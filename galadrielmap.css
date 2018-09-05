@@ -1,0 +1,122 @@
+/* Стили, заменяющие соответствующее в оригинальных стилях */
+/* leaflet */
+.leaflet-bar a,
+.leaflet-bar a:hover {
+	background-color: rgba(255,255,255,0.75);
+	width: 4rem;
+	height: 4rem;
+	line-height: 4rem;
+}
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+	font-size: 24px;
+}
+.leaflet-control-scale-line {
+	font-size: 24px;
+}
+
+/* leaflet-sidebar-v2 */
+.leaflet-sidebar-tabs {
+  background-color: rgba(255, 255, 255, 0.85); 
+}
+.disabled {
+	opacity:0.3; /* Полупрозрачность элемента */
+}
+.leaflet-sidebar-close { 	/* уберём свойства, исходно приписываемые стилю. Но навешивание обработчика на этот стиль где-то в скрипте останется. В результате этим стилем мы можем навесить обработчик без порчи картинки. */
+  position: unset;
+  top: unset;
+  width: unset;
+  height: unset;
+  text-align: unset;
+}
+.leaflet-sidebar-close-icn { /* создадим аналогичный стиль с другим именем, но на который не навешен обработчик. Картинка сохранится. */
+  position: absolute;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  cursor: pointer; 
+}
+.leaflet-sidebar-left .leaflet-sidebar-close-icn {
+    right: 0; 
+}
+.leaflet-sidebar-right .leaflet-sidebar-close-icn {
+    left: 0; 
+}
+.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
+	margin: 0 0 1em 0;
+}
+/**/
+ul {
+  list-style-type: none;
+  margin: 2rem 0 2rem 0;
+  padding: 0;
+}
+#mapList, #mapDisplayed, #trackList, #trackDisplayed li {
+	cursor: pointer;
+	font: 200 20px/1.5 Helvetica, Verdana, sans-serif;
+	border-bottom: 1px solid #ccc;
+	margin-bottom: 1rem;
+}
+.currentTrackName {
+	background-color:  rgba(227, 231, 251, 0.5); /* бледно-голубой */
+}
+.big_symbol {
+	font-size:80px;
+	height:5em; 
+	width: 100%;
+	display: flex;
+    justify-content: center; /*Центрирование по горизонтали*/
+    align-items: center;     /*Центрирование по вертикали */
+    text-align: center;
+}
+
+/* Переключатель https://proto.io/freebies/onoff/ */
+    .onoffswitch {
+        position: relative; width: 60px;
+        -webkit-user-select:none; -moz-user-select:none; -ms-user-select: none;
+    }
+    .onoffswitch-checkbox {
+        display: none;
+    }
+    .onoffswitch-label {
+        display: block; overflow: hidden; cursor: pointer;
+        border: 2px solid #999999; border-radius: 20px;
+    }
+    .onoffswitch-inner {
+        display: block; width: 200%; margin-left: -100%;
+        transition: margin 0.3s ease-in 0s;
+    }
+    .onoffswitch-inner:before, .onoffswitch-inner:after {
+        display: block; float: left; width: 50%; height: 16px; padding: 0; line-height: 16px;
+        font-size: 14px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold;
+        box-sizing: border-box;
+    }
+    .onoffswitch-inner:before {
+        content: "ON";
+        padding-left: 10px;
+        background-color: #34A7C1; color: #FFFFFF;
+    }
+    .onoffswitch-inner:after {
+        content: "OFF";
+        padding-right: 10px;
+        background-color: #EEEEEE; color: #999999;
+        text-align: right;
+    }
+    .onoffswitch-switch {
+        display: block; width: 13px; margin: 1.5px;
+        background: #FFFFFF;
+        position: absolute; top: 0; bottom: 0;
+        right: 40px;
+        border: 2px solid #999999; border-radius: 20px;
+        transition: all 0.3s ease-in 0s; 
+    }
+    .onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
+        margin-left: 0;
+    }
+    .onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
+        right: 0px; 
+    } 
+    
+/*  */
+
