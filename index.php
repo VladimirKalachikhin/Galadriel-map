@@ -25,7 +25,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$settingsCursorTXT = 'Follow <br>to cursor';
 	$settingsTrackTXT = 'Current track<br>always visible';
 	$integerTXT = 'Integer';
-	$clearTXT = 'Cleif(!$gpsanddataServerURI)ar';
+	$clearTXT = 'Clear';
 	$okTXT = 'Create!';
 	$latTXT = 'Lat';
 	$longTXT = 'Lng';
@@ -100,17 +100,18 @@ else $trackInfo = array();
 
 	<link rel="stylesheet" href="leaflet/leaflet.css" type="text/css">
 	<script src="leaflet/leaflet-src.js"></script>
-    <link rel="stylesheet" href="leaflet-sidebar-v2/css/leaflet-sidebar.css" />
-	<script src="leaflet-sidebar-v2/js/leaflet-sidebar.js"></script>
+
+    <script src="leaflet-realtime/dist/leaflet-realtime.js"></script>
+
+    <script src="Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
+
     <script src="L.TileLayer.Mercator/src/L.TileLayer.Mercator.js"></script>
 
-<?php if($gpsanddataServerURI) {?>
-    <script src="leaflet-realtime/dist/leaflet-realtime.js"></script>
-    <script src="Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
-<?php }?>
-<?php if($gpxDir) {?>
+    <link rel="stylesheet" href="leaflet-sidebar-v2/css/leaflet-sidebar.css" />
+	<script src="leaflet-sidebar-v2/js/leaflet-sidebar.js"></script>
+
 	<script src="leaflet-omnivore/leaflet-omnivore.js"></script>
-<?php }?>    
+    
 <!--    <script src="JSON-js/cycle.js"></script>--> <!-- костыль для JSON.stringify , которая используется для отладки -->
     <script src="fetch/fetch.js"></script> <!-- полифил для старых браузеров -->
     <script src="promise-polyfill/promise.js"></script> <!-- полифил для старых браузеров -->
