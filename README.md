@@ -24,7 +24,7 @@ You must have a web server with php support. Just copy.
 * [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) as _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
 * [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) in _leaflet-sidebar-v2/_ directory
 * [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) as _leaflet-omnivore/leaflet-omnivore.js_
-For more compability:
+<br>For more compability:
 * [fetch polyfill](https://github.com/github/fetch/) as _fetch/fetch.js_
 * [promise-polyfill](https://github.com/taylorhakes/promise-polyfill) as _promise-polyfill/promise.js_
 Create local copy of dependences and/or edit _index.php_
