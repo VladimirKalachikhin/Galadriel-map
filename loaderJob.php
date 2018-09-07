@@ -8,10 +8,12 @@ if($jobsDir[0]!='/') $jobsDir = "$tileCachePath/$jobsDir";	// если путь 
 
 $XYs = $_REQUEST['xys'];
 $jobName = $_REQUEST['jobname'];
+//echo "XYs=$XYs; jobName=$jobName; <br>\n";
 
 $name_parts = pathinfo($jobName);
+//echo "name_parts:<pre>"; print_r($name_parts); echo "</pre>";
 if(!(is_numeric($name_parts['extension']) AND (intval($name_parts['extension']) <=20 AND intval($name_parts['extension']) >=0))) return; 	// расширение - не масштаб
-if(!@is_file("$mapSourcesDir/".$name_parts['filename'].'.php')) return; 	// нет такого источника
+if(!is_file("$mapSourcesDir/".$name_parts['filename'].'.php')) return; 	// нет такого источника
 if(!$XYs) return; 	// нет собственно задания
 // Создадим задание
 file_put_contents("$jobsDir/$jobName",$XYs);

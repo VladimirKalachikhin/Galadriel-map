@@ -1,8 +1,6 @@
 <?php
 require_once('fcommon.php');
 require('params.php'); 	// пути и параметры
-// Settings of a tile cache/proxy app
-if( $tileCachePath) require("$tileCachePath/params.php"); 	//
 
 $versionTXT = '0.0';
 // Интернационализация
@@ -29,6 +27,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$okTXT = 'Create!';
 	$latTXT = 'Lat';
 	$longTXT = 'Lng';
+	$completeTXT = 'complete';
 }
 else {
 	$homeHeaderTXT = 'Карты';
@@ -52,32 +51,38 @@ else {
 	$okTXT = 'Создать!';
 	$latTXT = 'Ш';
 	$longTXT = 'Д';
+	$completeTXT = 'выполнено';
 }
 
+if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 // Получаем список имён карт
-if( $tileCachePath) {
 	if($mapSourcesDir[0]=='/') $mapsInfo = $mapSourcesDir;	// если путь абсолютный (и в unix, конечно)
-	else  $mapsInfo = "$tileCachePath/$mapSourcesDir";
-	$mapsInfo = scandir($mapsInfo);
+	else  $mapsInfo = "$tileCachePath/$mapSourcesDir"; 	// сделаем путь абсолютным
+	$mapsInfo = glob("$mapsInfo/*.php");
 	//echo ":<pre>"; print_r($mapsInfo); echo "</pre>";
 	array_walk($mapsInfo,function (&$name,$ind) {
-			if(strpos($name,'~')!==FALSE) $name = NULL; 	// скрытые файлы
-			else $name=strstr($name,'.php',TRUE); 	// строка до 
+			$name=basename($name,'.php'); 	//
 		}); 	// 
-	sort($mapsInfo=array_unique($mapsInfo),SORT_NATURAL | SORT_FLAG_CASE); 	// 
-	if(!$mapsInfo[0]) unset($mapsInfo[0]); 	// строка от файлов, которые не .php, например - каталогов
+// Получаем список выполняющихся заданий на скачивание
+	if($jobsDir[0]!='/') $jobsDir = "$tileCachePath/$jobsDir";	//  сделаем путь абсолютным, потому что jobsDir - из конфига GaladrielCache
+	if($jobsInWorkDir[0]!='/') $jobsInWorkDir = "$tileCachePath/$jobsInWorkDir";	//  сделаем путь абсолютным
+	$jobsInfo = preg_grep('~.[0-9]$~', scandir($jobsDir)); 	// возьмём только файлы с цифровым расшрением
+	foreach($jobsInfo as $i => $jobName) {
+		$jobSize = filesize("$jobsDir/$jobName");
+		$jobComleteSize =  filesize("$jobsInWorkDir/$jobName");
+		//echo "jobSize=$jobSize; jobComleteSize=$jobComleteSize; <br>\n";
+		$jobsInfo[$i] = array($jobName, (100 - round(($jobComleteSize/$jobSize)*100)));
+	}
+	//echo "jobsInfo:<pre>"; print_r($jobsInfo); echo "</pre>";
 }
-else $mapsInfo = array();
-
+else {$mapsInfo = array(); $jobsInfo = array();}
+ 
 // Получаем список имён треков
 if($gpxDir) {
-	$trackInfo = scandir($gpxDir); 	// gpxDir - из файла params.php
+	$trackInfo = glob("$gpxDir/*.gpx"); 	// gpxDir - из файла params.php
 	array_walk($trackInfo,function (&$name,$ind) {
-			if(strpos($name,'~')!==FALSE) $name = NULL; 	// скрытые файлы
-			else $name=strstr($name,'.gpx',TRUE); 	// строка до 
+			$name=basename($name,'.gpx'); 	// 
 		}); 	// 
-	sort($trackInfo=array_unique($trackInfo),SORT_NATURAL | SORT_FLAG_CASE); 	// 
-	if(!$trackInfo[0]) unset($trackInfo[0]); 	// строка от файлов, которые не .gpx, например - каталогов
 	//echo "trackInfo:<pre>"; print_r($trackInfo); echo "</pre>";
 	foreach($trackInfo as $trk){
 		$lastStr = tailCustom("$gpxDir/$trk.gpx"); 	// fcommon.php
@@ -89,6 +94,7 @@ if($gpxDir) {
 	}
 }
 else $trackInfo = array();
+
 ?>
 <!DOCTYPE html >
 <html lang="ru">
@@ -222,7 +228,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 								this.onchange = null; 	// удалим обработчик с этого элемента
 								this.parentNode.parentNode.insertBefore(newXinput,this.parentNode.nextSibling); 	// вставляем после последнего. Да, вот так через задницу, потому что это javascript
 								this.parentNode.parentNode.insertBefore(newYinput,newXinput.nextSibling);
-								newXinput.getElementsByTagName('input')[0].focus(); 	// усановим курсор ввода
+								newXinput.getElementsByTagName('input')[0].focus(); 	// установим курсор ввода
 							"></div>
 						</div>
 					</div>
@@ -233,7 +239,14 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 			</div>
 			<div style="font-size:120%;margin:1rem 0;">
 				<h3><?php echo $downloadJobListTXT;?>:</h3>
-				<span id="dwnldJobList"></span>
+				<ul id="dwnldJobList">
+<?php
+foreach($jobsInfo as $jobName) { 	// 
+	list($jobName,$jobPercent) = $jobName;
+	echo "						<li  ><span>$jobName </span><span style='font-size:75%;'>$jobPercent% $completeTXT</span></li>";
+}
+?>
+				</ul>
 			</div>
 		</div>
 		<div class="leaflet-sidebar-pane" id="settings">

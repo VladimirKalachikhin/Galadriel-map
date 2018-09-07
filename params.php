@@ -14,4 +14,6 @@ $tileCacheURI = '/tileproxy/tiles.php?z={z}&x={x}&y={y}&r={map}'; 	// uri of a m
 $gpsanddataServerURI = 'askGPSD.php'; 	// uri of a active data service, if present. Commonly GNSS/AIS.
 $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of a active track service, if present
 
+// Settings of a tile cache/proxy app
+if( $tileCachePath) require("$tileCachePath/params.php"); 	//
 ?>

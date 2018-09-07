@@ -228,15 +228,15 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 		//alert(XYsE);
 		var uri = 'loaderJob.php?jobname='+mapname+'.'+zoom+'&xys='+XYsE;
 	}
-	//alert(encodeURI(uri)+'\n\n');
-	//return;
+	//alert(encodeURI(uri)+'           \n\n');
+	//continue;
 	xhr[i] = new XMLHttpRequest();
 	xhr[i].open('GET', encodeURI(uri), true); 	// Подготовим асинхронный запрос
 	xhr[i].send();
 	xhr[i].onreadystatechange = function() { // 
 		if (this.readyState != 4) return; 	// запрос ещё не завершился
 		if (this.status != 200) return; 	// что-то не то с сервером
-		dwnldJobList.innerHTML += this.responseText + '<br>\n';
+		dwnldJobList.innerHTML += '<li>' + this.responseText + '</li>\n';
 	}
 }
 } 	// end function createDwnldJob
