@@ -1,6 +1,6 @@
 # GaladrielMap
 This is a web tile map viewer to serve in a weak computers such as RaspberryPi or NAS and use on a thick clients such as tablets and smartphones. Author use it from the wi-fi router/GSM modem under OpenWRT on his sailboat Galadriel.<br>
-GaladrielMap designed for use mainly with GaladrielCache, but may be used with any tile OSM-like map sources or file tile cache for explore map. The author is not responsible for the consequences of using the GaladrielMap as navigator!
+GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache), but may be used with any tile OSM-like map sources or file tile cache for explore map. The author is not responsible for the consequences of using the GaladrielMap as navigator!
 
 ## Features:
 1. Stacked maps (with GaladrielCache)
