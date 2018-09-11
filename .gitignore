@@ -1,6 +1,7 @@
+params.php
+info.php
 *~
 test*
-info.php
 _*
 L.TileLayer.Mercator*
 Leaflet*
@@ -9,5 +10,4 @@ fetch*
 promise-polyfill*
 JSON-js*
 отстой
-params.php
 
