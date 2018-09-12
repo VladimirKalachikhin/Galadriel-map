@@ -23,7 +23,7 @@ You must have a web server with php support. Just copy.
 * [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) as _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
 * [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) as _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
 * [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) in _leaflet-sidebar-v2/_ directory
-* [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) as _leaflet-omnivore/leaflet-omnivore.js_
+* [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) as _leaflet-omnivore/leaflet-omnivore.js_ leaflet-omnivore patched to non well-formed gpx files.
 <br>For more compability:
 * [fetch polyfill](https://github.com/github/fetch/) as _fetch/fetch.js_
 * [promise-polyfill](https://github.com/taylorhakes/promise-polyfill) as _promise-polyfill/promise.js_

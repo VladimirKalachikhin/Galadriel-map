@@ -3,6 +3,7 @@ info.php
 *~
 test*
 _*
+*.zip
 L.TileLayer.Mercator*
 Leaflet*
 leaflet*
