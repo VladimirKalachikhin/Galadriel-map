@@ -27,6 +27,7 @@ You must have a web server with php support. Just copy.
 <br>For more compability:
 * [fetch polyfill](https://github.com/github/fetch/) as _fetch/fetch.js_
 * [promise-polyfill](https://github.com/taylorhakes/promise-polyfill) as _promise-polyfill/promise.js_
+
 Create local copy of dependences and/or edit _index.php_
 
 Paths and other set and describe in _params.php_
