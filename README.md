@@ -16,7 +16,9 @@ Modern browsers, include mobile.
 ![s2](screenshots/s2.jpg) ![s1](screenshots/s1.jpg) ![s3](screenshots/s3.jpg) ![s5](screenshots/s4.jpg) ![s6](screenshots/s6.jpg)![s7](screenshots/s7.jpg)
 
 ## Install&configure:
-You must have a web server with php support. Just copy.
+You must have a web server with php support. Just copy.<br>
+Paths and other set and describe in _params.php_
+
 ### Dependences
 * [Leaflet](https://leafletjs.com/) in _leaflet/_ directory
 * [leaflet-realtime](https://github.com/perliedman/leaflet-realtime) as _leaflet-realtime/dist/leaflet-realtime.js_
@@ -29,8 +31,6 @@ You must have a web server with php support. Just copy.
 * [promise-polyfill](https://github.com/taylorhakes/promise-polyfill) as _promise-polyfill/promise.js_
 
 Create local copy of dependences and/or edit _index.php_
-
-Paths and other set and describe in _params.php_
 
 ### gpsd
 GaladrielMap get position and velosity from gpsd via _askGPSD.php_ service. You may configure _askGPSD.php_ to you gpsd host and port. Default are localhost and 2947 port (default for gpsd).<br>
