@@ -40,7 +40,7 @@ You may use gpxlogger app from gpsd-clients packet to logging on your server. Ga
 Run _chkGPXfiles.php_ in cli to repair non well-formed gpx files.
 
 ## Also used
-Free icons from [icon-icons](https://icon-icons.com/)
+Free icons from [icon-icons](https://icon-icons.com/)<br>
 [On/Off FlipSwitch](https://proto.io/freebies/onoff/)
 
 
