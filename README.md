@@ -17,7 +17,7 @@ Modern browsers, include mobile.
 
 ## Install&configure:
 You must have a web server with php support. Just copy.<br>
-Paths and other set and describe in _params.php_
+Paths and other are set and describe in _params.php_
 
 ### Dependences
 * [Leaflet](https://leafletjs.com/) in _leaflet/_ directory
