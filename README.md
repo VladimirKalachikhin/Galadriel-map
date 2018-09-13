@@ -39,4 +39,8 @@ How to install and configure gpsd see [gpsd pages](http://www.catb.org/gpsd/).
 You may use gpxlogger app from gpsd-clients packet to logging on your server. GaladrielMap displaying current not well-formed gpx file. Other tracks may be diplayed simultaneously.<br>
 Run _chkGPXfiles.php_ in cli to repair non well-formed gpx files.
 
+## Also used
+Free icons from [icon-icons](https://icon-icons.com/)
+[On/Off FlipSwitch](https://proto.io/freebies/onoff/)
+
 
