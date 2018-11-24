@@ -16,7 +16,7 @@ GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/Vl
 Modern browsers, include mobile.
 
 ## Screenshots
- ![s1](screenshots/s1.jpg) ![s2](screenshots/s2.jpg) ![s3](screenshots/s3.jpg) ![s4](screenshots/s4.jpg)
+ ![s1](screenshots/s1.png) ![s2](screenshots/s2.png) ![s3](screenshots/s3.png) ![s4](screenshots/s4.png)
 
 ## Install&configure:
 You must have a web server with php support. Just copy.<br>
@@ -34,7 +34,7 @@ Paths and other are set and describe in _params.php_
 
 Create local copy of dependences and/or edit _index.php_
 
-###Thanks
+### Thanks
 * [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to non well-formed gpx files.
 * [Metrize Icons by Alessio Atzeni](https://icon-icons.com/pack/Metrize-Icons/1130) for icons.
 * [Typicons by Stephen Hutchings](https://icon-icons.com/pack/Typicons/1144) for icons.
