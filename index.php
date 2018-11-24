@@ -4,8 +4,8 @@ require('params.php'); 	// пути и параметры
 
 $versionTXT = '0.1.0';
 // Интернационализация
-//if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
-if(TRUE) { 	// клиент - нерусский
+if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
+//if(TRUE) { 	// клиент - нерусский
 	$homeHeaderTXT = 'Maps';
 	$dashboardHeaderTXT = 'Velocity&heading';
 	$dashboardSpeedMesTXT = 'km/h';
