@@ -2,10 +2,10 @@
 require_once('fcommon.php');
 require('params.php'); 	// пути и параметры
 
-$versionTXT = '0.0';
+$versionTXT = '0.1.0';
 // Интернационализация
-if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
-//if(TRUE) { 	// клиент - нерусский
+//if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
+if(TRUE) { 	// клиент - нерусский
 	$homeHeaderTXT = 'Maps';
 	$dashboardHeaderTXT = 'Velocity&heading';
 	$dashboardSpeedMesTXT = 'km/h';
@@ -19,11 +19,17 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$downloadHeaderTXT = 'Download';
 	$downloadZoomTXT = 'Zoom';
 	$downloadJobListTXT = 'Started downloading';
+	
+	$measureHeaderTXT = 'Route';
+	$routeControlsBeginTXT = 'Begin';
+	$routeControlsContinueTXT = 'Continue';
+	$routeControlsClearTXT = 'Erase';
+	
 	$settingsHeaderTXT = 'Settings';
 	$settingsCursorTXT = 'Follow <br>to cursor';
 	$settingsTrackTXT = 'Current track<br>always visible';
 	$integerTXT = 'Integer';
-	$clearTXT = 'Cleif(!$gpsanddataServerURI)ar';
+	$clearTXT = 'Clear';
 	$okTXT = 'Create!';
 	$latTXT = 'Lat';
 	$longTXT = 'Lng';
@@ -43,6 +49,12 @@ else {
 	$downloadHeaderTXT = 'Загрузки';
 	$downloadZoomTXT = 'Масштаб';
 	$downloadJobListTXT = 'Поставлены загрузки';
+	
+	$measureHeaderTXT = 'Маршрут';
+	$routeControlsBeginTXT = 'Начать';
+	$routeControlsContinueTXT = 'Продолжить';
+	$routeControlsClearTXT = 'Стереть';
+	
 	$settingsHeaderTXT = 'Параметры';
 	$settingsCursorTXT = 'Следование <br>за курсором';
 	$settingsTrackTXT = 'Текущй трек <br>всегда показывается';
@@ -69,7 +81,7 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 	$jobsInfo = preg_grep('~.[0-9]$~', scandir($jobsDir)); 	// возьмём только файлы с цифровым расшрением
 	foreach($jobsInfo as $i => $jobName) {
 		$jobSize = filesize("$jobsDir/$jobName");
-		$jobComleteSize =  filesize("$jobsInWorkDir/$jobName");
+		$jobComleteSize =  @filesize("$jobsInWorkDir/$jobName"); 	// файла в этот момент может уже и не оказаться
 		//echo "jobSize=$jobSize; jobComleteSize=$jobComleteSize; <br>\n";
 		$jobsInfo[$i] = array($jobName, (100 - round(($jobComleteSize/$jobSize)*100)));
 	}
@@ -117,6 +129,11 @@ else $trackInfo = array();
 <?php if($gpxDir) {?>
 	<script src="leaflet-omnivore/leaflet-omnivore.js"></script>
 <?php }?>    
+
+	<script src="Leaflet.Editable/src/Leaflet.Editable.js"></script>
+	<link rel="stylesheet" href="leaflet-measure-path/leaflet-measure-path.css" />
+	<script src="leaflet-measure-path/leaflet-measure-path.js"></script>
+
 <!--    <script src="JSON-js/cycle.js"></script>--> <!-- костыль для JSON.stringify , которая используется для отладки -->
     <script src="fetch/fetch.js"></script> <!-- полифил для старых браузеров -->
     <script src="promise-polyfill/promise.js"></script> <!-- полифил для старых браузеров -->
@@ -141,17 +158,19 @@ html, body, #mapid {
 	<!-- Nav tabs -->
 	<div class="leaflet-sidebar-tabs">
 		<ul role="tablist">
-			<li id="home-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/menu.svg" alt="menu" width="16px"></a></li>
-			<li id="dashboard-tab" <?php if(!$gpsanddataServerURI) echo 'class="disabled"';?>><a href="#dashboard" role="tab"><img src="img/speed.svg" alt="dashboard" width="16px"></a></li>
-			<li id="tracks-tab" <?php if(!$gpxDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/road.svg" alt="tracks" width="16px"></a></li>
-			<li id="download-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download.svg" alt="download map" width="16px"></a></li>
+			<li id="home-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
+			<li id="dashboard-tab" <?php if(!$gpsanddataServerURI) echo 'class="disabled"';?>><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
+			<li id="tracks-tab" <?php if(!$gpxDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
+			<li id="download-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
+			<li id="measure-tab" ><a href="#measure" role="tab"><img src="img/measure.svg" alt="Create path" width="70%"></a></li>
 		</ul>
 		<ul role="tablist">
-			<li><a href="#settings" role="tab"><img src="img/settings.svg" alt="settings" width="16px"></a></li>
+			<li><a href="#settings" role="tab"><img src="img/settings1.svg" alt="settings" width="70%"></a></li>
 		</ul>
 	</div>
 	<!-- Tab panes -->
 	<div class="leaflet-sidebar-content">
+		<!-- Карты -->
 		<div class="leaflet-sidebar-pane" id="home">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<br>
@@ -167,6 +186,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 ?>
 			</ul>
 		</div>
+		<!-- Приборы -->
 		<div class="leaflet-sidebar-pane" id="dashboard">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $dashboardHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<div class="big_symbol" onClick="map.setView(cursor.getLatLng());"> <!-- передвинуть карту на место курсора -->
@@ -194,6 +214,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 				<?php echo $dashboardSpeedZoomTXT;?> <span id='velocityVectorLengthInMnDisplay'></span> <?php echo $dashboardSpeedZoomMesTXT;?>.
 			</div>
 		</div>
+		<!-- Треки -->
 		<div class="leaflet-sidebar-pane" id="tracks">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<br>
@@ -209,6 +230,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 ?>
 			</ul>
 		</div>
+		<!-- Загрузчик -->
 		<div class="leaflet-sidebar-pane" id="download">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<h2 style=''><?php echo $downloadZoomTXT;?>: <span id='current_zoom'></span></h2>
@@ -216,24 +238,33 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				<form id="dwnldJob" onSubmit="createDwnldJob();return false;" onreset="current_zoom.innerHTML=map.getZoom(); downJob=false;//alert('reset');">
 					<div style='display:grid;grid-template-columns:auto auto;'>
 						<div>X</div><div>Y</div>
-					<div style='height:25vh;overflow-y:auto;overflow-x:hidden;grid-column:1/3'> 
-						<div style='display:grid; grid-template-columns: auto auto; grid-column-gap: 3px;'>
-							<div style='margin-bottom:10px;'><input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:7rem;font-size:150%;'></div><div style='margin-bottom:10px;'><input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:7rem;font-size:150%;' onChange="
-								//alert(this.parentNode.previousSibling);
-								downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание
-								var newXinput = this.parentNode.previousSibling.cloneNode(true); 	// клонируем div с x
-								newXinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
-								var newYinput = this.parentNode.cloneNode(true); 	// клонируем div с y
-								newYinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
-								this.onchange = null; 	// удалим обработчик с этого элемента
-								this.parentNode.parentNode.insertBefore(newXinput,this.parentNode.nextSibling); 	// вставляем после последнего. Да, вот так через задницу, потому что это javascript
-								this.parentNode.parentNode.insertBefore(newYinput,newXinput.nextSibling);
-								newXinput.getElementsByTagName('input')[0].focus(); 	// установим курсор ввода
-							"></div>
+						<div style='height:25vh;overflow-y:auto;overflow-x:hidden;grid-column:1/3'> 
+							<div style='display:grid; grid-template-columns: auto auto; grid-column-gap: 3px;'>
+								<div style='margin-bottom:10px;'>
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:7rem;font-size:150%;'>
+								</div>
+								<div style='margin-bottom:10px;'>
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:7rem;font-size:150%;' 
+										onChange="
+											//console.log(this.parentNode);
+											downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание
+											var newXinput = this.parentNode.previousElementSibling.cloneNode(true); 	// клонируем div с x
+											newXinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
+											var newYinput = this.parentNode.cloneNode(true); 	// клонируем div с y
+											newYinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
+											this.onchange = null; 	// удалим обработчик с этого элемента
+											this.parentNode.parentNode.insertBefore(newXinput,this.parentNode.nextElementSibling); 	// вставляем после последнего. Да, вот так через задницу, потому что это javascript
+											this.parentNode.parentNode.insertBefore(newYinput,newXinput.nextElementSibling);
+											newXinput.getElementsByTagName('input')[0].focus(); 	// установим курсор ввода
+										"
+									>
+								</div>
+							</div>
 						</div>
 					</div>
-					<div><button type='reset' style="margin-top:5px;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px"></button></div>
-					<div style="text-align:right;"><button type='submit' style="margin-top:5px;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button></div>
+					<div style="width:85%;margin: 0 auto;">
+						<button type='reset' style="margin-top:5px;width:4rem;padding:0.2rem;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px" ></button>
+						<button type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 					</div>
 				</form>
 			</div>
@@ -249,30 +280,69 @@ foreach($jobsInfo as $jobName) { 	//
 				</ul>
 			</div>
 		</div>
+		<!-- Расстояния -->
+		<div class="leaflet-sidebar-pane" id="measure">
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $measureHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<div id='routeControls' class="routeControls" style="padding: 1rem 0; text-align: center;">
+				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
+					onChange="
+						if(L.Browser.mobile && L.Browser.touch) var weight = 15; 	// мобильный браузер
+						else var weight = 7; 	// стационарный браузер
+						//window.LAYER = map.editTools.startPolyline(false,{showMeasurements: true,color: '#ccff00',weight: weight,opacity: 0.7});
+						window.LAYER = map.editTools.startPolyline(false,{showMeasurements: true,color: '#FDFF00',weight: weight,opacity: 0.5});
+                        //console.log(window.LAYER);
+				        window.LAYER.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
+						measuredPaths.push(window.LAYER);
+						routeEraseButton.disabled=false;
+					"
+				>
+				<label for="routeCreateButton"><?php echo $routeControlsBeginTXT;?></label>
+				<input type="radio" name="routeControl" class='R' id="routeContinueButton"
+					onChange="
+						map.once('editable:vertex:click', function f(e) { // это CancelableVertexEvent
+	                        //console.log(e);
+	                        //console.log(e.vertex);
+	                        e.cancel(); 	// прекратить дальнейшую обработку
+	                        //e.vertex.split();
+							e.vertex.continue();
+							routeCreateButton.checked=true;
+						});
+					"
+				>
+				<label for="routeContinueButton"><?php echo $routeControlsContinueTXT;?></label><br>
+				<br>
+				<input type="radio" name="routeControl" id="routeEraseButton"
+					onChange="
+						delShapes(true);
+						routeControlsDeSelect();
+						this.disabled=true;
+						routeContinueButton.disabled=true;
+					"
+				>
+				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
+			</div>
+		</div>
+		<!-- Настройки -->
 		<div class="leaflet-sidebar-pane" id="settings">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $settingsHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div style="margin: 1.5em 0;">
-				<div style="float:right;padding: 1em 0;">
-					<div class="onoffswitch" style="float:right;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+			<div style="margin: 1rem 1rem;">
+					<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="followSwitch" onChange="noFollowToCursor=!noFollowToCursor; CurrnoFollowToCursor=noFollowToCursor;" checked>
 						<label class="onoffswitch-label" for="followSwitch">
 							<span class="onoffswitch-inner"></span>
 							<span class="onoffswitch-switch"></span>
 						</label>
 					</div>
-				</div>
-				<span style="font-size:120%"><?php echo $settingsCursorTXT;?></span>
+					<span style="font-size:120%"><?php echo $settingsCursorTXT;?></span>
 			</div>
-			<div style="margin: 1.5em 0;">
-				<div style="float:right;padding: 1em 0;">
-					<div class="onoffswitch" style="float:right;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+			<div style="margin: 1rem 1rem;">
+					<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="currTrackSwitch" onChange="" checked>
 						<label class="onoffswitch-label" for="currTrackSwitch">
 							<span class="onoffswitch-inner"></span>
 							<span class="onoffswitch-switch"></span>
 						</label>
 					</div>
-				</div>
 				<span style="font-size:120%"><?php echo $settingsTrackTXT;?></span>
 			</div>
 		</div>
@@ -310,7 +380,8 @@ var map = L.map('mapid', {
 	center: startCenter,
     zoom: startZoom,
     attributionControl: false,
-    zoomControl: false
+    zoomControl: false,
+    editable: true
 	}
 );
 
@@ -411,6 +482,34 @@ tileGrid.createTile = function (coords) {
 }
 if( !downJob) current_zoom.innerHTML = map.getZoom(); 	// текущий масштаб отобразим а панели скачивания
 
+// Рисование маршрута
+var measuredPaths = [];
+doRestoreMeasuredPaths(); 	// восстановим из кук сохранённые на устройстве маршруты
+routeControlsDeSelect(); 	// сделать кнопки рисования невыбранными
+routeContinueButton.disabled=true; 	// сделать кнопку "Продолжить" неактивной.
+routeEraseButton.disabled=true; 	// сделать кнопку "Стереть" неактивной.
+
+map.on('editable:editing', // обязательный обработчик для editable для перересовывания расстояний при изменении пути
+	function (e) {
+		//console.log(e);
+		//console.log(e.layer);
+		if (e.layer instanceof L.Path) e.layer.updateMeasurements();
+    }
+);
+map.on('editable:drawing:end', // выключать кнопку "Начать" при окончании рисования, сделать доступной "Продолжить"
+	function () {
+		//alert('Stop create'); 
+		routeCreateButton.checked=false;
+		routeContinueButton.disabled=false;
+	}
+);
+map.on('editable:vertex:dragstart', 
+	function (e) {
+		window.navigator.vibrate(200); // Вибрировать 200ms
+	}
+)
+var doSaveMeasuredPathsProcess = setInterval(doSaveMeasuredPaths,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery
+
 <?php if(!$gpsanddataServerURI) goto noRealTime; // если нет источника текущих данных - не нужны и обработчики ?>
 // Местоположение
 // маркеры
@@ -490,8 +589,9 @@ realtime.on('update', function(onUpdate) {
 	var positionTime = new Date(onUpdate.features.gps.properties.time);
 	var now = new Date();
 	//alert("Время ГПС "+positionTime+'\n'+"Сейчас    "+now);
-	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
-	else 		cursor.setIcon(GpsCursor);
+//	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
+//	else
+	 		cursor.setIcon(GpsCursor);
 	// Направление с попыткой его запомнить при прекращении движения
 	if((onUpdate.features.gps.properties.heading !== null) && Math.round( onUpdate.features.gps.properties.velocity ) != 0) {heading = onUpdate.features.gps.properties.heading;} // если положение изменилось - возьмём новое направление, иначе - будет старое.
 	//alert("Направление: "+JSON.stringify(onUpdate.features.gps.properties.heading));

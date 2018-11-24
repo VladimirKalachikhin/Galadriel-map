@@ -14,9 +14,16 @@ deSelectTrack()
 updateCurrTrack()
 
 createDwnldJob()
+
+routeControlsDeSelect()
+delShapes(realy)
+tooggleEditRoute(e)
+doSaveMeasuredPaths()
+doRestoreMeasuredPaths()
 */
 function getCookie(name) {
 // возвращает cookie с именем name, если есть, если нет, то undefined
+name=name.trim();
 var matches = document.cookie.match(new RegExp(
 	"(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
 	)
@@ -78,6 +85,7 @@ function displayMap(mapname) {
 // Если для запросов тайлов нужно их расширение - делает запрос к askMapParm.php для получения
 // Если в имени карты есть EPSG3395 - делает слой в проекции с пересчётом с помощью L.tileLayer.Mercator
 // проекцию карты от askMapParm.php не получает!!! чтобы не делать лишних запросов
+mapname=mapname.trim();
 var tileCacheURIthis = tileCacheURI.replace('{map}',mapname); 	// глобальная переменная
 //alert(tileCacheURIthis);
 if(  tileCacheURIthis.indexOf('{ext}')!=-1) {	// если для запроса тайлов нужно их расширение
@@ -106,6 +114,7 @@ window[mapname].addTo(map);
 } // end function displayMap
 
 function removeMap(mapname) {
+mapname=mapname.trim();
 window[mapname].remove();
 }
 
@@ -125,6 +134,7 @@ function displayTrack(trackName) {
 global gpxDirURI, window, currentTrackName
 */
 //alert(trackName);
+trackName=trackName.trim();
 if( window[trackName] && (trackName != currentTrackName)) window[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем
 else {
 	var xhr = new XMLHttpRequest();
@@ -240,5 +250,91 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 	}
 }
 } 	// end function createDwnldJob
+
+// Функции рисования маршрутов
+function routeControlsDeSelect() {
+// сделаем невыбранными кнопки управления рисованием маршрута. Они должны быть и так не выбраны, но почему-то...
+var elements = document.getElementsByName('routeControl');
+for (var i = 0; i < elements.length; i++) {
+	elements[i].checked=false;
+}   
+} // end function routeControlsDeSelect
+
+function delShapes(realy) {
+/* Удаляет полилинии в состоянии редактирования, если realy = true
+возвращает число таких объектов
+полилинии находятся в глобальном массиве measuredPaths, куда заносятся при создании
+*/
+//alert(measuredPaths);
+var edEnShapesCntr=0;
+if(realy) map.editTools.stopDrawing(); 	// нужно прекратить рисование перед удалением, иначе будут глюки
+for(var i=0; i<measuredPaths.length; i++) {
+	if(measuredPaths[i].editEnabled()) {
+		edEnShapesCntr++;
+		//console.log(measuredPaths[i]);
+		//alert(measuredPaths[i].getLatLngs()[0]);
+		if(realy) {
+			measuredPaths[i].editor.deleteShapeAt(measuredPaths[i].getLatLngs()[0]);
+			measuredPaths.splice(i,1);
+		}
+	}
+};
+//alert(measuredPaths);
+return edEnShapesCntr;
+}	// end function delShapes
+
+function tooggleEditRoute(e) {
+//console.log(e.target);
+e.target.toggleEdit();
+if(e.target.editEnabled()) { 	//  если включено редактирование
+	routeEraseButton.disabled=false; 	// - сделать доступной кнопку Удалить
+	routeContinueButton.disabled=false; 	// - сделать доступной кнопку Продолжить
+}
+else {
+	if(delShapes(false))  routeEraseButton.disabled=false; 	// если есть редактируемые слои
+	else {
+		routeEraseButton.disabled=true; 	// - сделать доступной кнопку Удалить
+		routeContinueButton.disabled=true; 	//  - сделать доступной кнопку Продолжить
+	}
+}
+}
+
+function doSaveMeasuredPaths() {
+/* сохранение в cookie отображаемых на карте маршрутов
+Сохраняются только маршруты, не находящиеся в состоянии редактирования.
+Предполагается, что это для сохранения маршрутов/замеров расстояний на конкретном устройстве
+*/
+var toSave = [];
+if(measuredPaths.length) { 	// если есть, что сохранять
+	var expires =  new Date();
+	expires.setTime(expires.getTime() + (60*24*60*60*1000)); 	// протухнет через два месяца
+	for(var i=0; i<measuredPaths.length; i++) {	// в глобальном списке маргрутов
+		if(!measuredPaths[i].editEnabled()) { 	// те, что не редактируются
+			toSave.push(measuredPaths[i].getLatLngs()); 	// сохраним координаты вершин
+		}
+	}
+}
+//alert(toSave.length);
+toSave = JSON.stringify(toSave);
+//alert(toSave);
+document.cookie = "GaladrielMapMeasuredPaths="+toSave+"; expires="+expires+"; path=/"; 	// если сечас и нет, чего сохранять - грохнем куки
+} 	// end function doSaveMeasuredPaths
+
+function doRestoreMeasuredPaths() {
+//var RestoreMeasuredPaths = JSON.parse(JSON.retrocycle(getCookie('GaladrielMapMeasuredPaths')));
+var RestoreMeasuredPaths = JSON.parse(getCookie('GaladrielMapMeasuredPaths'));
+if(RestoreMeasuredPaths) {
+	if(L.Browser.mobile && L.Browser.touch) var weight = 15; 	// мобильный браузер
+	else var weight = 7; 	// стационарный браузер
+	for(var i=0; i<RestoreMeasuredPaths.length; i++) {	// в списке маршрутов
+		window.LAYER = L.polyline(RestoreMeasuredPaths[i],{showMeasurements: true,color: '#FDFF00',weight: weight,opacity: 0.5})
+		.addTo(map);
+		//window.LAYER.on('dblclick', L.DomEvent.stop).on('dblclick', window.LAYER.toggleEdit);
+        window.LAYER.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
+		measuredPaths.push(window.LAYER);
+	}
+}
+}	// end function doRestoreMeasuredPaths
+
 
 

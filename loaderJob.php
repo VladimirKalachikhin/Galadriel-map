@@ -16,7 +16,10 @@ if(!(is_numeric($name_parts['extension']) AND (intval($name_parts['extension']) 
 if(!is_file("$mapSourcesDir/".$name_parts['filename'].'.php')) return; 	// нет такого источника
 if(!$XYs) return; 	// нет собственно задания
 // Создадим задание
-file_put_contents("$jobsDir/$jobName",$XYs);
+file_put_contents("$jobsDir/$jobName",$XYs,FILE_APPEND); 	// возможно, такое задание уже есть. Тогда, скорее всего, тайлы минимального масштаба не будут загружены. Не страшно.
+// Сохраним задание на всякий случай
+file_put_contents("$jobsDir/oldJobs/$jobName".'_'.gmdate("Y-m-d_Gis", time()),$XYs);
+
 //file_put_contents("$jobName",$XYs);
 //exit;
 chmod("$jobsDir/$jobName",0777); 	// чтобы запуск от другого юзера

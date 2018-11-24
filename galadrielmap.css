@@ -17,7 +17,10 @@
 
 /* leaflet-sidebar-v2 */
 .leaflet-sidebar-tabs {
-  background-color: rgba(255, 255, 255, 0.85); 
+	background-color: rgba(255, 255, 255, 0.75); 
+}
+.leaflet-sidebar-content {
+	background-color: rgba(255, 255, 255, 0.9);
 }
 .disabled {
 	opacity:0.3; /* Полупрозрачность элемента */
@@ -37,22 +40,74 @@
   text-align: center;
   cursor: pointer; 
 }
+@media (min-width: 768px) and (max-width: 991px) {
+	.leaflet-sidebar { 	/* исходно на 40 пикселов больше, чем leaflet-sidebar-pane */
+		width: 285px;
+		max-width: 285px; 
+	}
+	.leaflet-sidebar-pane {
+		min-width: 250px; 
+	} 
+	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
+		left: 300px; 
+	}
+	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
+		right: 300px; 
+	}
+}
+@media (min-width: 992px) and (max-width: 1199px) {
+	.leaflet-sidebar {
+		width: 300px;
+		max-width: 300px; 
+	}
+	.leaflet-sidebar-pane {
+		min-width: 280px; 
+	} 
+	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
+		left: 315px; 
+	}
+	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
+		right: 315px; 
+	}
+}
+@media (min-width: 1200px) {
+	.leaflet-sidebar {
+		width: 320px;
+		max-width: 320px; 
+	}
+	.leaflet-sidebar-pane {
+		min-width: 300px; 
+	} 
+	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
+		left: 335px; 
+	}
+	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
+		right: 335px; 
+	}
+}
 .leaflet-sidebar-left .leaflet-sidebar-close-icn {
     right: 0; 
 }
 .leaflet-sidebar-right .leaflet-sidebar-close-icn {
     left: 0; 
 }
-.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
-	margin: 0 0 1em 0;
+.leaflet-sidebar-tabs > ul {
+	margin: 1rem auto;
 }
+.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
+	margin: 1rem auto;
+}
+.leaflet-sidebar-tabs > ul > li > a > img {
+	vertical-align: middle;
+}
+
 /**/
 ul {
   list-style-type: none;
   margin: 2rem 0 2rem 0;
   padding: 0;
 }
-#mapList, #mapDisplayed, #trackList, #trackDisplayed li {
+#mapList, #mapDisplayed, #trackList, #trackDisplayed {
 	cursor: pointer;
 	font: 200 20px/1.5 Helvetica, Verdana, sans-serif;
 	border-bottom: 1px solid #ccc;
@@ -69,6 +124,7 @@ ul {
     justify-content: center; /*Центрирование по горизонтали*/
     align-items: center;     /*Центрирование по вертикали */
     text-align: center;
+    padding: 0 auto;
 }
 
 /* Переключатель https://proto.io/freebies/onoff/ */
@@ -118,5 +174,36 @@ ul {
         right: 0px; 
     } 
     
+/* Кнопки управления рисованием маршрута */
+.routeControls > input[type="radio"] {
+	display:none;
+}
+.routeControls > input[type="radio"] + label {
+	cursor: pointer;
+    display: inline-block;
+	font-weight: bold;
+	font-size: 110%;
+	width: 6rem;
+    border: 1px solid;
+    border-radius: 5px;
+    text-align: center;
+    padding: 0.5rem 0;
+}
+.routeControls > input[type="radio"].L + label {
+    /*border-right: none;*/
+    border-radius: 5px 0px 0px 5px;
+}
+.routeControls > input[type="radio"].R + label {
+    /*border-left: none;*/
+    border-radius: 0px 5px 5px 0px;
+}
+.routeControls > input[type="radio"]:checked + label {
+	background-color: rgb(233, 233, 233));
+	box-shadow: 5px 5px 7px #9b9b9b inset;
+}
+.routeControls > input[type="radio"]:disabled + label {
+	opacity: 0.3;
+}
+
 /*  */
 
