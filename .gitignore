@@ -7,6 +7,7 @@ _*
 L.TileLayer.Mercator*
 Leaflet*
 leaflet*
+!leaflet-omnivore/
 fetch*
 promise-polyfill*
 JSON-js*
