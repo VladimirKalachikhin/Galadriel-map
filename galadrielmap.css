@@ -107,7 +107,7 @@ ul {
   margin: 2rem 0 2rem 0;
   padding: 0;
 }
-#mapList, #mapDisplayed, #trackList, #trackDisplayed {
+#mapList, #mapDisplayed, #trackList, #trackDisplayed, #routeList, #routeDisplayed {
 	cursor: pointer;
 	font: 200 20px/1.5 Helvetica, Verdana, sans-serif;
 	border-bottom: 1px solid #ccc;

@@ -27,6 +27,7 @@ module.exports.wkt = wktLoad;
 module.exports.wkt.parse = wktParse;
 
 function addData(l, d) {
+//console.log(d);
     if ('addData' in l) l.addData(d);
     if ('setGeoJSON' in l) l.setGeoJSON(d);
 }
@@ -205,15 +206,117 @@ function csvParse(csv, options, layer) {
 }
 
 function gpxParse(gpx, options, layer) {
-    var xml = parseXML(gpx);
-    if (!xml) return layer.fire('error', {
-        error: 'Could not parse GPX'
-    });
-    layer = layer || L.geoJson();
-    var geojson = toGeoJSON.gpx(xml);
-    addData(layer, geojson);
-    return layer;
+var xml = parseXML(gpx);
+if (!xml) return layer.fire('error', {
+    error: 'Could not parse GPX'
+});
+layer = layer || L.geoJson();
+//console.log(layer);
+layer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
+var geojson = toGeoJSON.gpx(xml);
+addData(layer, geojson);
+return layer;
+} // end function gpxParse
+
+function getMarkerToPoint(geoJsonPoint, latlng) { 	//  https://leafletjs.com/reference-1.3.4.html#geojson 
+//console.log(geoJsonPoint);
+var marker = L.marker(latlng, { 	// маркер для этой точки
+});
+//console.log(marker);
+//alert('icon' in marker.options);
+var iconNames = []; 	// возможные имена значков
+if(geoJsonPoint.properties.sym) iconNames.push(geoJsonPoint.properties.sym.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase());
+if(geoJsonPoint.properties.type) iconNames.push(geoJsonPoint.properties.type.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase());
+iconServer.setIconCustomIcon(marker,iconNames); 	// заменить в marker icon на нужный асинхронно
+//console.log(iconServer.iconsByType);
+//console.log(marker);
+marker.bindTooltip(geoJsonPoint.properties.name,{ 	// подпись
+	permanent: true,  	// всегда показывать
+	//direction: 'auto', 
+	direction: 'left', 
+	//offset: [-16,-25],
+	className: 'wpTooltip', 	// css class
+	opacity: 1
+});
+//}).openTooltip(); 	// и перерисуем подпись под умолчальный маркер. Под другие маркеры перерисуем потом. Но это бессмысленно - она не перерисовывается
+return marker;
+} // end function getMarkerToPoint
+
+var iconServer = { 	// типа, объект, централизованно раздающий icon
+iconsByType: {}, 	// сюда будем складывать L.icon каждого типа
+setIconCustomIcon: function (marker,iconNames) {
+/* пытается создать L.icon с iconUrl из iconNames, где они без пути и расширения
+при наличии такого файла - создаёт, устанавливает эту L.icon в marker
+и складывает в iconsByType
+*/
+var iconName = iconNames.shift();
+//console.log(iconName);
+if(iconName) {
+	//console.log(this.iconsByType);
+	if(this.iconsByType[iconName] === undefined) { 	// такая icon ещё не получена
+		this.iconsByType[iconName] = true; 	// укажем, что понеслось получать
+		// получить асинхронно
+		fetch("leaflet-omnivore/symbols/"+iconName+".png")
+		.then(function(response) {
+			//console.log(response);
+			if(response.ok)	return response.blob(); 	// руками обработаем ошибки сервера
+			else throw new Error('Network response was not ok for icon '+iconName); 	// Перейдём сразу к .catch
+		})
+		.then(function(blob){
+			var iconURL = URL.createObjectURL(blob);
+			//console.log(iconURL);
+			var icon = L.icon({
+				iconUrl: iconURL,
+				iconSize: [32, 37],
+				iconAnchor: [16, 37],
+				tooltipAnchor: [16,-25],
+				className: 'wpIcon'
+			});
+			iconServer.iconsByType[iconName] = icon;
+			marker.setIcon(icon).openTooltip(); 	// посадить значёк и перерисовать подпись
+			//console.log('Create and Set icon '+iconName);
+			//console.log(marker);
+		})
+		.catch(function(error) {	// - не работает в случае 404!
+			iconServer.iconsByType[iconName] = false; 	// укажем, что со значком облом
+			console.log('iconServer setIconCustomIcon fetch error: ' + error.message);
+		    iconServer.setIconCustomIcon(marker,iconNames); 	// вызовем себя для следующего имени
+		});
+	}
+	else {
+		if(typeof this.iconsByType[iconName] === 'object' && this.iconsByType[iconName] !== null) { 	// такая icon уже получена
+			// присвоить
+			marker.setIcon(this.iconsByType[iconName]).openTooltip(); 	// если  icon с таким именем уже создавали - посадить значёк и перерисовать подпись
+			//console.log('icon '+iconName+' из хранилища');
+		}
+		else { 	// такой icon нет
+			if(this.iconsByType[iconName] === true) { 	// такую icon кто-то сейчас получает
+				// ждать
+				var vait = setInterval(function(){ 	// запустим асинхронное ожидание. В результате сначала присвоится умолчальный значёк, а потом - нужный
+					//console.log('Ждём icon '+iconName);
+					if(typeof iconServer.iconsByType[iconName] === 'object' && iconServer.iconsByType[iconName] !== null) { 	// такая icon уже получена
+						marker.setIcon(iconServer.iconsByType[iconName]).openTooltip(); 	// если  icon с таким именем уже создавали  посадить значёк и перерисовать подпись
+						//console.log('Дождались icon '+iconName);
+						clearInterval(vait); 	// прекратим ждать
+					}
+					else {
+						if(iconServer.iconsByType[iconName] === false) {
+							//console.log('Не дождались icon '+iconName);
+							clearInterval(vait); 	// оно обломалось, прекратим ждать
+						}
+					}
+				},100); 	// таймер на  милисекунд
+			}
+			else { 	// такой icon вообще нет, её кто-то пытался получить, но безуспешно
+				//console.log('Уже был облом с icon '+iconName);
+			    iconServer.setIconCustomIcon(marker,iconNames); 	// вызовем себя для следующего имени
+				// ничего не делать - поставится умолчальная
+			}
+		}
+	}	
 }
+}, // end function setIconCustomIcon, список атрибутов объекта продолжается
+} // end object iconServer
 
 
 function kmlParse(gpx, options, layer) {
@@ -978,7 +1081,7 @@ toGeoJSON = (function() {
                 return [feature];
             }
             return gj;
-        },
+        }, 	// end .kml
         gpx: function(doc) {
             var i,
                 // a feature collection
@@ -1020,16 +1123,19 @@ toGeoJSON = (function() {
             for (i = 0; i < waypoints.length; i++) {
                 gj.features.push(getPoint(waypoints[i]));
             }
-            //function getPoints(node, pointname) {
-            function getPoints(node, pointname, prevPoint) { 
+			//console.log(gj); 	// здесь получена GeoJSON FeatureCollection всех объектов исходного gpx файла. Дальше - return
+
+
+            function getPoints(node, pointname) {
+            //function getPoints(node, pointname, prevPoint) { 
             	// Делает из точек geojson линию. node - один сегмент
-            	prevPoint = prevPoint || {};
+            	//prevPoint = prevPoint || {};
                 var pts = get(node, pointname), line = [], times = [],
                     l = pts.length;
-                if (l < 2 && prevPoint.coordinates) {  // Invalid line in GeoJSON
-                    line.push(prevPoint.coordinates);
-                    if (prevPoint.time) times.push(prevPoint.time);
-                }
+//                if (l < 2 && prevPoint.coordinates) {  // Invalid line in GeoJSON - а, собственно, почему? Сегиент из одной точки не противоречит спецификации.
+//                    line.push(prevPoint.coordinates); 	// кдваивать точки - это плохая идея
+//                    if (prevPoint.time) times.push(prevPoint.time);
+//                }
                 for (var i = 0; i < l; i++) {
                     var c = coordPair(pts[i]);
                     line.push(c.coordinates);
@@ -1064,9 +1170,9 @@ toGeoJSON = (function() {
             	/* GeoJSON для набора треков. node - один трек */
                 var segments = get(node, 'trkseg'), track = [], times = [], line = {};
                 for (var i = 0; i < segments.length; i++) { // для каждого сегмента
-                    //line = getPoints(segments[i], 'trkpt');
+                    line = getPoints(segments[i], 'trkpt');
 	            	//alert(line.lastPoint.coordinates);
-                    line = getPoints(segments[i], 'trkpt', lastPoint);
+                    //line = getPoints(segments[i], 'trkpt', lastPoint);
                     lastPoint = line.lastPoint;
                     if (line.line) track.push(line.line);
                     if (line.times.length) times.push(line.times);
@@ -1111,20 +1217,19 @@ toGeoJSON = (function() {
                 };
             }
             function getProperties(node) {
-                var meta = ['name', 'desc', 'author', 'copyright', 'link',
-                            'time', 'keywords'],
-                    prop = {},
+                var meta = ['name', 'cmt', 'desc', 'author', 'copyright', 'link', 'sym', 'type', 'time', 'keywords'], 	// список свойств, которые будем получать
+                    prop = {}, 	// массив свойств узла - путевой точки, маршрута, точки трека, сегмента или трека. Но не metadata.Однако, в списке meta - атрибуты из блока metadata
                     k;
                 for (k = 0; k < meta.length; k++) {
                     prop[meta[k]] = nodeVal(get1(node, meta[k]));
                 }
-                return clean(prop);
+                return clean(prop); 	// убрать пустые значения
             }
             return gj;
-        }
-    };
+        } 	// end .gpx
+    }; 	// end var t
     return t;
-})();
+})(); 	// end toGeoJSON = (function()
 
 if (typeof module !== 'undefined') module.exports = toGeoJSON;
 

@@ -15,15 +15,19 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$dashboardPosAltTXT = 'Широта / Долгота';
 	$dashboardSpeedZoomTXT = 'Velocity vector - distance for';
 	$dashboardSpeedZoomMesTXT = 'minutes';
-	$tracksHeaderTXT = 'Tracks';
-	$downloadHeaderTXT = 'Download';
-	$downloadZoomTXT = 'Zoom';
-	$downloadJobListTXT = 'Started downloading';
-	
+
+	$tracksHeaderTXT = 'Create track';
+
 	$measureHeaderTXT = 'Route';
 	$routeControlsBeginTXT = 'Begin';
 	$routeControlsContinueTXT = 'Continue';
 	$routeControlsClearTXT = 'Erase';
+	
+	$routesHeaderTXT = 'Tracks and POI';
+	
+	$downloadHeaderTXT = 'Download';
+	$downloadZoomTXT = 'Zoom';
+	$downloadJobListTXT = 'Started downloading';
 	
 	$settingsHeaderTXT = 'Settings';
 	$settingsCursorTXT = 'Follow <br>to cursor';
@@ -45,15 +49,19 @@ else {
 	$dashboardPosAltTXT = 'Latitude / Longitude';
 	$dashboardSpeedZoomTXT = 'Вектор скорости - расстояние за';
 	$dashboardSpeedZoomMesTXT = 'минут';
+
 	$tracksHeaderTXT = 'Треки';
-	$downloadHeaderTXT = 'Загрузки';
-	$downloadZoomTXT = 'Масштаб';
-	$downloadJobListTXT = 'Поставлены загрузки';
-	
+
 	$measureHeaderTXT = 'Маршрут';
 	$routeControlsBeginTXT = 'Начать';
 	$routeControlsContinueTXT = 'Продолжить';
 	$routeControlsClearTXT = 'Стереть';
+	
+	$routesHeaderTXT = 'Места и маршруты';
+	
+	$downloadHeaderTXT = 'Загрузки';
+	$downloadZoomTXT = 'Масштаб';
+	$downloadJobListTXT = 'Поставлены загрузки';
 	
 	$settingsHeaderTXT = 'Параметры';
 	$settingsCursorTXT = 'Следование <br>за курсором';
@@ -90,14 +98,14 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 else {$mapsInfo = array(); $jobsInfo = array();}
  
 // Получаем список имён треков
-if($gpxDir) {
-	$trackInfo = glob("$gpxDir/*.gpx"); 	// gpxDir - из файла params.php
+if($trackDir) {
+	$trackInfo = glob("$trackDir/*.gpx"); 	// gpxDir - из файла params.php
 	array_walk($trackInfo,function (&$name,$ind) {
 			$name=basename($name,'.gpx'); 	// 
 		}); 	// 
 	//echo "trackInfo:<pre>"; print_r($trackInfo); echo "</pre>";
 	foreach($trackInfo as $trk){
-		$lastStr = tailCustom("$gpxDir/$trk.gpx"); 	// fcommon.php
+		$lastStr = tailCustom("$trackDir/$trk.gpx"); 	// fcommon.php
 		//echo "lastStr=".htmlspecialchars($lastStr)."; <br>\n";
 		if($lastStr AND ($lastStr <> '</gpx>')) { 	// трек не завершён
 			$currentTrackName = $trk;
@@ -106,6 +114,14 @@ if($gpxDir) {
 	}
 }
 else $trackInfo = array();
+// Получаем список имён маршрутов
+if($routeDir) {
+	$routeInfo = glob("$routeDir/*.gpx"); 	// routeDir - из файла params.php
+	array_walk($routeInfo,function (&$name,$ind) {
+			$name=basename($name); 	// 
+		}); 	// 
+}
+else $routeInfo = array();
 
 ?>
 <!DOCTYPE html >
@@ -126,7 +142,8 @@ else $trackInfo = array();
     <script src="leaflet-realtime/dist/leaflet-realtime.js"></script>
     <script src="Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
 <?php }?>
-<?php if($gpxDir) {?>
+<?php if($trackDir) {?>
+	<link rel="stylesheet" href="leaflet-omnivore/leaflet-omnivore.css" />
 	<script src="leaflet-omnivore/leaflet-omnivore.js"></script>
 <?php }?>    
 
@@ -134,6 +151,7 @@ else $trackInfo = array();
 	<link rel="stylesheet" href="leaflet-measure-path/leaflet-measure-path.css" />
 	<script src="leaflet-measure-path/leaflet-measure-path.js"></script>
 
+	<script src="image-to-base64/image-to-base64.min.js"></script> <!-- костыль для отсутствующего преобразования в base64 -->
 <!--    <script src="JSON-js/cycle.js"></script>--> <!-- костыль для JSON.stringify , которая используется для отладки -->
     <script src="fetch/fetch.js"></script> <!-- полифил для старых браузеров -->
     <script src="promise-polyfill/promise.js"></script> <!-- полифил для старых браузеров -->
@@ -160,11 +178,12 @@ html, body, #mapid {
 		<ul role="tablist">
 			<li id="home-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
 			<li id="dashboard-tab" <?php if(!$gpsanddataServerURI) echo 'class="disabled"';?>><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
-			<li id="tracks-tab" <?php if(!$gpxDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
-			<li id="download-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
-			<li id="measure-tab" ><a href="#measure" role="tab"><img src="img/measure.svg" alt="Create path" width="70%"></a></li>
+			<li id="tracks-tab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
+			<li id="measure-tab" ><a href="#measure" role="tab"><img src="img/route.svg" alt="Create route" width="70%"></a></li>
+			<li id="routes-tab" ><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
 		</ul>
 		<ul role="tablist">
+			<li id="download-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
 			<li><a href="#settings" role="tab"><img src="img/settings1.svg" alt="settings" width="70%"></a></li>
 		</ul>
 	</div>
@@ -224,7 +243,65 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 <?php
 foreach($trackInfo as $trackName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
 ?>
-					<li onClick='{selectTrack(event.currentTarget)}' <?php if($trackName == $currentTrackName) echo "id='currentTrackLi' class='currentTrackName' title='Current track'"; echo ">$trackName";?></li>
+					<li onClick='{selectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack)}' <?php if($trackName == $currentTrackName) echo "id='currentTrackLi' class='currentTrackName' title='Current track'"; echo ">$trackName";?></li>
+<?php
+}
+?>
+			</ul>
+		</div>
+		<!-- Расстояния -->
+		<div class="leaflet-sidebar-pane" id="measure">
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $measureHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<div id='routeControls' class="routeControls" style="padding: 1rem 0; text-align: center;">
+				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
+					onChange="
+						if(L.Browser.mobile && L.Browser.touch) var weight = 15; 	// мобильный браузер
+						else var weight = 7; 	// стационарный браузер
+						//window.LAYER = map.editTools.startPolyline(false,{showMeasurements: true,color: '#ccff00',weight: weight,opacity: 0.7});
+						window.LAYER = map.editTools.startPolyline(false,{showMeasurements: true,color: '#FDFF00',weight: weight,opacity: 0.5});
+                        //console.log(window.LAYER);
+				        window.LAYER.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
+						measuredPaths.push(window.LAYER);
+						routeEraseButton.disabled=false;
+					"
+				>
+				<label for="routeCreateButton"><?php echo $routeControlsBeginTXT;?></label>
+				<input type="radio" name="routeControl" class='R' id="routeContinueButton"
+					onChange="
+						map.once('editable:vertex:click', function f(e) { // это CancelableVertexEvent
+	                        //console.log(e);
+	                        //console.log(e.vertex);
+	                        e.cancel(); 	// прекратить дальнейшую обработку
+	                        //e.vertex.split();
+							e.vertex.continue();
+							routeCreateButton.checked=true;
+						});
+					"
+				>
+				<label for="routeContinueButton"><?php echo $routeControlsContinueTXT;?></label><br>
+				<br>
+				<input type="radio" name="routeControl" id="routeEraseButton"
+					onChange="
+						delShapes(true);
+						routeControlsDeSelect();
+						this.disabled=true;
+						routeContinueButton.disabled=true;
+					"
+				>
+				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
+			</div>
+		</div>
+		<!-- Места и маршруты -->
+		<div class="leaflet-sidebar-pane" id="routes">
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $routesHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<br>
+			<ul id="routeDisplayed">
+			</ul>
+			<ul id="routeList">
+<?php
+foreach($routeInfo as $routeName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
+?>
+					<li onClick='{selectTrack(event.currentTarget,routeList,routeDisplayed,displayRoute)}' <?php echo ">$routeName";?></li>
 <?php
 }
 ?>
@@ -280,48 +357,6 @@ foreach($jobsInfo as $jobName) { 	//
 				</ul>
 			</div>
 		</div>
-		<!-- Расстояния -->
-		<div class="leaflet-sidebar-pane" id="measure">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $measureHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div id='routeControls' class="routeControls" style="padding: 1rem 0; text-align: center;">
-				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
-					onChange="
-						if(L.Browser.mobile && L.Browser.touch) var weight = 15; 	// мобильный браузер
-						else var weight = 7; 	// стационарный браузер
-						//window.LAYER = map.editTools.startPolyline(false,{showMeasurements: true,color: '#ccff00',weight: weight,opacity: 0.7});
-						window.LAYER = map.editTools.startPolyline(false,{showMeasurements: true,color: '#FDFF00',weight: weight,opacity: 0.5});
-                        //console.log(window.LAYER);
-				        window.LAYER.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
-						measuredPaths.push(window.LAYER);
-						routeEraseButton.disabled=false;
-					"
-				>
-				<label for="routeCreateButton"><?php echo $routeControlsBeginTXT;?></label>
-				<input type="radio" name="routeControl" class='R' id="routeContinueButton"
-					onChange="
-						map.once('editable:vertex:click', function f(e) { // это CancelableVertexEvent
-	                        //console.log(e);
-	                        //console.log(e.vertex);
-	                        e.cancel(); 	// прекратить дальнейшую обработку
-	                        //e.vertex.split();
-							e.vertex.continue();
-							routeCreateButton.checked=true;
-						});
-					"
-				>
-				<label for="routeContinueButton"><?php echo $routeControlsContinueTXT;?></label><br>
-				<br>
-				<input type="radio" name="routeControl" id="routeEraseButton"
-					onChange="
-						delShapes(true);
-						routeControlsDeSelect();
-						this.disabled=true;
-						routeContinueButton.disabled=true;
-					"
-				>
-				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
-			</div>
-		</div>
 		<!-- Настройки -->
 		<div class="leaflet-sidebar-pane" id="settings">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $settingsHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
@@ -371,7 +406,8 @@ var userMoveMap = true; 	// флаг для отделения собствен�
 var downJob = false; 	// флаг - не создаётся ли задание на скачивание
 var velocityVectorLengthInMn = 10; 	// длинной в сколько минут пути рисуется линия скорости
 var currentTrackServerURI = '<?php echo $currentTrackServerURI;?>'; 	// адрес для подключения к сервису, отдающему сегменты текущего трека
-var gpxDirURI = '<?php echo $gpxDir;?>'; 	// адрес каталога с треками
+var trackDirURI = '<?php echo $trackDir;?>'; 	// адрес каталога с треками
+var routeDirURI = '<?php echo $routeDir;?>'; 	// адрес каталога с маршрутами
 var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущего (пишущегося сейчас) трека
 if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked = true; 	// показывать текущий трек вместе с курсором
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch'));
@@ -571,6 +607,7 @@ var realtime = L.realtime(gpsanddataServerURI, {
 	}        
 }).addTo(map);
 
+// Realtime периодическое обновление
 realtime.on('update', function(onUpdate) {
 	//alert(JSON.stringify(JSON.decycle(onUpdate.features)));
 	//alert(JSON.stringify(JSON.decycle(onUpdate.update)));

@@ -9,8 +9,8 @@ displayMap(mapname) Создаёт leaflet lauer с именем, содержа
 removeMap(mapname)
 
 selectTrack()
-displayTrack()
 deSelectTrack()
+displayTrack()
 updateCurrTrack()
 
 createDwnldJob()
@@ -119,45 +119,25 @@ window[mapname].remove();
 }
 
 // Функции выбора - удаления треков
-function selectTrack(node) { 	
-/* Выбор трека из списка имеющихся. Получим объект
-global window, map, trackDisplayed,  currentTrackName
+function selectTrack(node,trackList,trackDisplayed,displayTrack) { 	
+/* Выбор трека из списка имеющихся. 
+node - объект li, элемент списка имеющихся, который выбрали
+trackList - объект ul, список имеющихся
+trackDisplayed - объект ul, список выбранных
+displayTrack - функция показывания того, что соответствует выбранному элементу
+global deSelectTrack()
 */
 //alert(node.innerHTML);
 trackDisplayed.insertBefore(node,trackDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
-node.onclick = function(event){deSelectTrack(event.currentTarget);};
+node.onclick = function(event){deSelectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
 displayTrack(node.innerHTML); 	// создадим трек
 } // end function selectTrack
 
-function displayTrack(trackName) {
-/* рисует трек с именем trackName 
-global gpxDirURI, window, currentTrackName
-*/
-//alert(trackName);
-trackName=trackName.trim();
-if( window[trackName] && (trackName != currentTrackName)) window[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем
-else {
-	var xhr = new XMLHttpRequest();
-	//alert(gpxDirURI+'/'+trackName+'.gpx');
-	xhr.open('GET', encodeURI(gpxDirURI+'/'+trackName+'.gpx'), true); 	// Подготовим асинхронный запрос
-	xhr.send();
-	xhr.onreadystatechange = function() { // trackName - внешняя
-		if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
-		if (this.status != 200) { 	// запрос завершлся, но неудачно
-			alert('На запрос трека сервер ответил '+this.status);
-			return; 	// что-то не то с сервером
-		}
-		//alert('|'+this.responseText.slice(-10)+'|');
-		if(this.responseText.slice(-10).indexOf('</gpx>') == -1)	window[trackName] = omnivore.gpx.parse(this.responseText + '  </trkseg>\n </trk>\n</gpx>');
-		else window[trackName] = omnivore.gpx.parse(this.responseText); 	// responseXML иногда почему-то кривой
-		window[trackName].addTo(map); 	// нарисуем его на карте
-	}
-}
-} // end function createTrack
-
-function deSelectTrack(node) {
+function deSelectTrack(node,trackList,trackDisplayed,displayTrack) {
 /* Прекращение показа трека, и возврат его в список имеющихся. Получим объект
-global trackList
+node - объект li, элемент списка показываемых, который выбрали для непоказывания
+trackList - объект ul, список имеющихся, куда надо вернуть node
+global selectTrack()
 */
 //alert(node.innerHTML);
 var li = null;
@@ -171,12 +151,54 @@ for (var i = 0; i < trackList.children.length; i++) { 	// для каждого 
 	li = null;
 }
 trackList.insertBefore(node,li); 	// перенесём перед тем, на котором обломался цикл, или перед концом
-node.onclick = function(event){selectTrack(event.currentTarget);};
+node.onclick = function(event){selectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
 removeMap(node.innerHTML);
 }
 
+function displayTrack(trackName) {
+/* рисует трек с именем trackName 
+global trackDirURI, window, currentTrackName
+*/
+//alert(trackName);
+trackName=trackName.trim();
+if( window[trackName] && (trackName != currentTrackName)) window[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем
+else {
+	var xhr = new XMLHttpRequest();
+	//alert(trackDirURI+'/'+trackName+'.gpx');
+	xhr.open('GET', encodeURI(trackDirURI+'/'+trackName+'.gpx'), true); 	// Подготовим асинхронный запрос
+	xhr.send();
+	xhr.onreadystatechange = function() { // trackName - внешняя
+		if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
+		if (this.status != 200) { 	// запрос завершлся, но неудачно
+			alert('На запрос трека сервер ответил '+this.status);
+			return; 	// что-то не то с сервером
+		}
+		//alert('|'+this.responseText.slice(-10)+'|');
+		if(this.responseText.slice(-10).indexOf('</gpx>') == -1)	window[trackName] = omnivore.gpx.parse(this.responseText + '  </trkseg>\n </trk>\n</gpx>'); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
+		else window[trackName] = omnivore.gpx.parse(this.responseText); 	// responseXML иногда почему-то кривой
+		window[trackName].addTo(map); 	// нарисуем его на карте
+	}
+}
+} // end function displayTrack
+
+function displayRoute(routeName) {
+/* рисует маршрут или места с именем routeName 
+global routeDirURI map window
+*/
+if( window[routeName]) window[routeName].addTo(map); 	// нарисуем его на карте. 
+else {
+	var routeType =  routeName.slice((routeName.lastIndexOf(".") - 1 >>> 0) + 2).toLowerCase(); 	// https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
+	switch(routeType) {
+	case 'gpx':
+		window[routeName] = omnivore.gpx(routeDirURI+'/'+routeName);
+		window[routeName].addTo(map);
+	}
+}
+} // end function displayRoute
+
 function updateCurrTrack() {
 /* Текущий трек дорсовывается по асинхронным запросам к серверу
+От сервера получается точка в формате gpx - структура типа trkpt
 global window currentTrackServerURI, currentTrackName
 */
 var xhr = new XMLHttpRequest();
