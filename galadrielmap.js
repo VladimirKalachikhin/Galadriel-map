@@ -192,6 +192,11 @@ else {
 	case 'gpx':
 		window[routeName] = omnivore.gpx(routeDirURI+'/'+routeName);
 		window[routeName].addTo(map);
+		break;
+	case 'kml':
+		window[routeName] = omnivore.kml(routeDirURI+'/'+routeName);
+		window[routeName].addTo(map);
+		break;
 	}
 }
 } // end function displayRoute

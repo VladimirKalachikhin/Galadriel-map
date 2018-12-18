@@ -37,9 +37,10 @@ Paths and other are set and describe in _params.php_
 Create local copy of dependences and/or edit _index.php_
 
 ### Thanks
-* [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to non well-formed gpx files.
+* [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to show markers and non well-formed gpx files.
 * [Metrize Icons by Alessio Atzeni](https://icon-icons.com/pack/Metrize-Icons/1130) for icons.
 * [Typicons by Stephen Hutchings](https://icon-icons.com/pack/Typicons/1144) for icons.
+* [Map Icons Collection](https://mapicons.mapsmarker.com/) for icons.
 * [On/Off FlipSwitch](https://proto.io/freebies/onoff/)
 
 ### gpsd

@@ -98,6 +98,7 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 else {$mapsInfo = array(); $jobsInfo = array();}
  
 // Получаем список имён треков
+$trackInfo = array();
 if($trackDir) {
 	$trackInfo = glob("$trackDir/*.gpx"); 	// gpxDir - из файла params.php
 	array_walk($trackInfo,function (&$name,$ind) {
@@ -113,15 +114,16 @@ if($trackDir) {
 		}
 	}
 }
-else $trackInfo = array();
 // Получаем список имён маршрутов
+$routeInfo = array();
 if($routeDir) {
 	$routeInfo = glob("$routeDir/*.gpx"); 	// routeDir - из файла params.php
+	$routeInfo = array_merge($routeInfo,glob("$routeDir/*.kml"));
 	array_walk($routeInfo,function (&$name,$ind) {
 			$name=basename($name); 	// 
 		}); 	// 
+	sort($routeInfo);
 }
-else $routeInfo = array();
 
 ?>
 <!DOCTYPE html >
@@ -142,16 +144,15 @@ else $routeInfo = array();
     <script src="leaflet-realtime/dist/leaflet-realtime.js"></script>
     <script src="Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
 <?php }?>
-<?php if($trackDir) {?>
-	<link rel="stylesheet" href="leaflet-omnivore/leaflet-omnivore.css" />
-	<script src="leaflet-omnivore/leaflet-omnivore.js"></script>
+<?php if($trackDir OR $routeDir) {?>
+	<link rel="stylesheet" href="leaflet-omnivorePATCHED/leaflet-omnivore.css" />
+	<script src="leaflet-omnivorePATCHED/leaflet-omnivore.js"></script>
 <?php }?>    
 
 	<script src="Leaflet.Editable/src/Leaflet.Editable.js"></script>
 	<link rel="stylesheet" href="leaflet-measure-path/leaflet-measure-path.css" />
 	<script src="leaflet-measure-path/leaflet-measure-path.js"></script>
 
-	<script src="image-to-base64/image-to-base64.min.js"></script> <!-- костыль для отсутствующего преобразования в base64 -->
 <!--    <script src="JSON-js/cycle.js"></script>--> <!-- костыль для JSON.stringify , которая используется для отладки -->
     <script src="fetch/fetch.js"></script> <!-- полифил для старых браузеров -->
     <script src="promise-polyfill/promise.js"></script> <!-- полифил для старых браузеров -->
@@ -180,7 +181,7 @@ html, body, #mapid {
 			<li id="dashboard-tab" <?php if(!$gpsanddataServerURI) echo 'class="disabled"';?>><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
 			<li id="tracks-tab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
 			<li id="measure-tab" ><a href="#measure" role="tab"><img src="img/route.svg" alt="Create route" width="70%"></a></li>
-			<li id="routes-tab" ><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
+			<li id="routes-tab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
 		</ul>
 		<ul role="tablist">
 			<li id="download-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
