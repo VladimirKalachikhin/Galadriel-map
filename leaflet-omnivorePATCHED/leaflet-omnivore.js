@@ -219,15 +219,24 @@ return layer;
 } // end function gpxParse
 
 function getMarkerToPoint(geoJsonPoint, latlng) { 	//  https://leafletjs.com/reference-1.3.4.html#geojson 
+// Функция, которая в latlng рисует маркер по сведениям из geoJsonPoint
+// обычно вызывается как свойство layer.options.pointToLayer
+// В geoJsonPoint.properties собираются:
+// 'name', 'cmt', 'desc', 'author', 'copyright', 'link', 'sym', 'type', 'time', 'keywords' в function getProperties(node) для gpx
+// 'name' 'icon' 'description' в function getPlacemark(root) для kml
 //console.log(geoJsonPoint);
+
+// Сам маркер - Marker
 var marker = L.marker(latlng, { 	// маркер для этой точки
 });
 //console.log(marker);
+
+// Значёк - Icon
 //alert('icon' in marker.options);
 var iconNames = []; 	// возможные имена значков
-if(geoJsonPoint.properties.sym) iconNames.push(geoJsonPoint.properties.sym.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx sym attribyte
-if(geoJsonPoint.properties.type) iconNames.push(geoJsonPoint.properties.type.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx type attribyte
-if(geoJsonPoint.properties.icon) {
+if(geoJsonPoint.properties.sym) iconNames.push(geoJsonPoint.properties.sym.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx sym (symbol name) attribyte
+if(geoJsonPoint.properties.type) iconNames.push(geoJsonPoint.properties.type.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx type (classification) attribyte
+if(geoJsonPoint.properties.icon) { 	// kml Icon
 	//console.log('"'+geoJsonPoint.properties.icon.textContent.trim()+'"');
 	var iNm = geoJsonPoint.properties.icon.textContent.trim();
 	iNm = iNm.substring(iNm.lastIndexOf('/')+1);
@@ -239,15 +248,49 @@ if(geoJsonPoint.properties.icon) {
 iconServer.setIconCustomIcon(marker,iconNames); 	// заменить в marker icon на нужный асинхронно
 //console.log(iconServer.iconsByType);
 //console.log(marker);
-marker.bindTooltip(geoJsonPoint.properties.name,{ 	// подпись
-	permanent: true,  	// всегда показывать
-	//direction: 'auto', 
-	direction: 'left', 
-	//offset: [-16,-25],
-	className: 'wpTooltip', 	// css class
-	opacity: 1
-});
-//}).openTooltip(); 	// и перерисуем подпись под умолчальный маркер. Под другие маркеры перерисуем потом. Но это бессмысленно - она не перерисовывается
+
+// Подпись - Tooltip
+if(geoJsonPoint.properties.name) {
+	marker.bindTooltip(geoJsonPoint.properties.name,{ 	
+		permanent: true,  	// всегда показывать
+		//direction: 'auto', 
+		direction: 'left', 
+		//offset: [-16,-25],
+		className: 'wpTooltip', 	// css class
+		opacity: 1
+	});
+	//}).openTooltip(); 	// и перерисуем подпись под умолчальный маркер. Под другие маркеры перерисуем потом. Но это бессмысленно - она не перерисовывается
+}
+
+// Информация о - PopUp
+//console.log(geoJsonPoint.properties.link);
+var popUpHTML = '';
+var camImgPath = thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/icons/cam.svg";
+if(geoJsonPoint.properties.cmt) popUpHTML = "<p>"+geoJsonPoint.properties.cmt+"</p>"+popUpHTML;
+if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc+"</p>"; 	// gpx description
+if(geoJsonPoint.properties.description) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.description+"</p>"; 	// kml description
+if(geoJsonPoint.properties.link) { 	// имеются ссылки
+	for(var i=0; i<geoJsonPoint.properties.link.length; i++) { 	// для каждой ссылки
+		var linkHTML = '<a href="'+geoJsonPoint.properties.link[i].attributes.href.value+'" target=”_blank” >';
+		//console.log(geoJsonPoint.properties.link[i].getElementsByTagName('type')[0].textContent);
+		var text = ' ',textAttr;
+		if( textAttr = geoJsonPoint.properties.link[i].getElementsByTagName('text')[0]) text = textAttr.textContent+'<br>';
+		if(geoJsonPoint.properties.link[i].getElementsByTagName('type')[0]) {
+			if( geoJsonPoint.properties.link[i].getElementsByTagName('type')[0].textContent.indexOf("image") != -1) { 	// если картинка
+				linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 0.5rem;"></a>'+text;
+			}
+		}
+		else {
+			linkHTML = linkHTML + text + '</a><br>';
+		}
+		popUpHTML = popUpHTML+linkHTML;
+	}	
+}
+if(popUpHTML) {
+	if(geoJsonPoint.properties.name) popUpHTML = "<b>"+geoJsonPoint.properties.name+"</b><br>"+popUpHTML;
+	marker.bindPopup(popUpHTML+'<br>');
+}
+
 return marker;
 } // end function getMarkerToPoint
 
@@ -1029,7 +1072,7 @@ toGeoJSON = (function() {
                     coordTimes: coordTimes
                 };
             }
-            function getPlacemark(root) {
+            function getPlacemark(root) { 	// root - the kml Placemark object
                 var geomsAndTimes = getGeometry(root), i, properties = {},
                     name = nodeVal(get1(root, 'name')),
                     styleUrl = nodeVal(get1(root, 'styleUrl')),
@@ -1223,7 +1266,7 @@ toGeoJSON = (function() {
                 if (line.times.length) routeObj.geometry.times = line.times;
                 return routeObj;
             }
-            function getPoint(node) {
+            function getPoint(node) { 	// получение свойств точки. wps only?
                 var prop = getProperties(node);
                 prop.sym = nodeVal(get1(node, 'sym'));
                 return {
@@ -1236,11 +1279,15 @@ toGeoJSON = (function() {
                 };
             }
             function getProperties(node) {
-                var meta = ['name', 'cmt', 'desc', 'author', 'copyright', 'link', 'sym', 'type', 'time', 'keywords'], 	// список свойств, которые будем получать
+                var meta = ['name', 'cmt', 'desc', 'author', 'copyright', 'sym', 'type', 'time', 'keywords'], 	// список уникальных свойств, которые будем получать
                     prop = {}, 	// массив свойств узла - путевой точки, маршрута, точки трека, сегмента или трека. Но не metadata.Однако, в списке meta - атрибуты из блока metadata
                     k;
                 for (k = 0; k < meta.length; k++) {
-                    prop[meta[k]] = nodeVal(get1(node, meta[k]));
+                    prop[meta[k]] = nodeVal(get1(node, meta[k])); 	// get the content of a text node, только одно (первое) значение свойства
+                }
+                meta=['link']; 	 	// список неуникальных и/или составных свойств, которые будем получать
+                for (k = 0; k < meta.length; k++) {
+                	prop[meta[k]] = node.getElementsByTagName(meta[k]);
                 }
                 return clean(prop); 	// убрать пустые значения
             }
