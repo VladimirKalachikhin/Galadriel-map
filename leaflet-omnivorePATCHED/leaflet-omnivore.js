@@ -281,6 +281,7 @@ if(geoJsonPoint.properties.link) { 	// имеются ссылки
 			}
 		}
 		else {
+			if(!text) text = 'External link';
 			linkHTML = linkHTML + text + '</a><br>';
 		}
 		popUpHTML = popUpHTML+linkHTML;

@@ -311,7 +311,14 @@ return edEnShapesCntr;
 }	// end function delShapes
 
 function tooggleEditRoute(e) {
+/* Переключает режим редактирования
+Обычно обработчик клика по линии
+*/
 //console.log(e.target);
+
+currentRoute = e.target; 	// сделаем объект, по которому щёлкнули, текущим
+if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
+
 e.target.toggleEdit();
 if(e.target.editEnabled()) { 	//  если включено редактирование
 	routeEraseButton.disabled=false; 	// - сделать доступной кнопку Удалить
@@ -324,7 +331,7 @@ else {
 		routeContinueButton.disabled=true; 	//  - сделать доступной кнопку Продолжить
 	}
 }
-}
+} // end function tooggleEditRoute
 
 function doSaveMeasuredPaths() {
 /* сохранение в cookie отображаемых на карте маршрутов
@@ -363,5 +370,75 @@ if(RestoreMeasuredPaths) {
 }
 }	// end function doRestoreMeasuredPaths
 
+function saveGPX() {
+/* Сохраняет на сервере маршрут из объекта currentRoute
+*/
+if(!currentRoute) { 	// глобальная переменная, должна содержать объект Editable, присваивается в tooggleEditRoute, типа - по щелчку на маршруте
+	routeSaveMessage.innerHTML = 'Error - no route selected.'
+	return;
+}
+var route = currentRoute.toGeoJSON(); 	// сделаем из Editable объект geoJSON
+if(route.geometry.type != 'LineString') { 	// это не линия
+	routeSaveMessage.innerHTML = 'Error - omly line may be saved.'
+	return;
+}
+if(!routeSaveName.value) routeSaveName.value = new Date().toJSON(); 	// это будет name
+if(!route.properties.name) route.properties.name = routeSaveName.value;
+var name = route.properties.name;
+if(!route.properties.desc && routeSaveDescr.value) route.properties.desc = routeSaveDescr.value;
+//console.log(route);
+route = toGPX(route); 	// сделаем gpx маршрут
+//console.log(route);
 
+var xhr = new XMLHttpRequest();
+xhr.open('POST', 'saveGPX.php', true); 	// Подготовим асинхронный запрос
+xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+xhr.send('name=' + encodeURIComponent(name) + '&gpx=' + encodeURIComponent(route));
+xhr.onreadystatechange = function() { // 
+	if (this.readyState != 4) return; 	// запрос ещё не завершился
+	if (this.status != 200) return; 	// что-то не то с сервером
+	routeSaveMessage.innerHTML = this.responseText;
+}
+} // end function createGPX()
 
+function toGPX(geoJSON,createTrk) {
+/*
+*/
+var gpxtrack = `<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1"  creator="GaladrielMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+`;
+if(createTrk) gpxtrack += '	<trk>\n'; 	// рисуем трек
+else gpxtrack += '	<rte>\n'; 	// рисуем маршрут
+
+if(geoJSON.properties.name) gpxtrack += '		<name>' + geoJSON.properties.name.encodeHTML() + '</name>\n';
+if(geoJSON.properties.cmt) gpxtrack += '		<cmt>' + geoJSON.properties.cmt.encodeHTML() + '</cmt>\n';
+if(geoJSON.properties.desc) gpxtrack += '		<desc>' + geoJSON.properties.desc.encodeHTML() + '</desc>\n';
+if(geoJSON.properties.src) gpxtrack += '		<src>' + geoJSON.properties.src + '</src>\n';
+if(geoJSON.properties.link) gpxtrack += '		<link>' + geoJSON.properties.link + '</link>\n';
+if(geoJSON.properties.number) gpxtrack += '		<number>' + geoJSON.properties.number + '</number>\n';
+if(geoJSON.properties.type) gpxtrack += '		<type>' + geoJSON.properties.type + '</type>\n';
+if(geoJSON.properties.extensions) gpxtrack += '		<extensions>' + geoJSON.properties.extensions + '</extensions>\n';
+
+if(createTrk) gpxtrack += '		<trkseg>\n'; 	// рисуем трек
+for (var i = 0; i < geoJSON.geometry.coordinates.length; i++) {
+	if(createTrk) gpxtrack += '			<trkpt '; 	// рисуем трек
+	else gpxtrack += '		<rtept '; 	// рисуем маршрут
+	gpxtrack += 'lat="' + geoJSON.geometry.coordinates[i][0] + '" lon="' + geoJSON.geometry.coordinates[i][1] + '">';
+	if(createTrk) gpxtrack += '</trkpt>\n'; 	// рисуем трек
+	else gpxtrack += '</rtept>\n'; 	// рисуем маршрут
+}
+if(createTrk) gpxtrack += '		</trkseg>\n'; 	// рисуем трек
+
+if(createTrk) gpxtrack += '	</trk>\n'; 	// рисуем трек
+else gpxtrack += '	</rte>\n'; 	// рисуем маршрут
+gpxtrack += '</gpx>';
+return gpxtrack;
+} // end function toGPX
+    
+String.prototype.encodeHTML = function () {
+    return this.replace(/&/g, '&amp;')
+               .replace(/</g, '&lt;')
+               .replace(/>/g, '&gt;')
+               .replace(/"/g, '&quot;')
+               .replace(/'/g, '&apos;');
+};

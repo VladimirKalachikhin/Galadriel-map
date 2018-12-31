@@ -22,6 +22,9 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$routeControlsBeginTXT = 'Begin';
 	$routeControlsContinueTXT = 'Continue';
 	$routeControlsClearTXT = 'Erase';
+	$routeSaveTXT = 'Label';
+	$routeSaveTitle = 'Save to server';
+	$routeSaveDescrTXT = 'Description to route';
 	
 	$routesHeaderTXT = 'Tracks and POI';
 	
@@ -56,6 +59,9 @@ else {
 	$routeControlsBeginTXT = 'Начать';
 	$routeControlsContinueTXT = 'Продолжить';
 	$routeControlsClearTXT = 'Стереть';
+	$routeSaveTXT = 'Название';
+	$routeSaveTitle = 'Сохранить на сервере';
+	$routeSaveDescrTXT = 'Описание маршрута';
 	
 	$routesHeaderTXT = 'Места и маршруты';
 	
@@ -120,7 +126,8 @@ if($routeDir) {
 	$routeInfo = glob("$routeDir/*.gpx"); 	// routeDir - из файла params.php
 	$routeInfo = array_merge($routeInfo,glob("$routeDir/*.kml"));
 	array_walk($routeInfo,function (&$name,$ind) {
-			$name=basename($name); 	// 
+			//$name=basename($name); 	// 
+			$name=end(explode('/',$name)); 	// basename не работает с неанглийскими буквами!!!!
 		}); 	// 
 	sort($routeInfo);
 }
@@ -264,6 +271,8 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				        window.LAYER.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
 						measuredPaths.push(window.LAYER);
 						routeEraseButton.disabled=false;
+						currentRoute = window.LAYER; 	// сделаем объект, по которому щёлкнули, текущим
+						if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
 					"
 				>
 				<label for="routeCreateButton"><?php echo $routeControlsBeginTXT;?></label>
@@ -291,6 +300,13 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				>
 				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
 			</div>
+			<div style="width:100%; padding: 1rem 0; text-align: center;">
+				<h2><?php echo $routeSaveTitle;?></h2>
+				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" size='255' style='width:95%;font-size:150%;'>
+				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='7' cols='255' style='width:93%;padding: 0.5rem 3%;'></textarea>
+				<button onClick='saveGPX();' type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
+				<div id='routeSaveMessage'></div>
+			</div>			
 		</div>
 		<!-- Места и маршруты -->
 		<div class="leaflet-sidebar-pane" id="routes">
@@ -402,7 +418,7 @@ var noFollowToCursor = false; 	// карта никогда не следует 
 var CurrnoFollowToCursor = 1; 	// глобальная переменная для сохранения состояния
 var followPause = 10 * 1000; 	// пауза следования карты за курсором, когда карту подвинули руками, микросекунд
 var savePositionEvery = 30 * 1000; 	// будем сохранять положение каждые микросекунд. В настоящее время только кладётся кука
-var followPaused = null; 	// объект таймера, который восстанавливает следование курсору
+var followPaused; 	// объект таймера, который восстанавливает следование курсору
 var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
 var downJob = false; 	// флаг - не создаётся ли задание на скачивание
 var velocityVectorLengthInMn = 10; 	// длинной в сколько минут пути рисуется линия скорости
@@ -412,6 +428,7 @@ var routeDirURI = '<?php echo $routeDir;?>'; 	// адрес каталога с 
 var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущего (пишущегося сейчас) трека
 if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked = true; 	// показывать текущий трек вместе с курсором
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch'));
+var currentRoute; 	// объект Editable, по которому щёлкнули. Типа, текущий.
 // Определим карту
 var map = L.map('mapid', {
 	center: startCenter,
