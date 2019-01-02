@@ -26,7 +26,7 @@ module.exports.kml.parse = kmlParse;
 module.exports.wkt = wktLoad;
 module.exports.wkt.parse = wktParse;
 
-function addData(l, d) {
+function addData(l, d) { 	// lauer, data
 //console.log(d);
     if ('addData' in l) l.addData(d);
     if ('setGeoJSON' in l) l.setGeoJSON(d);
@@ -207,14 +207,20 @@ function csvParse(csv, options, layer) {
 
 function gpxParse(gpx, options, layer) {
 var xml = parseXML(gpx);
-if (!xml) return layer.fire('error', {
-    error: 'Could not parse GPX'
-});
+if (!xml) {
+	console.log(xml);
+	return layer.fire('error', {
+	    error: 'Could not parse GPX'
+	});
+}
 layer = layer || L.geoJson();
-//console.log(layer);
 layer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
+layer.options.onEachFeature = getPopOpToLine; 	// функция, вызываемая для каждой feature при её создании
 var geojson = toGeoJSON.gpx(xml);
-addData(layer, geojson);
+//'name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords' в function getProperties(node) для gpx
+//console.log(geojson);
+addData(layer, geojson); 	// добавляем geojson в layer
+//console.log(layer);
 return layer;
 } // end function gpxParse
 
@@ -222,7 +228,7 @@ function getMarkerToPoint(geoJsonPoint, latlng) { 	//  https://leafletjs.com/ref
 // Функция, которая в latlng рисует маркер по сведениям из geoJsonPoint
 // обычно вызывается как свойство layer.options.pointToLayer
 // В geoJsonPoint.properties собираются:
-// 'name', 'cmt', 'desc', 'author', 'copyright', 'link', 'sym', 'type', 'time', 'keywords' в function getProperties(node) для gpx
+//'name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords' в function getProperties(node) для gpx
 // 'name' 'icon' 'description' в function getPlacemark(root) для kml
 //console.log(geoJsonPoint);
 
@@ -265,28 +271,10 @@ if(geoJsonPoint.properties.name) {
 // Информация о - PopUp
 //console.log(geoJsonPoint.properties.link);
 var popUpHTML = '';
-var camImgPath = thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/icons/cam.svg";
 if(geoJsonPoint.properties.cmt) popUpHTML = "<p>"+geoJsonPoint.properties.cmt+"</p>"+popUpHTML;
-if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc+"</p>"; 	// gpx description
-if(geoJsonPoint.properties.description) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.description+"</p>"; 	// kml description
-if(geoJsonPoint.properties.link) { 	// имеются ссылки
-	for(var i=0; i<geoJsonPoint.properties.link.length; i++) { 	// для каждой ссылки
-		var linkHTML = '<a href="'+geoJsonPoint.properties.link[i].attributes.href.value+'" target=”_blank” >';
-		//console.log(geoJsonPoint.properties.link[i].getElementsByTagName('type')[0].textContent);
-		var text = ' ',textAttr;
-		if( textAttr = geoJsonPoint.properties.link[i].getElementsByTagName('text')[0]) text = textAttr.textContent+'<br>';
-		if(geoJsonPoint.properties.link[i].getElementsByTagName('type')[0]) {
-			if( geoJsonPoint.properties.link[i].getElementsByTagName('type')[0].textContent.indexOf("image") != -1) { 	// если картинка
-				linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 0.5rem;"></a>'+text;
-			}
-		}
-		else {
-			if(!text) text = 'External link';
-			linkHTML = linkHTML + text + '</a><br>';
-		}
-		popUpHTML = popUpHTML+linkHTML;
-	}	
-}
+if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
+if(geoJsonPoint.properties.description) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
+popUpHTML += getLinksHTML(geoJsonPoint); 	// приклеим ссылки
 if(popUpHTML) {
 	if(geoJsonPoint.properties.name) popUpHTML = "<b>"+geoJsonPoint.properties.name+"</b><br>"+popUpHTML;
 	marker.bindPopup(popUpHTML+'<br>');
@@ -294,6 +282,65 @@ if(popUpHTML) {
 
 return marker;
 } // end function getMarkerToPoint
+
+function getLinksHTML(feature) {
+/* Возвращает строку,которуюможно было бы показать в PopUp, 
+из атрибутов link в feature. Оформляет ссылки как может.
+Пытается обнаружить ссылки на картинки и показывает для них фотоаппаратик.
+*/
+var camImgPath = thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/icons/cam.svg";
+var popUpHTML = '';
+if(!feature.properties.link) return popUpHTML;
+// имеются ссылки
+//console.log(feature.properties.link);
+for(var i=0; i<feature.properties.link.length; i++) { 	// для каждой ссылки
+	if(feature.properties.link[i].attributes.length) 		var link = feature.properties.link[i].attributes.href.value.trim();
+	else 	var link = feature.properties.link[i].innerHTML.trim();
+	var linkHTML = '<a href="'+link+'" target=”_blank” >';
+	var text = ' ',textAttr;
+	if( textAttr = feature.properties.link[i].getElementsByTagName('text')[0]) text = textAttr.textContent+'<br>'; 	// есть атрибут text
+	if(feature.properties.link[i].getElementsByTagName('type')[0]) { 	// есть атрибут type
+		if( feature.properties.link[i].getElementsByTagName('type')[0].textContent.indexOf("image") != -1) { 	// если картинка
+			linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 0.5rem;"></a>'+text;
+		}
+		else { 	// неизвестный тип
+			if(!text) text = 'External link';
+			linkHTML = linkHTML + text + '</a><br>';
+		}
+	}
+	else { 	// нет атрибута type
+		if((link.slice(-5).toLowerCase()=='.jpeg') || (link.slice(-4).toLowerCase()=='.jpg') || (link.slice(-4).toLowerCase()=='.png') || (link.slice(-4).toLowerCase()=='.svg') || (link.slice(-4).toLowerCase()=='.tif') || (link.slice(-5).toLowerCase()=='.tiff')) {
+			linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 0.5rem;"></a>'+text;
+		}
+		else { 	// непонятная ссылка
+			if(!text) text = 'External link';
+			linkHTML = linkHTML + text + '</a><br>';
+		}
+	}
+	popUpHTML = popUpHTML+linkHTML;
+}	
+return popUpHTML;
+};
+
+function getPopOpToLine(feature, layer) {
+/* A Function that will be called once for each created Feature
+*/
+//console.log(feature);
+if(feature.properties.isRoute) { 	// это маршрут.
+	layer.options.showMeasurements=true;
+	layer.options.color = '#FDFF00';
+}
+var popUpHTML = '';
+if(feature.properties.number) popUpHTML = " <span style='font-size:120%;'>"+feature.properties.number+"</span> "+popUpHTML;
+if(feature.properties.cmt) popUpHTML += "<p>"+feature.properties.cmt+"</p>";
+if(feature.properties.desc) popUpHTML += "<p>"+feature.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
+if(feature.properties.description) popUpHTML += "<p>"+feature.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
+popUpHTML += getLinksHTML(feature); 	// приклеим ссылки
+if(popUpHTML) {
+	if(feature.properties.name) popUpHTML = "<b>"+feature.properties.name+"</b> "+popUpHTML;
+	layer.bindPopup(popUpHTML+'<br>');
+}
+} // end function getPopOpToLine
 
 // определение имени файла этого скрипта
 var scripts = document.getElementsByTagName('script');
@@ -1180,6 +1227,7 @@ toGeoJSON = (function() {
             var    routes = get(doc, 'rte');
             for (i = 0; i < routes.length; i++) {
                 feature = getRoute(routes[i]);
+				//console.log(feature); 	// 
                 if (feature) gj.features.push(feature);
             }
             var    waypoints = get(doc, 'wpt');
@@ -1240,7 +1288,6 @@ toGeoJSON = (function() {
                     if (line.line) track.push(line.line);
                     if (line.times.length) times.push(line.times);
                 }
-                //alert(track);
                 if (track.length === 0) return;
                 var properties = getProperties(node);
                 if (times.length) properties.coordTimes = track.length === 1 ? times[0] : times;
@@ -1261,9 +1308,10 @@ toGeoJSON = (function() {
                     properties: getProperties(node),
                     geometry: {
                         type: 'LineString',
-                        coordinates: line
+                        coordinates: line.line
                     }
                 };
+                routeObj.properties.isRoute = true;
                 if (line.times.length) routeObj.geometry.times = line.times;
                 return routeObj;
             }
@@ -1280,7 +1328,7 @@ toGeoJSON = (function() {
                 };
             }
             function getProperties(node) {
-                var meta = ['name', 'cmt', 'desc', 'author', 'copyright', 'sym', 'type', 'time', 'keywords'], 	// список уникальных свойств, которые будем получать
+                var meta = ['name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords'], 	// список уникальных свойств, которые будем получать
                     prop = {}, 	// массив свойств узла - путевой точки, маршрута, точки трека, сегмента или трека. Но не metadata.Однако, в списке meta - атрибуты из блока metadata
                     k;
                 for (k = 0; k < meta.length; k++) {

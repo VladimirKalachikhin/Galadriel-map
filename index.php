@@ -87,7 +87,8 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 	$mapsInfo = glob("$mapsInfo/*.php");
 	//echo ":<pre>"; print_r($mapsInfo); echo "</pre>";
 	array_walk($mapsInfo,function (&$name,$ind) {
-			$name=basename($name,'.php'); 	//
+			//$name=basename($name,'.php'); 	//
+			$name=explode('.php',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
 		}); 	// 
 // Получаем список выполняющихся заданий на скачивание
 	if($jobsDir[0]!='/') $jobsDir = "$tileCachePath/$jobsDir";	//  сделаем путь абсолютным, потому что jobsDir - из конфига GaladrielCache
@@ -108,7 +109,8 @@ $trackInfo = array();
 if($trackDir) {
 	$trackInfo = glob("$trackDir/*.gpx"); 	// gpxDir - из файла params.php
 	array_walk($trackInfo,function (&$name,$ind) {
-			$name=basename($name,'.gpx'); 	// 
+			//$name=basename($name,'.gpx'); 	// 
+			$name=explode('.gpx',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
 		}); 	// 
 	//echo "trackInfo:<pre>"; print_r($trackInfo); echo "</pre>";
 	foreach($trackInfo as $trk){

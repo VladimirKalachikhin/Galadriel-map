@@ -423,7 +423,7 @@ if(createTrk) gpxtrack += '		<trkseg>\n'; 	// рисуем трек
 for (var i = 0; i < geoJSON.geometry.coordinates.length; i++) {
 	if(createTrk) gpxtrack += '			<trkpt '; 	// рисуем трек
 	else gpxtrack += '		<rtept '; 	// рисуем маршрут
-	gpxtrack += 'lat="' + geoJSON.geometry.coordinates[i][0] + '" lon="' + geoJSON.geometry.coordinates[i][1] + '">';
+	gpxtrack += 'lat="' + geoJSON.geometry.coordinates[i][1] + '" lon="' + geoJSON.geometry.coordinates[i][0] + '">';
 	if(createTrk) gpxtrack += '</trkpt>\n'; 	// рисуем трек
 	else gpxtrack += '</rtept>\n'; 	// рисуем маршрут
 }
