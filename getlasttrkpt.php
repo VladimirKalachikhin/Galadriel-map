@@ -1,7 +1,8 @@
 <?php session_start();
-/* Отдаёт последнюю структуру типа trkpt из незакрытого файла gpx
+/* This is a current track server. Read gpx from gpxlogger directory.
+Отдаёт последнюю структуру типа trkpt из незакрытого файла gpx
 Имя файла без расширения передаётся в первом параметре или в currTrackName
-Файл ищется в $gpxDir из params.php
+Файл ищется в $trackDir из params.php
 Если файл закрыт, или какие-то проблемы с последней точкой - не отдаёт ничего
 */
 
@@ -12,12 +13,12 @@ $selfPath = $path_parts['dirname'];
 require_once('fcommon.php');
 require('params.php'); 	// пути и параметры
 
-if($gpxDir[0]!='/') $gpxDir = "$selfPath/$gpxDir";	// если путь относительный - будет абсолютный
+if($trackDir[0]!='/') $trackDir = "$selfPath/$trackDir";	// если путь относительный - будет абсолютный
 $currTrackFileName = $_REQUEST['currTrackName'];
 if(! $currTrackFileName) $currTrackFileName = $argv[1];
 if(! $currTrackFileName) goto END;
-$currTrackFileName = "$gpxDir/$currTrackFileName.gpx";
-//$currTrackFileName = "$gpxDir/07-05-2018_003913.gpx";
+$currTrackFileName = "$trackDir/$currTrackFileName.gpx";
+//$currTrackFileName = "$trackDir/07-05-2018_003913.gpx";
 //echo "currTrackFileName=$currTrackFileName; <br>\n";
 
 $tailStrings = 5 * 20; 	// сколько строк заведомо включает последнюю trkpt. Спецификация говорит, что trkpt может иметь 20 строк

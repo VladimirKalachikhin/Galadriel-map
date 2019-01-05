@@ -20,6 +20,11 @@ delShapes(realy)
 tooggleEditRoute(e)
 doSaveMeasuredPaths()
 doRestoreMeasuredPaths()
+
+saveGPX() 			Сохраняет на сервере маршрут из объекта currentRoute
+toGPX(geoJSON,createTrk) Create gpx route or track (createTrk==true) from geoJSON object
+
+String.prototype.encodeHTML = function ()
 */
 function getCookie(name) {
 // возвращает cookie с именем name, если есть, если нет, то undefined
@@ -128,6 +133,7 @@ displayTrack - функция показывания того, что соотв
 global deSelectTrack()
 */
 //alert(node.innerHTML);
+//console.log(trackDisplayed.firstChild);
 trackDisplayed.insertBefore(node,trackDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.onclick = function(event){deSelectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
 displayTrack(node.innerHTML); 	// создадим трек
@@ -402,7 +408,8 @@ xhr.onreadystatechange = function() { //
 } // end function createGPX()
 
 function toGPX(geoJSON,createTrk) {
-/*
+/* Create gpx route or track (createTrk==true) from geoJSON object
+geoJSON must have a needle gpx attributes
 */
 var gpxtrack = `<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <gpx xmlns="http://www.topografix.com/GPX/1/1"  creator="GaladrielMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">

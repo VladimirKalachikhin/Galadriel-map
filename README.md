@@ -6,22 +6,26 @@ GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/Vl
 
 ## Features:
 1. View one OSM-like on-line map or
-2. stacked any number of maps with GaladrielCache
+2. stacked any number of maps with GaladrielCache:
  ![s1](screenshots/s1.png)
-3. Positioning via gpsd and display current (writing now) track file in gpx format
+ 
+3. Positioning via gpsd and display current (writing now) track file in gpx format:
  ![s2](screenshots/s2.png)
-4. Display routes and POIs files in gpx and kml format
+ 
+4. Display routes and POIs files in gpx and kml format:
  ![Display routes and POIs](screenshots/s5.png)
-5. Creating a route localy and save it to server in gpx format
+ 
+5. Creating a route localy and save it to server in gpx format:
  ![Creating a route](screenshots/s3.png)
-6. Control the GaladrielCache Loader
+ 
+6. Control the GaladrielCache Loader: 
  ![Control Loader](screenshots/s4.png)
 
 ## Compatibility
 Linux. Modern browsers, include mobile.
 
 ## Install&configure:
-You must have a web server under Linux with php support. Just copy.<br>
+You must have a web server under Linux with php support. Just copy and set paths.<br>
 Paths and other are set and describe in _params.php_
 
 ### Dependences

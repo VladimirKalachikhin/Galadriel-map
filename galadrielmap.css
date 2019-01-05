@@ -116,8 +116,22 @@ ul {
 .currentTrackName {
 	background-color:  rgba(227, 231, 251, 0.5); /* бледно-голубой */
 }
+@media (min-width: 768px) and (max-width: 991px) {
+	.big_symbol {
+		font-size:55px;
+	}
+}
+@media (min-width: 992px) and (max-width: 1199px) {
+	.big_symbol {
+		font-size:60px;
+	}
+}
+@media (min-width: 1200px) {
+	.big_symbol {
+		font-size:75px;
+	}
+}
 .big_symbol {
-	font-size:80px;
 	height:5em; 
 	width: 100%;
 	display: flex;

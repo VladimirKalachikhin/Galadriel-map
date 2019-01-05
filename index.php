@@ -4,8 +4,8 @@ require('params.php'); 	// пути и параметры
 
 $versionTXT = '0.1.0';
 // Интернационализация
-if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
-//if(TRUE) { 	// клиент - нерусский
+//if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
+if(TRUE) { 	// клиент - нерусский
 	$homeHeaderTXT = 'Maps';
 	$dashboardHeaderTXT = 'Velocity&heading';
 	$dashboardSpeedMesTXT = 'km/h';
@@ -16,7 +16,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$dashboardSpeedZoomTXT = 'Velocity vector - distance for';
 	$dashboardSpeedZoomMesTXT = 'minutes';
 
-	$tracksHeaderTXT = 'Create track';
+	$tracksHeaderTXT = 'Tracks';
 
 	$measureHeaderTXT = 'Route';
 	$routeControlsBeginTXT = 'Begin';
@@ -239,7 +239,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 					</div>
 				</div>
 			</div>
-			<div style="text-align:center; position: absolute; bottom: 0; width: 100%;">
+			<div style="text-align:center; position: absolute; bottom: 0;">
 				<?php echo $dashboardSpeedZoomTXT;?> <span id='velocityVectorLengthInMnDisplay'></span> <?php echo $dashboardSpeedZoomMesTXT;?>.
 			</div>
 		</div>
@@ -646,8 +646,8 @@ realtime.on('update', function(onUpdate) {
 	var positionTime = new Date(onUpdate.features.gps.properties.time);
 	var now = new Date();
 	//alert("Время ГПС "+positionTime+'\n'+"Сейчас    "+now);
-	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
-	else
+//	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
+//	else
 	 		cursor.setIcon(GpsCursor);
 	// Направление с попыткой его запомнить при прекращении движения
 	if((onUpdate.features.gps.properties.heading !== null) && Math.round( onUpdate.features.gps.properties.velocity ) != 0) {heading = onUpdate.features.gps.properties.heading;} // если положение изменилось - возьмём новое направление, иначе - будет старое.
@@ -672,7 +672,8 @@ realtime.on('update', function(onUpdate) {
 			updateCurrTrack();
 		}
 		else {
-			if(currTrackSwitch.checked) selectTrack(currentTrackLi); 	// требуется показывать текущй трек
+			//alert('Нет имени Текущий трек '+currTrackSwitch.checked);
+			if(currTrackSwitch.checked) selectTrack(currentTrackLi,trackList,trackDisplayed,displayTrack); 	// galadrielmap.js требуется показывать текущй трек
 		}
 	}
 <?php } ?>
