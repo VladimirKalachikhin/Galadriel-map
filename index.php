@@ -302,12 +302,12 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				>
 				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
 			</div>
-			<div style="width:100%; padding: 1rem 0; text-align: center;">
+			<div style="width:95%; padding: 1rem 0; text-align: center;">
 				<h2><?php echo $routeSaveTitle;?></h2>
 				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" size='255' style='width:95%;font-size:150%;'>
 				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='7' cols='255' style='width:93%;padding: 0.5rem 3%;'></textarea>
 				<button onClick='saveGPX();' type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
-				<div id='routeSaveMessage'></div>
+				<div id='routeSaveMessage' style='margin: 1rem;'></div>
 			</div>			
 		</div>
 		<!-- Места и маршруты -->

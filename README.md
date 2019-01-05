@@ -3,14 +3,15 @@ This is a web tile map viewer to serve on a weak computers such as RaspberryPi o
 GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache), but may be used with any tile OSM-like map sources or file tile cache for explore map. The author is not responsible for the consequences of using the GaladrielMap as navigator!
 
 ## v. 0.1
+ ![screen](screenshots/s.png)
 
 ## Features:
 1. View one OSM-like on-line map or
 2. stacked any number of maps with GaladrielCache:
- ![s1](screenshots/s1.png)
+ ![stacked maps](screenshots/s1.png)
  
 3. Positioning via gpsd and display current (writing now) track file in gpx format:
- ![s2](screenshots/s2.png)
+ ![Positioning](screenshots/s2.png)
  
 4. Display routes and POIs files in gpx and kml format:
  ![Display routes and POIs](screenshots/s5.png)
