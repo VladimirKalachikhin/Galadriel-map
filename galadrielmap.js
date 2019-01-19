@@ -383,6 +383,7 @@ if(!currentRoute) { 	// глобальная переменная, должна 
 	routeSaveMessage.innerHTML = 'Error - no route selected.'
 	return;
 }
+//console.log(currentRoute.toGeoJSON().getBounds());
 var route = currentRoute.toGeoJSON(); 	// сделаем из Editable объект geoJSON
 if(route.geometry.type != 'LineString') { 	// это не линия
 	routeSaveMessage.innerHTML = 'Error - omly line may be saved.'
@@ -393,7 +394,7 @@ if(!route.properties.name) route.properties.name = routeSaveName.value;
 var name = route.properties.name;
 if(!route.properties.desc && routeSaveDescr.value) route.properties.desc = routeSaveDescr.value;
 //console.log(route);
-route = toGPX(route); 	// сделаем gpx маршрут
+route = toGPX(route,currentRoute.getBounds()); 	// сделаем gpx маршрут
 //console.log(route);
 
 var xhr = new XMLHttpRequest();
@@ -407,13 +408,20 @@ xhr.onreadystatechange = function() { //
 }
 } // end function createGPX()
 
-function toGPX(geoJSON,createTrk) {
+function toGPX(geoJSON,bounds,createTrk) {
 /* Create gpx route or track (createTrk==true) from geoJSON object
 geoJSON must have a needle gpx attributes
+bounds - потому что geoJSON.getBounds() не работает
 */
+//console.log(geoJSON);
 var gpxtrack = `<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <gpx xmlns="http://www.topografix.com/GPX/1/1"  creator="GaladrielMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
 `;
+gpxtrack += '<metadata>\n';
+gpxtrack += '	<time>'+new Date().toISOString()+'</time>\n';
+//var bounds = geoJSON.getBounds();
+gpxtrack += '	<bounds minlat="'+bounds.getSouth().toFixed(4)+'" minlon="'+bounds.getWest().toFixed(4)+'" maxlat="'+bounds.getNorth().toFixed(4)+'" maxlon="'+bounds.getEast().toFixed(4)+'"  />\n';
+gpxtrack += '</metadata>\n';
 if(createTrk) gpxtrack += '	<trk>\n'; 	// рисуем трек
 else gpxtrack += '	<rte>\n'; 	// рисуем маршрут
 
