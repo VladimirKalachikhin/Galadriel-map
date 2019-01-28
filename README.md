@@ -13,7 +13,7 @@ GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/Vl
 3. Positioning via gpsd and display current (writing now) track file in gpx format:
  ![Positioning](screenshots/s2.png)
  
-4. Display routes and POIs files in gpx and kml format:
+4. Display routes and POIs files in gpx, kml and csv format:
  ![Display routes and POIs](screenshots/s5.png)
  
 5. Creating a route localy and save it to server in gpx format:
@@ -58,5 +58,9 @@ How to install and configure gpsd see [gpsd pages](http://www.catb.org/gpsd/).
 You may use gpxlogger app from gpsd-clients packet to logging track on your server. GaladrielMap displaying current track as not well-formed gpx file. Other tracks may be diplayed simultaneously.<br>
 Run _chkGPXfiles.php_ in cli to repair non well-formed gpx files for other applications.
 
+### CSV
+Comma-Separated Values text file - a simplest way to cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.<br>
+First line in csv file must be a field names. Good choice is a `"number","name","desc","type","link","latitude","longitude"`.<br>
+Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
 
 

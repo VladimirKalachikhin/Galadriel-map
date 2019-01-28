@@ -127,6 +127,7 @@ $routeInfo = array();
 if($routeDir) {
 	$routeInfo = glob("$routeDir/*.gpx"); 	// routeDir - из файла params.php
 	$routeInfo = array_merge($routeInfo,glob("$routeDir/*.kml"));
+	$routeInfo = array_merge($routeInfo,glob("$routeDir/*.csv"));
 	array_walk($routeInfo,function (&$name,$ind) {
 			//$name=basename($name); 	// 
 			$name=end(explode('/',$name)); 	// basename не работает с неанглийскими буквами!!!!

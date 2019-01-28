@@ -182,6 +182,7 @@ else {
 		//alert('|'+this.responseText.slice(-10)+'|');
 		if(this.responseText.slice(-10).indexOf('</gpx>') == -1)	window[trackName] = omnivore.gpx.parse(this.responseText + '  </trkseg>\n </trk>\n</gpx>'); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
 		else window[trackName] = omnivore.gpx.parse(this.responseText); 	// responseXML иногда почему-то кривой
+		//console.log(window[trackName]);
 		window[trackName].addTo(map); 	// нарисуем его на карте
 	}
 }
@@ -197,13 +198,16 @@ else {
 	switch(routeType) {
 	case 'gpx':
 		window[routeName] = omnivore.gpx(routeDirURI+'/'+routeName);
-		window[routeName].addTo(map);
 		break;
 	case 'kml':
 		window[routeName] = omnivore.kml(routeDirURI+'/'+routeName);
-		window[routeName].addTo(map);
+		break;
+	case 'csv':
+		window[routeName] = omnivore.csv(routeDirURI+'/'+routeName);
 		break;
 	}
+	//console.log(window[routeName]);
+	window[routeName].addTo(map);
 }
 } // end function displayRoute
 
@@ -418,8 +422,10 @@ var gpxtrack = `<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 <gpx xmlns="http://www.topografix.com/GPX/1/1"  creator="GaladrielMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
 `;
 gpxtrack += '<metadata>\n';
-gpxtrack += '	<time>'+new Date().toISOString()+'</time>\n';
+var date = new Date().toISOString();
+gpxtrack += '	<time>'+ date +'</time>\n';
 //var bounds = geoJSON.getBounds();
+//console.log(bounds);
 gpxtrack += '	<bounds minlat="'+bounds.getSouth().toFixed(4)+'" minlon="'+bounds.getWest().toFixed(4)+'" maxlat="'+bounds.getNorth().toFixed(4)+'" maxlon="'+bounds.getEast().toFixed(4)+'"  />\n';
 gpxtrack += '</metadata>\n';
 if(createTrk) gpxtrack += '	<trk>\n'; 	// рисуем трек
