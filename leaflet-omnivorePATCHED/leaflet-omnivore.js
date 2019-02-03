@@ -272,6 +272,7 @@ if(geoJsonPoint.properties.number) popUpHTML = " <span style='font-size:120%;'>"
 if(geoJsonPoint.properties.cmt) popUpHTML = "<p>"+geoJsonPoint.properties.cmt+"</p>"+popUpHTML;
 if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
 if(geoJsonPoint.properties.description) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
+
 popUpHTML += getLinksHTML(geoJsonPoint); 	// приклеим ссылки
 if(popUpHTML) {
 	if(geoJsonPoint.properties.name) popUpHTML = "<b>"+geoJsonPoint.properties.name+"</b><br>"+popUpHTML;
@@ -293,9 +294,9 @@ if(!feature.properties.link) return popUpHTML;
 //console.log(feature.properties.link);
 switch(typeof(feature.properties.link)) {
 case "string":
-	var linkHTML = '<a href="'+feature.properties.link+'" target=”_blank” >';
+	var linkHTML = '<a href="'+feature.properties.link+'" target="_blank" >';
 	if((feature.properties.link.slice(-5).toLowerCase()=='.jpeg') || (feature.properties.link.slice(-4).toLowerCase()=='.jpg') || (feature.properties.link.slice(-4).toLowerCase()=='.png') || (feature.properties.link.slice(-4).toLowerCase()=='.svg') || (feature.properties.link.slice(-4).toLowerCase()=='.tif') || (feature.properties.link.slice(-5).toLowerCase()=='.tiff')) {
-		linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 0.5rem;"></a>'+text;
+		linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 0.5rem;"></a>';
 	}
 	else { 	// непонятная ссылка
 		linkHTML = linkHTML + 'External link' + '</a><br>';
@@ -654,7 +655,7 @@ function auto(x) {
     return deleteColumns(dsv.dsvFormat(delimiter).parse(x));
 }
 
-function csv2geojson(x, options, callback) {
+function csv2geojson(x, options, callback) { // text csv целиком, options, onparse
 
     if (!callback) {
         callback = options;
@@ -684,9 +685,10 @@ function csv2geojson(x, options, callback) {
             return;
         }
     }
-
+	// массив объектов из строк csv файла, начиная со второй, с именами атрибутов - из первой
     var parsed = (typeof x == 'string') ?
         dsv.dsvFormat(options.delimiter).parse(x) : x;
+  	//console.log(parsed);
 
     if (!parsed.length) {
         callback(null, featurecollection);
@@ -839,7 +841,7 @@ module.exports = {
 
   function objectConverter(columns) {
     return new Function("d", "return {" + columns.map(function(name, i) {
-      return JSON.stringify(name) + ": d[" + i + "]";
+      return JSON.stringify(name).toLowerCase() + ": d[" + i + "]"; 		// !!!
     }).join(",") + "}");
   }
 
@@ -870,12 +872,18 @@ module.exports = {
     var reFormat = new RegExp("[\"" + delimiter + "\n]"),
         delimiterCode = delimiter.charCodeAt(0);
 
-    function parse(text, f) {
-      var convert, columns, rows = parseRows(text, function(row, i) {
+    function parse(text, f) { 	// (строка - файл csv целиком,?), эта функция вызывается для разбора файла
+      var convert, columns; 
+      var rows = parseRows(text, function(row, i) {
+		//console.log(row);
         if (convert) return convert(row, i - 1);
+        //columns = row.map(function(colname){return colname.toLowerCase();}), convert = f ? customConverter(row, f) : objectConverter(row);
         columns = row, convert = f ? customConverter(row, f) : objectConverter(row);
+		//console.log(convert);
       });
+	  //console.log(columns);
       rows.columns = columns;
+	  //console.log(rows);
       return rows;
     }
 
@@ -926,23 +934,26 @@ module.exports = {
 
         // special case: last token before EOF
         return text.slice(j);
-      }
+      } // end function token
 
       while ((t = token()) !== EOF) {
+      	//console.log(t);
         var a = [];
         while (t !== EOL && t !== EOF) {
+			//console.log(t);
           a.push(t);
           t = token();
         }
+      	//console.log(a);
         if (f && (a = f(a, n++)) == null) continue;
         rows.push(a);
       }
 
       return rows;
-    }
+    } // end function parseRows
 
     function format(rows, columns) {
-      if (columns == null) columns = inferColumns(rows);
+     if (columns == null) columns = inferColumns(rows);
       return [columns.map(formatValue).join(delimiter)].concat(rows.map(function(row) {
         return columns.map(function(column) {
           return formatValue(row[column]);
