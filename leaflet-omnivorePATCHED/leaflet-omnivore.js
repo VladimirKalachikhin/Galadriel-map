@@ -292,11 +292,12 @@ var popUpHTML = '';
 if(!feature.properties.link) return popUpHTML;
 // имеются ссылки
 //console.log(feature.properties.link);
+var linkHTML = '';
 switch(typeof(feature.properties.link)) {
 case "string":
-	var linkHTML = '<a href="'+feature.properties.link+'" target="_blank" >';
+	linkHTML = '<a href="'+feature.properties.link+'" target="_blank" >';
 	if((feature.properties.link.slice(-5).toLowerCase()=='.jpeg') || (feature.properties.link.slice(-4).toLowerCase()=='.jpg') || (feature.properties.link.slice(-4).toLowerCase()=='.png') || (feature.properties.link.slice(-4).toLowerCase()=='.svg') || (feature.properties.link.slice(-4).toLowerCase()=='.tif') || (feature.properties.link.slice(-5).toLowerCase()=='.tiff')) {
-		linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 0.5rem;"></a>';
+		linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>';
 	}
 	else { 	// непонятная ссылка
 		linkHTML = linkHTML + 'External link' + '</a><br>';
@@ -306,25 +307,25 @@ case "object":
 	for(var i=0; i<feature.properties.link.length; i++) { 	// для каждой ссылки
 		if(feature.properties.link[i].attributes.length) 		var link = feature.properties.link[i].attributes.href.value.trim();
 		else 	var link = feature.properties.link[i].innerHTML.trim();
-		var linkHTML = '<a href="'+link+'" target=”_blank” >';
-		var text = ' ',textAttr;
+		linkHTML += '<a href="'+link+'" target=”_blank” >';
+		var text = ' ', textAttr;
 		if( textAttr = feature.properties.link[i].getElementsByTagName('text')[0]) text = textAttr.textContent+'<br>'; 	// есть атрибут text
 		if(feature.properties.link[i].getElementsByTagName('type')[0]) { 	// есть атрибут type
 			if( feature.properties.link[i].getElementsByTagName('type')[0].textContent.indexOf("image") != -1) { 	// если картинка
-				linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 0.5rem;"></a>'+text;
+				linkHTML += '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>'+text;
 			}
 			else { 	// неизвестный тип
 				if(!text) text = 'External link';
-				linkHTML = linkHTML + text + '</a><br>';
+				linkHTML += text + '</a><br>';
 			}
 		}
 		else { 	// нет атрибута type
 			if((link.slice(-5).toLowerCase()=='.jpeg') || (link.slice(-4).toLowerCase()=='.jpg') || (link.slice(-4).toLowerCase()=='.png') || (link.slice(-4).toLowerCase()=='.svg') || (link.slice(-4).toLowerCase()=='.tif') || (link.slice(-5).toLowerCase()=='.tiff')) {
-				linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 0.5rem;"></a>'+text;
+				linkHTML += '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>'+text;
 			}
 			else { 	// непонятная ссылка
 				if(!text) text = 'External link';
-				linkHTML = linkHTML + text + '</a><br>';
+				linkHTML += text + '</a><br>';
 			}
 		}
 	}
@@ -335,7 +336,7 @@ default:
 popUpHTML = popUpHTML+linkHTML;
 
 return popUpHTML;
-};
+}; 	// end function getLinksHTML
 
 function getPopUpToLine(feature, layer) {
 /* A Function that will be called once for each created Feature
