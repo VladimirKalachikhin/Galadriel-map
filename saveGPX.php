@@ -4,6 +4,7 @@ require('params.php'); 	// пути и параметры
 
 if(!$routeDir) {
 	echo "Sorry, no way to save path.";
+	return;
 }
 
 $gpx = trim(urldecode($_REQUEST['gpx']));
