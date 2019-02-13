@@ -155,11 +155,11 @@ if($routeDir) {
     <script src="Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
 <?php }?>
 <?php if($trackDir OR $routeDir) {?>
+	<script src='supercluster/supercluster.js')></script>
 	<link rel="stylesheet" href="leaflet-omnivorePATCHED/leaflet-omnivore.css" />
 	<script src="leaflet-omnivorePATCHED/leaflet-omnivore.js"></script>
 <?php }?>    
-
-	<script src="Leaflet.Editable/src/Leaflet.Editable.js"></script>
+<script src="Leaflet.Editable/src/Leaflet.Editable.js"></script>
 	<link rel="stylesheet" href="leaflet-measure-path/leaflet-measure-path.css" />
 	<script src="leaflet-measure-path/leaflet-measure-path.js"></script>
 
@@ -504,7 +504,10 @@ map.on('zoomend', function(event) {
 	if(!downJob) current_zoom.innerHTML = zoom;
 	
 });
-map.on("layeradd ", function(event) {
+<?php if($trackDir OR $routeDir) {?>
+map.on('moveend', updateClasters); 	// кластеризация точек POI
+<?php }?>    
+map.on("layeradd", function(event) {
 	//alert(tileGrid);
 	if(tileGrid) tileGrid.bringToFront(); 	// выведем наверх слой с сеткой
 });
@@ -548,6 +551,7 @@ routeEraseButton.disabled=true; 	// сделать кнопку "Стереть"
 
 map.on('editable:editing', // обязательный обработчик для editable для перересовывания расстояний при изменении пути
 	function (e) {
+		//console.log('обязательный обработчик для editable start by editable:editing');
 		//console.log(e);
 		//console.log(e.layer);
 		if (e.layer instanceof L.Path) e.layer.updateMeasurements();

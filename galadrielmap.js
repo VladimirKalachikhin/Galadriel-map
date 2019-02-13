@@ -207,6 +207,7 @@ else {
 		break;
 	}
 	//console.log(window[routeName]);
+	//console.log(window[routeName].getLayers());
 	window[routeName].addTo(map);
 }
 } // end function displayRoute
@@ -325,6 +326,7 @@ function tooggleEditRoute(e) {
 Обычно обработчик клика по линии
 */
 //console.log(e.target);
+//console.log('tooggleEditRoute start by anymore');
 
 currentRoute = e.target; 	// сделаем объект, по которому щёлкнули, текущим
 if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
@@ -463,3 +465,44 @@ String.prototype.encodeHTML = function () {
                .replace(/"/g, '&quot;')
                .replace(/'/g, '&apos;');
 };
+
+// Кластеризация точек
+function updateClasters() {
+/* Обновляет все показываемые кластеры точек
+*/
+//console.log('galadrielmap.js: updateClasters start by anymore');
+for (var i = 0; i < routeDisplayed.children.length; i++) { 	// для каждого потомка списка routeDisplayed
+	const trackName = routeDisplayed.children[i].innerHTML; 	// наименование показывающегося слоя, возможн, с точками
+	updClaster(window[trackName]);
+}
+for (var i = 0; i < trackDisplayed.children.length; i++) { 	// для каждого потомка списка trackDisplayed
+	const trackName = trackDisplayed.children[i].innerHTML; 	// наименование показывающегося слоя, возможн, с точками
+	updClaster(window[trackName]);
+}
+} // end function updateClasters
+
+async function updClaster(e) {
+// обновляет кластер
+let layer;
+if(e.target) layer = e.target; 	// e - event
+else layer = e;	// e - layer
+//console.log(layer.getLayers());
+//console.log(layer);
+if(layer.getLayers().length) layer.eachLayer(realUpdClaster);
+else realUpdClaster(layer);
+
+function realUpdClaster(layer) {
+if(layer.supercluster) {
+	//console.log('Обновляется кластер');
+	//console.log(layer);
+	const bounds = map.getBounds();
+	const mapBox = {
+		bbox: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
+		zoom: map.getZoom()
+	}
+	layer.clearLayers();
+	layer.addData(layer.supercluster.getClusters(mapBox.bbox, mapBox.zoom)); 	// возвращает точки (и кластеры как точки) как GeoJSON Feature и загружает в слой
+}
+} 	// end function realUpdClaster
+} // end function updClaster
+

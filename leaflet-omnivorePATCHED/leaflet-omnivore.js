@@ -1,6 +1,5 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.omnivore = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-
-importScripts('supercluster/supercluster.js');
+"use strict"
 
 var xhr = require('corslite'),
     csv2geojson = require('csv2geojson'),
@@ -29,13 +28,15 @@ module.exports.kml.parse = kmlParse;
 module.exports.wkt = wktLoad;
 module.exports.wkt.parse = wktParse;
 
-function addData(l, d) {
-    if ('setGeoJSON' in l) {
-        l.setGeoJSON(d);
-    } else if ('addData' in l) {
-        l.addData(d);
-    }
+function addData(l, d) { 	// layer geojson
+/* Загружает geojson в layer 
+*/
+if ('setGeoJSON' in l) {
+	l.setGeoJSON(d);
+} else if ('addData' in l) {
+	l.addData(d);
 }
+} // end function addData
 
 /**
  * Load a [GeoJSON](http://geojson.org/) document into a layer and return the layer.
@@ -83,20 +84,21 @@ function topojsonLoad(url, options, customLayer) {
  * @returns {object}
  */
 function csvLoad(url, options, customLayer) {
-    var layer = customLayer || L.geoJson();
-    xhr(url, onload);
-    function onload(err, response) {
-        var error;
-        if (err) return layer.fire('error', { error: err });
-        function avoidReady() {
-            error = true;
-        }
-        layer.on('error', avoidReady);
-        csvParse(response.responseText, options, layer);
-        layer.off('error', avoidReady);
-        if (!error) layer.fire('ready');
+if(customLayer) var layer = L.layerGroup([customLayer]);
+else var layer = L.layerGroup();
+xhr(url, onload);
+function onload(err, response) {
+    var error;
+    if (err) return layer.fire('error', { error: err });
+    function avoidReady() {
+        error = true;
     }
-    return layer;
+    layer.on('error', avoidReady);
+    csvParse(response.responseText, options, layer);
+    layer.off('error', avoidReady);
+    if (!error) layer.fire('ready');
+}
+return layer;
 }
 
 /**
@@ -108,20 +110,22 @@ function csvLoad(url, options, customLayer) {
  * @returns {object}
  */
 function gpxLoad(url, options, customLayer) {
-    var layer = customLayer || L.geoJson();
-    xhr(url, onload);
-    function onload(err, response) {
-        var error;
-        if (err) return layer.fire('error', { error: err });
-        function avoidReady() {
-            error = true;
-        }
-        layer.on('error', avoidReady);
-        gpxParse(response.responseXML || response.responseText, options, layer);
-        layer.off('error', avoidReady);
-        if (!error) layer.fire('ready');
+if(customLayer) var layer = L.layerGroup([customLayer]);
+else var layer = L.layerGroup();
+//console.log(layer);
+xhr(url, onload);
+function onload(err, response) {
+    var error;
+    if (err) return layer.fire('error', { error: err });
+    function avoidReady() {
+        error = true;
     }
-    return layer;
+    layer.on('error', avoidReady);
+    gpxParse(response.responseXML || response.responseText, options, layer);
+    layer.off('error', avoidReady);
+    if (!error) layer.fire('ready');
+}
+return layer;
 }
 
 /**
@@ -133,20 +137,21 @@ function gpxLoad(url, options, customLayer) {
  * @returns {object}
  */
 function kmlLoad(url, options, customLayer) {
-    var layer = customLayer || L.geoJson();
-    xhr(url, onload);
-    function onload(err, response) {
-        var error;
-        if (err) return layer.fire('error', { error: err });
-        function avoidReady() {
-            error = true;
-        }
-        layer.on('error', avoidReady);
-        kmlParse(response.responseXML || response.responseText, options, layer);
-        layer.off('error', avoidReady);
-        if (!error) layer.fire('ready');
+if(customLayer) var layer = L.layerGroup([customLayer]);
+else var layer = L.layerGroup();
+xhr(url, onload);
+function onload(err, response) {
+    var error;
+    if (err) return layer.fire('error', { error: err });
+    function avoidReady() {
+        error = true;
     }
-    return layer;
+    layer.on('error', avoidReady);
+    kmlParse(response.responseXML || response.responseText, options, layer);
+    layer.off('error', avoidReady);
+    if (!error) layer.fire('ready');
+}
+return layer;
 }
 
 /**
@@ -200,29 +205,112 @@ function topojsonParse(data, options, layer) {
 }
 
 function csvParse(csv, options, layer) {
-    layer = layer || L.geoJson();
+	if(layer) {
+		if(layer.getLayers()) { 	// это layerGroup
+			var featuresLayer = layer.getLayers()[0] || L.geoJson();
+		}
+		else {	// это одиночный Layer
+			var featuresLayer = layer;
+			layer = new L.layerGroup([featuresLayer]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит
+		}
+	}
+	else {
+		var featuresLayer = L.geoJson();
+		var layer = new L.layerGroup([featuresLayer]);
+	}
+	featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
+	if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
 	layer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
+
+	var pointsLayer = L.geoJson();
+	pointsLayer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
+	layer.addLayer(pointsLayer);
+
     options = options || {};
     csv2geojson.csv2geojson(csv, options, onparse);
+
     function onparse(err, geojson) {
         if (err) return layer.fire('error', { error: err });
-        addData(layer, geojson);
+		var Points=[];
+		var Features=[];
+		for(var i=0; i<geojson.features.length;i++) {
+			if(geojson.features[i].geometry.type=='Point') Points.push(geojson.features[i]);
+			else Features.push(geojson.features[i]);
+		}
+		addData(featuresLayer, Features); 	// добавим и покажем всё остальное
+		if(Points.length) {
+			doClastering(pointsLayer, Points); 	// закластеризуем точки
+			updClaster(pointsLayer);	// galadrielmap.js  и покажем
+		}
     }
     return layer;
 }
 
 function gpxParse(gpx, options, layer) {
-    var xml = parseXML(gpx);
-    if (!xml) return layer.fire('error', {
-        error: 'Could not parse GPX'
-    });
-    layer = layer || L.geoJson();
-	layer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
-	layer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
-    var geojson = toGeoJSON.gpx(xml);
-    addData(layer, geojson);
-    return layer;
+var xml = parseXML(gpx);
+if (!xml) return layer.fire('error', {
+    error: 'Could not parse GPX'
+});
+var geojson = toGeoJSON.gpx(xml);
+//console.log(geojson);
+var Points=[];
+var Features=[];
+for(var i=0; i<geojson.features.length;i++) {
+	if(geojson.features[i].geometry.type=='Point') Points.push(geojson.features[i]);
+	else Features.push(geojson.features[i]);
 }
+//console.log(Points);
+//console.log(Features);
+if(layer) {
+	if(layer.getLayers()) { 	// это layerGroup
+		var featuresLayer = layer.getLayers()[0] || L.geoJson();
+	}
+	else {	// это одиночный Layer
+		var featuresLayer = layer;
+		layer = new L.layerGroup([featuresLayer]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит
+	}
+}
+else {
+	var featuresLayer = L.geoJson();
+	var layer = new L.layerGroup([featuresLayer]);
+}
+featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
+addData(featuresLayer, Features); 	// добавим и покажем всё остальное
+//console.log(featuresLayer);
+if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
+if(Points.length) {
+	var pointsLayer = L.geoJson();
+	pointsLayer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
+	doClastering(pointsLayer, Points); 	// закластеризуем точки
+	updClaster(pointsLayer);	// galadrielmap.js  и покажем
+	layer.addLayer(pointsLayer);
+}
+//console.log(layer);
+//console.log(layer.getLayers());
+return layer;
+}
+
+function doClastering(layer, geojson) {
+/* Кластеризует wpt в layer, если они там есть 
+Требует наличия supercluster.js
+*/
+const index = new Supercluster({
+    log: false, 	// вывод лога в консоль
+    radius: 60,
+    extent: 256,
+    maxZoom: 17
+}).load(geojson); 	// собственно, загрузка в суперкластер точек index
+layer.supercluster = index;
+layer.on('click', (e) => { 	// клик по любому значку :-( потому что нам нужен layer
+	//console.log('leaflet-omnivore.js : doClastering start by click');
+	//console.log(e);
+	if (e.layer.feature.properties.cluster_id) { 	// кликнутый значёк - кластер
+		const expansionZoom = e.target.supercluster.getClusterExpansionZoom(e.layer.feature.properties.cluster_id); 	// 	получим масштаб, при котором этот кластер разделится	
+	    map.flyTo(e.latlng,expansionZoom);
+	}
+});
+return layer;
+} // end function doClastering
 
 function getMarkerToPoint(geoJsonPoint, latlng) { 	//  https://leafletjs.com/reference-1.3.4.html#geojson 
 // Функция, которая в latlng рисует маркер по сведениям из geoJsonPoint
@@ -235,53 +323,62 @@ function getMarkerToPoint(geoJsonPoint, latlng) { 	//  https://leafletjs.com/ref
 // Сам маркер - Marker
 var marker = L.marker(latlng, { 	// маркер для этой точки
 });
-//console.log(marker);
-
-// Значёк - Icon
-//alert('icon' in marker.options);
-var iconNames = []; 	// возможные имена значков
-if(geoJsonPoint.properties.sym) iconNames.push(geoJsonPoint.properties.sym.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx sym (symbol name) attribyte
-if(geoJsonPoint.properties.type) iconNames.push(geoJsonPoint.properties.type.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx type (classification) attribyte
-if(geoJsonPoint.properties.icon) { 	// kml Icon
-	//console.log('"'+geoJsonPoint.properties.icon.textContent.trim()+'"');
-	var iNm = geoJsonPoint.properties.icon.textContent.trim();
-	iNm = iNm.substring(iNm.lastIndexOf('/')+1);
-	var iNmExt = iNm.slice((iNm.lastIndexOf(".") - 1 >>> 0) + 2); 	// icon filename ext https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
-	if(iNmExt.length) iNm = iNm.slice(0,-(iNmExt.length+1));
-	//console.log(iNm);
-	if(iNm.length) iconNames.push(iNm.replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// kml icon name in <Style><IconStyle><Icon> attribyte
+if(geoJsonPoint.properties.cluster) { 	// это кластер
+	//console.log('marker for claster');
+    const icon  = L.divIcon({
+        html: `<div><span>${  geoJsonPoint.properties.point_count_abbreviated  }</span></div>`,
+        className: `marker-cluster`,
+        iconSize: L.point(25, 25),
+    });
+	marker.setIcon(icon);
 }
-iconServer.setIconCustomIcon(marker,iconNames); 	// заменить в marker icon на нужный асинхронно
-//console.log(iconServer.iconsByType);
-//console.log(marker);
+else { 	// это индивидуальная точка
+	//console.log('marker for point');
+	// Значёк - Icon
+	//alert('icon' in marker.options);
+	var iconNames = []; 	// возможные имена значков
+	if(geoJsonPoint.properties.sym) iconNames.push(geoJsonPoint.properties.sym.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx sym (symbol name) attribyte
+	if(geoJsonPoint.properties.type) iconNames.push(geoJsonPoint.properties.type.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx type (classification) attribyte
+	if(geoJsonPoint.properties.icon) { 	// kml Icon
+		//console.log('"'+geoJsonPoint.properties.icon.textContent.trim()+'"');
+		var iNm = geoJsonPoint.properties.icon.textContent.trim();
+		iNm = iNm.substring(iNm.lastIndexOf('/')+1);
+		var iNmExt = iNm.slice((iNm.lastIndexOf(".") - 1 >>> 0) + 2); 	// icon filename ext https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
+		if(iNmExt.length) iNm = iNm.slice(0,-(iNmExt.length+1));
+		//console.log(iNm);
+		if(iNm.length) iconNames.push(iNm.replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// kml icon name in <Style><IconStyle><Icon> attribyte
+	}
+	iconServer.setIconCustomIcon(marker,iconNames); 	// заменить в marker icon на нужный асинхронно
+	//console.log(iconServer.iconsByType);
+	//console.log(marker);
 
-// Подпись - Tooltip
-if(geoJsonPoint.properties.name) {
-	marker.bindTooltip(geoJsonPoint.properties.name,{ 	
-		permanent: true,  	// всегда показывать
-		//direction: 'auto', 
-		direction: 'left', 
-		//offset: [-16,-25],
-		className: 'wpTooltip', 	// css class
-		opacity: 1
-	});
-	//}).openTooltip(); 	// и перерисуем подпись под умолчальный маркер. Под другие маркеры перерисуем потом. Но это бессмысленно - она не перерисовывается
+	// Подпись - Tooltip
+	if(geoJsonPoint.properties.name) {
+		marker.bindTooltip(geoJsonPoint.properties.name,{ 	
+			permanent: true,  	// всегда показывать
+			//direction: 'auto', 
+			direction: 'left', 
+			//offset: [-16,-25],
+			className: 'wpTooltip', 	// css class
+			opacity: 1
+		});
+		//}).openTooltip(); 	// и перерисуем подпись под умолчальный маркер. Под другие маркеры перерисуем потом. Но это бессмысленно - она не перерисовывается
+	}
+
+	// Информация о - PopUp
+	//console.log(geoJsonPoint.properties.link);
+	var popUpHTML = '';
+	if(geoJsonPoint.properties.number) popUpHTML = " <span style='font-size:120%;'>"+geoJsonPoint.properties.number+"</span> "+popUpHTML;
+	if(geoJsonPoint.properties.cmt) popUpHTML = "<p>"+geoJsonPoint.properties.cmt+"</p>"+popUpHTML;
+	if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
+	if(geoJsonPoint.properties.description) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
+
+	popUpHTML += getLinksHTML(geoJsonPoint); 	// приклеим ссылки
+	if(popUpHTML) {
+		if(geoJsonPoint.properties.name) popUpHTML = "<b>"+geoJsonPoint.properties.name+"</b><br>"+popUpHTML;
+		marker.bindPopup(popUpHTML+'<br>');
+	}
 }
-
-// Информация о - PopUp
-//console.log(geoJsonPoint.properties.link);
-var popUpHTML = '';
-if(geoJsonPoint.properties.number) popUpHTML = " <span style='font-size:120%;'>"+geoJsonPoint.properties.number+"</span> "+popUpHTML;
-if(geoJsonPoint.properties.cmt) popUpHTML = "<p>"+geoJsonPoint.properties.cmt+"</p>"+popUpHTML;
-if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
-if(geoJsonPoint.properties.description) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
-
-popUpHTML += getLinksHTML(geoJsonPoint); 	// приклеим ссылки
-if(popUpHTML) {
-	if(geoJsonPoint.properties.name) popUpHTML = "<b>"+geoJsonPoint.properties.name+"</b><br>"+popUpHTML;
-	marker.bindPopup(popUpHTML+'<br>');
-}
-
 return marker;
 } // end function getMarkerToPoint
 
@@ -448,15 +545,41 @@ if(iconName) {
 
 
 function kmlParse(gpx, options, layer) {
-    var xml = parseXML(gpx);
-    if (!xml) return layer.fire('error', {
-        error: 'Could not parse KML'
-    });
-    layer = layer || L.geoJson();
-	layer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
-    var geojson = toGeoJSON.kml(xml);
-    addData(layer, geojson);
-    return layer;
+var xml = parseXML(gpx);
+if (!xml) return layer.fire('error', {
+    error: 'Could not parse KML'
+});
+var geojson = toGeoJSON.kml(xml);
+var Points=[];
+var Features=[];
+for(var i=0; i<geojson.features.length;i++) {
+	if(geojson.features[i].geometry.type=='Point') Points.push(geojson.features[i]);
+	else Features.push(geojson.features[i]);
+}
+if(layer) {
+	if(layer.getLayers()) { 	// это layerGroup
+		var featuresLayer = layer.getLayers()[0] || L.geoJson();
+	}
+	else {	// это одиночный Layer
+		var featuresLayer = layer;
+		layer = new L.layerGroup([featuresLayer]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит
+	}
+}
+else {
+	var featuresLayer = L.geoJson();
+	var layer = new L.layerGroup([featuresLayer]);
+}
+featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
+addData(featuresLayer, Features); 	// добавим и покажем всё остальное
+if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
+if(Points.length) {
+	var pointsLayer = L.geoJson();
+	pointsLayer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
+	doClastering(pointsLayer, Points); 	// закластеризуем точки
+	updClaster(pointsLayer);	// galadrielmap.js  и покажем
+	layer.addLayer(pointsLayer);
+}
+return layer;
 }
 
 function polylineParse(txt, options, layer) {
@@ -1631,7 +1754,7 @@ var toGeoJSON = (function() {
                     timeSpan = get1(root, 'TimeSpan'),
                     extendedData = get1(root, 'ExtendedData'),
                     lineStyle = get1(root, 'LineStyle'),
-                    polyStyle = get1(root, 'PolyStyle');
+                    polyStyle = get1(root, 'PolyStyle'),
                     icon = get1(root, 'Icon'); 	// !!
 
                 if (!geomsAndTimes.geoms.length) return [];
