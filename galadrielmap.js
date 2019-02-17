@@ -136,7 +136,7 @@ global deSelectTrack()
 //console.log(trackDisplayed.firstChild);
 trackDisplayed.insertBefore(node,trackDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.onclick = function(event){deSelectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
-displayTrack(node.innerHTML); 	// создадим трек
+displayTrack(node); 	// создадим трек
 } // end function selectTrack
 
 function deSelectTrack(node,trackList,trackDisplayed,displayTrack) {
@@ -161,12 +161,12 @@ node.onclick = function(event){selectTrack(event.currentTarget,trackList,trackDi
 removeMap(node.innerHTML);
 }
 
-function displayTrack(trackName) {
-/* рисует трек с именем trackName 
+function displayTrack(trackNameNode) {
+/* рисует трек в именем в trackNameNode
 global trackDirURI, window, currentTrackName
 */
 //alert(trackName);
-trackName=trackName.trim();
+var trackName = trackNameNode.innerText.trim();
 if( window[trackName] && (trackName != currentTrackName)) window[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем
 else {
 	var xhr = new XMLHttpRequest();
@@ -188,26 +188,27 @@ else {
 }
 } // end function displayTrack
 
-function displayRoute(routeName) {
+function displayRoute(routeNameNode) {
 /* рисует маршрут или места с именем routeName 
 global routeDirURI map window
 */
+var routeName = routeNameNode.innerText.trim();
+var options = {routeNameNode : routeNameNode};
 if( window[routeName]) window[routeName].addTo(map); 	// нарисуем его на карте. 
 else {
 	var routeType =  routeName.slice((routeName.lastIndexOf(".") - 1 >>> 0) + 2).toLowerCase(); 	// https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
 	switch(routeType) {
 	case 'gpx':
-		window[routeName] = omnivore.gpx(routeDirURI+'/'+routeName);
+		window[routeName] = omnivore.gpx(routeDirURI+'/'+routeName,options);
 		break;
 	case 'kml':
-		window[routeName] = omnivore.kml(routeDirURI+'/'+routeName);
+		window[routeName] = omnivore.kml(routeDirURI+'/'+routeName,options);
 		break;
 	case 'csv':
-		window[routeName] = omnivore.csv(routeDirURI+'/'+routeName);
+		window[routeName] = omnivore.csv(routeDirURI+'/'+routeName,options);
 		break;
 	}
 	//console.log(window[routeName]);
-	//console.log(window[routeName].getLayers());
 	window[routeName].addTo(map);
 }
 } // end function displayRoute
@@ -506,3 +507,24 @@ if(layer.supercluster) {
 } 	// end function realUpdClaster
 } // end function updClaster
 
+function nextColor(color,step) {
+/* color - object {r,g,b} in HEX
+step - HEX
+ */
+if(!step) step = 0xF0;
+color.b -= step;
+if(color.b < 0) {
+	color.b = 0;
+	color.g -= step;
+	if(color.g < 0) {
+		color.g = 0;
+		color.r -= step;
+		if(color.r < 0) {
+			color.r = 0xFF;
+			color.g = 0xFF;
+			color.b = 0xFF;
+		}
+	}
+}
+return color;
+} // end function nextColor

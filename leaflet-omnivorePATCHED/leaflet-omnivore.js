@@ -205,62 +205,6 @@ function topojsonParse(data, options, layer) {
 }
 
 function csvParse(csv, options, layer) {
-	if(layer) {
-		if(layer.getLayers()) { 	// это layerGroup
-			var featuresLayer = layer.getLayers()[0] || L.geoJson();
-		}
-		else {	// это одиночный Layer
-			var featuresLayer = layer;
-			layer = new L.layerGroup([featuresLayer]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит
-		}
-	}
-	else {
-		var featuresLayer = L.geoJson();
-		var layer = new L.layerGroup([featuresLayer]);
-	}
-	featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
-	if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
-	layer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
-
-	var pointsLayer = L.geoJson();
-	pointsLayer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
-	layer.addLayer(pointsLayer);
-
-    options = options || {};
-    csv2geojson.csv2geojson(csv, options, onparse);
-
-    function onparse(err, geojson) {
-        if (err) return layer.fire('error', { error: err });
-		var Points=[];
-		var Features=[];
-		for(var i=0; i<geojson.features.length;i++) {
-			if(geojson.features[i].geometry.type=='Point') Points.push(geojson.features[i]);
-			else Features.push(geojson.features[i]);
-		}
-		addData(featuresLayer, Features); 	// добавим и покажем всё остальное
-		if(Points.length) {
-			doClastering(pointsLayer, Points); 	// закластеризуем точки
-			updClaster(pointsLayer);	// galadrielmap.js  и покажем
-		}
-    }
-    return layer;
-}
-
-function gpxParse(gpx, options, layer) {
-var xml = parseXML(gpx);
-if (!xml) return layer.fire('error', {
-    error: 'Could not parse GPX'
-});
-var geojson = toGeoJSON.gpx(xml);
-//console.log(geojson);
-var Points=[];
-var Features=[];
-for(var i=0; i<geojson.features.length;i++) {
-	if(geojson.features[i].geometry.type=='Point') Points.push(geojson.features[i]);
-	else Features.push(geojson.features[i]);
-}
-//console.log(Points);
-//console.log(Features);
 if(layer) {
 	if(layer.getLayers()) { 	// это layerGroup
 		var featuresLayer = layer.getLayers()[0] || L.geoJson();
@@ -275,9 +219,85 @@ else {
 	var layer = new L.layerGroup([featuresLayer]);
 }
 featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
-addData(featuresLayer, Features); 	// добавим и покажем всё остальное
-//console.log(featuresLayer);
 if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
+
+var pointsLayer = L.geoJson();
+pointsLayer.options.markerColor = Object.assign({}, globalCurrentMarkerColor); 	// копируем цвет линий и значков
+console.log(pointsLayer.options.markerColor);
+globalCurrentMarkerColor = nextColor(globalCurrentMarkerColor); 	// сменим текущий цвет
+layer.options.markerColor = pointsLayer.options.markerColor; 	// потом в layerGroup не найдёшь
+if(options.routeNameNode) { 	// li с именем файла, из которого делаем layer
+	console.log('#'+pointsLayer.options.markerColor.r.toString(16)+pointsLayer.options.markerColor.g.toString(16)+pointsLayer.options.markerColor.b.toString(16));
+	//options.routeNameNode.style.backgroundColor = '#${pointsLayer.options.markerColor.r.toString(16)}${pointsLayer.options.markerColor.g.toString(16)}${pointsLayer.options.markerColor.b.toString(16)}';
+	options.routeNameNode.style.backgroundColor = '#'+pointsLayer.options.markerColor.r.toString(16)+pointsLayer.options.markerColor.g.toString(16)+pointsLayer.options.markerColor.b.toString(16);
+}
+pointsLayer.options.pointToLayer = function (geoJsonPoint, latlng) { 	// функция, вызываемая для каждой точки при её создании
+	var parameters = {color: pointsLayer.options.markerColor}; 	// таким образом мы забросим цвет в создание маркера
+	var marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
+	return marker;
+};
+//pointsLayer.on('layeradd', markerUpd); 	// после добавления маркера - покрасим его
+layer.addLayer(pointsLayer);
+
+options = options || {};
+csv2geojson.csv2geojson(csv, options, onparse);
+
+function onparse(err, geojson) {
+    if (err) return layer.fire('error', { error: err });
+	var Points=[];
+	var Features=[];
+	//console.log(layer.options.markerColor);
+	for(var i=0; i<geojson.features.length;i++) {
+		if(geojson.features[i].geometry.type=='Point') {
+			geojson.features[i].properties.color = layer.options.markerColor;
+			Points.push(geojson.features[i]);
+		}
+		else Features.push(geojson.features[i]);
+	}
+	addData(featuresLayer, Features); 	// добавим и покажем всё остальное
+	if(Points.length) {
+		doClastering(pointsLayer, Points); 	// закластеризуем точки
+		updClaster(pointsLayer);	// galadrielmap.js  и покажем
+	}
+} 	// end function onparse
+return layer;
+} // end function csvParse
+
+function gpxParse(gpx, options, layer) {
+var xml = parseXML(gpx);
+if (!xml) return layer.fire('error', {
+    error: 'Could not parse GPX'
+});
+if(layer) {
+	if(layer.getLayers()) { 	// это layerGroup
+		var featuresLayer = layer.getLayers()[0] || L.geoJson();
+	}
+	else {	// это одиночный Layer
+		var featuresLayer = layer;
+		layer = new L.layerGroup([featuresLayer]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит
+	}
+}
+else {
+	var featuresLayer = L.geoJson();
+	var layer = new L.layerGroup([featuresLayer]);
+}
+layer.options.markerColor = globalCurrentMarkerColor; 	// цвет линий и значков
+globalCurrentMarkerColor = nextColor(globalCurrentMarkerColor); 	// сменим текущий цвет
+
+var geojson = toGeoJSON.gpx(xml);
+//console.log(geojson);
+var Points=[];
+var Features=[];
+for(var i=0; i<geojson.features.length;i++) {
+	if(geojson.features[i].geometry.type=='Point') Points.push(geojson.features[i]);
+	else Features.push(geojson.features[i]);
+}
+//console.log(Points);
+//console.log(Features);
+featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
+addData(featuresLayer, Features); 	// добавим и покажем всё остальное
+if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
+//console.log(featuresLayer);
 if(Points.length) {
 	var pointsLayer = L.geoJson();
 	pointsLayer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
@@ -290,15 +310,22 @@ if(Points.length) {
 return layer;
 }
 
+function markerUpd(event) {
+/* Вешается на событие layeradd с целью редактирования того, что add 
+Предполагается, что маркер
+*/
+console.log(event);
+}
+
 function doClastering(layer, geojson) {
 /* Кластеризует wpt в layer, если они там есть 
 Требует наличия supercluster.js
 */
 const index = new Supercluster({
     log: false, 	// вывод лога в консоль
-    radius: 60,
+    radius: 40,
     extent: 256,
-    maxZoom: 17
+    maxZoom: 15,
 }).load(geojson); 	// собственно, загрузка в суперкластер точек index
 layer.supercluster = index;
 layer.on('click', (e) => { 	// клик по любому значку :-( потому что нам нужен layer
@@ -312,21 +339,25 @@ layer.on('click', (e) => { 	// клик по любому значку :-( по�
 return layer;
 } // end function doClastering
 
-function getMarkerToPoint(geoJsonPoint, latlng) { 	//  https://leafletjs.com/reference-1.3.4.html#geojson 
+function getMarkerToPoint(geoJsonPoint, latlng, parameters) { 	//  https://leafletjs.com/reference-1.3.4.html#geojson 
 // Функция, которая в latlng рисует маркер по сведениям из geoJsonPoint
 // обычно вызывается как свойство layer.options.pointToLayer
 // В geoJsonPoint.properties собираются:
-//'name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords' в function getProperties(node) для gpx
+//'ele' 'name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords' в function getProperties(node) для gpx
 // 'name' 'icon' 'description' в function getPlacemark(root) для kml
-//console.log(geoJsonPoint);
+// для csv просто берутся имеющиеся имена атрибутов, поэтому будем парсить имена отсюда: https://www.gpsbabel.org/htmldoc-1.5.4/fmt_unicsv.html
+//console.log(parameters);
 
 // Сам маркер - Marker
+if(!parameters) parameters = {};
 var marker = L.marker(latlng, { 	// маркер для этой точки
 });
 if(geoJsonPoint.properties.cluster) { 	// это кластер
-	//console.log('marker for claster');
+	//console.log(geoJsonPoint);
+	if(!parameters.color) parameters.color = {r:0xFF,g:0xFF,b:0xFF}
     const icon  = L.divIcon({
-        html: `<div><span>${  geoJsonPoint.properties.point_count_abbreviated  }</span></div>`,
+        html: `<div style="background-color:rgb(${parameters.color.r},${parameters.color.g},${parameters.color.b})"><span>${  geoJsonPoint.properties.point_count_abbreviated  }</span></div>`,
+        //html: `<div ><span>${  geoJsonPoint.properties.point_count_abbreviated  }</span></div>`,
         className: `marker-cluster`,
         iconSize: L.point(25, 25),
     });
@@ -338,6 +369,8 @@ else { 	// это индивидуальная точка
 	//alert('icon' in marker.options);
 	var iconNames = []; 	// возможные имена значков
 	if(geoJsonPoint.properties.sym) iconNames.push(geoJsonPoint.properties.sym.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx sym (symbol name) attribyte
+	if(geoJsonPoint.properties.symbol) iconNames.push(geoJsonPoint.properties.symbol.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// csv symbol name attribyte
+	if(geoJsonPoint.properties.symb) iconNames.push(geoJsonPoint.properties.symb.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// csv symbol name attribyte
 	if(geoJsonPoint.properties.type) iconNames.push(geoJsonPoint.properties.type.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx type (classification) attribyte
 	if(geoJsonPoint.properties.icon) { 	// kml Icon
 		//console.log('"'+geoJsonPoint.properties.icon.textContent.trim()+'"');
@@ -368,14 +401,25 @@ else { 	// это индивидуальная точка
 	// Информация о - PopUp
 	//console.log(geoJsonPoint.properties.link);
 	var popUpHTML = '';
-	if(geoJsonPoint.properties.number) popUpHTML = " <span style='font-size:120%;'>"+geoJsonPoint.properties.number+"</span> "+popUpHTML;
-	if(geoJsonPoint.properties.cmt) popUpHTML = "<p>"+geoJsonPoint.properties.cmt+"</p>"+popUpHTML;
-	if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
+	if(geoJsonPoint.properties.number) popUpHTML = " <span style='font-size:120%;'>"+geoJsonPoint.properties.number+"</span><br> "+popUpHTML;
+	if((geoJsonPoint.properties.cmt&&geoJsonPoint.properties.desc)&&(geoJsonPoint.properties.cmt==geoJsonPoint.properties.desc)) {
+		popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
+	}
+	else {
+		if(geoJsonPoint.properties.cmt) popUpHTML = "<p>"+geoJsonPoint.properties.cmt+"</p>"+popUpHTML;
+		if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
+	}
+	if(geoJsonPoint.properties.notes) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.notes.replace(/\n/g, '<br>')+"</p>"; 	// csv description
 	if(geoJsonPoint.properties.description) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
+	if(geoJsonPoint.properties.comment) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.comment.replace(/\n/g, '<br>')+"</p>"; 	// csv description
+	if(geoJsonPoint.properties.ele) popUpHTML = popUpHTML+"<p>Alt: "+geoJsonPoint.properties.ele+"</p>"; 	// gpx elevation
+	if(geoJsonPoint.properties.alt) popUpHTML = popUpHTML+"<p>Alt: "+geoJsonPoint.properties.alt+"</p>"; 	// csv elevation
+	if(geoJsonPoint.properties.height) popUpHTML = popUpHTML+"<p>Alt: "+geoJsonPoint.properties.height+"</p>"; 	// csv elevation
+	if(geoJsonPoint.properties.depth) popUpHTML = popUpHTML+"<p>Alt: "+geoJsonPoint.properties.depth+"</p>"; 	// csv depth
 
 	popUpHTML += getLinksHTML(geoJsonPoint); 	// приклеим ссылки
 	if(popUpHTML) {
-		if(geoJsonPoint.properties.name) popUpHTML = "<b>"+geoJsonPoint.properties.name+"</b><br>"+popUpHTML;
+		if(geoJsonPoint.properties.name) popUpHTML = "<b>"+geoJsonPoint.properties.name+"</b> "+popUpHTML;
 		marker.bindPopup(popUpHTML+'<br>');
 	}
 }
@@ -383,58 +427,61 @@ return marker;
 } // end function getMarkerToPoint
 
 function getLinksHTML(feature) {
-/* Возвращает строку,которуюможно было бы показать в PopUp, 
+/* Возвращает строку,которую можно было бы показать в PopUp, 
 из атрибутов link в feature. Оформляет ссылки как может.
 Пытается обнаружить ссылки на картинки и показывает для них фотоаппаратик.
 */
 var camImgPath = thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/icons/cam.svg";
 var popUpHTML = '';
-if(!feature.properties.link) return popUpHTML;
+var links = [];
+if(feature.properties.link) links.push(feature.properties.link);
+if(feature.properties.url) links.push(feature.properties.url);
+if(!links.length) return popUpHTML;
 // имеются ссылки
-//console.log(feature.properties.link);
-var linkHTML = '';
-switch(typeof(feature.properties.link)) {
-case "string":
-	linkHTML = '<a href="'+feature.properties.link+'" target="_blank" >';
-	if((feature.properties.link.slice(-5).toLowerCase()=='.jpeg') || (feature.properties.link.slice(-4).toLowerCase()=='.jpg') || (feature.properties.link.slice(-4).toLowerCase()=='.png') || (feature.properties.link.slice(-4).toLowerCase()=='.svg') || (feature.properties.link.slice(-4).toLowerCase()=='.tif') || (feature.properties.link.slice(-5).toLowerCase()=='.tiff')) {
-		linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>';
-	}
-	else { 	// непонятная ссылка
-		linkHTML = linkHTML + 'External link' + '</a><br>';
-	}
-	break;
-case "object":
-	for(var i=0; i<feature.properties.link.length; i++) { 	// для каждой ссылки
-		if(feature.properties.link[i].attributes.length) 		var link = feature.properties.link[i].attributes.href.value.trim();
-		else 	var link = feature.properties.link[i].innerHTML.trim();
-		linkHTML += '<a href="'+link+'" target=”_blank” >';
-		var text = ' ', textAttr;
-		if( textAttr = feature.properties.link[i].getElementsByTagName('text')[0]) text = textAttr.textContent+'<br>'; 	// есть атрибут text
-		if(feature.properties.link[i].getElementsByTagName('type')[0]) { 	// есть атрибут type
-			if( feature.properties.link[i].getElementsByTagName('type')[0].textContent.indexOf("image") != -1) { 	// если картинка
-				linkHTML += '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>'+text;
+//console.log(links);
+for (var i=0; i<links.length; i++) {
+	var linkHTML = '';
+	switch(typeof(links[i])) {
+	case "string":
+		linkHTML = '<a href="'+links[i]+'" target="_blank" >';
+		if((links[i].slice(-5).toLowerCase()=='.jpeg') || (links[i].slice(-4).toLowerCase()=='.jpg') || (links[i].slice(-4).toLowerCase()=='.png') || (links[i].slice(-4).toLowerCase()=='.svg') || (links[i].slice(-4).toLowerCase()=='.tif') || (links[i].slice(-5).toLowerCase()=='.tiff')) {
+			linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>';
+		}
+		else { 	// непонятная ссылка
+			linkHTML = linkHTML + 'External link' + '</a><br>';
+		}
+		break;
+	case "object":
+		for(var j=0; j<links[i].length; j++) { 	// для каждой ссылки
+			if(links[i][j].attributes.length) 		var link = links[i][j].attributes.href.value.trim();
+			else 	var link = links[i][j].innerHTML.trim();
+			linkHTML += '<a href="'+link+'" target=”_blank” >';
+			var text = ' ', textAttr;
+			if( textAttr = links[i][j].getElementsByTagName('text')[0]) text = textAttr.textContent+'<br>'; 	// есть атрибут text
+			if(links[i][j].getElementsByTagName('type')[0]) { 	// есть атрибут type
+				if( links[i][j].getElementsByTagName('type')[0].textContent.indexOf("image") != -1) { 	// если картинка
+					linkHTML += '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>'+text;
+				}
+				else { 	// неизвестный тип
+					if(!text) text = 'External link';
+					linkHTML += text + '</a><br>';
+				}
 			}
-			else { 	// неизвестный тип
-				if(!text) text = 'External link';
-				linkHTML += text + '</a><br>';
+			else { 	// нет атрибута type
+				if((link.slice(-5).toLowerCase()=='.jpeg') || (link.slice(-4).toLowerCase()=='.jpg') || (link.slice(-4).toLowerCase()=='.png') || (link.slice(-4).toLowerCase()=='.svg') || (link.slice(-4).toLowerCase()=='.tif') || (link.slice(-5).toLowerCase()=='.tiff')) {
+					linkHTML += '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>'+text;
+				}
+				else { 	// непонятная ссылка
+					if(!text) text = 'External link';
+					linkHTML += text + '</a><br>';
+				}
 			}
 		}
-		else { 	// нет атрибута type
-			if((link.slice(-5).toLowerCase()=='.jpeg') || (link.slice(-4).toLowerCase()=='.jpg') || (link.slice(-4).toLowerCase()=='.png') || (link.slice(-4).toLowerCase()=='.svg') || (link.slice(-4).toLowerCase()=='.tif') || (link.slice(-5).toLowerCase()=='.tiff')) {
-				linkHTML += '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>'+text;
-			}
-			else { 	// непонятная ссылка
-				if(!text) text = 'External link';
-				linkHTML += text + '</a><br>';
-			}
-		}
+		break;
 	}
-	break;
-default:
-	return popUpHTML;
+	popUpHTML = popUpHTML+linkHTML;
 }
-popUpHTML = popUpHTML+linkHTML;
-
+if(popUpHTML) popUpHTML = '<br>'+popUpHTML;
 return popUpHTML;
 }; 	// end function getLinksHTML
 
@@ -1910,7 +1957,7 @@ var toGeoJSON = (function() {
                 };
             }
             function getProperties(node) {
-                var meta = ['name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords'], 	// список уникальных свойств, которые будем получать
+                var meta = ['ele', 'name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords'], 	// список уникальных свойств, которые будем получать
                     prop = {},
                     k;
                 for (k = 0; k < meta.length; k++) {

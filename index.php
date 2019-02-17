@@ -432,6 +432,7 @@ var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущ�
 if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked = true; 	// показывать текущий трек вместе с курсором
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch'));
 var currentRoute; 	// объект Editable, по которому щёлкнули. Типа, текущий.
+var globalCurrentMarkerColor = {r:0xFF,g:0xFF,b:0xFF}; 	// цвет линий и значков
 // Определим карту
 var map = L.map('mapid', {
 	center: startCenter,
