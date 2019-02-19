@@ -247,7 +247,6 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 		<!-- Треки -->
 		<div class="leaflet-sidebar-pane" id="tracks">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<br>
 			<ul id="trackDisplayed">
 			</ul>
 			<ul id="trackList">
@@ -314,7 +313,6 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 		<!-- Места и маршруты -->
 		<div class="leaflet-sidebar-pane" id="routes">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $routesHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<br>
 			<ul id="routeDisplayed">
 			</ul>
 			<ul id="routeList">
@@ -432,7 +430,7 @@ var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущ�
 if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked = true; 	// показывать текущий трек вместе с курсором
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch'));
 var currentRoute; 	// объект Editable, по которому щёлкнули. Типа, текущий.
-var globalCurrentMarkerColor = {r:0xFF,g:0xFF,b:0xFF}; 	// цвет линий и значков
+var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 // Определим карту
 var map = L.map('mapid', {
 	center: startCenter,

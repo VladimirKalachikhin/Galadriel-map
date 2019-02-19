@@ -205,6 +205,7 @@ function topojsonParse(data, options, layer) {
 }
 
 function csvParse(csv, options, layer) {
+/**/
 if(layer) {
 	if(layer.getLayers()) { 	// это layerGroup
 		var featuresLayer = layer.getLayers()[0] || L.geoJson();
@@ -218,25 +219,24 @@ else {
 	var featuresLayer = L.geoJson();
 	var layer = new L.layerGroup([featuresLayer]);
 }
+var color = globalCurrentColor;
+globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет
+if(color == 0xFFFFFF) featuresLayer.options.color = 0x3388FF; 	//  умолчальный цвет линий
+else featuresLayer.options.color = color; 	//  цвет линий
+if(options.featureNameNode) { 	// li с именем файла, из которого делаем layer
+	options.featureNameNode.style.backgroundColor = '#'+('000000' + color.toString(16)).slice(-6);
+}
 featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
+featuresLayer.options.style = function(geoJsonFeature){return{color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6)};}; 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
 if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
 
 var pointsLayer = L.geoJson();
-pointsLayer.options.markerColor = Object.assign({}, globalCurrentMarkerColor); 	// копируем цвет линий и значков
-console.log(pointsLayer.options.markerColor);
-globalCurrentMarkerColor = nextColor(globalCurrentMarkerColor); 	// сменим текущий цвет
-layer.options.markerColor = pointsLayer.options.markerColor; 	// потом в layerGroup не найдёшь
-if(options.routeNameNode) { 	// li с именем файла, из которого делаем layer
-	console.log('#'+pointsLayer.options.markerColor.r.toString(16)+pointsLayer.options.markerColor.g.toString(16)+pointsLayer.options.markerColor.b.toString(16));
-	//options.routeNameNode.style.backgroundColor = '#${pointsLayer.options.markerColor.r.toString(16)}${pointsLayer.options.markerColor.g.toString(16)}${pointsLayer.options.markerColor.b.toString(16)}';
-	options.routeNameNode.style.backgroundColor = '#'+pointsLayer.options.markerColor.r.toString(16)+pointsLayer.options.markerColor.g.toString(16)+pointsLayer.options.markerColor.b.toString(16);
-}
+pointsLayer.options.color = color; 	//  цвет значков
 pointsLayer.options.pointToLayer = function (geoJsonPoint, latlng) { 	// функция, вызываемая для каждой точки при её создании
-	var parameters = {color: pointsLayer.options.markerColor}; 	// таким образом мы забросим цвет в создание маркера
+	var parameters = {color: pointsLayer.options.color}; 	// таким образом мы забросим цвет в создание маркера
 	var marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
 	return marker;
 };
-//pointsLayer.on('layeradd', markerUpd); 	// после добавления маркера - покрасим его
 layer.addLayer(pointsLayer);
 
 options = options || {};
@@ -264,6 +264,7 @@ return layer;
 } // end function csvParse
 
 function gpxParse(gpx, options, layer) {
+/**/
 var xml = parseXML(gpx);
 if (!xml) return layer.fire('error', {
     error: 'Could not parse GPX'
@@ -281,8 +282,6 @@ else {
 	var featuresLayer = L.geoJson();
 	var layer = new L.layerGroup([featuresLayer]);
 }
-layer.options.markerColor = globalCurrentMarkerColor; 	// цвет линий и значков
-globalCurrentMarkerColor = nextColor(globalCurrentMarkerColor); 	// сменим текущий цвет
 
 var geojson = toGeoJSON.gpx(xml);
 //console.log(geojson);
@@ -294,13 +293,26 @@ for(var i=0; i<geojson.features.length;i++) {
 }
 //console.log(Points);
 //console.log(Features);
+var color = globalCurrentColor;
+globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет
+if(color == 0xFFFFFF) featuresLayer.options.color = 0x3388FF; 	//  умолчальный цвет линий
+else featuresLayer.options.color = color; 	//  цвет линий
+if(options.featureNameNode) { 	// li с именем файла, из которого делаем layer
+	options.featureNameNode.style.backgroundColor = '#'+('000000' + color.toString(16)).slice(-6);
+}
 featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
+featuresLayer.options.style = function(geoJsonFeature){return{color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6)};}; 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
 addData(featuresLayer, Features); 	// добавим и покажем всё остальное
 if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
 //console.log(featuresLayer);
 if(Points.length) {
 	var pointsLayer = L.geoJson();
-	pointsLayer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
+	pointsLayer.options.color = color; 	//  цвет значков
+	pointsLayer.options.pointToLayer = function (geoJsonPoint, latlng) { 	// функция, вызываемая для каждой точки при её создании
+		var parameters = {color: pointsLayer.options.color}; 	// таким образом мы забросим цвет в создание маркера
+		var marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
+		return marker;
+	};
 	doClastering(pointsLayer, Points); 	// закластеризуем точки
 	updClaster(pointsLayer);	// galadrielmap.js  и покажем
 	layer.addLayer(pointsLayer);
@@ -308,13 +320,6 @@ if(Points.length) {
 //console.log(layer);
 //console.log(layer.getLayers());
 return layer;
-}
-
-function markerUpd(event) {
-/* Вешается на событие layeradd с целью редактирования того, что add 
-Предполагается, что маркер
-*/
-console.log(event);
 }
 
 function doClastering(layer, geojson) {
@@ -354,10 +359,9 @@ var marker = L.marker(latlng, { 	// маркер для этой точки
 });
 if(geoJsonPoint.properties.cluster) { 	// это кластер
 	//console.log(geoJsonPoint);
-	if(!parameters.color) parameters.color = {r:0xFF,g:0xFF,b:0xFF}
+	if(!parameters.color) parameters.color = 0xFFFFFF;
     const icon  = L.divIcon({
-        html: `<div style="background-color:rgb(${parameters.color.r},${parameters.color.g},${parameters.color.b})"><span>${  geoJsonPoint.properties.point_count_abbreviated  }</span></div>`,
-        //html: `<div ><span>${  geoJsonPoint.properties.point_count_abbreviated  }</span></div>`,
+        html: `<div style="background-color: #${('000000' + parameters.color.toString(16)).slice(-6)};"><span>${  geoJsonPoint.properties.point_count_abbreviated  }</span></div>`,
         className: `marker-cluster`,
         iconSize: L.point(25, 25),
     });
@@ -589,9 +593,8 @@ if(iconName) {
 }, // end function setIconCustomIcon, список атрибутов объекта продолжается
 } // end object iconServer
 
-
-
 function kmlParse(gpx, options, layer) {
+/**/
 var xml = parseXML(gpx);
 if (!xml) return layer.fire('error', {
     error: 'Could not parse KML'
@@ -616,12 +619,25 @@ else {
 	var featuresLayer = L.geoJson();
 	var layer = new L.layerGroup([featuresLayer]);
 }
+var color = globalCurrentColor;
+globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет
+if(color == 0xFFFFFF) featuresLayer.options.color = 0x3388FF; 	//  умолчальный цвет линий
+else featuresLayer.options.color = color; 	//  цвет линий
+if(options.featureNameNode) { 	// li с именем файла, из которого делаем layer
+	options.featureNameNode.style.backgroundColor = '#'+('000000' + color.toString(16)).slice(-6);
+}
 featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
+featuresLayer.options.style = function(geoJsonFeature){return{color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6)};}; 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
 addData(featuresLayer, Features); 	// добавим и покажем всё остальное
 if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
 if(Points.length) {
 	var pointsLayer = L.geoJson();
-	pointsLayer.options.pointToLayer = getMarkerToPoint; 	// функция, вызываемая для каждой точки при её создании
+	pointsLayer.options.color = color; 	//  цвет значков
+	pointsLayer.options.pointToLayer = function (geoJsonPoint, latlng) { 	// функция, вызываемая для каждой точки при её создании
+		var parameters = {color: pointsLayer.options.color}; 	// таким образом мы забросим цвет в создание маркера
+		var marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
+		return marker;
+	};
 	doClastering(pointsLayer, Points); 	// закластеризуем точки
 	updClaster(pointsLayer);	// galadrielmap.js  и покажем
 	layer.addLayer(pointsLayer);

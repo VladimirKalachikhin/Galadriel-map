@@ -169,6 +169,7 @@ global trackDirURI, window, currentTrackName
 var trackName = trackNameNode.innerText.trim();
 if( window[trackName] && (trackName != currentTrackName)) window[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем
 else {
+	var options = {featureNameNode : trackNameNode};
 	var xhr = new XMLHttpRequest();
 	//alert(trackDirURI+'/'+trackName+'.gpx');
 	xhr.open('GET', encodeURI(trackDirURI+'/'+trackName+'.gpx'), true); 	// Подготовим асинхронный запрос
@@ -181,7 +182,7 @@ else {
 		}
 		//alert('|'+this.responseText.slice(-10)+'|');
 		if(this.responseText.slice(-10).indexOf('</gpx>') == -1)	window[trackName] = omnivore.gpx.parse(this.responseText + '  </trkseg>\n </trk>\n</gpx>'); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
-		else window[trackName] = omnivore.gpx.parse(this.responseText); 	// responseXML иногда почему-то кривой
+		else window[trackName] = omnivore.gpx.parse(this.responseText,options); 	// responseXML иногда почему-то кривой
 		//console.log(window[trackName]);
 		window[trackName].addTo(map); 	// нарисуем его на карте
 	}
@@ -193,7 +194,7 @@ function displayRoute(routeNameNode) {
 global routeDirURI map window
 */
 var routeName = routeNameNode.innerText.trim();
-var options = {routeNameNode : routeNameNode};
+var options = {featureNameNode : routeNameNode};
 if( window[routeName]) window[routeName].addTo(map); 	// нарисуем его на карте. 
 else {
 	var routeType =  routeName.slice((routeName.lastIndexOf(".") - 1 >>> 0) + 2).toLowerCase(); 	// https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
@@ -508,23 +509,28 @@ if(layer.supercluster) {
 } // end function updClaster
 
 function nextColor(color,step) {
-/* color - object {r,g,b} in HEX
-step - HEX
- */
-if(!step) step = 0xF0;
-color.b -= step;
-if(color.b < 0) {
-	color.b = 0;
-	color.g -= step;
-	if(color.g < 0) {
-		color.g = 0;
-		color.r -= step;
-		if(color.r < 0) {
-			color.r = 0xFF;
-			color.g = 0xFF;
-			color.b = 0xFF;
+/* step - by color chanel 
+step не может быть константой, если color - число, если мы хотим получать чистые цвета
+*/
+if(!step) step = 0x80;
+const colorStr = ('000000' + color.toString(16)).slice(-6);
+var r = parseInt(colorStr.slice(0,2),16);
+var g = parseInt(colorStr.slice(2,4),16);
+var b = parseInt(colorStr.slice(4),16);
+b-=step;
+if(b<0) {
+	b=0xFF+b;
+	g-=step;
+	if(g<0) {
+		g=0xFF+g;
+		r-=step;
+		if(r<0) {
+			r=0xFF+r;
+			g=0xFF-g;
+			b=0xFF-b;
 		}
 	}
 }
-return color;
+return parseInt(('00'+r.toString(16)).slice(-2)+('00'+g.toString(16)).slice(-2)+('00'+b.toString(16)).slice(-2),16);
 } // end function nextColor
+
