@@ -44,6 +44,10 @@ Paths and other are set and describe in _params.php_
 
 Create local copy of dependences and/or edit _index.php_
 
+### Emergency kit
+
+All you need to install, including dependences, are in _distr/_.
+
 ### Thanks
 * [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to show markers and non well-formed gpx files.
 * [Metrize Icons by Alessio Atzeni](https://icon-icons.com/pack/Metrize-Icons/1130) for icons.
