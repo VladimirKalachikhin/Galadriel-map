@@ -4,3 +4,25 @@
 .wpIcon {
 	opacity: 0.7;
 }
+
+/* supercluster */
+.marker-cluster {
+	background-clip: padding-box;
+	border-radius: 5px;
+	border: 2px outset black;
+	background-color: #969696;
+	opacity: 0.7;
+	display: flex;
+    justify-content: center; /*Центрирование по горизонтали*/
+    align-items: center;     /*Центрирование по вертикали */
+}
+.marker-cluster div {
+	width: 20px;
+	height: 20px;
+	border-radius: 10px;
+	/*background-color: white;*/
+	text-align: center;
+	font-weight: bold;
+	padding-top: 2px;
+}
+

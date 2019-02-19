@@ -136,7 +136,7 @@ global deSelectTrack()
 //console.log(trackDisplayed.firstChild);
 trackDisplayed.insertBefore(node,trackDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.onclick = function(event){deSelectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
-displayTrack(node.innerHTML); 	// создадим трек
+displayTrack(node); 	// создадим трек
 } // end function selectTrack
 
 function deSelectTrack(node,trackList,trackDisplayed,displayTrack) {
@@ -161,14 +161,15 @@ node.onclick = function(event){selectTrack(event.currentTarget,trackList,trackDi
 removeMap(node.innerHTML);
 }
 
-function displayTrack(trackName) {
-/* рисует трек с именем trackName 
+function displayTrack(trackNameNode) {
+/* рисует трек в именем в trackNameNode
 global trackDirURI, window, currentTrackName
 */
 //alert(trackName);
-trackName=trackName.trim();
+var trackName = trackNameNode.innerText.trim();
 if( window[trackName] && (trackName != currentTrackName)) window[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем
 else {
+	var options = {featureNameNode : trackNameNode};
 	var xhr = new XMLHttpRequest();
 	//alert(trackDirURI+'/'+trackName+'.gpx');
 	xhr.open('GET', encodeURI(trackDirURI+'/'+trackName+'.gpx'), true); 	// Подготовим асинхронный запрос
@@ -181,29 +182,31 @@ else {
 		}
 		//alert('|'+this.responseText.slice(-10)+'|');
 		if(this.responseText.slice(-10).indexOf('</gpx>') == -1)	window[trackName] = omnivore.gpx.parse(this.responseText + '  </trkseg>\n </trk>\n</gpx>'); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
-		else window[trackName] = omnivore.gpx.parse(this.responseText); 	// responseXML иногда почему-то кривой
+		else window[trackName] = omnivore.gpx.parse(this.responseText,options); 	// responseXML иногда почему-то кривой
 		//console.log(window[trackName]);
 		window[trackName].addTo(map); 	// нарисуем его на карте
 	}
 }
 } // end function displayTrack
 
-function displayRoute(routeName) {
+function displayRoute(routeNameNode) {
 /* рисует маршрут или места с именем routeName 
 global routeDirURI map window
 */
+var routeName = routeNameNode.innerText.trim();
+var options = {featureNameNode : routeNameNode};
 if( window[routeName]) window[routeName].addTo(map); 	// нарисуем его на карте. 
 else {
 	var routeType =  routeName.slice((routeName.lastIndexOf(".") - 1 >>> 0) + 2).toLowerCase(); 	// https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
 	switch(routeType) {
 	case 'gpx':
-		window[routeName] = omnivore.gpx(routeDirURI+'/'+routeName);
+		window[routeName] = omnivore.gpx(routeDirURI+'/'+routeName,options);
 		break;
 	case 'kml':
-		window[routeName] = omnivore.kml(routeDirURI+'/'+routeName);
+		window[routeName] = omnivore.kml(routeDirURI+'/'+routeName,options);
 		break;
 	case 'csv':
-		window[routeName] = omnivore.csv(routeDirURI+'/'+routeName);
+		window[routeName] = omnivore.csv(routeDirURI+'/'+routeName,options);
 		break;
 	}
 	//console.log(window[routeName]);
@@ -325,6 +328,7 @@ function tooggleEditRoute(e) {
 Обычно обработчик клика по линии
 */
 //console.log(e.target);
+//console.log('tooggleEditRoute start by anymore');
 
 currentRoute = e.target; 	// сделаем объект, по которому щёлкнули, текущим
 if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
@@ -463,3 +467,70 @@ String.prototype.encodeHTML = function () {
                .replace(/"/g, '&quot;')
                .replace(/'/g, '&apos;');
 };
+
+// Кластеризация точек
+function updateClasters() {
+/* Обновляет все показываемые кластеры точек
+*/
+//console.log('galadrielmap.js: updateClasters start by anymore');
+for (var i = 0; i < routeDisplayed.children.length; i++) { 	// для каждого потомка списка routeDisplayed
+	const trackName = routeDisplayed.children[i].innerHTML; 	// наименование показывающегося слоя, возможн, с точками
+	updClaster(window[trackName]);
+}
+for (var i = 0; i < trackDisplayed.children.length; i++) { 	// для каждого потомка списка trackDisplayed
+	const trackName = trackDisplayed.children[i].innerHTML; 	// наименование показывающегося слоя, возможн, с точками
+	updClaster(window[trackName]);
+}
+} // end function updateClasters
+
+async function updClaster(e) {
+// обновляет кластер
+let layer;
+if(e.target) layer = e.target; 	// e - event
+else layer = e;	// e - layer
+//console.log(layer.getLayers());
+//console.log(layer);
+if(layer.getLayers().length) layer.eachLayer(realUpdClaster);
+else realUpdClaster(layer);
+
+function realUpdClaster(layer) {
+if(layer.supercluster) {
+	//console.log('Обновляется кластер');
+	//console.log(layer);
+	const bounds = map.getBounds();
+	const mapBox = {
+		bbox: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
+		zoom: map.getZoom()
+	}
+	layer.clearLayers();
+	layer.addData(layer.supercluster.getClusters(mapBox.bbox, mapBox.zoom)); 	// возвращает точки (и кластеры как точки) как GeoJSON Feature и загружает в слой
+}
+} 	// end function realUpdClaster
+} // end function updClaster
+
+function nextColor(color,step) {
+/* step - by color chanel 
+step не может быть константой, если color - число, если мы хотим получать чистые цвета
+*/
+if(!step) step = 0x80;
+const colorStr = ('000000' + color.toString(16)).slice(-6);
+var r = parseInt(colorStr.slice(0,2),16);
+var g = parseInt(colorStr.slice(2,4),16);
+var b = parseInt(colorStr.slice(4),16);
+b-=step;
+if(b<0) {
+	b=0xFF+b;
+	g-=step;
+	if(g<0) {
+		g=0xFF+g;
+		r-=step;
+		if(r<0) {
+			r=0xFF+r;
+			g=0xFF-g;
+			b=0xFF-b;
+		}
+	}
+}
+return parseInt(('00'+r.toString(16)).slice(-2)+('00'+g.toString(16)).slice(-2)+('00'+b.toString(16)).slice(-2),16);
+} // end function nextColor
+

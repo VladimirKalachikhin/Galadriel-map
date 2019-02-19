@@ -155,11 +155,11 @@ if($routeDir) {
     <script src="Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
 <?php }?>
 <?php if($trackDir OR $routeDir) {?>
+	<script src='supercluster/supercluster.js')></script>
 	<link rel="stylesheet" href="leaflet-omnivorePATCHED/leaflet-omnivore.css" />
 	<script src="leaflet-omnivorePATCHED/leaflet-omnivore.js"></script>
 <?php }?>    
-
-	<script src="Leaflet.Editable/src/Leaflet.Editable.js"></script>
+<script src="Leaflet.Editable/src/Leaflet.Editable.js"></script>
 	<link rel="stylesheet" href="leaflet-measure-path/leaflet-measure-path.css" />
 	<script src="leaflet-measure-path/leaflet-measure-path.js"></script>
 
@@ -247,7 +247,6 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 		<!-- Треки -->
 		<div class="leaflet-sidebar-pane" id="tracks">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<br>
 			<ul id="trackDisplayed">
 			</ul>
 			<ul id="trackList">
@@ -314,7 +313,6 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 		<!-- Места и маршруты -->
 		<div class="leaflet-sidebar-pane" id="routes">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $routesHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<br>
 			<ul id="routeDisplayed">
 			</ul>
 			<ul id="routeList">
@@ -432,6 +430,7 @@ var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущ�
 if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked = true; 	// показывать текущий трек вместе с курсором
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch'));
 var currentRoute; 	// объект Editable, по которому щёлкнули. Типа, текущий.
+var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 // Определим карту
 var map = L.map('mapid', {
 	center: startCenter,
@@ -504,7 +503,10 @@ map.on('zoomend', function(event) {
 	if(!downJob) current_zoom.innerHTML = zoom;
 	
 });
-map.on("layeradd ", function(event) {
+<?php if($trackDir OR $routeDir) {?>
+map.on('moveend', updateClasters); 	// кластеризация точек POI
+<?php }?>    
+map.on("layeradd", function(event) {
 	//alert(tileGrid);
 	if(tileGrid) tileGrid.bringToFront(); 	// выведем наверх слой с сеткой
 });
@@ -548,6 +550,7 @@ routeEraseButton.disabled=true; 	// сделать кнопку "Стереть"
 
 map.on('editable:editing', // обязательный обработчик для editable для перересовывания расстояний при изменении пути
 	function (e) {
+		//console.log('обязательный обработчик для editable start by editable:editing');
 		//console.log(e);
 		//console.log(e.layer);
 		if (e.layer instanceof L.Path) e.layer.updateMeasurements();

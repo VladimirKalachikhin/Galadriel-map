@@ -220,4 +220,8 @@ ul {
 }
 
 /*  */
+.leaflet-popup-content {
+    max-height: 55vh;
+    overflow-y: auto;
+}
 
