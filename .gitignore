@@ -11,5 +11,6 @@ fetch*
 promise-polyfill*
 JSON-js*
 отстой
+supercluster
 
 
