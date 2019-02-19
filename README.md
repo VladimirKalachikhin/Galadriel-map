@@ -37,6 +37,7 @@ Paths and other are set and describe in _params.php_
 * [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) in _leaflet-sidebar-v2/_ directory
 * [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) in _Leaflet.Editable/_ directory
 * [Leaflet Measure Path](https://github.com/ProminentEdge/leaflet-measure-path) in _leaflet-measure-path/_ directory
+* [supercluster](https://github.com/mapbox/supercluster) as _supercluster/supercluster.js_
 <br>For more compability:
 * [fetch polyfill](https://github.com/github/fetch/) as _fetch/fetch.js_
 * [promise-polyfill](https://github.com/taylorhakes/promise-polyfill) as _promise-polyfill/promise.js_
