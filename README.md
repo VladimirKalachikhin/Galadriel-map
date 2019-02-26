@@ -65,7 +65,7 @@ Run _chkGPXfiles.php_ in cli to repair non well-formed gpx files for other appli
 
 ### CSV
 Comma-Separated Values text file - a simplest way to cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.<br>
-First line in csv file must be a field names. Good choice is a `"number","name","description","type","link","latitude","longitude"`<br>
+First line in csv file must be a field names. Good choice is a `"number","name","description","type","link","latitude","longitude"` <br>
 Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
 
 
