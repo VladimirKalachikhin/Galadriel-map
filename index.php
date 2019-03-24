@@ -159,7 +159,7 @@ if($routeDir) {
 	<link rel="stylesheet" href="leaflet-omnivorePATCHED/leaflet-omnivore.css" />
 	<script src="leaflet-omnivorePATCHED/leaflet-omnivore.js"></script>
 <?php }?>    
-<script src="Leaflet.Editable/src/Leaflet.Editable.js"></script>
+	<script src="Leaflet.Editable/src/Leaflet.Editable.js"></script>
 	<link rel="stylesheet" href="leaflet-measure-path/leaflet-measure-path.css" />
 	<script src="leaflet-measure-path/leaflet-measure-path.js"></script>
 
@@ -673,10 +673,11 @@ realtime.on('update', function(onUpdate) {
 	if(currentTrackName) {
 		if(map.hasLayer(window[currentTrackName])) { 	// Текущий трек показывается
 			//alert('Текущий трек показывается');
+			//updateCurrTrack(cursor.getLatLng()); 	// for debug
 			updateCurrTrack();
 		}
 		else {
-			//alert('Нет имени Текущий трек '+currTrackSwitch.checked);
+			//alert('Текущий трек '+currTrackSwitch.checked);
 			if(currTrackSwitch.checked) selectTrack(currentTrackLi,trackList,trackDisplayed,displayTrack); 	// galadrielmap.js требуется показывать текущй трек
 		}
 	}

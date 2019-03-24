@@ -28,6 +28,8 @@ module.exports.kml.parse = kmlParse;
 module.exports.wkt = wktLoad;
 module.exports.wkt.parse = wktParse;
 
+//module.exports.toGeoJSON = toGeoJSON;
+
 function addData(l, d) { 	// layer geojson
 /* Загружает geojson в layer 
 */
@@ -493,20 +495,22 @@ function getPopUpToLine(feature, layer) {
 /* A Function that will be called once for each created Feature
 */
 //console.log(feature);
-if(feature.properties.isRoute) { 	// это маршрут.
+if(feature.properties && feature.properties.isRoute) { 	// это маршрут.
 	layer.options.showMeasurements=true;
 	layer.options.color = '#FDFF00';
 }
-var popUpHTML = '';
-if(feature.properties.number) popUpHTML = " <span style='font-size:120%;'>"+feature.properties.number+"</span> "+popUpHTML;
-if(feature.properties.cmt) popUpHTML += "<p>"+feature.properties.cmt+"</p>";
-if(feature.properties.desc) popUpHTML += "<p>"+feature.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
-if(feature.properties.description) popUpHTML += "<p>"+feature.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
-popUpHTML += getLinksHTML(feature); 	// приклеим ссылки
-if(popUpHTML) {
-	if(feature.properties.name) popUpHTML = "<b>"+feature.properties.name+"</b> "+popUpHTML;
-	//alert(popUpHTML);
-	layer.bindPopup(popUpHTML+'<br>');
+if(feature.properties) {
+	var popUpHTML = '';
+	if(feature.properties.number) popUpHTML = " <span style='font-size:120%;'>"+feature.properties.number+"</span> "+popUpHTML;
+	if(feature.properties.cmt) popUpHTML += "<p>"+feature.properties.cmt+"</p>";
+	if(feature.properties.desc) popUpHTML += "<p>"+feature.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
+	if(feature.properties.description) popUpHTML += "<p>"+feature.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
+	popUpHTML += getLinksHTML(feature); 	// приклеим ссылки
+	if(popUpHTML) {
+		if(feature.properties.name) popUpHTML = "<b>"+feature.properties.name+"</b> "+popUpHTML;
+		//alert(popUpHTML);
+		layer.bindPopup(popUpHTML+'<br>');
+	}
 }
 } // end function getPopUpToLine
 
@@ -1885,6 +1889,7 @@ var toGeoJSON = (function() {
             return gj;
         },
         gpx: function(doc) {
+        	//console.log(doc);
             var i,
                 tracks = get(doc, 'trk'),
                 routes = get(doc, 'rte'),
@@ -1892,6 +1897,7 @@ var toGeoJSON = (function() {
                 // a feature collection
                 gj = fc(),
                 feature;
+			//console.log(waypoints);
             for (i = 0; i < tracks.length; i++) {
                 feature = getTrack(tracks[i]);
                 if (feature) gj.features.push(feature);
@@ -1903,6 +1909,7 @@ var toGeoJSON = (function() {
             for (i = 0; i < waypoints.length; i++) {
                 gj.features.push(getPoint(waypoints[i]));
             }
+            //console.log(gj);
             function getPoints(node, pointname) {
                 var pts = get(node, pointname),
                     line = [],

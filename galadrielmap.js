@@ -180,9 +180,13 @@ else {
 			alert('На запрос трека сервер ответил '+this.status);
 			return; 	// что-то не то с сервером
 		}
-		//alert('|'+this.responseText.slice(-10)+'|');
-		if(this.responseText.slice(-10).indexOf('</gpx>') == -1)	window[trackName] = omnivore.gpx.parse(this.responseText + '  </trkseg>\n </trk>\n</gpx>'); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
-		else window[trackName] = omnivore.gpx.parse(this.responseText,options); 	// responseXML иногда почему-то кривой
+		//console.log('|'+this.responseText.slice(-10)+'|');
+		if(this.responseText.slice(-10).indexOf('</gpx>') == -1) {
+			window[trackName] = omnivore.gpx.parse(this.responseText + '  </trkseg>\n </trk>\n</gpx>',options); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
+		}
+		else {
+			window[trackName] = omnivore.gpx.parse(this.responseText,options); 	// responseXML иногда почему-то кривой
+		}
 		//console.log(window[trackName]);
 		window[trackName].addTo(map); 	// нарисуем его на карте
 	}
@@ -214,14 +218,16 @@ else {
 }
 } // end function displayRoute
 
-function updateCurrTrack() {
+function updateCurrTrack(LatLng) {
 /* Текущий трек дорсовывается по асинхронным запросам к серверу
 От сервера получается точка в формате gpx - структура типа trkpt
 global window currentTrackServerURI, currentTrackName
 */
 var xhr = new XMLHttpRequest();
 // Получим последнюю путевую точку или последний сегмент, или последний трек из текущего трека
-xhr.open('GET', encodeURI(currentTrackServerURI+'?currTrackName='+currentTrackName), true); 	// Подготовим асинхронный запрос
+let parm = '';
+if(LatLng) parm = '&lat='+LatLng.lat+'&lon='+LatLng.lng;
+xhr.open('GET', encodeURI(currentTrackServerURI+'?currTrackName='+currentTrackName+parm), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
@@ -229,11 +235,16 @@ xhr.onreadystatechange = function() { //
 		alert('Сервер ответил '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
 		return; 	// что-то не то с сервером
 	}
-	//alert(this.responseText);
+	//console.log(this.responseText);
 	if(this.responseText) {
-		var currentTrkPtGeoJSON = toGeoJSON.gpx(this.responseXML); 	// сделаем из полученного GeoJSON функцией из omnivore
-		//alert(JSON.stringify(currentTrkPtGeoJSON));
-		window[currentTrackName].addData(currentTrkPtGeoJSON); 	// добавим полученное к слою с текущим треком
+		//console.log(JSON.parse(this.responseText));
+		//console.log(window[currentTrackName]);
+		//console.log(window[currentTrackName].getLayers());
+		if(window[currentTrackName].getLayers()) { 	// это layerGroup
+			window[currentTrackName].getLayers()[0].addData(JSON.parse(this.responseText)); 	// добавим полученное к слою с текущим треком
+			//console.log(window[currentTrackName].getLayers()[0]);
+		}
+		else window[currentTrackName].addData(JSON.parse(this.responseText)); 	// добавим полученное к слою с текущим треком
 	}
 }
 } // end function updateCurrTrack
@@ -485,6 +496,7 @@ for (var i = 0; i < trackDisplayed.children.length; i++) { 	// для каждо
 
 async function updClaster(e) {
 // обновляет кластер
+if(!e) return;
 let layer;
 if(e.target) layer = e.target; 	// e - event
 else layer = e;	// e - layer
