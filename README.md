@@ -28,8 +28,8 @@ GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/Vl
 
 ## Compatibility
 Linux. Modern browsers, include mobile.
- ![Dashboard velocity](screenshots/s7.png)
- ![Dashboard heading](screenshots/s6.png)
+ ![Dashboard velocity](screenshots/s7.jpg)
+ ![Dashboard heading](screenshots/s6.jpg)
 
 ## Install&configure:
 You must have a web server under Linux with php support. Just copy and set paths.<br>
