@@ -25,11 +25,11 @@ GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/Vl
 7. Dashboard.<br>
  _dashboard.php_ - separate app to display velocity and heading on weak (and/or old) devices, such as E-ink readers, for example.<br>
  No javascript, no fanciful css.
+ ![Dashboard velocity](screenshots/s7.jpg)
+ ![Dashboard heading](screenshots/s6.jpg)
 
 ## Compatibility
 Linux. Modern browsers, include mobile.
- ![Dashboard velocity](screenshots/s7.jpg)
- ![Dashboard heading](screenshots/s6.jpg)
 
 ## Install&configure:
 You must have a web server under Linux with php support. Just copy and set paths.<br>
