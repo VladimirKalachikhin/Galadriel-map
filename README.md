@@ -21,9 +21,15 @@ GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/Vl
  
 6. Control the GaladrielCache Loader: 
  ![Control Loader](screenshots/s4.png)
+ 
+7. Dashboard.<br>
+ _dashboard.php_ - separate app to display velocity and heading on weak (and/or old) devices, such as E-ink readers, for example.<br>
+ No javascript, no fanciful css.
 
 ## Compatibility
 Linux. Modern browsers, include mobile.
+ ![Dashboard velocity](screenshots/s7.png)
+ ![Dashboard heading](screenshots/s6.png)
 
 ## Install&configure:
 You must have a web server under Linux with php support. Just copy and set paths.<br>
@@ -48,22 +54,22 @@ Create local copy of dependences and/or edit _index.php_
 
 All you need to install, including dependences, are in _distr/_.
 
-### Thanks
+## Thanks
 * [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to show markers and non well-formed gpx files.
 * [Metrize Icons by Alessio Atzeni](https://icon-icons.com/pack/Metrize-Icons/1130) for icons.
 * [Typicons by Stephen Hutchings](https://icon-icons.com/pack/Typicons/1144) for icons.
 * [Map Icons Collection](https://mapicons.mapsmarker.com/) for icons.
 * [On/Off FlipSwitch](https://proto.io/freebies/onoff/)
 
-### gpsd
+## gpsd
 GaladrielMap get position and velosity from gpsd via _askGPSD.php_ service. You may configure _askGPSD.php_ to you gpsd host and port. Default are localhost and 2947 port (default for gpsd).<br>
 How to install and configure gpsd see [gpsd pages](http://www.catb.org/gpsd/).
 
-### tracks
+## tracks
 You may use gpxlogger app from gpsd-clients packet to logging track on your server. GaladrielMap displaying current track as not well-formed gpx file. Other tracks may be diplayed simultaneously.<br>
 Run _chkGPXfiles.php_ in cli to repair non well-formed gpx files for other applications.
 
-### CSV
+## CSV
 Comma-Separated Values text file - a simplest way to cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.<br>
 First line in csv file must be a field names. Good choice is a `"number","name","description","type","link","latitude","longitude"` <br>
 Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.

@@ -1,9 +1,9 @@
 <?php
 /**/
 // Интернационализация
-//if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
-if(TRUE) {
-	$dashboardSpeedTXT = 'Velosity';
+if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
+//if(TRUE) {
+	$dashboardSpeedTXT = 'Velocity';
 	$dashboardSpeedMesTXT = 'km/h';
 	$dashboardHeadingTXT = 'Heading';
 	$dashboardGNSSoldTXT = 'GNSS data old';
@@ -28,12 +28,12 @@ if($vps['features'][0]['properties']['error']) {
 }
 $gnssTime = new DateTime($vps['features'][1]['properties']['time']); 	// 
 $gnssTime = $gnssTime->getTimestamp();
-/*
+
 if((time()-$gnssTime)>30) {
 	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели более, чем на 30 секунд
 	goto DISPLAY;
 }
-*/
+
 switch($mode) {
 case 'heading':
 	$header = $dashboardHeadingTXT;
