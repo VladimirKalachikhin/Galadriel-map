@@ -238,8 +238,6 @@ xhr.onreadystatechange = function() { //
 	//console.log(this.responseText);
 	if(this.responseText) {
 		//console.log(JSON.parse(this.responseText));
-		//console.log(window[currentTrackName]);
-		//console.log(window[currentTrackName].getLayers());
 		if(window[currentTrackName].getLayers()) { 	// это layerGroup
 			window[currentTrackName].getLayers()[0].addData(JSON.parse(this.responseText)); 	// добавим полученное к слою с текущим треком
 			//console.log(window[currentTrackName].getLayers()[0]);
