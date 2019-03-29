@@ -28,12 +28,12 @@ if($vps['features'][0]['properties']['error']) {
 }
 $gnssTime = new DateTime($vps['features'][1]['properties']['time']); 	// 
 $gnssTime = $gnssTime->getTimestamp();
-/*
+
 if((time()-$gnssTime)>30) {
 	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели более, чем на 30 секунд
 	goto DISPLAY;
 }
-*/
+
 switch($mode) {
 case 'heading':
 	$header = $dashboardHeadingTXT;
