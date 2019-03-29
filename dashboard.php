@@ -63,7 +63,6 @@ if($fontZ>1) {
 	<meta http-equiv="refresh" content="2">
    <title>Dashboard</title>
    <style>
-/*@media (max-width: 768px) {*/
 @media (max-height: 576px) {
 	.big_symbol {
 		font-size:200px;
@@ -72,7 +71,6 @@ if($fontZ>1) {
 		font-size:40px;
 	}
 }
-/*@media (min-width: 768px) and (max-width: 991px) {*/
 @media (min-height: 577px) and (max-height: 743px) {
 	.big_symbol {
 		font-size:320px;
@@ -81,7 +79,6 @@ if($fontZ>1) {
 		font-size:50px;
 	}
 }
-/*@media (min-width: 992px) and (max-width: 1199px) {*/
 @media (min-height: 744px) and (max-height: 899px) {
 	.big_symbol {
 		font-size:450px;
@@ -91,7 +88,6 @@ if($fontZ>1) {
 	}
 }
 @media (min-height: 900px) {
-/*@media (min-width: 1200px) {*/
 	.big_symbol {
 		font-size:630px;
 	}
