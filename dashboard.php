@@ -16,7 +16,7 @@ else {
 }
 //$gpsdHost = 'localhost';
 //$gpsdPort = 2947;
-require_once('fGPSD.php'); // fGPSD.php
+require_once('fGPSD.php'); // fGPSD.php 
 
 $mode = $_REQUEST['mode'];
 
