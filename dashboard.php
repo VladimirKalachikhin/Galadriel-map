@@ -58,7 +58,10 @@ if($fontZ>1) {
 <!DOCTYPE html >
 <html lang="ru">
 <head>
-   <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Expires" content="0" />
 	<!--<meta http-equiv="refresh" content="2">-->
 	<meta http-equiv="refresh" content="2">
    <title>Dashboard</title>
@@ -95,18 +98,6 @@ if($fontZ>1) {
 		font-size:85px;
 	}
 }
-a {
-	text-decoration: none;
-}
-a:link {
-	color: #000000; /* Цвет ссылок */
-}
-a:visited {
-	color: #000000; /* Цвет посещенных ссылок */
-}
-a:hover, a:focus {
-	color: blue; /* Цвет посещенных ссылок */
-}
    </style>
 </head>
 <body>
@@ -128,15 +119,15 @@ a:hover, a:focus {
 	</div>
 </div>
 <div style='text-align:center; bottom:0; padding: 0; margin: 0;'>
-	<button style='width:90%;'>
 	<a href="dashboard.php?mode=<?php echo $mode; ?>">
+	<button style='width:90%;'>
 	<span class='mid_symbol' style='vertical-align:middle;'>
 	<?php
 	echo $nextsymbol;
 	?>
 	</span>
-	</a>
 	</button>
+	</a>
 </div>
 </body>
 </html>
