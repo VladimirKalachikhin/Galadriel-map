@@ -48,7 +48,7 @@ default:
 	$mode = 'heading';
 }
 DISPLAY:
-$fontZ = intdiv(mb_strlen($symbol),3); 	// считая, что штатный размер шрифта позволяет разместить 4 символа на экране
+$fontZ = intdiv(mb_strlen($symbol),4); 	// считая, что штатный размер шрифта позволяет разместить 4 символа на экране
 if($fontZ>1) {
 	$fontZ = round((1/$fontZ)*100);
 	$symbol = "<span style='font-size:$fontZ%;'>$symbol</span>";
@@ -66,12 +66,20 @@ if($fontZ>1) {
 	<meta http-equiv="refresh" content="2">
    <title>Dashboard</title>
    <style>
-@media (max-height: 576px) {
+@media (max-height: 356px) {
 	.big_symbol {
-		font-size:200px;
+		font-size:220px;
 	}
 	.mid_symbol {
-		font-size:40px;
+		font-size:30px;
+	}
+}
+@media (min-height: 357px) and (max-height: 576px) {
+	.big_symbol {
+		font-size:250px;
+	}
+	.mid_symbol {
+		font-size:45px;
 	}
 }
 @media (min-height: 577px) and (max-height: 743px) {
