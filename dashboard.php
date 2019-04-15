@@ -28,12 +28,12 @@ if($vps['features'][0]['properties']['error']) {
 }
 $gnssTime = new DateTime($vps['features'][1]['properties']['time']); 	// 
 $gnssTime = $gnssTime->getTimestamp();
-
+/*
 if((time()-$gnssTime)>30) {
 	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели более, чем на 30 секунд
 	goto DISPLAY;
 }
-
+*/
 switch($mode) {
 case 'heading':
 	$header = $dashboardHeadingTXT;
@@ -68,15 +68,15 @@ if($fontZ>1) {
    <style>
 @media (max-height: 356px) {
 	.big_symbol {
-		font-size:220px;
+		font-size:270px;
 	}
 	.mid_symbol {
-		font-size:30px;
+		font-size:40px;
 	}
 }
 @media (min-height: 357px) and (max-height: 576px) {
 	.big_symbol {
-		font-size:250px;
+		font-size:320px;
 	}
 	.mid_symbol {
 		font-size:45px;
@@ -84,7 +84,7 @@ if($fontZ>1) {
 }
 @media (min-height: 577px) and (max-height: 743px) {
 	.big_symbol {
-		font-size:320px;
+		font-size:370px;
 	}
 	.mid_symbol {
 		font-size:50px;

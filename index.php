@@ -98,7 +98,8 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 		$jobSize = filesize("$jobsDir/$jobName");
 		$jobComleteSize =  @filesize("$jobsInWorkDir/$jobName"); 	// файла в этот момент может уже и не оказаться
 		//echo "jobSize=$jobSize; jobComleteSize=$jobComleteSize; <br>\n";
-		$jobsInfo[$i] = array($jobName, (100 - round(($jobComleteSize/$jobSize)*100)));
+		//$jobsInfo[$i] = array($jobName, (100 - round(($jobComleteSize/$jobSize)*100))); 	// осталось
+		$jobsInfo[$i] = array($jobName, round(($jobComleteSize/$jobSize)*100)); 	// выполнено
 	}
 	//echo "jobsInfo:<pre>"; print_r($jobsInfo); echo "</pre>";
 }
@@ -139,7 +140,6 @@ if($routeDir) {
 <!DOCTYPE html >
 <html lang="ru">
 <head>
-<!--   <LINK href="common.css" rel="stylesheet" type="text/css"> -->
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<meta http-equiv="Content-Script-Type" content="text/javascript">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" > <!--  tell the mobile browser to disable unwanted scaling of the page and set it to its actual size -->
