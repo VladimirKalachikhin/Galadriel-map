@@ -98,8 +98,7 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 		$jobSize = filesize("$jobsDir/$jobName");
 		$jobComleteSize =  @filesize("$jobsInWorkDir/$jobName"); 	// файла в этот момент может уже и не оказаться
 		//echo "jobSize=$jobSize; jobComleteSize=$jobComleteSize; <br>\n";
-		//$jobsInfo[$i] = array($jobName, (100 - round(($jobComleteSize/$jobSize)*100))); 	// осталось
-		$jobsInfo[$i] = array($jobName, round(($jobComleteSize/$jobSize)*100)); 	// выполнено
+		$jobsInfo[$i] = array($jobName, round((($jobSize-$jobComleteSize)/$jobSize)*100)); 	// выполнено
 	}
 	//echo "jobsInfo:<pre>"; print_r($jobsInfo); echo "</pre>";
 }
