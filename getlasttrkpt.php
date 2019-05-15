@@ -52,7 +52,7 @@ else { 	// читаем трек
 //echo "lastTrkPt:<pre>"; print_r(htmlentities($lastTrkPt)); echo "</pre>"; 
 //echo htmlentities("<trkseg>\n".$_SESSION['lastTrkPt']."\n$lastTrkPt\n</trkseg>\n"); goto END;
 //echo "lastTrkPt:<pre>"; print_r($lastTrkPt); echo "</pre>"; 
-ob_clean(); 	// очистим, если что попало в буфер, но заголовки выше должны отправиться
+ob_clean(); 	// очистим, если что попало в буфер
 if($_SESSION['lastTrkPt'] <> $lastTrkPt) { 	// вернём, если точка изменилась
 	//$lastTrkPtGPX = "<trkseg>\n".$_SESSION['lastTrkPt']."\n$lastTrkPt\n</trkseg>\n"; 	// всегда будем оформлять две последних путевых точек как отдельный сегмент
 	$lastTrkPtGPX = gpx2geoJSONpoint(array($_SESSION['lastTrkPt'],$lastTrkPt)); 	// сделаем из двух последних точек GeoJSON LineString
@@ -68,6 +68,7 @@ if($_SESSION['lastTrkPt'] <> $lastTrkPt) { 	// вернём, если точка
 }
 
 END:
+ob_clean(); 	// очистим, если что попало в буфер
 return;
 
 function gpx2geoJSONpoint($gpxPts) {

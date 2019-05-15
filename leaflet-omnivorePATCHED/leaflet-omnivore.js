@@ -1896,7 +1896,8 @@ var toGeoJSON = (function() {
                 waypoints = get(doc, 'wpt'),
                 // a feature collection
                 gj = fc(),
-                feature;
+                feature,
+            	prevPoint; 	// для показа сегментов из одной точки будем делать из них сегмент из двух точек - своей и предыдущей
 			//console.log(waypoints);
             for (i = 0; i < tracks.length; i++) {
                 feature = getTrack(tracks[i]);
@@ -1916,7 +1917,22 @@ var toGeoJSON = (function() {
                     times = [],
                     heartRates = [],
                     l = pts.length;
-//                if (l < 2) return {};  // Invalid line in GeoJSON  !!
+				//console.log(prevPoint);
+                if (l < 2) {  					// Invalid line in GeoJSON  !!
+                	if(prevPoint && (prevPoint!=pts[l-1])) {
+                		var pts1 = []; 			// pts - HTMLcollection, и хрен туда что добавишь
+                		pts1.push(prevPoint); 	// добавим в начало предыдущую точку
+				        for (var i = 0; i < l; i++) {
+				            pts1.push(pts[i]); 	// добавим всё остальное
+						}
+						prevPoint = pts[l-1];
+						pts = pts1; 			// теперь pts - массив
+	                    l = pts.length;
+                	}
+                	else prevPoint = pts[l-1];
+                }
+				else prevPoint = pts[l-1];
+				//console.log(pts);
                 for (var i = 0; i < l; i++) {
                     var c = coordPair(pts[i]);
                     line.push(c.coordinates);
