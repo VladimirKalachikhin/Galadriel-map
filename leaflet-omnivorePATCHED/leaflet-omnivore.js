@@ -222,7 +222,7 @@ else {
 	var layer = new L.layerGroup([featuresLayer]);
 }
 var color = globalCurrentColor;
-globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет
+globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет, from galadrielmap.js
 if(color == 0xFFFFFF) featuresLayer.options.color = 0x3388FF; 	//  умолчальный цвет линий
 else featuresLayer.options.color = color; 	//  цвет линий
 if(options.featureNameNode) { 	// li с именем файла, из которого делаем layer
@@ -296,7 +296,7 @@ for(var i=0; i<geojson.features.length;i++) {
 //console.log(Points);
 //console.log(Features);
 var color = globalCurrentColor;
-globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет
+globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет, from galadrielmap.js
 if(color == 0xFFFFFF) featuresLayer.options.color = 0x3388FF; 	//  умолчальный цвет линий
 else featuresLayer.options.color = color; 	//  цвет линий
 if(options.featureNameNode) { 	// li с именем файла, из которого делаем layer
@@ -624,7 +624,7 @@ else {
 	var layer = new L.layerGroup([featuresLayer]);
 }
 var color = globalCurrentColor;
-globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет
+globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет, from galadrielmap.js
 if(color == 0xFFFFFF) featuresLayer.options.color = 0x3388FF; 	//  умолчальный цвет линий
 else featuresLayer.options.color = color; 	//  цвет линий
 if(options.featureNameNode) { 	// li с именем файла, из которого делаем layer

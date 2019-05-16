@@ -430,6 +430,7 @@ if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked =
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch'));
 var currentRoute; 	// объект Editable, по которому щёлкнули. Типа, текущий.
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
+var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.
 // Определим карту
 var map = L.map('mapid', {
 	center: startCenter,
@@ -630,6 +631,7 @@ var realtime = L.realtime(gpsanddataServerURI, {
 	}        
 }).addTo(map);
 
+
 // Realtime периодическое обновление
 realtime.on('update', function(onUpdate) {
 	//alert(JSON.stringify(JSON.decycle(onUpdate.features)));
@@ -669,15 +671,19 @@ realtime.on('update', function(onUpdate) {
 	}
 <?php if($currentTrackServerURI) { ?>
 	// Текущий трек
-	if(currentTrackName) {
-		if(map.hasLayer(window[currentTrackName])) { 	// Текущий трек показывается
-			//alert('Текущий трек показывается');
-			//updateCurrTrack(cursor.getLatLng()); 	// for debug
-			updateCurrTrack();
+	if(currentTrackName && currTrackSwitch.checked) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек
+		if(currentTrackShowedFlag !== false) { 	// Текущий трек некогда был загружен или сейчас загружается
+			if(map.hasLayer(window[currentTrackName])) { 	// если он реально есть
+				updateCurrTrack(); 	//  - обновим  galadrielmap.js
+				currentTrackShowedFlag = true;
+			}
+			else { 
+				if(currentTrackShowedFlag != 'loading') currentTrackShowedFlag = false;
+			}
 		}
-		else {
-			//alert('Текущий трек '+currTrackSwitch.checked);
-			if(currTrackSwitch.checked) selectTrack(currentTrackLi,trackList,trackDisplayed,displayTrack); 	// galadrielmap.js требуется показывать текущй трек
+		else { 	// текущий трек ещё не был загружен
+			selectTrack(currentTrackLi,trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно galadrielmap.js
+			currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
 		}
 	}
 <?php } ?>
