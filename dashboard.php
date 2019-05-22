@@ -48,7 +48,7 @@ default:
 	$mode = 'heading';
 }
 DISPLAY:
-$fontZ = intdiv(mb_strlen($symbol),4); 	// считая, что штатный размер шрифта позволяет разместить 4 символа на экране
+$fontZ = intdiv(mb_strlen($symbol),3); 	// считая, что штатный размер шрифта позволяет разместить 4 символа на экране
 if($fontZ>1) {
 	$fontZ = round((1/$fontZ)*100);
 	$symbol = "<span style='font-size:$fontZ%;'>$symbol</span>";

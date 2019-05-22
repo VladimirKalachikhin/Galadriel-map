@@ -25,6 +25,13 @@ saveGPX() 			Сохраняет на сервере маршрут из объе
 toGPX(geoJSON,createTrk) Create gpx route or track (createTrk==true) from geoJSON object
 
 String.prototype.encodeHTML = function ()
+
+updateClasters()
+updClaster(e)
+realUpdClaster(layer)
+
+nextColor(color,step)
+
 */
 function getCookie(name) {
 // возвращает cookie с именем name, если есть, если нет, то undefined
