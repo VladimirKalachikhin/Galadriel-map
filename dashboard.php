@@ -26,14 +26,16 @@ if($vps['features'][0]['properties']['error']) {
 	$symbol = $vps['features'][0]['properties']['error'];
 	goto DISPLAY;
 }
+
+
 $gnssTime = new DateTime($vps['features'][1]['properties']['time']); 	// 
 $gnssTime = $gnssTime->getTimestamp();
-/*
+
 if((time()-$gnssTime)>30) {
 	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели более, чем на 30 секунд
 	goto DISPLAY;
 }
-*/
+
 switch($mode) {
 case 'heading':
 	$header = $dashboardHeadingTXT;
@@ -68,13 +70,21 @@ if($fontZ>1) {
    <style>
 @media (max-height: 356px) {
 	.big_symbol {
-		font-size:270px;
+		font-size:220px;
+	}
+	.mid_symbol {
+		font-size:30px;
+	}
+}
+@media (min-height: 357px) and (max-height: 576px) {
+	.big_symbol {
+		font-size:250px;
 	}
 	.mid_symbol {
 		font-size:40px;
 	}
 }
-@media (min-height: 357px) and (max-height: 576px) {
+@media (min-height: 577px) and (max-height: 743px) {
 	.big_symbol {
 		font-size:320px;
 	}
@@ -82,28 +92,20 @@ if($fontZ>1) {
 		font-size:45px;
 	}
 }
-@media (min-height: 577px) and (max-height: 743px) {
+@media (min-height: 744px) and (max-height: 899px) {
 	.big_symbol {
-		font-size:370px;
+		font-size:400px;
 	}
 	.mid_symbol {
 		font-size:50px;
 	}
 }
-@media (min-height: 744px) and (max-height: 899px) {
-	.big_symbol {
-		font-size:450px;
-	}
-	.mid_symbol {
-		font-size:70px;
-	}
-}
 @media (min-height: 900px) {
 	.big_symbol {
-		font-size:630px;
+		font-size:530px;
 	}
 	.mid_symbol {
-		font-size:85px;
+		font-size:65px;
 	}
 }
    </style>
