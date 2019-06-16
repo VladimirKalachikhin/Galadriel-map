@@ -335,10 +335,10 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 						<div style='height:25vh;overflow-y:auto;overflow-x:hidden;grid-column:1/3'> 
 							<div style='display:grid; grid-template-columns: auto auto; grid-column-gap: 3px;'>
 								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:7rem;font-size:150%;'>
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:5rem;font-size:150%;'>
 								</div>
 								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:7rem;font-size:150%;' 
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:5rem;font-size:150%;' 
 										onChange="
 											//console.log(this.parentNode);
 											downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание

@@ -40,6 +40,21 @@
   text-align: center;
   cursor: pointer; 
 }
+@media (max-width: 767px) {
+	.leaflet-sidebar { 	/*  */
+		width: 270px;
+		max-width: 270px; 
+	}
+	.leaflet-sidebar-pane {
+		min-width: 240px; 
+	} 
+	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
+		left: 280px; 
+	}
+	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
+		right: 280px; 
+	}
+}
 @media (min-width: 768px) and (max-width: 991px) {
 	.leaflet-sidebar { 	/* исходно на 40 пикселов больше, чем leaflet-sidebar-pane */
 		width: 285px;
