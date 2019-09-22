@@ -2,83 +2,9 @@
 require_once('fcommon.php');
 require('params.php'); 	// пути и параметры
 
-$versionTXT = '0.1.0';
+$versionTXT = '1.0.0';
 // Интернационализация
-if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
-//if(TRUE) { 	// клиент - нерусский
-	$homeHeaderTXT = 'Maps';
-	$dashboardHeaderTXT = 'Velocity&heading';
-	$dashboardSpeedMesTXT = 'km/h';
-	$dashboardHeadingTXT = 'Heading';
-	$dashboardHeadingAltTXT = 'Истинный курс';
-	$dashboardPosTXT = 'Position';
-	$dashboardPosAltTXT = 'Широта / Долгота';
-	$dashboardSpeedZoomTXT = 'Velocity vector - distance for';
-	$dashboardSpeedZoomMesTXT = 'minutes';
-
-	$tracksHeaderTXT = 'Tracks';
-
-	$measureHeaderTXT = 'Route';
-	$routeControlsBeginTXT = 'Begin';
-	$routeControlsContinueTXT = 'Continue';
-	$routeControlsClearTXT = 'Erase';
-	$routeSaveTXT = 'Label';
-	$routeSaveTitle = 'Save to server';
-	$routeSaveDescrTXT = 'Description to route';
-	
-	$routesHeaderTXT = 'Tracks and POI';
-	
-	$downloadHeaderTXT = 'Download';
-	$downloadZoomTXT = 'Zoom';
-	$downloadJobListTXT = 'Started downloading';
-	
-	$settingsHeaderTXT = 'Settings';
-	$settingsCursorTXT = 'Follow <br>to cursor';
-	$settingsTrackTXT = 'Current track<br>always visible';
-	$integerTXT = 'Integer';
-	$clearTXT = 'Clear';
-	$okTXT = 'Create!';
-	$latTXT = 'Lat';
-	$longTXT = 'Lng';
-	$completeTXT = 'complete';
-}
-else {
-	$homeHeaderTXT = 'Карты';
-	$dashboardHeaderTXT = 'Скорость и направление';
-	$dashboardSpeedMesTXT = 'км/ч';
-	$dashboardHeadingTXT = 'Истинный курс';
-	$dashboardHeadingAltTXT = 'Heading';
-	$dashboardPosTXT = 'Местоположение';
-	$dashboardPosAltTXT = 'Latitude / Longitude';
-	$dashboardSpeedZoomTXT = 'Вектор скорости - расстояние за';
-	$dashboardSpeedZoomMesTXT = 'минут';
-
-	$tracksHeaderTXT = 'Треки';
-
-	$measureHeaderTXT = 'Маршрут';
-	$routeControlsBeginTXT = 'Начать';
-	$routeControlsContinueTXT = 'Продолжить';
-	$routeControlsClearTXT = 'Стереть';
-	$routeSaveTXT = 'Название';
-	$routeSaveTitle = 'Сохранить на сервере';
-	$routeSaveDescrTXT = 'Описание маршрута';
-	
-	$routesHeaderTXT = 'Места и маршруты';
-	
-	$downloadHeaderTXT = 'Загрузки';
-	$downloadZoomTXT = 'Масштаб';
-	$downloadJobListTXT = 'Поставлены загрузки';
-	
-	$settingsHeaderTXT = 'Параметры';
-	$settingsCursorTXT = 'Следование <br>за курсором';
-	$settingsTrackTXT = 'Текущй трек <br>всегда показывается';
-	$integerTXT = 'Целое число';
-	$clearTXT = 'Очистить';
-	$okTXT = 'Создать!';
-	$latTXT = 'Ш';
-	$longTXT = 'Д';
-	$completeTXT = 'выполнено';
-}
+require('internationalisation.php');
 
 if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 // Получаем список имён карт
@@ -230,7 +156,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 					<div style="font-size:50%;">
 						<span id='headingDisplay'></span>
 					</div>
-					<div style="font-size:50%;line-height:0.5;">
+					<div style="font-size:50%;line-height:0.5;" onClick="doCopyToClipboard(lat+' '+lng);" >
 						<br><span style="font-size:50%;"><?php echo $dashboardPosTXT;?></span><br>
 						<span style="font-size:30%; "><?php echo $dashboardPosAltTXT;?></span>
 					</div>
@@ -335,10 +261,10 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 						<div style='height:25vh;overflow-y:auto;overflow-x:hidden;grid-column:1/3'> 
 							<div style='display:grid; grid-template-columns: auto auto; grid-column-gap: 3px;'>
 								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:5rem;font-size:150%;'>
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:7rem;font-size:150%;'>
 								</div>
 								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:5rem;font-size:150%;' 
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:7rem;font-size:150%;' 
 										onChange="
 											//console.log(this.parentNode);
 											downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание
@@ -397,6 +323,16 @@ foreach($jobsInfo as $jobName) { 	//
 					</div>
 				<span style="font-size:120%"><?php echo $settingsTrackTXT;?></span>
 			</div>
+			<div style="margin: 1rem 1rem;">
+					<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="SelectedRoutesSwitch" onChange="">
+						<label class="onoffswitch-label" for="SelectedRoutesSwitch">
+							<span class="onoffswitch-inner"></span>
+							<span class="onoffswitch-switch"></span>
+						</label>
+					</div>
+				<span style="font-size:120%"><?php echo $settingsRoutesAlwaysTXT;?></span>
+			</div>
 		</div>
 	</div>
 </div>
@@ -428,9 +364,15 @@ var routeDirURI = '<?php echo $routeDir;?>'; 	// адрес каталога с 
 var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущего (пишущегося сейчас) трека
 if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked = true; 	// показывать текущий трек вместе с курсором
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch'));
+if(getCookie('GaladrielSelectedRoutesSwitch') == undefined) SelectedRoutesSwitch.checked = false; 	// показывать выбранные маршруты
+else SelectedRoutesSwitch.checked = Boolean(+getCookie('GaladrielSelectedRoutesSwitch'));
 var currentRoute; 	// объект Editable, по которому щёлкнули. Типа, текущий.
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.
+var lat; 	 	// широта
+var lng; 	 	// долгота
+var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
+var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
 // Определим карту
 var map = L.map('mapid', {
 	center: startCenter,
@@ -441,6 +383,7 @@ var map = L.map('mapid', {
 	}
 );
 
+// Controls
 // Zoom в правом верхнем углу
 L.control.zoom({
      position:'topright'
@@ -459,6 +402,12 @@ L.control.scale({
 	imperial: false
 }
 ).addTo(map);
+
+// control для записывания в clipboard
+var copyToClipboard = new L.Control.CopyToClipboard({ 	// класс определён в galadrielmap.js
+	position: 'bottomright'
+}); 	// на карту не добавляется
+
 
 // Панель управления
 var sidebar = L.control.sidebar('sidebar',{
@@ -479,7 +428,7 @@ sidebar.on("closing", function(){
 	if(CurrnoFollowToCursor !== 1) noFollowToCursor = CurrnoFollowToCursor; 	// восстановим признак следования за курсором
 	CurrnoFollowToCursor = 1;
 });
-
+// end controls
 // Поведение карты
 map.on('movestart zoomstart', function(event) { 	// карту начали двигать руками
 	// функция отменяет следование карты за курсором, и устанавливает таймер, чтобы вернуть
@@ -527,6 +476,23 @@ if(lauers) lauers.reverse().forEach(function(lauerName){ 	// потому что
 else {?>
 displayMap('default');
 <?php }?>
+
+// Восстановим показываемые треки
+if(SelectedRoutesSwitch.checked) {
+	let showRoutes = JSON.parse(getCookie('GaladrielRoutes'));
+	if(showRoutes) {
+		showRoutes.forEach(
+			function(lauerName){ 	// 
+				for (let i = 0; i < routeList.children.length; i++) { 	// для каждого потомка списка routeList маршрутов
+					if (routeList.children[i].innerHTML==lauerName) { 	// 
+						selectTrack(routeList.children[i],routeList,routeDisplayed,displayRoute)
+						break;
+					}
+				}
+			}
+		);
+	}
+}
 
 // Сетка
 var tileGrid = new L.GridLayer();
@@ -693,8 +659,8 @@ realtime.on('update', function(onUpdate) {
 	//alert("Скорость: "+velocity+"км/ч");
 	velocityDial.innerHTML = velocity;
 	// координаты курсора с точностью знаков
-	var lat = Math.round(cursor.getLatLng().lat*10000)/10000; 	 	// широта
-	var lng = Math.round(cursor.getLatLng().lng*10000)/10000; 	 	// долгота
+	lat = Math.round(cursor.getLatLng().lat*10000)/10000; 	 	// широта
+	lng = Math.round(cursor.getLatLng().lng*10000)/10000; 	 	// долгота
 	//alert(cursor.getLatLng()+'\n'+lat+' '+lng);
 	locationDisplay.innerHTML = '<?php echo $latTXT?> '+lat+'<br><?php echo $longTXT?> '+lng;	
 	followSwitch.checked = !noFollowToCursor; 	// выставим переключатель на панели Настроек в текущее положение

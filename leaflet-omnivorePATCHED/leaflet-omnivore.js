@@ -399,7 +399,7 @@ else { 	// это индивидуальная точка
 			direction: 'left', 
 			//offset: [-16,-25],
 			className: 'wpTooltip', 	// css class
-			opacity: 1
+			opacity: 0.75
 		});
 		//}).openTooltip(); 	// и перерисуем подпись под умолчальный маркер. Под другие маркеры перерисуем потом. Но это бессмысленно - она не перерисовывается
 	}
@@ -407,14 +407,15 @@ else { 	// это индивидуальная точка
 	// Информация о - PopUp
 	//console.log(geoJsonPoint.properties.link);
 	var popUpHTML = '';
-	if(geoJsonPoint.properties.number) popUpHTML = " <span style='font-size:120%;'>"+geoJsonPoint.properties.number+"</span><br> "+popUpHTML;
-	if((geoJsonPoint.properties.cmt&&geoJsonPoint.properties.desc)&&(geoJsonPoint.properties.cmt==geoJsonPoint.properties.desc)) {
-		popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
-	}
-	else {
-		if(geoJsonPoint.properties.cmt) popUpHTML = "<p>"+geoJsonPoint.properties.cmt+"</p>"+popUpHTML;
-		if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
-	}
+	if(geoJsonPoint.properties.number) popUpHTML =geoJsonPoint.properties.number;
+	if(geoJsonPoint.properties.name) popUpHTML = "<b>"+geoJsonPoint.properties.name+"</b> "+popUpHTML;
+	if(!popUpHTML) popUpHTML = latlng.lat+" "+latlng.lng;
+	//console.log(latlng);
+	popUpHTML = "<span style='font-size:120%'; onClick='doCopyToClipboard(\""+latlng.lat+" "+latlng.lng+"\")'>" + popUpHTML + "</span><br>";
+	//popUpHTML = "<span style='font-size:120%';'>" + popUpHTML + "</span><br>";
+
+	if(geoJsonPoint.properties.cmt) popUpHTML = 		popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.cmt.replace(/\n/g, '<br>')+"</p>"; 	// gpx description;
+	if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
 	if(geoJsonPoint.properties.notes) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.notes.replace(/\n/g, '<br>')+"</p>"; 	// csv description
 	if(geoJsonPoint.properties.description) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
 	if(geoJsonPoint.properties.comment) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.comment.replace(/\n/g, '<br>')+"</p>"; 	// csv description
@@ -424,10 +425,8 @@ else { 	// это индивидуальная точка
 	if(geoJsonPoint.properties.depth) popUpHTML = popUpHTML+"<p>Alt: "+geoJsonPoint.properties.depth+"</p>"; 	// csv depth
 
 	popUpHTML += getLinksHTML(geoJsonPoint); 	// приклеим ссылки
-	if(popUpHTML) {
-		if(geoJsonPoint.properties.name) popUpHTML = "<b>"+geoJsonPoint.properties.name+"</b> "+popUpHTML;
-		marker.bindPopup(popUpHTML+'<br>');
-	}
+
+	marker.bindPopup(popUpHTML+'<br>'); 	// создадим PopUp, popUpHTML всегда не пуст
 }
 return marker;
 } // end function getMarkerToPoint

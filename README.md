@@ -2,7 +2,7 @@
 This is a web tile map viewer to serve on a weak computers such as RaspberryPi or NAS and for use on a thick clients such as tablets and smartphones. It is assumed that the in onboard network of pleasure boats or campers. Author use it from the wi-fi router/GSM modem under OpenWRT on his sailboat "Galadriel".<br>
 GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache), but may be used with any tile OSM-like map sources or file tile cache for explore map. The author is not responsible for the consequences of using the GaladrielMap as navigator!
 
-## v. 0.1
+## v. 1.0
  ![screen](screenshots/s.png)
 
 ## Features:
@@ -74,4 +74,6 @@ Comma-Separated Values text file - a simplest way to cooking personal POI for yo
 First line in csv file must be a field names. Good choice is a `"number","name","description","type","link","latitude","longitude"` <br>
 Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
 
-
+## get position
+To get position to clipboard to share it via other apps - tap on Position on <img src="img/speed1.svg" alt="Dashboard" width="32px"> tab.  
+Also, tap on point name on point's popup.

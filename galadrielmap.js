@@ -32,6 +32,10 @@ realUpdClaster(layer)
 
 nextColor(color,step)
 
+copyToClipboard()
+
+Классы
+L.Control.CopyToClipboard
 */
 function getCookie(name) {
 // возвращает cookie с именем name, если есть, если нет, то undefined
@@ -55,14 +59,22 @@ document.cookie = "GaladrielMapPosition="+pos+"; expires="+expires+"; path=/";
 document.cookie = "GaladrielMapZoom="+zoom+"; expires="+expires+"; path=/";
 //alert('Сохранение параметров '+pos+zoom);
 // Сохранение показываемых карт
-var openedMapsNames = [];
-for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
-	openedMapsNames[i] = mapDisplayed.children[i].innerHTML; 	// 
+let openedNames = [];
+for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
+	openedNames[i] = mapDisplayed.children[i].innerHTML; 	// 
 }
-openedMapsNames = JSON.stringify(openedMapsNames);
-document.cookie = "GaladrielMaps="+openedMapsNames+"; expires="+expires+"; path=/";
+openedNames = JSON.stringify(openedNames);
+document.cookie = "GaladrielMaps="+openedNames+"; expires="+expires+"; path=/";
+// Сохранение показываемых маршрутов
+openedNames = [];
+for (let i = 0; i < routeDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
+	openedNames[i] = routeDisplayed.children[i].innerHTML; 	// 
+}
+openedNames = JSON.stringify(openedNames);
+document.cookie = "GaladrielRoutes="+openedNames+"; expires="+expires+"; path=/";
 // Сохранение переключателей
 document.cookie = "GaladrielcurrTrackSwitch="+Number(currTrackSwitch.checked)+"; expires="+expires+"; path=/"; 	// переключатель currTrackSwitch
+document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/"; 	// переключатель SelectedRoutesSwitch
 }
 
 // Функции выбора - удаления карт
@@ -550,4 +562,51 @@ if(b<0) {
 }
 return parseInt(('00'+r.toString(16)).slice(-2)+('00'+g.toString(16)).slice(-2)+('00'+b.toString(16)).slice(-2),16);
 } // end function nextColor
+
+function doCopyToClipboard(text) {
+/* создаёт control с полем, откуда можно скопировать text в буфер обмена, 
+при этом пытается это сделать сама.
+Через некоторое время поле исчезает
+
+global copyToClipboard
+*/
+if(typeof(text) === 'string') {
+	if(!copyToClipboard._map) { 	// кривой метод
+		//alert('not on map!');
+		copyToClipboard.addTo(map);
+	}
+	copyToClipboardField.value = text;
+	copyToClipboardField.focus();
+	copyToClipboardField.select(); // 
+	let successful = document.execCommand('copy');
+	if(successful) {
+		copyToClipboardMessage.innerText = copyToClipboardMessageOkTXT;
+	}
+	else {
+		copyToClipboardMessage.style.color='red';
+		copyToClipboardMessage.innerText = copyToClipboardMessageBadTXT;
+	}
+	let remCopyToClipboardField = setTimeout(doCopyToClipboard,PosFreshBefore); 	// удалим поле через PosFreshBefore, определённый в index
+}
+else {
+	if(typeof copyToClipboard !== 'undefined') copyToClipboard.remove();
+}
+} // end function doCopyToClipboard
+
+
+/* Определения классов */
+// control для копирования в клипбоард
+L.Control.CopyToClipboard = L.Control.extend({
+	onAdd: function(map) {
+			var div = L.DomUtil.create('div','CopyToClipboardClass');
+			div.innerHTML = `
+				<span id='copyToClipboardMessage' onClick='doCopyToClipboard()'></span>
+				<input id='copyToClipboardField' type='text'  size='12' >
+			`;
+			return div;
+		},
+	onRemove: function(map) {
+		// Nothing to do here
+		}
+});
 
