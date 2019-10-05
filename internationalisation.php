@@ -1,6 +1,6 @@
 <?php
-//if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
-if(TRUE) { 	// клиент - нерусский
+if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
+//if(TRUE) { 	// клиент - нерусский
 	$homeHeaderTXT = 'Maps';
 	$dashboardHeaderTXT = 'Velocity&heading';
 	$dashboardSpeedMesTXT = 'km/h';

@@ -646,8 +646,8 @@ realtime.on('update', function(onUpdate) {
 	var positionTime = new Date(onUpdate.features.gps.properties.time);
 	var now = new Date();
 	//alert("Время ГПС "+positionTime+'\n'+"Сейчас    "+now);
-//	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
-//	else
+	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
+	else
 	 		cursor.setIcon(GpsCursor);
 	// Направление с попыткой его запомнить при прекращении движения
 	if((onUpdate.features.gps.properties.heading !== null) && Math.round( onUpdate.features.gps.properties.velocity ) != 0) {heading = onUpdate.features.gps.properties.heading;} // если положение изменилось - возьмём новое направление, иначе - будет старое.
