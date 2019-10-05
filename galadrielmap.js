@@ -32,6 +32,9 @@ realUpdClaster(layer)
 
 nextColor(color,step)
 
+centerMarkOn
+centerMarkOff
+
 copyToClipboard()
 
 Классы
@@ -563,6 +566,52 @@ if(b<0) {
 return parseInt(('00'+r.toString(16)).slice(-2)+('00'+g.toString(16)).slice(-2)+('00'+b.toString(16)).slice(-2),16);
 } // end function nextColor
 
+
+// Показ координат центра и переход по введённым
+function centerMarkPosition() {
+/* global goToPositionField */
+centerMark.setLatLng(map.getCenter()); 	// определена в index
+//centerMark.setLatLng(map.getBounds().getCenter()); 	// определена в index
+if(goToPositionManualFlag === false) { 	// если поле не юзают руками
+	const lat = Math.round(centerMark.getLatLng().lat*10000)/10000; 	 	// широта с четыремя знаками после запятой - 10см
+	const lng = Math.round(centerMark.getLatLng().lng*10000)/10000; 	 	// долгота
+	goToPositionField.value = lat + ' ' + lng;
+}
+}; // end function centerMarkPosition
+
+function centerMarkOn() {
+/**/
+centerMarkPosition();
+centerMark.addTo(map);
+map.on('move', centerMarkPosition);
+goToPositionField.addEventListener('focus', function(e){goToPositionManualFlag=true;}); 	// при получении фокуса - прекратить обновление
+goToPositionField.addEventListener('blur', function(e){
+			goToPositionButton.value = goToPositionField.value; 	// разбор введённого как координат происходит потом, когда координаты действительно нужны - для скорости
+			goToPositionManualFlag=false;
+		}
+	); 	// при потере - возобновить
+}; // end function centerMarkOn
+
+function centerMarkOff() {
+centerMark.remove();
+map.off('move', centerMarkPosition);
+}; // end function centerMarkOff
+
+function flyByString(stringPos){
+/* Получает строку предположительно с координатами, и перемещает туда центр карты */
+let error;
+//console.log(stringPos);
+try {
+    var position = new Coordinates(stringPos);
+	//console.log(position);
+	map.setView(L.latLng([position.getLatitude(),position.getLongitude()])); 	// подвинем карту в указанное место
+} catch (error) { 	// строка - не координаты
+	//alert(error);
+}
+} // end function flyByString
+
+
+// Копирование в буфер обмена
 function doCopyToClipboard(text) {
 /* создаёт control с полем, откуда можно скопировать text в буфер обмена, 
 при этом пытается это сделать сама.

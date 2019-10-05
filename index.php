@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require('params.php'); 	// пути и параметры
 
-$versionTXT = '1.0.0';
+$versionTXT = '1.1.0';
 // Интернационализация
 require('internationalisation.php');
 
@@ -88,6 +88,10 @@ if($routeDir) {
 	<link rel="stylesheet" href="leaflet-measure-path/leaflet-measure-path.css" />
 	<script src="leaflet-measure-path/leaflet-measure-path.js"></script>
 
+	<script src="coordinate-parser/coordinates.js">	</script>
+	<script src="coordinate-parser/validator.js"></script>
+	<script src="coordinate-parser/coordinate-number.js"></script> 
+	
 <!--    <script src="JSON-js/cycle.js"></script>--> <!-- костыль для JSON.stringify , которая используется для отладки -->
 <!--    <script src="fetch/fetch.js"></script>--> <!-- полифил для старых браузеров -->
 <!--    <script src="promise-polyfill/promise.js"></script>--> <!-- полифил для старых браузеров -->
@@ -144,7 +148,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 		<!-- Приборы -->
 		<div class="leaflet-sidebar-pane" id="dashboard">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $dashboardHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div class="big_symbol" onClick="map.setView(cursor.getLatLng());"> <!-- передвинуть карту на место курсора -->
+			<div class="big_symbol" onClick="if(! noFollowToCursor) map.setView(cursor.getLatLng());"> <!-- передвинуть карту на место курсора -->
 				<div>
 					<div style="line-height:0.5;margin-top:2em;">				
 						<span id='velocityDial'></span><br><span style="font-size:50%;"><?php echo $dashboardSpeedMesTXT;?></span>
@@ -226,6 +230,10 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 					"
 				>
 				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
+			</div>
+			<div style="width:95%; text-align: center;">
+				<input id = 'goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:9rem;font-size:150%;'>			
+				<button id = 'goToPositionButton' onClick='flyByString(this.value);' type='submit' style="width:4rem;padding:0.2rem;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 			</div>
 			<div style="width:95%; padding: 1rem 0; text-align: center;">
 				<h2><?php echo $routeSaveTitle;?></h2>
@@ -340,6 +348,7 @@ foreach($jobsInfo as $jobName) { 	//
 <?php
 ?>
 <script> "use strict";
+
 // Карта
 var gpsanddataServerURI = '<?php echo $gpsanddataServerURI;?>'; 	// адрес для подключения к сервису координат и приборов
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
@@ -373,6 +382,9 @@ var lat; 	 	// широта
 var lng; 	 	// долгота
 var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
 var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
+var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
+
+
 // Определим карту
 var map = L.map('mapid', {
 	center: startCenter,
@@ -421,12 +433,18 @@ sidebar.on("content", function(event){ 	// Событие открытия? па
 		if(CurrnoFollowToCursor === 1)CurrnoFollowToCursor = noFollowToCursor;  // запомним состояние глобального признака следования за курсором, если ещё не запоминали
 		noFollowToCursor = true; 	// отключим следование за курсором
 		break;
+	case 'measure': 	// рисование маршрута
+		centerMarkOn(); 	// включить крестик в середине
+		if(CurrnoFollowToCursor === 1)CurrnoFollowToCursor = noFollowToCursor;  // запомним состояние глобального признака следования за курсором, если ещё не запоминали
+		noFollowToCursor = true; 	// отключим следование за курсором
+		break;
 	}
 });
 sidebar.on("closing", function(){
 	tileGrid.remove(); 	// удалить с карты тайловую сетку
 	if(CurrnoFollowToCursor !== 1) noFollowToCursor = CurrnoFollowToCursor; 	// восстановим признак следования за курсором
 	CurrnoFollowToCursor = 1;
+	centerMarkOff(); 	// выключить крестик в середине
 });
 // end controls
 // Поведение карты
@@ -536,6 +554,17 @@ map.on('editable:vertex:dragstart',
 )
 var doSaveMeasuredPathsProcess = setInterval(doSaveMeasuredPaths,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery
 
+// центр экрана
+let markSize = Math.round(window.innerWidth/5);
+//console.log(markSize);
+var centerMark = L.marker(map.getBounds().getCenter(), {
+	'icon': new L.icon({
+		iconUrl: './img/Crosshair.svg',
+		iconSize:     [markSize, markSize], // size of the icon
+		iconAnchor:   [markSize/2, markSize/2], // point of the icon which will correspond to marker's location
+	})
+});
+
 <?php if(!$gpsanddataServerURI) goto noRealTime; // если нет источника текущих данных - не нужны и обработчики ?>
 // Местоположение
 // маркеры
@@ -617,8 +646,8 @@ realtime.on('update', function(onUpdate) {
 	var positionTime = new Date(onUpdate.features.gps.properties.time);
 	var now = new Date();
 	//alert("Время ГПС "+positionTime+'\n'+"Сейчас    "+now);
-	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
-	else
+//	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
+//	else
 	 		cursor.setIcon(GpsCursor);
 	// Направление с попыткой его запомнить при прекращении движения
 	if((onUpdate.features.gps.properties.heading !== null) && Math.round( onUpdate.features.gps.properties.velocity ) != 0) {heading = onUpdate.features.gps.properties.heading;} // если положение изменилось - возьмём новое направление, иначе - будет старое.

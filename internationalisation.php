@@ -1,6 +1,6 @@
 <?php
-if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
-//if(TRUE) { 	// клиент - нерусский
+//if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
+if(TRUE) { 	// клиент - нерусский
 	$homeHeaderTXT = 'Maps';
 	$dashboardHeaderTXT = 'Velocity&heading';
 	$dashboardSpeedMesTXT = 'km/h';
@@ -13,15 +13,16 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 
 	$tracksHeaderTXT = 'Tracks';
 
-	$measureHeaderTXT = 'Route';
+	$measureHeaderTXT = 'Handle route';
 	$routeControlsBeginTXT = 'Begin';
 	$routeControlsContinueTXT = 'Continue';
 	$routeControlsClearTXT = 'Erase';
+	$goToPositionTXT = 'Flay map to';
 	$routeSaveTXT = 'Label';
 	$routeSaveTitle = 'Save to server';
 	$routeSaveDescrTXT = 'Description to route';
 	
-	$routesHeaderTXT = 'Tracks and POI';
+	$routesHeaderTXT = 'Routes and POI';
 	
 	$downloadHeaderTXT = 'Download';
 	$downloadZoomTXT = 'Zoom';
@@ -59,6 +60,7 @@ else {
 	$routeControlsContinueTXT = 'Продолжить';
 	$routeControlsClearTXT = 'Стереть';
 	$routeSaveTXT = 'Название';
+	$goToPositionTXT = 'Переместить карту в';
 	$routeSaveTitle = 'Сохранить на сервере';
 	$routeSaveDescrTXT = 'Описание маршрута';
 	
