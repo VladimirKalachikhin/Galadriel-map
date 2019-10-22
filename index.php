@@ -1,10 +1,10 @@
 <?php
 require_once('fcommon.php');
-require('params.php'); 	// пути и параметры
+require_once('params.php'); 	// пути и параметры
 
 $versionTXT = '1.1.0';
 // Интернационализация
-require('internationalisation.php');
+require_once('internationalisation.php');
 
 if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 // Получаем список имён карт
