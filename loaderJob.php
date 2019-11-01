@@ -9,23 +9,23 @@ if($jobsDir[0]!='/') $jobsDir = "$tileCachePath/$jobsDir";	// если путь 
 $XYs = $_REQUEST['xys'];
 $jobName = $_REQUEST['jobname'];
 //echo "XYs=$XYs; jobName=$jobName; <br>\n";
-
-$name_parts = pathinfo($jobName);
-//echo "name_parts:<pre>"; print_r($name_parts); echo "</pre>";
-if(!(is_numeric($name_parts['extension']) AND (intval($name_parts['extension']) <=20 AND intval($name_parts['extension']) >=0))) return; 	// расширение - не масштаб
-if(!is_file("$mapSourcesDir/".$name_parts['filename'].'.php')) return; 	// нет такого источника
-if(!$XYs) return; 	// нет собственно задания
-// Создадим задание
-file_put_contents("$jobsDir/$jobName",$XYs,FILE_APPEND); 	// возможно, такое задание уже есть. Тогда, скорее всего, тайлы минимального масштаба не будут загружены. Не страшно.
-// Сохраним задание на всякий случай
-file_put_contents("$jobsDir/oldJobs/$jobName".'_'.gmdate("Y-m-d_Gis", time()),$XYs);
-
-//file_put_contents("$jobName",$XYs);
+if($jobName != 'restart') {
+	$name_parts = pathinfo($jobName);
+	//echo "name_parts:<pre>"; print_r($name_parts); echo "</pre>";
+	if(!(is_numeric($name_parts['extension']) AND (intval($name_parts['extension']) <=20 AND intval($name_parts['extension']) >=0))) return; 	// расширение - не масштаб
+	if(!is_file("$mapSourcesDir/".$name_parts['filename'].'.php')) return; 	// нет такого источника
+	if(!$XYs) return; 	// нет собственно задания
+	// Создадим задание
+	file_put_contents("$jobsDir/$jobName",$XYs,FILE_APPEND); 	// возможно, такое задание уже есть. Тогда, скорее всего, тайлы минимального масштаба не будут загружены. Не страшно.
+	// Сохраним задание на всякий случай
+	file_put_contents("$jobsDir/oldJobs/$jobName".'_'.gmdate("Y-m-d_Gis", time()),$XYs);
+	//file_put_contents("$jobName",$XYs);
+	chmod("$jobsDir/$jobName",0777); 	// чтобы запуск от другого юзера
+}
 //exit;
-chmod("$jobsDir/$jobName",0777); 	// чтобы запуск от другого юзера
 //echo "$tileCachePath<br>\n";
 // Запустим планировщик
-exec("$phpCLIexec $tileCachePath/loaderSched.php > /dev/null 2>&1 &"); 	// если запускать сам файл, ему нужны права
+exec("$phpCLIexec $tileCachePath/loaderSched.php > /dev/null 2>&1 &",$ret,$status); 	// если запускать сам файл, ему нужны права
 //exec("$tileCachePath/loaderSched.php"); 	
-echo $jobName;
+echo "$status;$jobName;"; 	// вернём что-нибудь. Например, $status запущенного exec
 ?>

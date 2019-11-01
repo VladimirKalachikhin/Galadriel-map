@@ -27,6 +27,8 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$downloadHeaderTXT = 'Download';
 	$downloadZoomTXT = 'Zoom';
 	$downloadJobListTXT = 'Started downloading';
+	$downloadLoaderIndicatorOnTXT = 'Loader runs';
+	$downloadLoaderIndicatorOffTXT = 'Loader not runs. Click to run';
 	
 	$settingsHeaderTXT = 'Settings';
 	$settingsCursorTXT = 'Follow <br>to cursor';
@@ -69,6 +71,8 @@ else {
 	$downloadHeaderTXT = 'Загрузки';
 	$downloadZoomTXT = 'Масштаб';
 	$downloadJobListTXT = 'Поставлены загрузки';
+	$downloadLoaderIndicatorOnTXT = 'Загрузчик работает';
+	$downloadLoaderIndicatorOffTXT = 'Загрузчик не работает. Нажмите, чтобы запустить';
 	
 	$settingsHeaderTXT = 'Параметры';
 	$settingsCursorTXT = 'Следование <br>за курсором';

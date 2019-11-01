@@ -13,7 +13,8 @@ deSelectTrack()
 displayTrack()
 updateCurrTrack()
 
-createDwnldJob()
+createDwnldJob() 	создаёт файлы заданий и запускает загрузчик
+restartLoader() 	запускает загрузчик
 
 routeControlsDeSelect()
 delShapes(realy)
@@ -317,10 +318,40 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 	xhr[i].onreadystatechange = function() { // 
 		if (this.readyState != 4) return; 	// запрос ещё не завершился
 		if (this.status != 200) return; 	// что-то не то с сервером
-		dwnldJobList.innerHTML += '<li>' + this.responseText + '</li>\n';
+		let responseText = this.responseText.split(';');
+		if(responseText[0] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
+			loaderIndicator.style.color='green';
+			loaderIndicator.innerText='\u263A';
+		}
+		else {
+			loaderIndicator.style.color='red';
+			loaderIndicator.innerText='\u2639';
+		}
+		dwnldJobList.innerHTML += '<li>' + responseText[1] + '</li>\n';
 	}
 }
 } 	// end function createDwnldJob
+
+function restartLoader() {
+/* запускает загрузчик */
+let xhr = new XMLHttpRequest();
+xhr.open('GET', encodeURI('loaderJob.php?jobname=restart'), true); 	// Подготовим асинхронный запрос
+xhr.send();
+xhr.onreadystatechange = function() { // 
+	if (this.readyState != 4) return; 	// запрос ещё не завершился
+	if (this.status != 200) return; 	// что-то не то с сервером
+	let responseText = this.responseText.split(';');
+	if(responseText[0] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
+		loaderIndicator.style.color='green';
+		loaderIndicator.innerText='\u263A';
+	}
+	else {
+		loaderIndicator.style.color='red';
+		loaderIndicator.innerText='\u2639';
+	}
+	dwnldJobList.innerHTML += '<li>' + responseText[1] + '</li>\n';
+}
+} // end function restartLoader
 
 // Функции рисования маршрутов
 function routeControlsDeSelect() {
