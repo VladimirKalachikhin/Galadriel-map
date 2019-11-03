@@ -36,7 +36,7 @@ The author is not responsible for the consequences of using the GaladrielMap as 
 Linux. Modern browsers, include mobile.
 
 ## Install&configure:
-You must have a web server under Linux with php support. Just copy and set paths.<br>
+You must have a web server under Linux with php support. Just copy and set paths.  
 Paths and other are set and describe in _params.php_
 
 ## Dependences and thanks
@@ -71,16 +71,19 @@ GaladrielMap get position and velosity from gpsd via _askGPSD.php_ service. You 
 How to install and configure gpsd see [gpsd pages](http://www.catb.org/gpsd/).
 
 ## Tracks
-You may use gpxlogger app from gpsd-clients packet to logging track on your server. GaladrielMap displaying current track as not well-formed gpx file. Other tracks may be diplayed simultaneously.<br>
+You may use gpxlogger app from gpsd-clients packet to logging track on your server. GaladrielMap displaying current track as not well-formed gpx file. Other tracks may be diplayed simultaneously.  
 Run _chkGPXfiles.php_ in cli to repair non well-formed gpx files for other applications.
 
 ## CSV
-Comma-Separated Values text file - a simplest way to cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.<br>
-First line in csv file must be a field names. Good choice is a `"number","name","description","type","link","latitude","longitude"` <br>
+Comma-Separated Values text file - a simplest way to cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.  
+First line in csv file must be a field names. Good choice is a `"number","name","description","type","link","latitude","longitude"`  
 Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
 
 ## Exchange coordinates
-To get current position to clipboard to share it via other apps - tap on Position on <img src="img/speed1.svg" alt="Dashboard" width="24px"> tab.<br>
-Also, tap on POI name on point's popup to get position of  this point.<br>
-To get coordinates of any point - open <img src="img/route.svg" alt="Handle route" width="24px"> tab. Coordinates of crosshair will be in text field.<br>
+To get current position to clipboard to share it via other apps - tap on Position on <img src="img/speed1.svg" alt="Dashboard" width="24px"> tab.  
+Also, tap on POI name on point's popup to get position of  this point.  
+To get coordinates of any point - open <img src="img/route.svg" alt="Handle route" width="24px"> tab. Coordinates of crosshair will be in text field.  
 To fly map by coordinates type they of any format to this field and press button.
+
+## Support
+You can get support for GaladrielMap and GaladrielCahe for a beer via PayPal at [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)
