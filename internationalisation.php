@@ -28,7 +28,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$downloadZoomTXT = 'Zoom';
 	$downloadJobListTXT = 'Started downloading';
 	$downloadLoaderIndicatorOnTXT = 'Loader runs';
-	$downloadLoaderIndicatorOffTXT = 'Loader not runs. Click to run';
+	$downloadLoaderIndicatorOffTXT = 'Loader not runs. Click to run'; 
 	
 	$settingsHeaderTXT = 'Settings';
 	$settingsCursorTXT = 'Follow <br>to cursor';
