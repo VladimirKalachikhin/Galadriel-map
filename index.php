@@ -376,6 +376,7 @@ foreach($jobsInfo as $jobName) { 	//
 // Карта
 var gpsanddataServerURI = '<?php echo $gpsanddataServerURI;?>'; 	// адрес для подключения к сервису координат и приборов
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
+var additionalTileCachePath = ''; 	// дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
 var startCenter = JSON.parse(getCookie('GaladrielMapPosition'));
 if(! startCenter) startCenter = L.latLng([55.754,37.62]); 	// начальная точка
 var startZoom = JSON.parse(getCookie('GaladrielMapZoom'));
