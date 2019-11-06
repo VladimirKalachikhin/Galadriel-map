@@ -114,8 +114,8 @@ function displayMap(mapname) {
 // Если в имени карты есть EPSG3395 - делает слой в проекции с пересчётом с помощью L.tileLayer.Mercator
 // проекцию карты от askMapParm.php не получает!!! чтобы не делать лишних запросов
 mapname=mapname.trim();
-let mapParm = new Array(); 	// переменная для параметров карты
 // Всегда будем спрашивать параметры карты
+let mapParm = new Array(); 	// переменная для параметров карты
 const xhr = new XMLHttpRequest();
 xhr.open('GET', 'askMapParm.php?mapname='+mapname, false); 	// Подготовим синхронный запрос
 xhr.send();
@@ -125,7 +125,7 @@ if (xhr.status == 200) { 	// Успешно
 }
 let mapnameThis = mapname+additionalTileCachePath; 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
 let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
-if(mapParm[0])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm[0]); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
+if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
 //alert(tileCacheURIthis);
 //alert('mapname='+mapname+'\n'+window[mapname]);
 if(  mapname.indexOf('EPSG3395')==-1) {
@@ -134,7 +134,6 @@ if(  mapname.indexOf('EPSG3395')==-1) {
 }
 else {
 	if(!window[mapname])	window[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {
-	//if(!window[mapname])	window[mapname] = L.tileLayer(tileCacheURIthis, {
 		});
 }
 //alert('После: mapname='+mapname+'\n'+window[mapname]);

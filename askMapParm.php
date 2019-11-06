@@ -11,7 +11,8 @@ $mapInfo = array(
 	'ext'=>$ext,
 	'epsg'=>$EPSG, 
 	'minZoom'=>$minZoom,
-	'maxZoom'=>$maxZoom
+	'maxZoom'=>$maxZoom,
+	'data'=>$data
 );
 $mapInfo = json_encode($mapInfo);
 header('Content-Type: application/json;charset=utf-8;');

@@ -133,6 +133,7 @@ html, body, #mapid {
 			<li id="tracks-tab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
 			<li id="measure-tab" ><a href="#measure" role="tab"><img src="img/route.svg" alt="Create route" width="70%"></a></li>
 			<li id="routes-tab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
+			<li id="weather-tab" ><a href="#weather" role="tab"><img src="img/weather.svg" alt="Weather forecast" width="70%"></a></li>
 		</ul>
 		<ul role="tablist">
 			<li id="download-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
@@ -248,7 +249,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				<button id = 'goToPositionButton' onClick='flyByString(this.value);' type='submit' style="width:4rem;padding:0.2rem;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 			</div>
 			<div style="width:95%; padding: 1rem 0; text-align: center;">
-				<h2><?php echo $routeSaveTitle;?></h2>
+				<h3><?php echo $routeSaveTitle;?></h3>
 				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" size='255' style='width:95%;font-size:150%;'>
 				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='7' cols='255' style='width:93%;padding: 0.5rem 3%;'></textarea>
 				<button onClick='saveGPX();' type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
@@ -269,6 +270,31 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 }
 ?>
 			</ul>
+		</div>
+		<!-- Погода -->
+		<div class="leaflet-sidebar-pane" id="weather">
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> Погода <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<form id="weatherLayers">
+				<table  style="font-size:120%;margin:0 1rem 1rem 0;float:right;">
+					<caption><h3>Карта</h3></caption>
+					<tr style="height:3rem;"><td style="text-align:right;">Ветер</td><td width=20% style="text-align:center;"><input type="checkbox" value="wind_stream" checked></td></tr>
+					<tr style="height:3rem;"><td style="text-align:right;">Давление</td><td width=20% style="text-align:center;"><input type="checkbox" value="surface_pressure"></td></tr>
+					<tr style="height:3rem;"><td style="text-align:right;">Температура</td><td width=20% style="text-align:center;"><input type="checkbox" value="air_temperature"></td></tr>
+					<tr style="height:3rem;"><td style="text-align:right;">Осадки</td><td width=20% style="text-align:center;"><input type="checkbox" value="precipitation"></td></tr>
+					<tr style="height:3rem;"><td style="text-align:right;">Волнение моря</td><td width=20% style="text-align:center;"><input type="checkbox" value="significant_wave_height"></td></tr>
+				</table>
+				<table style="font-size:120%;margin:0 0 1rem 0;">
+					<caption><h3>Прогноз, час.</h3></caption>
+					<tr style="height:3rem;"><td>O</td><td><input type="radio" value="0h" checked></td></tr>
+					<tr style="height:3rem;"><td>6</td><td><input type="radio" value="6h"></td></tr>
+					<tr style="height:3rem;"><td>12</td><td><input type="radio" value="12h"></td></tr>
+					<tr style="height:3rem;"><td>24</td><td><input type="radio" value="24h"></td></tr>
+					<tr style="height:3rem;"><td>36</td><td><input type="radio" value="36h"></td></tr>
+					<tr style="height:3rem;"><td>48</td><td><input type="radio" value="48h"></td></tr>
+					<tr style="height:3rem;"><td>60</td><td><input type="radio" value="60h"></td></tr>
+					<tr style="height:3rem;"><td>72</td><td><input type="radio" value="72h"></td></tr>
+				</table>				
+			</form>
 		</div>
 		<!-- Загрузчик -->
 		<div class="leaflet-sidebar-pane" id="download">
