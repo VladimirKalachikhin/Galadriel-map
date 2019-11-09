@@ -4,7 +4,7 @@ This viewer designed for use mainly with [GaladrielCache](https://github.com/Vla
 GaladrielMap created with use a lot of famous projects, so don't forget install [dependenses](#dependences-and-thanks).  
 The author is not responsible for the consequences of using the GaladrielMap as navigator!
 
-## v. 1.1
+## v. 1.2
  ![screen](screenshots/s.png)
 
 ## Features:
@@ -22,11 +22,14 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  ![Creating a route](screenshots/s3.png)
  
 6. Exchange coordinates via clipboard (see above)
+
+7.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
+ ![Weather forecast](screenshots/s8.png)
  
-7. Control the GaladrielCache Loader: 
+8. Control the GaladrielCache Loader: 
  ![Control Loader](screenshots/s4.png)
  
-7. Dashboard.<br>
+9. Dashboard.<br>
  _dashboard.php_ - separate app to display velocity and heading on weak (and/or old) devices, such as E-ink readers, for example.<br>
  No javascript, no fanciful css.
  ![Dashboard velocity](screenshots/s7.jpg)
