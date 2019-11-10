@@ -288,9 +288,9 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 										onChange="
 											//console.log(this.parentNode);
 											downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание
-											var newXinput = this.parentNode.previousElementSibling.cloneNode(true); 	// клонируем div с x
+											let newXinput = this.parentNode.previousElementSibling.cloneNode(true); 	// клонируем div с x
 											newXinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
-											var newYinput = this.parentNode.cloneNode(true); 	// клонируем div с y
+											let newYinput = this.parentNode.cloneNode(true); 	// клонируем div с y
 											newYinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
 											this.onchange = null; 	// удалим обработчик с этого элемента
 											this.parentNode.parentNode.insertBefore(newXinput,this.parentNode.nextElementSibling); 	// вставляем после последнего. Да, вот так через задницу, потому что это javascript
