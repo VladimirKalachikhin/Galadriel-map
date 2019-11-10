@@ -129,8 +129,13 @@ if (xhr.status == 200) { 	// Успешно
 if(mapParm['data'] && mapParm['data']['javascriptOpen']) eval(mapParm['data']['javascriptOpen']);
 // Загружаемая карта - многослойная?
 if(Array.isArray(additionalTileCachePath)) { 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
-	if(window[mapname]) window[mapname].remove();
+	let currZoom; 
+	if(window[mapname]) {
+		if(window[mapname].options.zoom) currZoom = window[mapname].options.zoom;
+		window[mapname].remove();
+	}
 	window[mapname]=L.layerGroup();
+	if(currZoom) window[mapname].options.zoom = currZoom;
 	for(let addPath of additionalTileCachePath) {
 		let mapnameThis = mapname+addPath; 	// 
 		let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
@@ -161,16 +166,18 @@ else {
 }
 //console.log(window[mapname]);
 // установим текущий масштаб в пределах возможного для загружаемой карты
-let currZoom = map.getZoom();
-if(mapParm['maxZoom'] < currZoom) {
-	map.setZoom(mapParm['maxZoom']);
-	window[mapname].options.zoom = currZoom;
+if(! window[mapname].options.zoom) {
+	let currZoom = map.getZoom();
+	if(mapParm['maxZoom'] < currZoom) {
+		map.setZoom(mapParm['maxZoom']);
+		window[mapname].options.zoom = currZoom;
+	}
+	else if(mapParm['minZoom'] > currZoom) { 
+		map.setZoom(mapParm['minZoom']);
+		window[mapname].options.zoom = currZoom;
+	}
+	else window[mapname].options.zoom = false;
 }
-else if(mapParm['minZoom'] > currZoom) { 
-	map.setZoom(mapParm['minZoom']);
-	window[mapname].options.zoom = currZoom;
-}
-else if(window[mapname].options.zoom) window[mapname].options.zoom = false;
 // javascript в загружаемом источнике на закрытие карты
 if(mapParm['data'] && mapParm['data']['javascriptClose']) window[mapname].options.javascriptClose = mapParm['data']['javascriptClose'];
 // Наконец, покажем
@@ -180,7 +187,10 @@ window[mapname].addTo(map);
 function removeMap(mapname) {
 mapname=mapname.trim();
 if(window[mapname].options.javascriptClose) eval(window[mapname].options.javascriptClose);
-if(window[mapname].options.zoom) map.setZoom(window[mapname].options.zoom); 	// вернём масштаб как было
+if(window[mapname].options.zoom) { 
+	map.setZoom(window[mapname].options.zoom); 	// вернём масштаб как было
+	window[mapname].options.zoom = false;
+}
 window[mapname].remove();
 }
 
