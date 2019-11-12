@@ -26,7 +26,7 @@ The author is not responsible for the consequences of using the GaladrielMap as 
 7. Control the GaladrielCache Loader: 
  ![Control Loader](screenshots/s4.png)
  
-7. Dashboard.<br>
+8. Dashboard.<br>
  _dashboard.php_ - separate app to display velocity and heading on weak (and/or old) devices, such as E-ink readers, for example.<br>
  No javascript, no fanciful css.
  ![Dashboard velocity](screenshots/s7.jpg)
