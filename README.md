@@ -23,7 +23,7 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  
 6. Exchange coordinates via clipboard (see above)
 
-7.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
+7.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)
  ![Weather forecast](screenshots/s8.png)
  
 8. Control the GaladrielCache Loader: 
@@ -59,7 +59,6 @@ Paths and other are set and describe in _params.php_
 Create local copy of dependences and/or edit _index.php_
 
 ## Emergency kit
-
 All you need to install, including dependences, are in _distr/_.
 
 ## More thanks
