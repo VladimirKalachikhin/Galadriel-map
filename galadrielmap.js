@@ -109,40 +109,88 @@ removeMap(node.innerHTML);
 }
 
 function displayMap(mapname) {
-// Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
-// Если для запросов тайлов нужно их расширение - делает запрос к askMapParm.php для получения
-// Если в имени карты есть EPSG3395 - делает слой в проекции с пересчётом с помощью L.tileLayer.Mercator
-// проекцию карты от askMapParm.php не получает!!! чтобы не делать лишних запросов
+/* Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
+ Если для запросов тайлов нужно их расширение - делает запрос к askMapParm.php для получения
+ Если в параметрах карты есть проекция, и она EPSG3395, 
+ или в имени карты есть EPSG3395 - делает слой в проекции с пересчётом с помощью L.tileLayer.Mercator
+*/
 mapname=mapname.trim();
-var tileCacheURIthis = tileCacheURI.replace('{map}',mapname); 	// глобальная переменная
-//alert(tileCacheURIthis);
-if(  tileCacheURIthis.indexOf('{ext}')!=-1) {	// если для запроса тайлов нужно их расширение
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', 'askMapParm.php?mapname='+mapname, false); 	// Подготовим синхронный запрос
-	xhr.send();
-	if (xhr.status == 200) { 	// Успешно
-		var mapParm = JSON.parse(xhr.responseText); 	// параметры карты: первый - расширение, второй - проекция
-		tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm[0]);
-		//alert('Получены параметры карты \n'+tileCacheURIthis);
-	}
-	else return;
+// Всегда будем спрашивать параметры карты
+let mapParm = new Array(); 	// переменная для параметров карты
+const xhr = new XMLHttpRequest();
+xhr.open('GET', 'askMapParm.php?mapname='+mapname, false); 	// Подготовим синхронный запрос
+xhr.send();
+if (xhr.status == 200) { 	// Успешно
+	mapParm = JSON.parse(xhr.responseText); 	// параметры карты: первый - расширение, второй - проекция
+	//alert('Получены параметры карты \n'+tileCacheURIthis);
 }
-//alert('mapname='+mapname+'\n'+window[mapname]);
-if(  mapname.indexOf('EPSG3395')==-1) {
-	if(!window[mapname])	window[mapname] = L.tileLayer(tileCacheURIthis, {
-		});
+// javascript в загружаемом источнике на открытие карты
+//console.log(mapParm['data']);
+if(mapParm['data'] && mapParm['data']['javascriptOpen']) eval(mapParm['data']['javascriptOpen']);
+// Загружаемая карта - многослойная?
+if(Array.isArray(additionalTileCachePath)) { 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
+	let currZoom; 
+	if(window[mapname]) {
+		if(window[mapname].options.zoom) currZoom = window[mapname].options.zoom;
+		window[mapname].remove();
+	}
+	window[mapname]=L.layerGroup();
+	if(currZoom) window[mapname].options.zoom = currZoom;
+	for(let addPath of additionalTileCachePath) {
+		let mapnameThis = mapname+addPath; 	// 
+		let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
+		if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
+		//alert(tileCacheURIthis);
+		//alert('mapname='+mapname+'\n'+window[mapname]);
+		if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
+			//alert('on Ellipsoide')
+			window[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {}));
+		}
+		else {
+			window[mapname].addLayer(L.tileLayer(tileCacheURIthis, {}));
+		}
+	}
 }
 else {
-	if(!window[mapname])	window[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {
-	//if(!window[mapname])	window[mapname] = L.tileLayer(tileCacheURIthis, {
-		});
+	let mapnameThis = mapname+additionalTileCachePath;
+	let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
+	if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
+	//alert(tileCacheURIthis);
+	if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
+		//alert('on Ellipsoide')
+		if(!window[mapname])	window[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {});
+	}
+	else {
+		if(!window[mapname])	window[mapname] = L.tileLayer(tileCacheURIthis, {});
+	}
 }
-//alert('После: mapname='+mapname+'\n'+window[mapname]);
+//console.log(window[mapname]);
+// установим текущий масштаб в пределах возможного для загружаемой карты
+if(! window[mapname].options.zoom) {
+	let currZoom = map.getZoom();
+	if(mapParm['maxZoom'] < currZoom) {
+		map.setZoom(mapParm['maxZoom']);
+		window[mapname].options.zoom = currZoom;
+	}
+	else if(mapParm['minZoom'] > currZoom) { 
+		map.setZoom(mapParm['minZoom']);
+		window[mapname].options.zoom = currZoom;
+	}
+	else window[mapname].options.zoom = false;
+}
+// javascript в загружаемом источнике на закрытие карты
+if(mapParm['data'] && mapParm['data']['javascriptClose']) window[mapname].options.javascriptClose = mapParm['data']['javascriptClose'];
+// Наконец, покажем
 window[mapname].addTo(map);
 } // end function displayMap
 
 function removeMap(mapname) {
 mapname=mapname.trim();
+if(window[mapname].options.javascriptClose) eval(window[mapname].options.javascriptClose);
+if(window[mapname].options.zoom) { 
+	map.setZoom(window[mapname].options.zoom); 	// вернём масштаб как было
+	window[mapname].options.zoom = false;
+}
 window[mapname].remove();
 }
 

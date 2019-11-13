@@ -7,7 +7,13 @@ if($mapSourcesDir[0]!='/') $mapSourcesDir = "$tileCachePath/$mapSourcesDir";	// 
 $mapName = $_REQUEST['mapname'];
 //echo "mapSourcesDir=$mapSourcesDir; mapName=$mapName; <br>\n";
 include("$mapSourcesDir/$mapName.php");
-$mapInfo = array($ext,$EPSG);
+$mapInfo = array(
+	'ext'=>$ext,
+	'epsg'=>$EPSG, 
+	'minZoom'=>$minZoom,
+	'maxZoom'=>$maxZoom,
+	'data'=>$data
+);
 $mapInfo = json_encode($mapInfo);
 header('Content-Type: application/json;charset=utf-8;');
 echo "$mapInfo \n";

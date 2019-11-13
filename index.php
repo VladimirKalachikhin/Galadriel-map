@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.1.0';
+$versionTXT = '1.2.0';
 // Интернационализация
 require_once('internationalisation.php');
 
@@ -92,7 +92,7 @@ if($routeDir) {
     <script src="Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
 <?php }?>
 <?php if($trackDir OR $routeDir) {?>
-	<script src='supercluster/supercluster.js')></script>
+	<script src='supercluster/supercluster.js'></script>
 	<link rel="stylesheet" href="leaflet-omnivorePATCHED/leaflet-omnivore.css" />
 	<script src="leaflet-omnivorePATCHED/leaflet-omnivore.js"></script>
 <?php }?>    
@@ -127,20 +127,20 @@ html, body, #mapid {
 <div id="sidebar" class="leaflet-sidebar collapsed">
 	<!-- Nav tabs -->
 	<div class="leaflet-sidebar-tabs">
-		<ul role="tablist">
-			<li id="home-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
-			<li id="dashboard-tab" <?php if(!$gpsanddataServerURI) echo 'class="disabled"';?>><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
-			<li id="tracks-tab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
-			<li id="measure-tab" ><a href="#measure" role="tab"><img src="img/route.svg" alt="Create route" width="70%"></a></li>
-			<li id="routes-tab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
+		<ul role="tablist" id="featuresList">
+			<li id="homeTab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
+			<li id="dashboardTab" <?php if(!$gpsanddataServerURI) echo 'class="disabled"';?>><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
+			<li id="tracksTab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
+			<li id="measureTab" ><a href="#measure" role="tab"><img src="img/route.svg" alt="Create route" width="70%"></a></li>
+			<li id="routesTab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
 		</ul>
-		<ul role="tablist">
+		<ul role="tablist" id="settingsList">
 			<li id="download-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
 			<li><a href="#settings" role="tab"><img src="img/settings1.svg" alt="settings" width="70%"></a></li>
 		</ul>
 	</div>
 	<!-- Tab panes -->
-	<div class="leaflet-sidebar-content">
+	<div class="leaflet-sidebar-content" id='tabPanes'>
 		<!-- Карты -->
 		<div class="leaflet-sidebar-pane" id="home">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
@@ -248,7 +248,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				<button id = 'goToPositionButton' onClick='flyByString(this.value);' type='submit' style="width:4rem;padding:0.2rem;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 			</div>
 			<div style="width:95%; padding: 1rem 0; text-align: center;">
-				<h2><?php echo $routeSaveTitle;?></h2>
+				<h3><?php echo $routeSaveTitle;?></h3>
 				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" size='255' style='width:95%;font-size:150%;'>
 				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='7' cols='255' style='width:93%;padding: 0.5rem 3%;'></textarea>
 				<button onClick='saveGPX();' type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
@@ -288,9 +288,9 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 										onChange="
 											//console.log(this.parentNode);
 											downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание
-											var newXinput = this.parentNode.previousElementSibling.cloneNode(true); 	// клонируем div с x
+											let newXinput = this.parentNode.previousElementSibling.cloneNode(true); 	// клонируем div с x
 											newXinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
-											var newYinput = this.parentNode.cloneNode(true); 	// клонируем div с y
+											let newYinput = this.parentNode.cloneNode(true); 	// клонируем div с y
 											newYinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
 											this.onchange = null; 	// удалим обработчик с этого элемента
 											this.parentNode.parentNode.insertBefore(newXinput,this.parentNode.nextElementSibling); 	// вставляем после последнего. Да, вот так через задницу, потому что это javascript
@@ -376,6 +376,7 @@ foreach($jobsInfo as $jobName) { 	//
 // Карта
 var gpsanddataServerURI = '<?php echo $gpsanddataServerURI;?>'; 	// адрес для подключения к сервису координат и приборов
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
+var additionalTileCachePath = ''; 	// дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
 var startCenter = JSON.parse(getCookie('GaladrielMapPosition'));
 if(! startCenter) startCenter = L.latLng([55.754,37.62]); 	// начальная точка
 var startZoom = JSON.parse(getCookie('GaladrielMapZoom'));
@@ -489,7 +490,7 @@ map.on('movestart zoomstart', function(event) { 	// карту начали дв
 	}
 });
 map.on('zoomend', function(event) {
-	var zoom = event.target.getZoom();
+	let zoom = event.target.getZoom();
 	//alert(zoom);
 	if(!downJob) current_zoom.innerHTML = zoom;
 	
