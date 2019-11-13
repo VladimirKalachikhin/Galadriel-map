@@ -1,10 +1,10 @@
 # GaladrielMap
-This is a web application for intranet -- the tile map viewer. The application is designed for a weak server as RaspberryPi or NAS and powerful clients such as tablets and smartphones. As intranet are assumed onboard network of pleasure boats or campers. Author use it from the wi-fi router/GSM modem under OpenWRT as server on his sailboat "Galadriel".  
+This is a web tile map viewer to serve on a weak computers such as RaspberryPi or NAS and for use on a thick clients such as tablets and smartphones. It is assumed that the in onboard network of pleasure boats or campers. Author use it from the wi-fi router/GSM modem under OpenWRT on his sailboat "Galadriel".  
 This viewer designed for use mainly with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache), but may be used with any tile OSM-like map sources or file tile cache for explore map.  
 GaladrielMap created with use a lot of famous projects, so don't forget install [dependenses](#dependences-and-thanks).  
 The author is not responsible for the consequences of using the GaladrielMap as navigator!
 
-## v. 1.1
+## v. 1.2
  ![screen](screenshots/s.png)
 
 ## Features:
@@ -22,11 +22,14 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  ![Creating a route](screenshots/s3.png)
  
 6. Exchange coordinates via clipboard (see above)
+
+7.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)
+ ![Weather forecast](screenshots/s8.png)
  
-7. Control the GaladrielCache Loader: 
+8. Control the GaladrielCache Loader: 
  ![Control Loader](screenshots/s4.png)
  
-8. Dashboard.<br>
+9. Dashboard.<br>
  _dashboard.php_ - separate app to display velocity and heading on weak (and/or old) devices, such as E-ink readers, for example.<br>
  No javascript, no fanciful css.
  ![Dashboard velocity](screenshots/s7.jpg)
@@ -56,7 +59,6 @@ Paths and other are set and describe in _params.php_
 Create local copy of dependences and/or edit _index.php_
 
 ## Emergency kit
-
 All you need to install, including dependences, are in _distr/_.
 
 ## More thanks
