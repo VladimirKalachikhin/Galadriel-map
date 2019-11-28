@@ -130,24 +130,24 @@ if(mapParm['data'] && mapParm['data']['javascriptOpen']) eval(mapParm['data']['j
 // Загружаемая карта - многослойная?
 if(Array.isArray(additionalTileCachePath)) { 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
 	let currZoom; 
-	if(window[mapname]) {
-		if(window[mapname].options.zoom) currZoom = window[mapname].options.zoom;
-		window[mapname].remove();
+	if(savedLayers[mapname]) {
+		if(savedLayers[mapname].options.zoom) currZoom = savedLayers[mapname].options.zoom;
+		savedLayers[mapname].remove();
 	}
-	window[mapname]=L.layerGroup();
-	if(currZoom) window[mapname].options.zoom = currZoom;
+	savedLayers[mapname]=L.layerGroup();
+	if(currZoom) savedLayers[mapname].options.zoom = currZoom;
 	for(let addPath of additionalTileCachePath) {
 		let mapnameThis = mapname+addPath; 	// 
 		let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
 		if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
 		//alert(tileCacheURIthis);
-		//alert('mapname='+mapname+'\n'+window[mapname]);
+		//alert('mapname='+mapname+'\n'+savedLayers[mapname]);
 		if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
 			//alert('on Ellipsoide')
-			window[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {}));
+			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {}));
 		}
 		else {
-			window[mapname].addLayer(L.tileLayer(tileCacheURIthis, {}));
+			savedLayers[mapname].addLayer(L.tileLayer(tileCacheURIthis, {}));
 		}
 	}
 }
@@ -158,40 +158,40 @@ else {
 	//alert(tileCacheURIthis);
 	if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
 		//alert('on Ellipsoide')
-		if(!window[mapname])	window[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {});
 	}
 	else {
-		if(!window[mapname])	window[mapname] = L.tileLayer(tileCacheURIthis, {});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer(tileCacheURIthis, {});
 	}
 }
-//console.log(window[mapname]);
+//console.log(savedLayers[mapname]);
 // установим текущий масштаб в пределах возможного для загружаемой карты
-if(! window[mapname].options.zoom) {
+if(! savedLayers[mapname].options.zoom) {
 	let currZoom = map.getZoom();
 	if(mapParm['maxZoom'] < currZoom) {
 		map.setZoom(mapParm['maxZoom']);
-		window[mapname].options.zoom = currZoom;
+		savedLayers[mapname].options.zoom = currZoom;
 	}
 	else if(mapParm['minZoom'] > currZoom) { 
 		map.setZoom(mapParm['minZoom']);
-		window[mapname].options.zoom = currZoom;
+		savedLayers[mapname].options.zoom = currZoom;
 	}
-	else window[mapname].options.zoom = false;
+	else savedLayers[mapname].options.zoom = false;
 }
 // javascript в загружаемом источнике на закрытие карты
-if(mapParm['data'] && mapParm['data']['javascriptClose']) window[mapname].options.javascriptClose = mapParm['data']['javascriptClose'];
+if(mapParm['data'] && mapParm['data']['javascriptClose']) savedLayers[mapname].options.javascriptClose = mapParm['data']['javascriptClose'];
 // Наконец, покажем
-window[mapname].addTo(map);
+savedLayers[mapname].addTo(map);
 } // end function displayMap
 
 function removeMap(mapname) {
 mapname=mapname.trim();
-if(window[mapname].options.javascriptClose) eval(window[mapname].options.javascriptClose);
-if(window[mapname].options.zoom) { 
-	map.setZoom(window[mapname].options.zoom); 	// вернём масштаб как было
-	window[mapname].options.zoom = false;
+if(savedLayers[mapname].options.javascriptClose) eval(savedLayers[mapname].options.javascriptClose);
+if(savedLayers[mapname].options.zoom) { 
+	map.setZoom(savedLayers[mapname].options.zoom); 	// вернём масштаб как было
+	savedLayers[mapname].options.zoom = false;
 }
-window[mapname].remove();
+savedLayers[mapname].remove();
 }
 
 // Функции выбора - удаления треков
@@ -238,7 +238,7 @@ global trackDirURI, window, currentTrackName
 */
 //alert(trackName);
 var trackName = trackNameNode.innerText.trim();
-if( window[trackName] && (trackName != currentTrackName)) window[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем
+if( savedLayers[trackName] && (trackName != currentTrackName)) savedLayers[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем
 else {
 	var options = {featureNameNode : trackNameNode};
 	var xhr = new XMLHttpRequest();
@@ -253,13 +253,13 @@ else {
 		}
 		//console.log('|'+this.responseText.slice(-10)+'|');
 		if(this.responseText.slice(-10).indexOf('</gpx>') == -1) {
-			window[trackName] = omnivore.gpx.parse(this.responseText + '  </trkseg>\n </trk>\n</gpx>',options); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
+			savedLayers[trackName] = omnivore.gpx.parse(this.responseText + '  </trkseg>\n </trk>\n</gpx>',options); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
 		}
 		else {
-			window[trackName] = omnivore.gpx.parse(this.responseText,options); 	// responseXML иногда почему-то кривой
+			savedLayers[trackName] = omnivore.gpx.parse(this.responseText,options); 	// responseXML иногда почему-то кривой
 		}
-		//console.log(window[trackName]);
-		window[trackName].addTo(map); 	// нарисуем его на карте
+		//console.log(savedLayers[trackName]);
+		savedLayers[trackName].addTo(map); 	// нарисуем его на карте
 	}
 }
 } // end function displayTrack
@@ -270,22 +270,22 @@ global routeDirURI map window
 */
 var routeName = routeNameNode.innerText.trim();
 var options = {featureNameNode : routeNameNode};
-if( window[routeName]) window[routeName].addTo(map); 	// нарисуем его на карте. 
+if( savedLayers[routeName]) savedLayers[routeName].addTo(map); 	// нарисуем его на карте. 
 else {
 	var routeType =  routeName.slice((routeName.lastIndexOf(".") - 1 >>> 0) + 2).toLowerCase(); 	// https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
 	switch(routeType) {
 	case 'gpx':
-		window[routeName] = omnivore.gpx(routeDirURI+'/'+routeName,options);
+		savedLayers[routeName] = omnivore.gpx(routeDirURI+'/'+routeName,options);
 		break;
 	case 'kml':
-		window[routeName] = omnivore.kml(routeDirURI+'/'+routeName,options);
+		savedLayers[routeName] = omnivore.kml(routeDirURI+'/'+routeName,options);
 		break;
 	case 'csv':
-		window[routeName] = omnivore.csv(routeDirURI+'/'+routeName,options);
+		savedLayers[routeName] = omnivore.csv(routeDirURI+'/'+routeName,options);
 		break;
 	}
-	//console.log(window[routeName]);
-	window[routeName].addTo(map);
+	//console.log(savedLayers[routeName]);
+	savedLayers[routeName].addTo(map);
 }
 } // end function displayRoute
 
@@ -309,11 +309,11 @@ xhr.onreadystatechange = function() { //
 	//console.log(this.responseText);
 	if(this.responseText) {
 		//console.log(JSON.parse(this.responseText));
-		if(window[currentTrackName].getLayers()) { 	// это layerGroup
-			window[currentTrackName].getLayers()[0].addData(JSON.parse(this.responseText)); 	// добавим полученное к слою с текущим треком
-			//console.log(window[currentTrackName].getLayers()[0]);
+		if(savedLayers[currentTrackName].getLayers()) { 	// это layerGroup
+			savedLayers[currentTrackName].getLayers()[0].addData(JSON.parse(this.responseText)); 	// добавим полученное к слою с текущим треком
+			//console.log(savedLayers[currentTrackName].getLayers()[0]);
 		}
-		else window[currentTrackName].addData(JSON.parse(this.responseText)); 	// добавим полученное к слою с текущим треком
+		else savedLayers[currentTrackName].addData(JSON.parse(this.responseText)); 	// добавим полученное к слою с текущим треком
 	}
 }
 } // end function updateCurrTrack
@@ -585,11 +585,11 @@ function updateClasters() {
 //console.log('galadrielmap.js: updateClasters start by anymore');
 for (var i = 0; i < routeDisplayed.children.length; i++) { 	// для каждого потомка списка routeDisplayed
 	const trackName = routeDisplayed.children[i].innerHTML; 	// наименование показывающегося слоя, возможн, с точками
-	updClaster(window[trackName]);
+	updClaster(savedLayers[trackName]);
 }
 for (var i = 0; i < trackDisplayed.children.length; i++) { 	// для каждого потомка списка trackDisplayed
 	const trackName = trackDisplayed.children[i].innerHTML; 	// наименование показывающегося слоя, возможн, с точками
-	updClaster(window[trackName]);
+	updClaster(savedLayers[trackName]);
 }
 } // end function updateClasters
 

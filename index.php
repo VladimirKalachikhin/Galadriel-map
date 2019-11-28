@@ -374,6 +374,7 @@ foreach($jobsInfo as $jobName) { 	//
 <script> "use strict";
 
 // Карта
+var savedLayers = []; 	// массив для хранения объектов, когда они не на карте
 var gpsanddataServerURI = '<?php echo $gpsanddataServerURI;?>'; 	// адрес для подключения к сервису координат и приборов
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
 var additionalTileCachePath = ''; 	// дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
@@ -693,7 +694,7 @@ realtime.on('update', function(onUpdate) {
 	// Текущий трек
 	if(currentTrackName && currTrackSwitch.checked) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек
 		if(currentTrackShowedFlag !== false) { 	// Текущий трек некогда был загружен или сейчас загружается
-			if(map.hasLayer(window[currentTrackName])) { 	// если он реально есть
+			if(map.hasLayer(savedLayers[currentTrackName])) { 	// если он реально есть
 				updateCurrTrack(); 	//  - обновим  galadrielmap.js
 				currentTrackShowedFlag = true;
 			}
