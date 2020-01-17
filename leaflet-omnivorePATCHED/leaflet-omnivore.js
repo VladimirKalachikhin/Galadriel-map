@@ -114,7 +114,7 @@ return layer;
 function gpxLoad(url, options, customLayer) {
 if(customLayer) var layer = L.layerGroup([customLayer]);
 else var layer = L.layerGroup();
-//console.log(layer);
+//console.log(url);
 xhr(url, onload);
 function onload(err, response) {
     var error;
@@ -124,6 +124,7 @@ function onload(err, response) {
     }
     layer.on('error', avoidReady);
     gpxParse(response.responseXML || response.responseText, options, layer);
+//    gpxParse(response.responseText, options, layer);
     layer.off('error', avoidReady);
     if (!error) layer.fire('ready');
 }
@@ -209,7 +210,7 @@ function topojsonParse(data, options, layer) {
 function csvParse(csv, options, layer) {
 /**/
 if(layer) {
-	if(layer.getLayers()) { 	// это layerGroup
+	if("getLayers" in layer) { 	// это layerGroup
 		var featuresLayer = layer.getLayers()[0] || L.geoJson();
 	}
 	else {	// это одиночный Layer
@@ -266,13 +267,17 @@ return layer;
 } // end function csvParse
 
 function gpxParse(gpx, options, layer) {
-/**/
+/* 
+Создаёт layerGroup из двух слоёв, в одном - линии, в другом - точки.
+
+*/
+//console.log(gpx);
 var xml = parseXML(gpx);
 if (!xml) return layer.fire('error', {
     error: 'Could not parse GPX'
 });
 if(layer) {
-	if(layer.getLayers()) { 	// это layerGroup
+	if("getLayers" in layer) { 	// это layerGroup
 		var featuresLayer = layer.getLayers()[0] || L.geoJson();
 	}
 	else {	// это одиночный Layer
@@ -289,10 +294,15 @@ var geojson = toGeoJSON.gpx(xml);
 //console.log(geojson);
 var Points=[];
 var Features=[];
-for(var i=0; i<geojson.features.length;i++) {
+for(let i=0; i<geojson.features.length;i++) {
 	if(geojson.features[i].geometry.type=='Point') Points.push(geojson.features[i]);
-	else Features.push(geojson.features[i]);
+	else {
+		//console.log(geojson.features[i]);
+		if(geojson.features[i].properties.isRoute) geojson.features[i].properties.fileName = options.featureNameNode.innerText.trim();
+		Features.push(geojson.features[i]);
+	}
 }
+//console.log(options);
 //console.log(Points);
 //console.log(Features);
 var color = globalCurrentColor;
@@ -304,9 +314,11 @@ if(options.featureNameNode) { 	// li с именем файла, из котор
 }
 featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
 featuresLayer.options.style = function(geoJsonFeature){return{color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6)};}; 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
+// Добавим в слой объекты
 addData(featuresLayer, Features); 	// добавим и покажем всё остальное
 if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
 //console.log(featuresLayer);
+// Теперь добавим точки
 if(Points.length) {
 	var pointsLayer = L.geoJson();
 	pointsLayer.options.color = color; 	//  цвет значков
@@ -319,6 +331,7 @@ if(Points.length) {
 	updClaster(pointsLayer);	// galadrielmap.js  и покажем
 	layer.addLayer(pointsLayer);
 }
+layer.options.fileName = options.featureNameNode.innerText.trim();
 //console.log(layer);
 //console.log(layer.getLayers());
 return layer;
@@ -335,7 +348,7 @@ const index = new Supercluster({
     maxZoom: 15,
 }).load(geojson); 	// собственно, загрузка в суперкластер точек index
 layer.supercluster = index;
-layer.on('click', (e) => { 	// клик по любому значку :-( потому что нам нужен layer
+layer.on('click', (e) => { 	// клик по любому значку (вообще по любому месту?) :-( потому что нам нужен layer
 	//console.log('leaflet-omnivore.js : doClastering start by click');
 	//console.log(e);
 	if (e.layer.feature.properties.cluster_id) { 	// кликнутый значёк - кластер
@@ -494,9 +507,13 @@ function getPopUpToLine(feature, layer) {
 /* A Function that will be called once for each created Feature
 */
 //console.log(feature);
+//console.log(layer);
 if(feature.properties && feature.properties.isRoute) { 	// это маршрут.
 	layer.options.showMeasurements=true;
-	layer.options.color = '#FDFF00';
+	//layer.options.editable = true;	//
+	//layer.on('dblclick', L.DomEvent.stop).on('dblclick', tooggleEditRoute);
+	layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute); 	// galadrielmap.js
+	//console.log(layer);
 }
 if(feature.properties) {
 	var popUpHTML = '';
@@ -505,8 +522,8 @@ if(feature.properties) {
 	if(feature.properties.desc) popUpHTML += "<p>"+feature.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
 	if(feature.properties.description) popUpHTML += "<p>"+feature.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
 	popUpHTML += getLinksHTML(feature); 	// приклеим ссылки
+	if(feature.properties.name) popUpHTML = "<b>"+feature.properties.name+"</b> "+popUpHTML;
 	if(popUpHTML) {
-		if(feature.properties.name) popUpHTML = "<b>"+feature.properties.name+"</b> "+popUpHTML;
 		//alert(popUpHTML);
 		layer.bindPopup(popUpHTML+'<br>');
 	}
@@ -610,7 +627,7 @@ for(var i=0; i<geojson.features.length;i++) {
 	else Features.push(geojson.features[i]);
 }
 if(layer) {
-	if(layer.getLayers()) { 	// это layerGroup
+	if("getLayers" in layer) { 	// это layerGroup
 		var featuresLayer = layer.getLayers()[0] || L.geoJson();
 	}
 	else {	// это одиночный Layer
@@ -1646,7 +1663,11 @@ var toGeoJSON = (function() {
     function attr(x, y) { return x.getAttribute(y); }
     function attrf(x, y) { return parseFloat(attr(x, y)); }
     // one Y child of X, if any, otherwise null
-    function get1(x, y) { var n = get(x, y); return n.length ? n[0] : null; }
+    function get1(x, y) { 
+    	const n = get(x, y);
+    	//if(y == 'desc') console.log(n); 
+    	return n.length ? n[0] : null; 
+    }
     // https://developer.mozilla.org/en-US/docs/Web/API/Node.normalize
     function norm(el) { if (el.normalize) { el.normalize(); } return el; }
     // cast array x into numbers
@@ -1893,11 +1914,11 @@ var toGeoJSON = (function() {
                 tracks = get(doc, 'trk'),
                 routes = get(doc, 'rte'),
                 waypoints = get(doc, 'wpt'),
-                // a feature collection
-                gj = fc(),
+                //metadata = get(doc, 'metadata'), 	// no way to save metadata to GeoJSON
+                gj = fc(), 	// a feature collection
                 feature,
             	prevPoint; 	// для показа сегментов из одной точки будем делать из них сегмент из двух точек - своей и предыдущей
-			//console.log(waypoints);
+			//console.log(routes);
             for (i = 0; i < tracks.length; i++) {
                 feature = getTrack(tracks[i]);
                 if (feature) gj.features.push(feature);
@@ -1972,6 +1993,7 @@ var toGeoJSON = (function() {
             function getRoute(node) {
                 var line = getPoints(node, 'rtept');
                 if (!line.line) return;
+                //console.log(node);
                 var routeObj = {
                     type: 'Feature',
                     properties: getProperties(node),
@@ -1980,6 +2002,8 @@ var toGeoJSON = (function() {
                         coordinates: line.line
                     }
                 };
+                routeObj.properties.isRoute = true;
+                //console.log(routeObj);
                 return routeObj;
             }
             function getPoint(node) {
@@ -1995,13 +2019,13 @@ var toGeoJSON = (function() {
                 };
             }
             function getProperties(node) {
-                var meta = ['ele', 'name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords'], 	// список уникальных свойств, которые будем получать
+                let meta = ['ele', 'name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords'], 	// список уникальных свойств, которые будем получать
                     prop = {},
                     k;
                 for (k = 0; k < meta.length; k++) {
                     prop[meta[k]] = nodeVal(get1(node, meta[k]));
                 }
-                meta=['link']; 	 	// список неуникальных и/или составных свойств, которые будем получать
+                meta=['link','extensions']; 	 	// список неуникальных и/или составных свойств, которые будем получать
                 for (k = 0; k < meta.length; k++) {
                 	prop[meta[k]] = node.getElementsByTagName(meta[k]);
                 }

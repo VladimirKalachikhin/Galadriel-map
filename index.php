@@ -251,7 +251,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				<h3><?php echo $routeSaveTitle;?></h3>
 				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" size='255' style='width:95%;font-size:150%;'>
 				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='7' cols='255' style='width:93%;padding: 0.5rem 3%;'></textarea>
-				<button onClick='saveGPX();' type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
+				<button onClick='saveGPX(routeSaveName.value,routeSaveDescr.value);' type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
 			</div>			
 		</div>

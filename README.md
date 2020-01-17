@@ -10,7 +10,7 @@ The author is not responsible for the consequences of using the GaladrielMap as 
 
 ## Features:
 1. View one OSM-like on-line map or
-2. stacked any number of maps with GaladrielCache:
+2. stacked any number of maps with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache):
  ![stacked maps](screenshots/s1.png)
  
 3. Positioning via gpsd and display current (writing now) track file in gpx format:
@@ -19,10 +19,10 @@ The author is not responsible for the consequences of using the GaladrielMap as 
 4. Display routes and POIs files in gpx, kml and csv format:
  ![Display routes and POIs](screenshots/s5.png)
  
-5. Creating a route localy and save it to server in gpx format:
+5. Creating a route localy and save it to server in gpx format (description below):
  ![Creating a route](screenshots/s3.png)
  
-6. Exchange coordinates via clipboard (see above)
+6. Exchange coordinates via clipboard (see screenshot above and description below)  
 
 7.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)
  ![Weather forecast](screenshots/s8.png)
@@ -87,6 +87,13 @@ To get current position to clipboard to share it via other apps - tap on Positio
 Also, tap on POI name on point's popup to get position of  this point.  
 To get coordinates of any point - open <img src="img/route.svg" alt="Handle route" width="24px"> tab. Coordinates of crosshair will be in text field.  
 To fly map by coordinates type they of any format to this field and press button.
+
+## Create and edit route
+Open <img src="img/route.svg" alt="Handle route" width="24px"> tab to navigational plotting feature.  
+You can create and edit route on local device, and/or save it to server.  
+ This feature include a base gpx route editing tool. You can edit any gpx route from server in the same way as local route, and save it under the same or new name.  
+ Good case for use - navigational plotting by navigator in a dry and warm booth for the steersman on the rain and wind.  
+ But it is only a base gpx route editor. Gpx &lt;metadata&gt; not supported, and point &lt;extensions&gt; (GARMIN like it) not supported too. Be careful to edit and save exists gpx.
 
 ## Support
 You can get support for GaladrielMap and GaladrielCahe for a beer via PayPal at [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)

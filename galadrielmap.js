@@ -284,7 +284,6 @@ else {
 		savedLayers[routeName] = omnivore.csv(routeDirURI+'/'+routeName,options);
 		break;
 	}
-	//console.log(savedLayers[routeName]);
 	savedLayers[routeName].addTo(map);
 }
 } // end function displayRoute
@@ -441,7 +440,17 @@ function tooggleEditRoute(e) {
 //console.log('tooggleEditRoute start by anymore');
 
 currentRoute = e.target; 	// сделаем объект, по которому щёлкнули, текущим
-if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
+if(('feature' in e.target) && ('fileName' in e.target.feature.properties)) {
+	//console.log(savedLayers[e.target.feature.properties.fileName]);
+	//currentRoute = savedLayers[e.target.feature.properties.fileName]; 	// сделаем самый верхний родительский объект объекта, по которому щёлкнули, текущим. На самом деле, это невозможно, но у нас все загружаемые объекты верхнего уровня сохраняются в глобальном массиве
+	routeSaveName.value = e.target.feature.properties.fileName; 	// запишем в поле ввода имени имя загруженного файла
+	if('desc' in e.target.feature.properties) routeSaveDescr.value = e.target.feature.properties.desc;
+}
+else {
+	//currentRoute = e.target; 	// сделаем объект, по которому щёлкнули, текущим
+	routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату
+	if( measuredPaths.indexOf(e.target) === -1) measuredPaths.push(e.target); 	// положим объект в список редактируемых объектов. Тогда эта линия локально сохранится.
+}
 
 e.target.toggleEdit();
 if(e.target.editEnabled()) { 	//  если включено редактирование
@@ -494,31 +503,71 @@ if(RestoreMeasuredPaths) {
 }
 }	// end function doRestoreMeasuredPaths
 
-function saveGPX() {
+function saveGPX(routeName,routeDescr) {
 /* Сохраняет на сервере маршрут из объекта currentRoute
+Считаем, что в currentRoute - именно тот объект, по которому щёлкнули, а не внешний, если он есть
+Считается, что функция вызывается по кнопке в интерфейсе, поэтому так
 */
 if(!currentRoute) { 	// глобальная переменная, должна содержать объект Editable, присваивается в tooggleEditRoute, типа - по щелчку на маршруте
 	routeSaveMessage.innerHTML = 'Error - no route selected.'
 	return;
 }
-//console.log(currentRoute.toGeoJSON().getBounds());
-var route = currentRoute.toGeoJSON(); 	// сделаем из Editable объект geoJSON
-if(route.geometry.type != 'LineString') { 	// это не линия
-	routeSaveMessage.innerHTML = 'Error - omly line may be saved.'
-	return;
+if(routeDescr) { 	// юзер указал новое описание.
+	currentRoute.feature.properties.desc = routeDescr;
 }
-if(!routeSaveName.value) routeSaveName.value = new Date().toJSON(); 	// это будет name
-if(!route.properties.name) route.properties.name = routeSaveName.value;
-var name = route.properties.name;
-if(!route.properties.desc && routeSaveDescr.value) route.properties.desc = routeSaveDescr.value;
+let toSaveRoute; 	// тот объект, который будем сохранять - ранее загруженный gpx или только что нарисованный layer
+let fileName; 	// имя файла для сохранения
+if('fileName' in currentRoute.feature.properties) { 	// currentRoute - часть чего-то большего, и сохранять надо его
+	if(routeName) { 	// юзер указал новое имя - очевидно, в интерфейсе
+		savedLayers[currentRoute.feature.properties.fileName].options.fileName = routeName; 	// установим это имя для внешнего объекта
+		fileName = routeName;
+	}
+	else {
+		fileName = savedLayers[currentRoute.feature.properties.fileName].options.fileName;
+		routeSaveName.value = name; 	// запишем в интерфейс
+	}
+	toSaveRoute = savedLayers[currentRoute.feature.properties.fileName]; 	// сделаем самый верхний родительский объект объекта, по которому щёлкнули, сохраняемым. На самом деле, это невозможно, но у нас все загружаемые объекты верхнего уровня сохраняются в глобальном массиве
+}
+else { 	// что-то локальное
+	if(routeName) { 	// юзер указал новое имя - очевидно, в интерфейсе
+		currentRoute.options.fileName = routeName; 	// установим это имя для внешнего объекта
+		fileName = routeName;
+	}
+	else {
+		routeSaveName.value = new Date().toJSON(); 	// это будет name
+		fileName = routeSaveName.value;
+	}
+	toSaveRoute = currentRoute; 	// 
+}
+//console.log(toSaveRoute);
+// поскольку мы хотим toGeoJSON() все имеющиеся точки, а слой может быть superclaster, то будем доставать точки из supercluster'а
+let pointsFeatureCollection;
+if('eachLayer' in toSaveRoute) { 	// это LayerGroup
+	toSaveRoute.eachLayer( function (layer) { 	// для каждого слоя этой группы выполним
+		if('supercluster' in layer) { 	// это superclaster'изованный слой, с точками, надо полагать, ранее положенными в свойство layer.supercluster
+			pointsFeatureCollection = layer.supercluster.points; 	// считаем, что слой с точками только один. У нас, вроде, это так.
+		}
+	});
+}
+//console.log(pointsFeatureCollection);
+let route = toSaveRoute.toGeoJSON(); 	// сделаем из Editable объект geoJSON
 //console.log(route);
-route = toGPX(route,currentRoute.getBounds()); 	// сделаем gpx маршрут
+if(pointsFeatureCollection) { 	// это был supercluster, поэтому в geoJSON неизвестно, сколько оригинальных точек, а не все. Но у нас с собой было...
+	for(let i=0; i<route.features.length;i++) {
+		if(route.features[i].geometry.type == 'Point') {
+			// delete route.features[i]; 	// так делать нельзя, потому что у всего используемого софта крыша едет от элемента массива undefined. Хотя это должно быть нормально в языке. Но что в этом языке нормально?
+			route.features.splice(i,1); 	// вырежем этот элемент из массива
+		}
+	}
+	route.features = route.features.concat(pointsFeatureCollection); 	// теперь положим туда точки, ранее взятые в superclaster'е
+}
 //console.log(route);
+route = toGPX(route); 	// сделаем gpx 
 
 var xhr = new XMLHttpRequest();
 xhr.open('POST', 'saveGPX.php', true); 	// Подготовим асинхронный запрос
 xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-xhr.send('name=' + encodeURIComponent(name) + '&gpx=' + encodeURIComponent(route));
+xhr.send('name=' + encodeURIComponent(fileName) + '&gpx=' + encodeURIComponent(route));
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился
 	if (this.status != 200) return; 	// что-то не то с сервером
@@ -526,7 +575,7 @@ xhr.onreadystatechange = function() { //
 }
 } // end function createGPX()
 
-function toGPX(geoJSON,bounds,createTrk) {
+function toGPX(geoJSON) {
 /* Create gpx route or track (createTrk==true) from geoJSON object
 geoJSON must have a needle gpx attributes
 bounds - потому что geoJSON.getBounds() не работает
@@ -538,36 +587,80 @@ var gpxtrack = `<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
 gpxtrack += '<metadata>\n';
 var date = new Date().toISOString();
 gpxtrack += '	<time>'+ date +'</time>\n';
-//var bounds = geoJSON.getBounds();
+// Хитрый способ получить границы всех объектов в geoJSON
+const geojsongroup = L.geoJSON(geoJSON);
+let bounds = geojsongroup.getBounds();
 //console.log(bounds);
-gpxtrack += '	<bounds minlat="'+bounds.getSouth().toFixed(4)+'" minlon="'+bounds.getWest().toFixed(4)+'" maxlat="'+bounds.getNorth().toFixed(4)+'" maxlon="'+bounds.getEast().toFixed(4)+'"  />\n';
+if(bounds) gpxtrack += '	<bounds minlat="'+bounds.getSouth().toFixed(4)+'" minlon="'+bounds.getWest().toFixed(4)+'" maxlat="'+bounds.getNorth().toFixed(4)+'" maxlon="'+bounds.getEast().toFixed(4)+'"  />\n';
 gpxtrack += '</metadata>\n';
-if(createTrk) gpxtrack += '	<trk>\n'; 	// рисуем трек
-else gpxtrack += '	<rte>\n'; 	// рисуем маршрут
-
-if(geoJSON.properties.name) gpxtrack += '		<name>' + geoJSON.properties.name.encodeHTML() + '</name>\n';
-if(geoJSON.properties.cmt) gpxtrack += '		<cmt>' + geoJSON.properties.cmt.encodeHTML() + '</cmt>\n';
-if(geoJSON.properties.desc) gpxtrack += '		<desc>' + geoJSON.properties.desc.encodeHTML() + '</desc>\n';
-if(geoJSON.properties.src) gpxtrack += '		<src>' + geoJSON.properties.src + '</src>\n';
-if(geoJSON.properties.link) gpxtrack += '		<link>' + geoJSON.properties.link + '</link>\n';
-if(geoJSON.properties.number) gpxtrack += '		<number>' + geoJSON.properties.number + '</number>\n';
-if(geoJSON.properties.type) gpxtrack += '		<type>' + geoJSON.properties.type + '</type>\n';
-if(geoJSON.properties.extensions) gpxtrack += '		<extensions>' + geoJSON.properties.extensions + '</extensions>\n';
-
-if(createTrk) gpxtrack += '		<trkseg>\n'; 	// рисуем трек
-for (var i = 0; i < geoJSON.geometry.coordinates.length; i++) {
-	if(createTrk) gpxtrack += '			<trkpt '; 	// рисуем трек
-	else gpxtrack += '		<rtept '; 	// рисуем маршрут
-	gpxtrack += 'lat="' + geoJSON.geometry.coordinates[i][1] + '" lon="' + geoJSON.geometry.coordinates[i][0] + '">';
-	if(createTrk) gpxtrack += '</trkpt>\n'; 	// рисуем трек
-	else gpxtrack += '</rtept>\n'; 	// рисуем маршрут
+let i,k,j;
+for( i=0; i<geoJSON.features.length;i++) {
+	//console.log(geoJSON.features[i]);
+	switch(geoJSON.features[i].geometry.type) {
+	case 'MultiLineString': 	// это обязательно путь
+		gpxtrack += '	<trk>\n'; 	// рисуем трек
+		doDescriptions() 	// запишем разные описательные поля
+		for( k = 0; k < geoJSON.features[i].geometry.coordinates.length; k++) {
+			gpxtrack += '		<trkseg>\n'; 	// рисуем трек
+			for ( j = 0; j < geoJSON.features[i].geometry.coordinates[k].length; j++) {
+				gpxtrack += '			<trkpt '; 	// рисуем трек
+				gpxtrack += 'lat="' + geoJSON.features[i].geometry.coordinates[k][j][1] + '" lon="' + geoJSON.features[i].geometry.coordinates[k][j][0] + '">';
+				gpxtrack += '</trkpt>\n'; 	// рисуем трек
+			}
+			gpxtrack += '		</trkseg>\n'; 	// рисуем трек
+		}
+		gpxtrack += '	</trk>\n'; 	// рисуем трек
+		break;
+	case 'LineString': 	// это может быть как маршрут, так и путь
+		if(!geoJSON.features[i].properties.isRoute) gpxtrack += '	<trk>\n'; 	// рисуем трек
+		else gpxtrack += '	<rte>\n'; 	// рисуем маршрут
+		doDescriptions() 	// запишем разные описательные поля
+		if(!geoJSON.features[i].properties.isRoute) gpxtrack += '		<trkseg>\n'; 	// рисуем трек
+		for ( j = 0; j < geoJSON.features[i].geometry.coordinates.length; j++) {
+			if(!geoJSON.features[i].properties.isRoute) gpxtrack += '			<trkpt '; 	// рисуем трек
+			else gpxtrack += '		<rtept '; 	// рисуем маршрут
+			gpxtrack += 'lat="' + geoJSON.features[i].geometry.coordinates[j][1] + '" lon="' + geoJSON.features[i].geometry.coordinates[j][0] + '">';
+			if(!geoJSON.features[i].properties.isRoute) gpxtrack += '</trkpt>\n'; 	// рисуем трек
+			else gpxtrack += '</rtept>\n'; 	// рисуем маршрут
+		}
+		if(!geoJSON.features[i].properties.isRoute) gpxtrack += '		</trkseg>\n'; 	// рисуем трек
+		if(!geoJSON.features[i].properties.isRoute) gpxtrack += '	</trk>\n'; 	// рисуем трек
+		else gpxtrack += '	</rte>\n'; 	// рисуем маршрут
+		break;
+	case 'Point':
+		gpxtrack += '	<wpt '; 	// рисуем точку
+		gpxtrack += 'lat="' + geoJSON.features[i].geometry.coordinates[1] + '" lon="' + geoJSON.features[i].geometry.coordinates[0] + '">\n';
+		doDescriptions() 	// запишем разные описательные поля
+		gpxtrack += '	</wpt>\n'; 	// 
+	}
 }
-if(createTrk) gpxtrack += '		</trkseg>\n'; 	// рисуем трек
-
-if(createTrk) gpxtrack += '	</trk>\n'; 	// рисуем трек
-else gpxtrack += '	</rte>\n'; 	// рисуем маршрут
 gpxtrack += '</gpx>';
+//console.log(gpxtrack);
 return gpxtrack;
+
+	function doDescriptions() {
+		if(geoJSON.features[i].properties.name) gpxtrack += '		<name>' + geoJSON.features[i].properties.name.encodeHTML() + '</name>\n';
+		if(geoJSON.features[i].properties.cmt) gpxtrack += '		<cmt>' + geoJSON.features[i].properties.cmt.encodeHTML() + '</cmt>\n';
+		if(geoJSON.features[i].properties.desc) gpxtrack += '		<desc>' + geoJSON.features[i].properties.desc.encodeHTML() + '</desc>\n';
+		if(geoJSON.features[i].properties.src) gpxtrack += '		<src>' + geoJSON.features[i].properties.src + '</src>\n';
+		if(geoJSON.features[i].properties.link) {
+			for ( let ii = 0; ii < geoJSON.features[i].properties.link.length; ii++) { 	// ссылок может быть много
+				//console.log(geoJSON.features[i].properties.link[ii]);
+				gpxtrack += '		<link http="' + geoJSON.features[i].properties.link[ii].getAttribute('href') + '">\n';
+				for(let iii = 0; iii < geoJSON.features[i].properties.link[ii].children.length; iii++) {
+					//console.log(geoJSON.features[i].properties.link[ii].children[iii].textContent);
+					gpxtrack += '			<' + geoJSON.features[i].properties.link[ii].children[iii].nodeName +'>' + geoJSON.features[i].properties.link[ii].children[iii].textContent + '</' + geoJSON.features[i].properties.link[ii].children[iii].nodeName + '>\n';
+				}
+				gpxtrack += '		</link>\n'
+			}
+			//console.log(gpxtrack);
+		}
+		if(geoJSON.features[i].properties.number) gpxtrack += '		<number>' + geoJSON.features[i].properties.number + '</number>\n';
+		if(geoJSON.features[i].properties.type) gpxtrack += '		<type>' + geoJSON.features[i].properties.type + '</type>\n';
+		if(geoJSON.features[i].properties.extensions) { 	// это HTMLCollection
+			// это произвольная структура, с которой непонятно что делать
+		}
+	}
 } // end function toGPX
     
 String.prototype.encodeHTML = function () {

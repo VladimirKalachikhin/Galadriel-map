@@ -12,6 +12,7 @@ $gpx = trim(urldecode($_REQUEST['gpx']));
 $name = trim(urldecode($_REQUEST['name']));
 //error_log("Name: ".html_entity_decode($name));
 //error_log($gpx);
-file_put_contents("$routeDir/$name".'.gpx',$gpx); 	// 
-echo $name.'.gpx saved!';
+if(pathinfo($name,PATHINFO_EXTENSION) != 'gpx') $name = "$name.gpx";
+file_put_contents("$routeDir/$name",$gpx); 	// 
+echo "$name saved!";
 ?>
