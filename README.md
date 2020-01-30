@@ -9,30 +9,33 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  ![screen](screenshots/s.png)
 
 ## Features:
-1. View one OSM-like on-line map or
-2. stacked any number of maps with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache):
+1. View one OSM-like on-line map or  
+2. with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) the stacked maps  
+[Open Sea Map](http://www.openseamap.org/)  
+[Open Topo Map](https://opentopomap.org/about)  
+ or any number of other maps:  
  ![stacked maps](screenshots/s1.png)
  
-3. Positioning via gpsd and display current (writing now) track file in gpx format:
+3. Positioning via gpsd and display current (writing now) track file in gpx format:  
  ![Positioning](screenshots/s2.png)
  
-4. Display routes and POIs files in gpx, kml and csv format:
+4. Display routes and POIs files in gpx, kml and csv format:  
  ![Display routes and POIs](screenshots/s5.png)
  
-5. Creating a route localy and save it to server in gpx format (description below):
+5. Creating a route localy and save it to server in gpx format (description below):  
  ![Creating a route](screenshots/s3.png)
  
 6. Exchange coordinates via clipboard (see screenshot above and description below)  
 
-7.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)
+7.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)  
  ![Weather forecast](screenshots/s8.png)
  
-8. Control the GaladrielCache Loader: 
+8. Control the GaladrielCache Loader:   
  ![Control Loader](screenshots/s4.png)
  
 9. Dashboard.<br>
  _dashboard.php_ - separate app to display velocity and heading on weak (and/or old) devices, such as E-ink readers, for example.<br>
- No javascript, no fanciful css.
+ No javascript, no fanciful css.  
  ![Dashboard velocity](screenshots/s7.jpg)
  ![Dashboard heading](screenshots/s6.jpg)
 
