@@ -1,5 +1,5 @@
-# GaladrielMap
-  <a href="README.ru-RU.md" style="float:right;"><img title="По-русски" src="screenshots/Flag_of_Russia.svg" width=32px></a>
+[![По-русски](screenshots/russia-flag-icon-32.png)](README.ru-RU.md)  
+# GaladrielMap 
 This is a web application - the tiles map viewer. The application can be placed on a weak server such as RaspberryPi or NAS and used on full clients such as tablets and smartphones. Only browser need.  
 It is assumed that the application is used in the onboard local area network of the boat or camper. The author uses it from the wi-fi router/GSM modem under OpenWRT as a server on his sailboat "Galadriel".  
 The GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) but may be used with any tile OSM-like map sources or file tile cache for exploring the map.  
