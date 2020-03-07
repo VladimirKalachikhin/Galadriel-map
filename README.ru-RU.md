@@ -24,7 +24,7 @@ GaladrielMap сделано на основе большого количест�
  5. Планирование маршрута на клиентском устройстве, с возможностью сохранить маршрут на сервере в формате gpx:  
  ![Creating a route](screenshots/s3.png)
  6. Обмен координатами через буфер обмена, переход по координатам, введённым с клавиатуры, получение координат точек достопримечательностей.  
-7.  Прогноз погоды от [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) только с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) версии 1.3 или больше)  
+7.  Прогноз погоды от [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (только с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) версии 1.3 или больше)  
  ![Weather forecast](screenshots/s8.png)
  8. Управление загрузчиком GaladrielCache:   
  ![Control Loader](screenshots/s4.png)
