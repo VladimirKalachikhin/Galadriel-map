@@ -16,7 +16,7 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  or any number of other maps:  
  ![stacked maps](screenshots/s1.png)
  
-3. Positioning via [gpsd](https://gpsd.gitlab.io/) and display current (writing now) track file in gpx format:  
+3. Positioning via [gpsd](https://gpsd.io/) and display current (writing now) track file in gpx format:  
  ![Positioning](screenshots/s2.png)
  
 4. Display routes and POIs files in gpx, kml and csv format:  
@@ -73,8 +73,8 @@ All you need to install, including dependences, are in _distr/_.
 * [On/Off FlipSwitch](https://proto.io/freebies/onoff/)
 
 ## gpsd
-GaladrielMap get position and velocity from  [gpsd](https://gpsd.gitlab.io/) via _askGPSD.php_ service. You may configure _askGPSD.php_ to you gpsd host and port. Defaults are localhost and 2947 port (default for gpsd).<br>
-How to install and configure gpsd see [gpsd pages](https://gpsd.gitlab.io/).
+GaladrielMap get position and velocity from  [gpsd](https://gpsd.io/) via _askGPSD.php_ service. You may configure _askGPSD.php_ to you gpsd host and port. Defaults are localhost and 2947 port (default for gpsd).<br>
+How to install and configure gpsd see [gpsd pages](https://gpsd.io/).
 
 ## Tracks
 You may use `gpxlogger` app from gpsd-clients packet to logging track on your server. GaladrielMap displaying current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
