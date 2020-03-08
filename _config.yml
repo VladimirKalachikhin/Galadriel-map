@@ -1,5 +1,5 @@
 theme: jekyll-theme-slate
-title: <span  style="float:right;"><a href="README"><img src="screenshots/united-kingdom-flag-icon-32.png"></a> <a href="README.ru-RU"><img src="screenshots/russia-flag-icon-32.png"></a></span>
+title: <span  style="float:right;"><a href="/Galadriel-map/"><img src="screenshots/united-kingdom-flag-icon-32.png"></a> <a href="README.ru-RU"><img src="screenshots/russia-flag-icon-32.png"></a></span>
 show_downloads: true
 github:
   zip_url: https://github.com/VladimirKalachikhin/Galadriel-map/raw/master/distr/GaladrielMap.zip
