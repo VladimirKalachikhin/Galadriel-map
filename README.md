@@ -84,6 +84,7 @@ Run _chkGPXfiles.php_ in cli to repair non-well-formed gpx files for other appli
 Comma-Separated Values text file - the simplest way of cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.  
 The first line in the csv file must be field names. Good choice is a `"number","name","description","type","link","latitude","longitude"`  
 Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
+A real example of using csv to store information about ports and piers on Lake Saimaa in Finland - [SaimaaPOI](https://github.com/VladimirKalachikhin/Saimaa-POI). File with geospatial photolinks on csv format - is a good example too.
 
 ## Exchange coordinates
 To get current position to clipboard to share it via other apps - tap on Position on <img src="img/speed1.svg" alt="Dashboard" width="24px"> tab.  
