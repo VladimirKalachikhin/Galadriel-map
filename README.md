@@ -63,7 +63,7 @@ Paths and other are set and describe in _params.php_
 Create a local copy of dependences and/or edit _index.php_
 
 ## Emergency kit
-All you need to install, including dependences, are in _distr/_.
+All you need to install, including dependences, are in _emergencykit/_.
 
 ## More thanks
 * [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to show markers and non well-formed gpx files.
