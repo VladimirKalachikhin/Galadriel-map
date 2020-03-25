@@ -39,22 +39,22 @@ $geoJSON = array(
 )
 );
 
-//echo "Начали\n";
+echo "Начали\n";
 $gpsd  = @stream_socket_client('tcp://'.$host.':'.$port); // открыть сокет 
 if(!$gpsd){
     $geoJSON['features'][0]['properties']= array('error' => 'no GPSD'); 	// корректный geoJSON
     return $geoJSON;
 }
-//echo "Открыт сокет\n";
+echo "Открыт сокет\n";
 $gpsdVersion = fgets($gpsd); 	// {"class":"VERSION","release":"3.15","rev":"3.15-2build1","proto_major":3,"proto_minor":11}
 //echo "Получен VERSION\n";
 
 fwrite($gpsd, '?WATCH={"enable":true};'); 	// велим демону включить устройства
-//echo "Отправлено ВКЛЮЧИТЬ\n";
+echo "Отправлено ВКЛЮЧИТЬ\n";
 $gpsdDevices = fgets($gpsd); 	// {"class":"DEVICES","devices":[{"class":"DEVICE","path":"/tmp/ttyS21","activated":"2017-09-20T20:13:02.636Z","native":0,"bps":38400,"parity":"N","stopbits":1,"cycle":1.00}]}
-//echo "Получен DEVICES\n";
+echo "Получен DEVICES\n<pre>"; print_r($gpsdDevices); echo "</pre><br>\n";
 $gpsdWATCH = fgets($gpsd); 	// статус WATCH
-//echo "Получен WATCH\n";
+echo "Получен WATCH\n<pre>"; print_r($gpsdWATCH); echo "</pre><br>\n";
 $gpsdDevices = json_decode($gpsdDevices,TRUE);
 $devicePresent = FALSE;
 foreach($gpsdDevices["devices"] as $device) {
@@ -69,14 +69,15 @@ $lat=0; $lon=0; $heading=0; $speed=0;
 $mode = 0;
 //stream_set_blocking($gpsd,FALSE); 	// установим неблокирующий режим чтения
 fwrite($gpsd, '?POLL;'); 	// запросим данные
-//echo "Отправлено ДАЙ!\n";
+echo "Отправлено ДАЙ!<br>\n";
 $gpsdData = fgets($gpsd); 	// {"class":"POLL","time":"2017-09-20T20:17:49.515Z","active":1,"tpv":[{"class":"TPV","device":"/tmp/ttyS21","mode":3,"time":"2017-09-20T23:17:48.000Z","ept":0.005,"lat":37.859215000,"lon":23.873236667,"alt":256.900,"track":146.4000,"speed":3694.843,"climb":-141.300}],"gst":[{"class":"GST","device":"/tmp/ttyS21","time":"1970-01-01T00:00:00.000Z","rms":0.000,"major":0.000,"minor":0.000,"orient":0.000,"lat":0.000,"lon":0.000,"alt":0.000}],"sky":[{"class":"SKY","device":"/tmp/ttyS21","time":"1970-01-01T00:00:00.000Z"}]}
-//echo "$gpsdData\n";
+//echo "<pre>"; 
+print_r($gpsdData); //echo "</pre>\n";
 $gpsdData = json_decode($gpsdData,TRUE);
 
 $tpv = array();
 foreach($gpsdData['tpv'] as $device) {
-	//echo "device="; print_r($device); echo "\n";
+	echo "device=<pre>"; print_r($device); echo "</pre>\n";
 	if(($mode = $device['mode']) < 2) continue; 	// координат нет или это не ГПС
 	$tpv[$device['time']] = array(
 		$device['lon'], 	// долгота
