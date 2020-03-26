@@ -36,12 +36,12 @@ if($vps['features'][0]['properties']['error']) {
 
 $gnssTime = new DateTime($vps['features'][1]['properties']['time']); 	// 
 $gnssTime = $gnssTime->getTimestamp();
-/*
+
 if((time()-$gnssTime)>30) {
 	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели более, чем на 30 секунд 
 	goto DISPLAY;
 }
-*/
+
 $rumbNames = array('N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW');
 $rumbNum = round($vps['features'][1]['properties']['heading']/22.5);
 if($rumbNum==16) $rumbNum = 0;
