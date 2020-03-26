@@ -1,5 +1,11 @@
 <?php
-/**/
+/*
+NW |NNW|N|NNE|NE
+WNW|   | |   |ENE
+W  |   | |   |E
+WSW|   | |   |ESE
+SW |SSW|S|SSE|SE
+*/
 // Интернационализация
 if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
 //if(TRUE) {
@@ -30,12 +36,18 @@ if($vps['features'][0]['properties']['error']) {
 
 $gnssTime = new DateTime($vps['features'][1]['properties']['time']); 	// 
 $gnssTime = $gnssTime->getTimestamp();
-
+/*
 if((time()-$gnssTime)>30) {
 	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели более, чем на 30 секунд 
 	goto DISPLAY;
 }
-
+*/
+$rumbNames = array('N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW');
+$rumbNum = round($vps['features'][1]['properties']['heading']/22.5);
+if($rumbNum==16) $rumbNum = 0;
+//echo "rumbNum=$rumbNum;<br>\n";
+$currRumb = array();
+$currRumb[$rumbNum] = $rumbNames[$rumbNum];
 switch($mode) {
 case 'heading':
 	$header = $dashboardHeadingTXT;
@@ -75,6 +87,9 @@ if($fontZ>1) {
 	.mid_symbol {
 		font-size:30px;
 	}
+	.big_mid_symbol {
+		font-size:60px;
+	}
 }
 @media (min-height: 357px) and (max-height: 576px) {
 	.big_symbol {
@@ -82,6 +97,9 @@ if($fontZ>1) {
 	}
 	.mid_symbol {
 		font-size:40px;
+	}
+	.big_mid_symbol {
+		font-size:80px;
 	}
 }
 @media (min-height: 577px) and (max-height: 743px) {
@@ -91,6 +109,9 @@ if($fontZ>1) {
 	.mid_symbol {
 		font-size:45px;
 	}
+	.big_mid_symbol {
+		font-size:90px;
+	}
 }
 @media (min-height: 744px) and (max-height: 899px) {
 	.big_symbol {
@@ -98,6 +119,9 @@ if($fontZ>1) {
 	}
 	.mid_symbol {
 		font-size:50px;
+	}
+	.big_mid_symbol {
+		font-size:100px;
 	}
 }
 @media (min-height: 900px) {
@@ -107,37 +131,80 @@ if($fontZ>1) {
 	.mid_symbol {
 		font-size:65px;
 	}
+	.big_mid_symbol {
+		font-size:130px;
+	}
 }
    </style>
 </head>
-<body>
-<div style='text-align:center; top:0;'>
-	<span class='mid_symbol' style='vertical-align:middle; padding: 0; margin: 0;'>
-	<?php
-	//echo "fontZ=$fontZ;<br>\n";
-	echo $header;
-	?>
-	</span>
-</div>
-<div style='padding:2% 0; margin:0;'>
+<body style="margin:0; padding:0;">
+
+<table style='
+	border:1px solid; 
+	position:fixed; 
+	width:100%; 
+	height:100%; 
+	margin:0; padding:0;
+	text-align:center;
+	opacity: 0.25;
+	z-index: -1;
+'>
+<tr>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[14]; ?></span></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[15]; ?></span></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[0]; ?></span></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[1]; ?></span></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[2]; ?></span></td>
+</tr>
+<tr>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[13]; ?></span></td>
+<td rowspan="3" colspan="3"></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[3]; ?></span></td>
+</tr>
+<tr>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[12]; ?></span></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[4]; ?></span></td>
+</tr>
+<tr>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[11]; ?></span></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[5]; ?></span></td>
+</tr>
+<tr>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[10]; ?></span></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[9]; ?></span></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[8]; ?></span></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[7]; ?></span></td>
+<td style="width:20%;height:20%;"><span class='big_mid_symbol' style='background-color:black;color:white;'><?php echo $currRumb[6]; ?></span></td>
+</tr>
+</table>
+
+<div style = '
+	position:fixed;
+	left: 50%;
+	top: 50%;
+	transform:translate(-50%, -50%);
+	width:70%;
+'>
+	<div style='text-align:center;'>
+		<span class='mid_symbol' style='vertical-align:middle; padding: 0; margin: 0;'>
+			<?php echo $header;	?>
+		</span>
+	</div>
 	<div id='dashboard' style='text-align:center; padding: 0; margin: 0;'>
-	<span class='big_symbol' style='vertical-align:middle;'>
-	<?php
-	echo $symbol;
-	?>
-	</span>
+		<span class='big_symbol' style='vertical-align:middle;'>
+			<?php echo $symbol;	?>
+		</span>
+	</div>
+	<div style='text-align:center; bottom:0; padding: 0; margin: 0;'>
+		<a href="dashboard.php?mode=<?php echo $mode; ?>">
+		<button style='width:90%;'>
+		<span class='mid_symbol' style='vertical-align:middle;'>
+			<?php echo $nextsymbol;	?>
+		</span>
+		</button>
+		</a>
 	</div>
 </div>
-<div style='text-align:center; bottom:0; padding: 0; margin: 0;'>
-	<a href="dashboard.php?mode=<?php echo $mode; ?>">
-	<button style='width:90%;'>
-	<span class='mid_symbol' style='vertical-align:middle;'>
-	<?php
-	echo $nextsymbol;
-	?>
-	</span>
-	</button>
-	</a>
-</div>
+
 </body>
 </html>
