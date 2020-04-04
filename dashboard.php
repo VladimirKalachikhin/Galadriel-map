@@ -1,26 +1,93 @@
-<?php
-/**/
+<?php session_start();
+/*
+NW |NNW|N|NNE|NE
+WNW|   | |   |ENE
+W  |   | |   |E
+WSW|   | |   |ESE
+SW |SSW|S|SSE|SE
+*/
 // Интернационализация
 if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
 //if(TRUE) {
-	$dashboardSpeedTXT = 'Velocity';
-	$dashboardSpeedMesTXT = 'km/h';
 	$dashboardHeadingTXT = 'Heading';
-	$dashboardGNSSoldTXT = 'GNSS data old';
+	$dashboardMagHeadingTXT = 'Magnetic heading';
+	$dashboardMagVarTXT = 'Magnetic variation';
+	$dashboardSpeedTXT = 'Velocity';
+	$dashboardMinSpeedAlarmTXT = 'Speed too high';
+	$dashboardMaxSpeedAlarmTXT = 'Speed too low';
+	$dashboardSpeedMesTXT = 'km/h';
+	$dashboardDepthTXT = 'Depth';
+	$dashboardDepthAlarmTXT = 'Too shallow';
+	$dashboardDepthMesTXT = 'm';
+	$dashboardGNSSoldTXT = 'Instrument data old';
+	$dashboardDepthMenuTXT = 'Shallow';
+	$dashboardMinSpeedMenuTXT = 'Min speed';
+	$dashboardMaxSpeedMenuTXT = 'Max speed';
 }
 else {
 	$dashboardHeadingTXT = 'Истинный курс';
+	$dashboardMagHeadingTXT = 'Магнитный курс';
+	$dashboardMagVarTXT = 'Склонение';
 	$dashboardSpeedTXT = 'Скорость';
+	$dashboardMinSpeedAlarmTXT = 'Скорость меньше допустимой';
+	$dashboardMaxSpeedAlarmTXT = 'Скорость больше допустимой';
 	$dashboardSpeedMesTXT = 'км/ч';
-	$dashboardGNSSoldTXT = 'Данные геопозиционирования устарели';
+	$dashboardDepthTXT = 'Глубина';
+	$dashboardDepthAlarmTXT = 'Слишком мелко';
+	$dashboardDepthMesTXT = 'м';
+	$dashboardGNSSoldTXT = 'Данные с приборов устарели';
+	$dashboardDepthMenuTXT = 'Опасная глубина';
+	$dashboardMinSpeedMenuTXT = 'Минимальная скорость';
+	$dashboardMaxSpeedMenuTXT = 'Максимальная скорость';
 }
 $gpsdHost = 'localhost'; $gpsdPort = 2947;
 require_once('fGPSD.php'); // fGPSD.php 
 
 $mode = $_REQUEST['mode'];
+if($mode) $_SESSION['mode'] = $mode;
+else $mode = $_SESSION['mode'];
+$magnetic = $_REQUEST['magnetic'];
+//echo "Is NULL ".is_null($_REQUEST['magnetic'])."<br>\n";
+if($magnetic===NULL) $magnetic = $_SESSION['magnetic'];
+else $_SESSION['magnetic'] = $magnetic;
+if($magnetic) $magneticTurn = 0;
+else $magneticTurn = 1;
+$menu = $_REQUEST['menu'];
+//echo "mode=$mode; menu=$menu; magnetic=$magnetic; magneticTurn=$magneticTurn;<br>\n";
+
+if($_REQUEST['submit']) {
+	$depthAlarm = $_REQUEST['depthAlarm'];
+	$minDepthValue = $_REQUEST['minDepthValue'];
+	if(!$minDepthValue) $depthAlarm = FALSE;
+	$_SESSION['depthAlarm'] = $depthAlarm;
+	$_SESSION['minDepthValue'] = $minDepthValue;
+
+	$minSpeedAlarm = $_REQUEST['minSpeedAlarm'];
+	$minSpeedValue = $_REQUEST['minSpeedValue'];
+	if(!$minSpeedValue) $minSpeedAlarm = FALSE;
+	$_SESSION['minSpeedAlarm'] = $minSpeedAlarm;
+	$_SESSION['minSpeedValue'] = $minSpeedValue;
+
+	$maxSpeedAlarm = $_REQUEST['maxSpeedAlarm'];
+	$maxSpeedValue = $_REQUEST['maxSpeedValue'];
+	if(!$maxSpeedValue) $maxSpeedAlarm = FALSE;
+	$_SESSION['maxSpeedAlarm'] = $maxSpeedAlarm;
+	$_SESSION['maxSpeedValue'] = $maxSpeedValue;
+}
+else {
+	$minDepthValue = $_SESSION['minDepthValue'];
+	$depthAlarm = $_SESSION['depthAlarm'];
+
+	$minSpeedAlarm = $_SESSION['minSpeedAlarm'];
+	$minSpeedValue = $_SESSION['minSpeedValue'];
+
+	$maxSpeedAlarm = $_SESSION['maxSpeedAlarm'];
+	$maxSpeedValue = $_SESSION['maxSpeedValue'];
+}
+//echo "depthAlarm=$depthAlarm; minDepthValue=$minDepthValue; minSpeedAlarm=$minSpeedAlarm; minSpeedValue=$minSpeedValue; maxSpeedAlarm=$maxSpeedAlarm; maxSpeedValue=$maxSpeedValue;<br>\n";
 
 $tpv = getData($gpsdHost,$gpsdPort);
-echo "Ответ:<pre>"; print_r($tpv); echo "</pre>";
+//echo "Ответ:<pre>"; print_r($tpv); echo "</pre>";
 if(is_string($tpv)) {
 	$symbol = $tpv;
 	goto DISPLAY;
@@ -33,20 +100,76 @@ if((time()-$gnssTime)>30) {
 	goto DISPLAY;
 }
 */
+$header = '';
+// Оповещения в порядке возрастания опасности, реально сработает последнее
+$alarm = FALSE;
+if($minSpeedAlarm AND $tpv['speed']) {
+	if($tpv['speed']*60*60/1000 <= $minSpeedValue) {
+		$mode = 'speed';
+		$header = $dashboardMinSpeedAlarmTXT;
+		$alarmJS = 'minSpeedAlarm();';
+		$alarm = TRUE;
+	}
+}
+if($maxSpeedAlarm AND $tpv['speed']) {
+	if($tpv['speed']*60*60/1000 >= $maxSpeedValue) {
+		$mode = 'speed';
+		$header = $dashboardMaxSpeedAlarmTXT;
+		$alarmJS = 'maxSpeedAlarm();';
+		$alarm = TRUE;
+	}
+}
+if($depthAlarm AND $tpv['depth']) {
+	if($tpv['depth'] <= $minDepthValue) {
+		$mode = 'depth';
+		$header = $dashboardDepthAlarmTXT;
+		$alarmJS = 'depthAlarm();';
+		$alarm = TRUE;
+	}
+}
 
 switch($mode) {
 case 'heading':
-	$header = $dashboardHeadingTXT;
-	$symbol = round($tpv['track']); 	// 
+	if($magnetic AND $tpv['magtrack']) {
+		if(!$header) $header = $dashboardMagHeadingTXT;
+		$symbol = round($tpv['magtrack']);
+	}
+	else {
+		if(!$header) $header = $dashboardHeadingTXT;
+		$symbol = round($tpv['track']); 	// 
+	}
 	$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
-	$mode = '';
+	$mode = 'speed';
+	break;
+case 'depth':
+	if(!$header) $header = "$dashboardDepthTXT, $dashboardDepthMesTXT";
+	$symbol = round($tpv['depth'],1); 	// 
+	if($magnetic AND $tpv['magtrack']) $nextsymbol = "$dashboardMagHeadingTXT ".round($tpv['track']); 	// 
+	else $nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
+	$mode = 'heading';
 	break;
 default:
-	$header = "$dashboardSpeedTXT, $dashboardSpeedMesTXT";
+	if(!$header) $header = "$dashboardSpeedTXT, $dashboardSpeedMesTXT";
 	$symbol = round($tpv['speed']*60*60/1000,1); 	// скорость от gpsd - в метрах в секунду
-	$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
-	$mode = 'heading';
+	if($tpv['depth']) {
+		$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
+		$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
+		$mode = 'depth';
+	}
+	else {
+		$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
+		$mode = 'heading';
+	}
 }
+
+$rumbNames = array(' N ','NNE',' NE ','ENE',' E ','ESE',' SE ','SSE',' S ','SSW',' SW ','WSW',' W ','WNW',' NW ','NNW');
+if($magnetic AND $tpv['magtrack']) $rumbNum = round($tpv['track']/22.5);
+else $rumbNum = round($tpv['track']/22.5);
+if($rumbNum==16) $rumbNum = 0;
+//echo "rumbNum=$rumbNum;<br>\n";
+$currRumb = array();
+$currRumb[$rumbNum] = $rumbNames[$rumbNum];
+
 DISPLAY:
 $fontZ = intdiv(mb_strlen($symbol),3); 	// считая, что штатный размер шрифта позволяет разместить 4 символа на экране
 if($fontZ>1) {
@@ -63,87 +186,125 @@ if($fontZ>1) {
 	<meta http-equiv="Pragma" content="no-cache" />
 	<meta http-equiv="Expires" content="0" />
 	<!--<meta http-equiv="refresh" content="2">-->
-	<meta http-equiv="refresh" content="2">
+	<?php if(!$menu) echo "<meta http-equiv='refresh' content='2; url={$_SERVER['PHP_SELF']}'>";?>
+	<script src="dashboard.js">	</script>
+	<?php if($alarm) echo "<script>$alarmJS</script>";?>
+	<link rel="stylesheet" href="dashboard.css" type="text/css"> 
    <title>Dashboard</title>
-   <style>
-@media (max-height: 356px) {
-	.big_symbol {
-		font-size:220px;
-	}
-	.mid_symbol {
-		font-size:30px;
-	}
-}
-@media (min-height: 357px) and (max-height: 576px) {
-	.big_symbol {
-		font-size:250px;
-	}
-	.mid_symbol {
-		font-size:40px;
-	}
-}
-@media (min-height: 577px) and (max-height: 743px) {
-	.big_symbol {
-		font-size:320px;
-	}
-	.mid_symbol {
-		font-size:45px;
-	}
-}
-@media (min-height: 744px) and (max-height: 899px) {
-	.big_symbol {
-		font-size:400px;
-	}
-	.mid_symbol {
-		font-size:50px;
-	}
-}
-@media (min-height: 900px) {
-	.big_symbol {
-		font-size:530px;
-	}
-	.mid_symbol {
-		font-size:65px;
-	}
-}
-   </style>
-   <script>
-function beep() {
-    var snd = new Audio("data:audio/wav;base64,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qJrx4KOQjahZxWbcZgztj2c49nKmkId44S71j0c8eV9yDK6uPRzx5X18eDvjvQ6yKo9ZSS6l//8elePK/Lf//IInrOF/FvDoADYAGBMGb7FtErm5MXMlmPAJQVgWta7Zx2go+8xJ0UiCb8LHHdftWyLJE0QIAIsI+UbXu67dZMjmgDGCGl1H+vpF4NSDckSIkk7Vd+sxEhBQMRU8j/12UIRhzSaUdQ+rQU5kGeFxm+hb1oh6pWWmv3uvmReDl0UnvtapVaIzo1jZbf/pD6ElLqSX+rUmOQNpJFa/r+sa4e/pBlAABoAAAAA3CUgShLdGIxsY7AUABPRrgCABdDuQ5GC7DqPQCgbbJUAoRSUj+NIEig0YfyWUho1VBBBA//uQZB4ABZx5zfMakeAAAAmwAAAAF5F3P0w9GtAAACfAAAAAwLhMDmAYWMgVEG1U0FIGCBgXBXAtfMH10000EEEEEECUBYln03TTTdNBDZopopYvrTTdNa325mImNg3TTPV9q3pmY0xoO6bv3r00y+IDGid/9aaaZTGMuj9mpu9Mpio1dXrr5HERTZSmqU36A3CumzN/9Robv/Xx4v9ijkSRSNLQhAWumap82WRSBUqXStV/YcS+XVLnSS+WLDroqArFkMEsAS+eWmrUzrO0oEmE40RlMZ5+ODIkAyKAGUwZ3mVKmcamcJnMW26MRPgUw6j+LkhyHGVGYjSUUKNpuJUQoOIAyDvEyG8S5yfK6dhZc0Tx1KI/gviKL6qvvFs1+bWtaz58uUNnryq6kt5RzOCkPWlVqVX2a/EEBUdU1KrXLf40GoiiFXK///qpoiDXrOgqDR38JB0bw7SoL+ZB9o1RCkQjQ2CBYZKd/+VJxZRRZlqSkKiws0WFxUyCwsKiMy7hUVFhIaCrNQsKkTIsLivwKKigsj8XYlwt/WKi2N4d//uQRCSAAjURNIHpMZBGYiaQPSYyAAABLAAAAAAAACWAAAAApUF/Mg+0aohSIRobBAsMlO//Kk4soosy1JSFRYWaLC4qZBYWFRGZdwqKiwkNBVmoWFSJkWFxX4FFRQWR+LsS4W/rFRb/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAU291bmRib3kuZGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMjAwNGh0dHA6Ly93d3cuc291bmRib3kuZGUAAAAAAAAAACU=");  
-    snd.play();
-}
-//beep();
-   </script>
 </head>
-<body>
-<div style='text-align:center; top:0;'>
-	<span class='mid_symbol' style='vertical-align:middle; padding: 0; margin: 0;'>
-	<?php
-	//echo "fontZ=$fontZ;<br>\n";
-	echo $header;
-	?>
-	</span>
-</div>
-<div style='padding:2% 0; margin:0;'>
-	<div id='dashboard' style='text-align:center; padding: 0; margin: 0;'>
-	<span class='big_symbol' style='vertical-align:middle;'>
-	<?php
-	echo $symbol;
-	?>
-	</span>
+<body style="margin:0; padding:0;">
+<script>
+//alert(window.outerWidth+' '+window.outerHeight);
+</script>
+
+<?php if($menu) { ?>
+<form action='<?php echo $_SERVER['PHP_SELF'];?>' style = '
+	position:fixed;
+	right: 5%;
+	top: 5%;
+	width:53%;
+	background-color:lightgrey;
+	padding: 1rem;
+	font-size: xx-large;
+	z-index: 10;
+'>
+	<table>
+		<tr style='height:3rem;'>
+			<td style='width:3rem;'><input type='checkbox' name='depthAlarm' value='1' <?php if($depthAlarm) echo 'checked';?>></td><td><?php echo $dashboardDepthMenuTXT?></td><td style='width:10%;'><input type='text' name=minDepthValue value='<?php echo $minDepthValue?>' style='width:95%;font-size:x-large;'></td>
+		</tr><tr style='height:3rem;'>
+			<td><input type='checkbox' name='minSpeedAlarm' value='1' <?php if($minSpeedAlarm) echo 'checked';?>></td><td><?php echo $dashboardMinSpeedMenuTXT?></td><td style='width:10%;'><input type='text' name=minSpeedValue value='<?php echo $minSpeedValue?>' style='width:95%;font-size:x-large;'></td>
+		</tr><tr style='height:3rem;'>
+			<td><input type='checkbox' name='maxSpeedAlarm' value='1' <?php if($maxSpeedAlarm) echo 'checked';?>></td><td><?php echo $dashboardMaxSpeedMenuTXT?></td><td style='width:10%;'><input type='text' name=maxSpeedValue value='<?php echo $maxSpeedValue?>' style='width:95%;font-size:x-large;'></td>
+		</tr><tr>
+			<td></td><td><a href='<?php echo $_SERVER['PHP_SELF'];?>' style='text-decoration:none;'><input type='button' value='&#x2718;' style='font-size:120%;'></a><input type='submit' name='submit' value='&#x2713;' style='font-size:120%;float:right;'></td><td></td>
+		</tr>
+	</table>
+</form>
+<?php } ?>
+
+<table style='
+	border:1px solid; 
+	position:fixed; 
+	width:100%; 
+	height:100%; 
+	margin:0; padding:0;
+	text-align:center;
+	opacity: 0.25;
+	z-index: -1;
+'>
+<tr>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[14]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[15]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[0]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[1]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[2]; ?></span></td>
+</tr>
+<tr>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[13]; ?></span></td>
+	<td rowspan="3" colspan="3"></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[3]; ?></span></td>
+</tr>
+<tr>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[12]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[4]; ?></span></td>
+</tr>
+<tr>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[11]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[5]; ?></span></td>
+</tr>
+<tr>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[10]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[9]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[8]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[7]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[6]; ?></span></td>
+</tr>
+</table>
+
+<div style = '
+	position:absolute;
+	left: 0;
+	right: 0;
+	top: 5%;
+	bottom: 0;
+	margin: auto;
+	width:70%;	
+'>
+	<div style='text-align:center;'>
+		<span class='mid_symbol' style='vertical-align:middle; padding: 0; margin: 0;'>
+			<?php echo $header;	?>
+		</span>
+	</div>
+	<div id='dashboard' class='<?php if($alarm) echo "wb alarm";?>' style='text-align:center; padding: 0; margin: 0;'>
+		<span class='big_symbol' style='vertical-align:middle;'>
+			<?php echo $symbol;	?>
+		</span>
+	</div>
+	<div style='text-align:center; bottom:0; padding: 0; margin: 0;'>
+		<a href="<?php echo $_SERVER['PHP_SELF'];?>?magnetic=<?php echo $magneticTurn; ?>" style="text-decoration:none;">
+			<button class='mid_symbol' style='width:14%;vertical-align:middle;' <?php if(empty($tpv['magtrack'])) echo 'disabled';?> >
+				<div style="position:relative;<?php if(!$magnetic) echo "opacity:0.5;";?>">
+				<?php if(!empty($tpv['magvar'])) echo "<div  class='small_symbol' style='position:absolute;text-align:center;'>$dashboardMagVarTXT</div><span style='font-size:75%;'>".round(@$tpv['magvar'])."</span>";	
+					else echo "&#x1f9ed;";
+				?>
+				</div>
+			</button>
+		</a>
+		<a href="<?php echo $_SERVER['PHP_SELF'];?>?mode=<?php echo $mode; ?>" style="text-decoration:none;">
+			<button class='mid_symbol' style='width:70%;vertical-align:middle;'>
+				<span style=''>
+					<?php echo $nextsymbol;	?>
+				</span>
+			</button>
+		</a>
+		<a href="<?php echo $_SERVER['PHP_SELF'];?>?menu=<?php if(!$menu) echo '1';?>" style="text-decoration:none;">
+			<button class='mid_symbol' style='width:14%;vertical-align:middle;'>
+					&#9776;
+			</button>
+		</a>
 	</div>
 </div>
-<div style='text-align:center; bottom:0; padding: 0; margin: 0;'>
-	<a href="dashboard.php?mode=<?php echo $mode; ?>">
-	<button style='width:90%;'>
-	<span class='mid_symbol' style='vertical-align:middle;'>
-	<?php
-	echo $nextsymbol;
-	?>
-	</span>
-	</button>
-	</a>
-</div>
+
 </body>
 </html>
 <?php
