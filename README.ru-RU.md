@@ -112,4 +112,4 @@ php chkGPXfiles.php
 Однако, инструмент имеет только самую базовую поддержку gpx. Так, &lt;metadata&gt; не поддерживаются, любимые GARMIN &lt;extensions&gt; тоже не поддерживаются. Поэтому следует быть осторожным при редактировании сторонних файлов gpx.
 
 ## Поддержка
-За кружку пива через PayPal можно получить консультации по адресу [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)
+За кружку пива через PayPal можно получить консультации по адресу [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  
