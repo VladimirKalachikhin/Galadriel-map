@@ -98,12 +98,12 @@ if(is_string($tpv)) {
 }
 $gnssTime = new DateTime($tpv['time']); 	// 
 $gnssTime = $gnssTime->getTimestamp();
-/*
+
 if((time()-$gnssTime)>30) {
 	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели более, чем на 30 секунд 
 	goto DISPLAY;
 }
-*/
+
 $header = '';
 // Оповещения в порядке возрастания опасности, реально сработает последнее
 $alarm = FALSE;
