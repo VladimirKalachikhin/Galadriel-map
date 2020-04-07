@@ -6,6 +6,7 @@ W  |   | |   |E
 WSW|   | |   |ESE
 SW |SSW|S|SSE|SE
 */
+$versionTXT = '1.2.1';
 // Интернационализация
 if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
 //if(TRUE) {
@@ -190,7 +191,7 @@ if($fontZ>1) {
 	<script src="dashboard.js">	</script>
 	<?php if($alarm) echo "<script>$alarmJS</script>";?>
 	<link rel="stylesheet" href="dashboard.css" type="text/css"> 
-   <title>Dashboard</title>
+   <title>Dashboard <?php echo $versionTXT;?></title>
 </head>
 <body style="margin:0; padding:0;">
 <script>
