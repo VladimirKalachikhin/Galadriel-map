@@ -93,11 +93,17 @@ if(is_string($tpv)) {
 	$symbol = $tpv;
 	goto DISPLAY;
 }
-$gnssTime = new DateTime($tpv['time']); 	// 
-$gnssTime = $gnssTime->getTimestamp();
+if($tpv['time']) { 	// иначе пусто преобразуется в очень давно
+	$gnssTime = new DateTime($tpv['time'],new DateTimeZone('UTC')); 	// объект, время в указанной TZ, или по грнвичу, если не
+	$gnssTime = $gnssTime->getTimestamp(); 	// число, unix timestamp - он вне часовых поясов
 
-if((time()-$gnssTime)>30) {
-	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели более, чем на 30 секунд 
+	if((time()-$gnssTime)>30) {
+		$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели более, чем на 30 секунд 
+		goto DISPLAY;
+	}
+}
+else {
+	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели
 	goto DISPLAY;
 }
 
