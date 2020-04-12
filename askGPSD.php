@@ -52,8 +52,8 @@ $geoJSON = array(
 );
 
 $gpsdData = askGPSD($host,$port,$GLOBALS['SEEN_GPS']|$GLOBALS['SEEN_AIS']);
-if(is_string($tpv)) {
-    $geoJSON['features'][0]['properties']= array('error' => $tpv); 	// корректный geoJSON
+if(is_string($gpsdData)) {
+    $geoJSON['features'][0]['properties']= array('error' => $gpsdData); 	// корректный geoJSON
     return $geoJSON;
 }
 
