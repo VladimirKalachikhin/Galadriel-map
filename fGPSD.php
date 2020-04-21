@@ -27,6 +27,7 @@ foreach($gpsdDevices["devices"] as $device) {
 	if($device['flags']&$dataType) $devicePresent[] = $device['path']; 	// список требуемых среди обнаруженных и понятых устройств.
 }
 if(!$devicePresent) return 'no required devices present';
+print_r($gpsdDevices); //echo "</pre><br>\n";
 
 $gpsdWATCH = fgets($gpsd); 	// статус WATCH
 //echo "Получен WATCH\n"; //echo "<pre>"; 
@@ -37,7 +38,7 @@ fwrite($gpsd, '?POLL;'); 	// запросим данные
 //echo "<br>Отправлено ДАЙ!<br>\n";
 $gpsdData = fgets($gpsd); 	// {"class":"POLL","time":"2017-09-20T20:17:49.515Z","active":1,"tpv":[{"class":"TPV","device":"/tmp/ttyS21","mode":3,"time":"2017-09-20T23:17:48.000Z","ept":0.005,"lat":37.859215000,"lon":23.873236667,"alt":256.900,"track":146.4000,"speed":3694.843,"climb":-141.300}],"gst":[{"class":"GST","device":"/tmp/ttyS21","time":"1970-01-01T00:00:00.000Z","rms":0.000,"major":0.000,"minor":0.000,"orient":0.000,"lat":0.000,"lon":0.000,"alt":0.000}],"sky":[{"class":"SKY","device":"/tmp/ttyS21","time":"1970-01-01T00:00:00.000Z"}]}
 //echo "gpsdData: ";//echo "<pre>"; 
-//print_r($gpsdData); //echo "</pre>\n";
+print_r($gpsdData); //echo "</pre>\n";
 $gpsdData = json_decode($gpsdData,TRUE);
 //echo "<br>JSON gpsdData: ";echo "<pre>"; print_r($gpsdData); echo "</pre>\n";
 if(!$gpsdData['active']) return 'no any active devices';
@@ -48,6 +49,14 @@ foreach($gpsdData['tpv'] as $device) {
 	if(!in_array($device['device'],$devicePresent)) continue; 	// это не то устройство, которое потребовали
 	$tpv[$device['time']] = $device;
 }
+if($gpsdData['ais'])	{print_r($gpsdData['ais']); echo "\n";};
+/*
+$ais = array();
+foreach($gpsdData['ais'] as $device) {
+	echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
+	//$tpv[$device['time']] = $device;
+}
+*/
 //echo "Получены данные\n";
 //print_r($tpv);
 
