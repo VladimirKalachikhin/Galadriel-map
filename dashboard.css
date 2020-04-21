@@ -1,0 +1,97 @@
+@media (max-height: 255px) {
+	.big_symbol {
+		font-size:200px;
+	}
+	.mid_symbol {
+		font-size:20px;
+	}
+	.big_mid_symbol {
+		font-size:40px;
+	}
+	.small_symbol {
+		font-size:7px;
+	}
+}
+@media (max-height: 256px) and (max-height: 356px) {
+	.big_symbol {
+		font-size:200px;
+	}
+	.mid_symbol {
+		font-size:30px;
+	}
+	.big_mid_symbol {
+		font-size:60px;
+	}
+	.small_symbol {
+		font-size:10px;
+	}
+}
+@media (min-height: 357px) and (max-height: 576px) {
+	.big_symbol {
+		font-size:250px;
+	}
+	.mid_symbol {
+		font-size:40px;
+	}
+	.big_mid_symbol {
+		font-size:80px;
+	}
+	.small_symbol {
+		font-size:13px;
+	}
+}
+@media (min-height: 577px) and (max-height: 743px) {
+	.big_symbol {
+		font-size:320px;
+	}
+	.mid_symbol {
+		font-size:45px;
+	}
+	.big_mid_symbol {
+		font-size:90px;
+	}
+	.small_symbol {
+		font-size:15px;
+	}
+}
+@media (min-height: 744px) and (max-height: 899px) {
+	.big_symbol {
+		font-size:400px;
+	}
+	.mid_symbol {
+		font-size:50px;
+	}
+	.big_mid_symbol {
+		font-size:100px;
+	}
+	.small_symbol {
+		font-size:20px;
+	}
+}
+@media (min-height: 900px) {
+	.big_symbol {
+		font-size:530px;
+	}
+	.mid_symbol {
+		font-size:65px;
+	}
+	.big_mid_symbol {
+		font-size:130px;
+	}
+	.small_symbol {
+		font-size:30px;
+	}
+}
+.wb {
+	background-color:black;
+	color:white;
+}
+.alarm {
+    animation:blinkingText 1s infinite;
+}
+@keyframes blinkingText{
+    0%{     color: white;    }
+    50%{    color: transparent; }
+    100%{   color: white;    }
+}
+
