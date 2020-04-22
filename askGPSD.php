@@ -5,7 +5,8 @@ ob_start(); 	// попробуем перехватить любой вывод 
 $gpsdHost = 'localhost';
 $gpsdPort = 2947;
 require_once('fGPSD.php'); // fGPSD.php
-$LefletRealtime = posToLeafletRealtime($gpsdHost,$gpsdPort); 	// получим ВремяПозициюСкорость от gpsd
+//$LefletRealtime = posToLeafletRealtime($gpsdHost,$gpsdPort); 	// получим ВремяПозициюСкорость от gpsd
+$LefletRealtime = json_encode(getPosAndInfo($gpsdHost,$gpsdPort)); 	// получим ВремяПозициюСкорость от gpsd
 ob_end_clean(); 			// очистим, если что попало в буфер
 header('Content-Type: application/json;charset=utf-8;');
 echo "$LefletRealtime \n";
@@ -118,9 +119,11 @@ return $geoJSON;
 function posToLeafletRealtime($host='localhost',$port=2947) {
 // делает из нормального geoJSON горбатый для LeafletRealtime
 $LefletRealtime = getPosAndInfo($host,$port); 	// получим ВремяПозициюСкорость от gpsd
+
 $LefletRealtime['features'][0]['properties']['id'] = $LefletRealtime['features'][0]['id'];
 //$LefletRealtime['features'][0]['geometry'] = $LefletRealtime['features'][1]['geometry'];
 $LefletRealtime['features'][1]['properties']['id'] = $LefletRealtime['features'][1]['id'];;
+
 // Для каждого объекта ais
 //print_r($LefletRealtime);
 return json_encode($LefletRealtime);
