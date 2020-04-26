@@ -88,7 +88,6 @@ if($routeDir) {
     <script src="L.TileLayer.Mercator/src/L.TileLayer.Mercator.js"></script>
 
 <?php if($gpsanddataServerURI) {?>
-    <script src="leaflet-realtime/dist/leaflet-realtime.min.js"></script>
     <script src="Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
 <?php }?>
 <?php if($trackDir OR $routeDir) {?>
@@ -103,6 +102,8 @@ if($routeDir) {
 	<script src="coordinate-parser/coordinates.js">	</script>
 	<script src="coordinate-parser/validator.js"></script>
 	<script src="coordinate-parser/coordinate-number.js"></script> 
+
+	<script src="leaflet-tracksymbolPATCHED/leaflet-tracksymbol.js"></script>
 	
 <!--    <script src="JSON-js/cycle.js"></script>--> <!-- костыль для JSON.stringify , которая используется для отладки -->
 <!--    <script src="fetch/fetch.js"></script>--> <!-- полифил для старых браузеров -->
@@ -381,6 +382,7 @@ foreach($jobsInfo as $jobName) { 	//
 // Карта
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте
 var gpsanddataServerURI = '<?php echo $gpsanddataServerURI;?>'; 	// адрес для подключения к сервису координат и приборов
+var aisServerURI = '<?php echo $aisServerURI;?>'; 	// адрес для подключения к сервису AIS
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
 var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
 var startCenter = JSON.parse(getCookie('GaladrielMapPosition'));
@@ -410,10 +412,11 @@ var currentRoute; 	// объект Editable, по которому щёлкну�
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.
 var lat; 	 	// широта
-var lng; 	 	// долгота
+var lng; 	 	// долгота, округлённые до 4-х знаков
 var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
 var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
 var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
+var vehicles = []; 	// list of visible by AIS data vehicle objects 
 
 
 // Определим карту
@@ -596,7 +599,7 @@ var centerMark = L.marker(map.getBounds().getCenter(), {
 	})
 });
 
-<?php if(!$gpsanddataServerURI) goto noRealTime; // если нет источника текущих данных - не нужны и обработчики ?>
+<?php if(!$gpsanddataServerURI) goto noTVPRealTime; // если нет источника текущих данных - не нужны и обработчики ?>
 // Местоположение
 // маркеры
 var GpsCursor = L.icon({
@@ -631,7 +634,7 @@ var cursor = L.marker(startCenter, {
 	'icon': GpsCursor,
 	rotationAngle: heading, // начальный угол поворота маркера
 	rotationOrigin: "50% 50%" 	// вертим маркер вокруг центра
-});
+}).addTo(map);
 // указатель скорости
 var velocityVector = L.marker(cursor.getLatLng(), {
 	'icon': velocityCursor,
@@ -650,22 +653,15 @@ var GNSScircle = L.circle(cursor.getLatLng(), {
 }).addTo(map);
 
 // Позиционирование
-var realtime = L.realtime(gpsanddataServerURI, {
-	interval: 1 * 1000,
-	pointToLayer: function (feature, latlng) {
-		return cursor.setLatLng(latlng);
-	}        
-}).addTo(map);
-
+// 	Запуск периодических функций
+//setInterval(function(){realtime(gpsanddataServerURI,function(data){console.log(data);});},1000);
+setInterval(function(){realtime(gpsanddataServerURI,realtimeTPVupdate);},1000); 	// данные позиционирования
 
 // Realtime периодическое обновление
-realtime.on('update', function(onUpdate) {
-	//alert(JSON.stringify(JSON.decycle(onUpdate.features)));
-	//alert(JSON.stringify(JSON.decycle(onUpdate.update)));
-	//alert(cursor.getLatLng());
-	// .gps. - это geoJSON id, который отдаёт testGPSD.php
+function realtimeTPVupdate(gpsdData) {
+	//console.log(gpsdData);
 	// Положение неизвестно
-	if(onUpdate.features.gps === undefined) { 	// баг в leaflet-realtime : если geometry":null, то вся onUpdate.features.gps неопределена, и прочитать сообщение об ошибке невозможно
+	if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null)) { 	// 
 		cursor.setIcon(NoCursor); 	// отключим курсоры
 		velocityVector.setIcon(NoCursor);
 		//velocityDial.innerHTML = ''; 	// может быть, следует знать, какой была скорость и координаты до пропадания приборов?
@@ -674,15 +670,14 @@ realtime.on('update', function(onUpdate) {
 		return;
 	}
 	// Свежее ли положение известно
-	var positionTime = new Date(onUpdate.features.gps.properties.time);
+	cursor.setLatLng(L.latLng(gpsdData.lat,gpsdData.lon));
+	var positionTime = new Date(gpsdData.time);
 	var now = new Date();
 	//alert("Время ГПС "+positionTime+'\n'+"Сейчас    "+now);
 	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
-	else
-	 		cursor.setIcon(GpsCursor);
+	//else	 		cursor.setIcon(GpsCursor);
 	// Направление с попыткой его запомнить при прекращении движения
-	if((onUpdate.features.gps.properties.heading !== null) && Math.round( onUpdate.features.gps.properties.velocity ) != 0) {heading = onUpdate.features.gps.properties.heading;} // если положение изменилось - возьмём новое направление, иначе - будет старое.
-	//alert("Направление: "+JSON.stringify(onUpdate.features.gps.properties.heading));
+	if((gpsdData.heading !== null) && Math.round( gpsdData.velocity ) != 0) {heading = gpsdData.heading;} // если положение изменилось - возьмём новое направление, иначе - будет старое.
 	velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
 	cursor.setRotationAngle(heading); // повернём маркер
 	velocityVector.setRotationAngle(heading); // повернём указатель скорости
@@ -691,8 +686,8 @@ realtime.on('update', function(onUpdate) {
 	//console.log("followToCursor", followToCursor);
 	if(followToCursor && (! noFollowToCursor)) { 	// если сказано следовать курсору, и это разрешено глобально
 		userMoveMap = false;
-		map.fitBounds(realtime.getBounds(), {maxZoom: map.getZoom()}); // подвинем карту на позицию маркера
-		map.setView(cursor.getLatLng());
+		//map.fitBounds(realtime.getBounds(), {maxZoom: map.getZoom()});
+		map.setView(cursor.getLatLng()); // подвинем карту на позицию маркера
 		userMoveMap = true;
 	}
 <?php if($currentTrackServerURI) { ?>
@@ -714,8 +709,7 @@ realtime.on('update', function(onUpdate) {
 	}
 <?php } ?>
 	// Показ скорости и прочего
-	//var velocity = Math.round(((onUpdate.features.gps.properties.velocity/1000)*60*60)*10)/10; 	// скорость от gpsd - в метрах в секунду
-	var velocity = Math.round((onUpdate.features.gps.properties.velocity*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
+	var velocity = Math.round((gpsdData.velocity*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
 	//alert("Скорость: "+velocity+"км/ч");
 	velocityDial.innerHTML = velocity;
 	// координаты курсора с точностью знаков
@@ -726,21 +720,67 @@ realtime.on('update', function(onUpdate) {
 	followSwitch.checked = !noFollowToCursor; 	// выставим переключатель на панели Настроек в текущее положение
 	// Установим длину указателя скорости за  минуты
 	var metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
-	var velocityCursorLength = onUpdate.features.gps.properties.velocity*60*velocityVectorLengthInMn; 	// метров  за  минуты
+	var velocityCursorLength = gpsdData.velocity*60*velocityVectorLengthInMn; 	// метров  за  минуты
 	velocityCursorLength = Math.round(velocityCursorLength/metresPerPixel);
-	//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\nonUpdate.features.gps.properties.velocity='+onUpdate.features.gps.properties.velocity+'\nvelocityCursorLength='+velocityCursorLength);
+	//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.velocity='+gpsdData.velocity+'\nvelocityCursorLength='+velocityCursorLength);
 	//alert('metresPerPixel='+metresPerPixel+'\nvelocityCursorLength='+velocityCursorLength);
 	velocityCursor.options.iconSize=[5,velocityCursorLength];
 	velocityCursor.options.iconAnchor=[3,velocityCursorLength];
 	velocityVector.setIcon(velocityCursor);
 	// Окружность точност ГПС
-	var errGNSS = (+onUpdate.features.gps.properties.errX+onUpdate.features.gps.properties.errY)/2;
+	var errGNSS = (+gpsdData.errX+gpsdData.errY)/2;
 	if(!errGNSS) errGNSS = 10; // метров
 	GNSScircle.setLatLng(cursor.getLatLng());
 	GNSScircle.setRadius(errGNSS);
-});
+};
+
 <?php 
-noRealTime: 
+noTVPRealTime: 
+
+if(!$aisServerURI) goto noAISRealTime; // если нет источника текущих данных - не нужны и обработчики 
+?>
+
+
+// Данные AIS
+// 	Запуск периодических функций
+//setInterval(function(){realtime(aisServerURI,function(data){console.log(data);});},1000);
+setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},1000);
+//realtime(aisServerURI,realtimeAISupdate);
+
+function realtimeAISupdate(aisData) {
+//console.log(aisData);
+let vehiclesVisible = [];
+for(const vehicle in aisData){
+	//console.log(aisData[vehicle]);
+	//console.log(aisData[vehicle].lat);	console.log(aisData[vehicle].lon);
+	//console.log(typeof(vehicles[vehicle]));
+	if(!vehicles[vehicle]) { 	// global var
+		vehicles[vehicle] = L.trackSymbol(L.latLng(0,0),{
+			trackId: vehicle,
+			leaderTime: velocityVectorLengthInMn*60,
+			fill: true,
+			fillOpacity: 1.0,
+			stroke: true,
+			opacity: 1.0,
+			weight: 1.0,
+			//noHeadingSymbol: [0.3,0, 0,0.3, -0.3,0, 0,-0.4]
+		}).addTo(map);
+	}
+	//console.log(vehicles[vehicle]);
+	vehicles[vehicle].addData(aisData[vehicle]); 	// обновим данные
+	
+	vehiclesVisible.push(vehicle); 	// запомним, какие есть
+}
+for(const vehicle in vehicles){
+	if(vehiclesVisible.includes(vehicle)) continue;
+	vehicles[vehicle].remove();
+	vehicles[vehicle] = null;
+	delete vehicles[vehicle];
+}
+} // end function realtimeAISupdate
+
+<?php
+noAISRealTime:
 ?>
 
 var savePositionProcess = setInterval(doSavePosition,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery

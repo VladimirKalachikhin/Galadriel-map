@@ -38,6 +38,8 @@ centerMarkOff
 
 copyToClipboard()
 
+realtime(dataUrl,fUpdate)
+
 Классы
 L.Control.CopyToClipboard
 */
@@ -813,6 +815,35 @@ else {
 	if(typeof copyToClipboard !== 'undefined') copyToClipboard.remove();
 }
 } // end function doCopyToClipboard
+
+function realtime(dataUrl,fUpdate) {
+/*
+fUpdate - функция обновления. Все должно делаться в ней. Получает json object
+*/
+//console.log(dataUrl);
+fetch(dataUrl)
+.then((response) => {
+    return response.text();
+})
+.then(data => { 		// The Body mixin of the Fetch API represents the body of the response/request, allowing you to declare what its content type is and how it should be handled.
+	try {
+		//console.log(data);
+		return JSON.parse(data);
+	}
+	catch(err) {
+		// error handling
+		console.log(err);
+		//throw Error(data); 	// просто сбросим ошибку ближайшему catch
+	}
+})
+.then(data => {
+	//console.log(data);
+	fUpdate(data);
+})
+.catch(console.error);
+
+}
+
 
 
 /* Определения классов */
