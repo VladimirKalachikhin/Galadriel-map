@@ -5,7 +5,7 @@ The GaladrielMap designed for use mainly with [GaladrielCache](https://github.co
 The GaladrielMap created with use a lot of famous projects, so don't forget to install [dependenses](#dependences-and-thanks).  
 The author is not responsible for the consequences of using the GaladrielMap as a navigator!
 
-## v. 1.2
+## v. 1.3
  ![screen](screenshots/s.png)
 
 ## Features:
@@ -30,10 +30,13 @@ The author is not responsible for the consequences of using the GaladrielMap as 
 7.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)  
  ![Weather forecast](screenshots/s8.png)<br><br>
  
-8. Control the GaladrielCache Loader:   
+8. Display AIS info:  
+ <br><br>
+ 
+9. Control the GaladrielCache Loader:   
  ![Control Loader](screenshots/s4.png)<br><br>
  
-9. Dashboard.
+10. Dashboard.
  _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading. The Dashboard allows you to set a signal for dangerous events, such as shallow or speed. Set up your browser to allow sound signal.  
  No javascript, no fanciful css.  
  ![Dashboard velocity](screenshots/s7.jpg)
@@ -48,7 +51,6 @@ Paths and other are set and describe in _params.php_
 
 ## Dependences and thanks
 * [Leaflet](https://leafletjs.com/) in _leaflet/_ directory
-* [leaflet-realtime](https://github.com/perliedman/leaflet-realtime) as _leaflet-realtime/dist/leaflet-realtime.js_
 * [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) as _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
 * [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) as _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
 * [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) in _leaflet-sidebar-v2/_ directory
@@ -56,7 +58,9 @@ Paths and other are set and describe in _params.php_
 * [Leaflet Measure Path](https://github.com/ProminentEdge/leaflet-measure-path) in _leaflet-measure-path/_ directory
 * [supercluster](https://github.com/mapbox/supercluster) as _supercluster/supercluster.js_
 * [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) in _coordinate-parser/_ directory
-<br>For more compability:
+* [gpsdAISd](https://github.com/VladimirKalachikhin/gpsdAISd) in _gpsdAISd/_
+<br>
+For more compability:
 * [fetch polyfill](https://github.com/github/fetch/) as _fetch/fetch.js_
 * [promise-polyfill](https://github.com/taylorhakes/promise-polyfill) as _promise-polyfill/promise.js_
 
@@ -71,6 +75,8 @@ All you need to install, including dependences, are in _emergencykit/_.
 * [Typicons by Stephen Hutchings](https://icon-icons.com/pack/Typicons/1144) for icons.
 * [Map Icons Collection](https://mapicons.mapsmarker.com/) for icons.
 * [On/Off FlipSwitch](https://proto.io/freebies/onoff/)
+* [leaflet-tracksymbol](https://github.com/lethexa/leaflet-tracksymbol) which became the basis for display AIS data
+* [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) for ideas
 
 ## gpsd
 GaladrielMap get position and velocity from  [gpsd](https://gpsd.io/) via _askGPSD.php_ service. You may configure _askGPSD.php_ to you gpsd host and port. Defaults are localhost and 2947 port (default for gpsd).<br>
