@@ -6,7 +6,7 @@ function askGPSD($host='localhost',$port=2947,$dataType=0x01) {
 /*
 $dataType - Bit vector of property flags. gpsd_json.5 ln 1355
 */
-echo "\n\nНачали. dataType=$dataType;<br>\n";
+//echo "\n\nНачали. dataType=$dataType;<br>\n";
 $gpsd  = stream_socket_client('tcp://'.$host.':'.$port); // открыть сокет 
 if(!$gpsd) return 'no GPSD';
 //stream_set_blocking($gpsd,FALSE); 	// установим неблокирующий режим чтения Что-то с ним не так...

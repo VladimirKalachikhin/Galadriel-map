@@ -825,18 +825,19 @@ fetch(dataUrl)
 .then((response) => {
     return response.text();
 })
-.then(body => { 		// The Body mixin of the Fetch API represents the body of the response/request, allowing you to declare what its content type is and how it should be handled.
+.then(data => { 		// The Body mixin of the Fetch API represents the body of the response/request, allowing you to declare what its content type is and how it should be handled.
 	try {
-		//console.log(body);
-		return JSON.parse(body);
+		//console.log(data);
+		return JSON.parse(data);
 	}
 	catch(err) {
 		// error handling
 		console.log(err);
-//		throw Error(body); 	// просто сбросим ошибку ближайшему catch
+		//throw Error(data); 	// просто сбросим ошибку ближайшему catch
 	}
 })
 .then(data => {
+	//console.log(data);
 	fUpdate(data);
 })
 .catch(console.error);

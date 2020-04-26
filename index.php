@@ -103,7 +103,7 @@ if($routeDir) {
 	<script src="coordinate-parser/validator.js"></script>
 	<script src="coordinate-parser/coordinate-number.js"></script> 
 
-	<script src="leaflet-tracksymbol/leaflet-tracksymbol.js"></script>
+	<script src="leaflet-tracksymbolPATCHED/leaflet-tracksymbol.js"></script>
 	
 <!--    <script src="JSON-js/cycle.js"></script>--> <!-- костыль для JSON.stringify , которая используется для отладки -->
 <!--    <script src="fetch/fetch.js"></script>--> <!-- полифил для старых браузеров -->
@@ -599,7 +599,7 @@ var centerMark = L.marker(map.getBounds().getCenter(), {
 	})
 });
 
-<?php if(!$gpsanddataServerURI) goto noRealTime; // если нет источника текущих данных - не нужны и обработчики ?>
+<?php if(!$gpsanddataServerURI) goto noTVPRealTime; // если нет источника текущих данных - не нужны и обработчики ?>
 // Местоположение
 // маркеры
 var GpsCursor = L.icon({
@@ -656,9 +656,6 @@ var GNSScircle = L.circle(cursor.getLatLng(), {
 // 	Запуск периодических функций
 //setInterval(function(){realtime(gpsanddataServerURI,function(data){console.log(data);});},1000);
 setInterval(function(){realtime(gpsanddataServerURI,realtimeTPVupdate);},1000); 	// данные позиционирования
-//setInterval(function(){realtime(aisServerURI,function(data){console.log(data);});},1000);
-setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},1000);
-//realtime(aisServerURI,realtimeAISupdate);
 
 // Realtime периодическое обновление
 function realtimeTPVupdate(gpsdData) {
@@ -737,25 +734,36 @@ function realtimeTPVupdate(gpsdData) {
 	GNSScircle.setRadius(errGNSS);
 };
 
+<?php 
+noTVPRealTime: 
+
+if(!$aisServerURI) goto noAISRealTime; // если нет источника текущих данных - не нужны и обработчики 
+?>
+
+
+// Данные AIS
+// 	Запуск периодических функций
+//setInterval(function(){realtime(aisServerURI,function(data){console.log(data);});},1000);
+setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},1000);
+//realtime(aisServerURI,realtimeAISupdate);
+
 function realtimeAISupdate(aisData) {
 //console.log(aisData);
 let vehiclesVisible = [];
 for(const vehicle in aisData){
 	//console.log(aisData[vehicle]);
 	//console.log(aisData[vehicle].lat);	console.log(aisData[vehicle].lon);
-	if(aisData[vehicle].cog>359) console.log(aisData[vehicle].cog);	
-	if(aisData[vehicle].trueHeading>359) console.log(aisData[vehicle].trueHeading);
-	if(vehicles[vehicle]===undefined) { 	// global var
+	//console.log(typeof(vehicles[vehicle]));
+	if(!vehicles[vehicle]) { 	// global var
 		vehicles[vehicle] = L.trackSymbol(L.latLng(0,0),{
-			leaderTime: 600,
+			trackId: vehicle,
+			leaderTime: velocityVectorLengthInMn*60,
 			fill: true,
-			fillColor: '#0000ff',
 			fillOpacity: 1.0,
 			stroke: true,
-			color: '#000000',
 			opacity: 1.0,
 			weight: 1.0,
-			noHeadingSymbol: [0.3,0, 0,0.3, -0.3,0, 0,-0.4]
+			//noHeadingSymbol: [0.3,0, 0,0.3, -0.3,0, 0,-0.4]
 		}).addTo(map);
 	}
 	//console.log(vehicles[vehicle]);
@@ -766,13 +774,13 @@ for(const vehicle in aisData){
 for(const vehicle in vehicles){
 	if(vehiclesVisible.includes(vehicle)) continue;
 	vehicles[vehicle].remove();
+	vehicles[vehicle] = null;
 	delete vehicles[vehicle];
 }
 } // end function realtimeAISupdate
 
-
-<?php 
-noRealTime: 
+<?php
+noAISRealTime:
 ?>
 
 var savePositionProcess = setInterval(doSavePosition,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery
