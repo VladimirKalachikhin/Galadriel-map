@@ -2,10 +2,11 @@
 
 $SEEN_GPS = 0x01; $SEEN_AIS = 0x08;
 
-function askGPSD($host='localhost',$port=2947,$dataType=0x01) {
+function askGPSD($host='localhost',$port=2947,$dataType=NULL) {
 /*
 $dataType - Bit vector of property flags. gpsd_json.5 ln 1355
 */
+if($dataType===NULL) $dataType=0x01;
 //echo "\n\nНачали. dataType=$dataType;<br>\n";
 $gpsd  = stream_socket_client('tcp://'.$host.':'.$port); // открыть сокет 
 if(!$gpsd) return 'no GPSD';
@@ -22,12 +23,12 @@ $gpsdDevices = fgets($gpsd); 	// {"class":"DEVICES","devices":[{"class":"DEVICE"
 //echo "Получен DEVICES<br>\n"; 
 //print_r($gpsdDevices); //echo "</pre><br>\n";
 $gpsdDevices = json_decode($gpsdDevices,TRUE);
-//echo "<pre>"; 
-//print_r($gpsdDevices); //echo "</pre><br>\n";
+//echo "<pre>"; print_r($gpsdDevices); echo "</pre><br>\n";
 $devicePresent = array();
 foreach($gpsdDevices["devices"] as $device) {
 	if($device['flags']) { 	// флага может не быть в случае, если это непонятное для gpsd устройство
 		if((int)$device['flags']&$dataType) $devicePresent[] = $device['path']; 	// список требуемых среди обнаруженных и понятых устройств.
+		//echo "device['flags']={$device['flags']}; dataType=$dataType; ".($device['flags']&$dataType)."<br>";
 	}
 	//else $devicePresent[] = $device['path']; 	// не считаем, что это правильное устройство
 }
@@ -59,7 +60,7 @@ foreach($gpsdData['tpv'] as $device) {
 	else $tpv[] = $device;
 }
 //echo "Получены данные\n";
-//print_r($tpv);
+//echo "<br>device=<pre>"; print_r($tpv); echo "</pre>\n";
 //print_r($gpsdData);
 return $tpv;
 } // end function askGPSD
