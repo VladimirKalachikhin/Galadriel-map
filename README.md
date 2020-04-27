@@ -6,7 +6,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 The author is not responsible for the consequences of using the GaladrielMap as a navigator!
 
 ## v. 1.3
- ![screen](screenshots/s.png)
+ ![screen](screenshots/s10.png)
 
 ## Features:
 1. View one OSM-like on-line map or  
