@@ -66,9 +66,12 @@ L.TrackSymbol = L.Path.extend({
     this._leaderTime = options.leaderTime || 60.0;
     this._minSilouetteZoom = options.minSilouetteZoom || 15;
     this.setGPSRefPos(options.gpsRefPos);
-    this._triSymbol = options.defaultSymbol || [0.75,0, -0.25,0.3, -0.25,-0.3];
-    this._diaSymbol = options.noHeadingSymbol || [0.3,0, 0,0.3, -0.3,0, 0,-0.3];
-    this._silSymbol = options.silouetteSymbol || [1,0.5, 0.75,1, 0,1, 0,0, 0.75,0];
+    //this._triSymbol = options.defaultSymbol || [0.75,0, -0.25,0.3, -0.25,-0.3];
+    this._triSymbol = options.defaultSymbol || [0.8,0, -0.3,0.35, -0.3,-0.35];
+    //this._diaSymbol = options.noHeadingSymbol || [0.3,0, 0,0.3, -0.3,0, 0,-0.3];
+    this._diaSymbol = options.noHeadingSymbol || [0.35,0, 0,0.35, -0.35,0, 0,-0.35];
+    //this._silSymbol = options.silouetteSymbol || [1,0.5, 0.75,1, 0,1, 0,0, 0.75,0];
+    this._silSymbol = options.silouetteSymbol || [1.05,0.5, 0.8,1, 0,1, 0,0, 0.8,0];
     this.bindPopup("",{className: "vehiclePopup"}); 	// приклеим popup с указанным стилем
   },
 

@@ -8,7 +8,7 @@
 
 Внимание! Автор не несёт ответственности за последствия использования GaladrielMap для навигации!
 
-## v. 1.2
+## v. 1.3
 Приложение GaladrielMap создано на основе  замечательных проектов многих, без сомнения, выдающихся авторов, поэтому необходимо вручную установить большое количество [зависимостей](#dependences-and-thanks).  
  ![screen](screenshots/s.png)
 
@@ -32,10 +32,13 @@
 7.  Прогноз погоды от [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (только с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) версии 1.3 или больше)  
  ![Weather forecast](screenshots/s8.png)<br><br>
  
- 8. Управление загрузчиком GaladrielCache:   
+8. Отображение информации AIS:  
+ ![AIS info](screenshots/s9.png)<br><br>
+
+9. Управление загрузчиком GaladrielCache:   
  ![Control Loader](screenshots/s4.png)<br><br>
  
- 9. Приборная панель.  
+10. Приборная панель.  
  _dashboard.php_ - отдельное приложение, предназначенное для показа некоторых имеющихся приборов на очень слабых и/или медленных клиентских устройствах. Например, на читалке электронных книг с E-ink экраном:
  ![Dashboard velocity](screenshots/s7.jpg)
  ![Dashboard heading](screenshots/s6.jpg)  
@@ -52,7 +55,6 @@
 
 ## Зависимости и благодарности
 * [Leaflet](https://leafletjs.com/), установленный в каталог _leaflet/_ 
-* [leaflet-realtime](https://github.com/perliedman/leaflet-realtime) установленный как _leaflet-realtime/dist/leaflet-realtime.js_
 * [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) установленный как _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
 * [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) установленный как _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
 * [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) установленный в каталог _leaflet-sidebar-v2/_ 
@@ -60,6 +62,7 @@
 * [Leaflet Measure Path](https://github.com/ProminentEdge/leaflet-measure-path) установленный в каталог _leaflet-measure-path/_ 
 * [supercluster](https://github.com/mapbox/supercluster) установленный как _supercluster/supercluster.js_
 * [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) установленный в каталог _coordinate-parser/_ 
+* [gpsdAISd](https://github.com/VladimirKalachikhin/gpsdAISd) в каталоге _gpsdAISd/_ 
 
 Для совместимости со старыми браузерами, но не обязательно:
 * [fetch polyfill](https://github.com/github/fetch/) установленный как _fetch/fetch.js_
@@ -76,9 +79,11 @@
 * [Typicons by Stephen Hutchings](https://icon-icons.com/pack/Typicons/1144) за использованные значки.
 * [Map Icons Collection](https://mapicons.mapsmarker.com/) за использованные значки.
 * [On/Off FlipSwitch](https://proto.io/freebies/onoff/)
+* [leaflet-tracksymbol](https://github.com/lethexa/leaflet-tracksymbol) на основе которого сделано отображение данных AIS
+* [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) , откуда позаимствованы идеи и немножко кода
 
 ## gpsd
-GaladrielMap получает положение, скорость и направление движения от [gpsd](https://gpsd.io/) с помощью _askGPSD.php_ . Если необходимо, укажите в _askGPSD.php_ адрес и порт, используемые gpsd. Исходно там указаны умолчальные для gpsd localhost и 2947 порт.
+GaladrielMap получает положение, данные AIS и приборов от [gpsd](https://gpsd.io/) с помощью _askGPSD.php_  и _askAIS.php_. Если необходимо, укажите в этих файлах адрес и порт, используемые gpsd. Исходно там  умолчальные для gpsd localhost и 2947 порт.
 
 Установка и конфигурирование gpsd описаны в [документации к gpsd](https://gpsd.io/).
 

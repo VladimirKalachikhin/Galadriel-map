@@ -31,7 +31,7 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  ![Weather forecast](screenshots/s8.png)<br><br>
  
 8. Display AIS info:  
- <br><br>
+ ![AIS info](screenshots/s9.png)<br><br>
  
 9. Control the GaladrielCache Loader:   
  ![Control Loader](screenshots/s4.png)<br><br>
@@ -79,7 +79,7 @@ All you need to install, including dependences, are in _emergencykit/_.
 * [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) for ideas
 
 ## gpsd
-GaladrielMap get position and velocity from  [gpsd](https://gpsd.io/) via _askGPSD.php_ service. You may configure _askGPSD.php_ to you gpsd host and port. Defaults are localhost and 2947 port (default for gpsd).<br>
+GaladrielMap gets realtime info, such as spatial data, AIS data, instruments from  [gpsd](https://gpsd.io/) via _askGPSD.php_ and _askAIS.php_ services. You may configure these services to you gpsd host and port. Defaults are localhost and 2947 port (default for gpsd).<br>
 How to install and configure gpsd see [gpsd pages](https://gpsd.io/).
 
 ## Tracks
