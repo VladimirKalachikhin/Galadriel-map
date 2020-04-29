@@ -33,7 +33,9 @@
  ![Weather forecast](screenshots/s8.png)<br><br>
  
 8. Отображение информации AIS:  
- ![AIS info](screenshots/s9.png)<br><br>
+ ![AIS info](screenshots/s9.png)<br>
+ Отображение информации AIS отключено по умолчанию. Его можно включить, раскомментировав строку с переменной $aisServerURI в файле _params.php_.
+ <br><br>
 
 9. Управление загрузчиком GaladrielCache:   
  ![Control Loader](screenshots/s4.png)<br><br>

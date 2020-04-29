@@ -31,7 +31,9 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  ![Weather forecast](screenshots/s8.png)<br><br>
  
 8. Display AIS info:  
- ![AIS info](screenshots/s9.png)<br><br>
+ ![AIS info](screenshots/s9.png)<br>
+Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_.
+ <br>
  
 9. Control the GaladrielCache Loader:   
  ![Control Loader](screenshots/s4.png)<br><br>
@@ -39,7 +41,7 @@ The author is not responsible for the consequences of using the GaladrielMap as 
 10. Dashboard.
  _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading. The Dashboard allows you to set a signal for dangerous events, such as shallow or speed. Set up your browser to allow sound signal.  
  No javascript, no fanciful css.  
- ![Dashboard velocity](screenshots/s7.jpg)
+ ![Dashboard velocity](screenshots/s7.jpg)<br>
  ![Dashboard heading](screenshots/s6.jpg)<br><br>
 
 ## Compatibility

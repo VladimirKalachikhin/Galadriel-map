@@ -599,7 +599,7 @@ var centerMark = L.marker(map.getBounds().getCenter(), {
 	})
 });
 
-<?php if(!$gpsanddataServerURI) goto noTVPRealTime; // если нет источника текущих данных - не нужны и обработчики ?>
+<?php if($gpsanddataServerURI) { // если нет источника текущих данных - не нужны и обработчики ?>
 // Местоположение
 // маркеры
 var GpsCursor = L.icon({
@@ -690,7 +690,7 @@ function realtimeTPVupdate(gpsdData) {
 		map.setView(cursor.getLatLng()); // подвинем карту на позицию маркера
 		userMoveMap = true;
 	}
-<?php if($currentTrackServerURI) { ?>
+<?php 	if($currentTrackServerURI) { ?>
 	// Текущий трек
 	if(currentTrackName && currTrackSwitch.checked) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек
 		if(currentTrackShowedFlag !== false) { 	// Текущий трек некогда был загружен или сейчас загружается
@@ -707,7 +707,7 @@ function realtimeTPVupdate(gpsdData) {
 			currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
 		}
 	}
-<?php } ?>
+<?php 	} ?>
 	// Показ скорости и прочего
 	var velocity = Math.round((gpsdData.velocity*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
 	//alert("Скорость: "+velocity+"км/ч");
@@ -735,16 +735,15 @@ function realtimeTPVupdate(gpsdData) {
 };
 
 <?php 
-noTVPRealTime: 
-
-if(!$aisServerURI) goto noAISRealTime; // если нет источника текущих данных - не нужны и обработчики 
+} 
+if($aisServerURI) { // если нет источника текущих данных - не нужны и обработчики 
 ?>
 
 
 // Данные AIS
 // 	Запуск периодических функций
 //setInterval(function(){realtime(aisServerURI,function(data){console.log(data);});},1000);
-setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},1000);
+setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},3000);
 //realtime(aisServerURI,realtimeAISupdate);
 
 function realtimeAISupdate(aisData) {
@@ -780,7 +779,7 @@ for(const vehicle in vehicles){
 } // end function realtimeAISupdate
 
 <?php
-noAISRealTime:
+}
 ?>
 
 var savePositionProcess = setInterval(doSavePosition,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery
