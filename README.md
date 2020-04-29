@@ -31,7 +31,7 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  ![Weather forecast](screenshots/s8.png)<br><br>
  
 8. Display AIS info:  
- ![AIS info](screenshots/s9.png)<br>
+ ![AIS info](screenshots/s9-1.png)<br>
 Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_.
  <br>
  
