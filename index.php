@@ -675,7 +675,7 @@ function realtimeTPVupdate(gpsdData) {
 	var now = new Date();
 	//alert("Время ГПС "+positionTime+'\n'+"Сейчас    "+now);
 	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
-	//else	 		cursor.setIcon(GpsCursor);
+	else	 		cursor.setIcon(GpsCursor);
 	// Направление с попыткой его запомнить при прекращении движения
 	if((gpsdData.heading !== null) && Math.round( gpsdData.velocity ) != 0) {heading = gpsdData.heading;} // если положение изменилось - возьмём новое направление, иначе - будет старое.
 	velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
