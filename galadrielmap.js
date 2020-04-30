@@ -304,7 +304,8 @@ xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
 	if (this.status != 200) { 	// запрос завершлся, но неудачно
-		alert('Сервер ответил '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
+		//alert('Сервер ответил '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
+		console.log('Server return '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
 		return; 	// что-то не то с сервером
 	}
 	//console.log(this.responseText);
@@ -840,9 +841,11 @@ fetch(dataUrl)
 	//console.log(data);
 	fUpdate(data);
 })
-.catch(console.error);
+.catch( (err) => {
+	fUpdate({'error':err});
+})
 
-}
+} 	// end function realtime
 
 
 
