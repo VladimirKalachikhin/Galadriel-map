@@ -833,8 +833,8 @@ fetch(dataUrl)
 	}
 	catch(err) {
 		// error handling
-		console.log(err);
-		//throw Error(data); 	// просто сбросим ошибку ближайшему catch
+		//console.log(err);
+		throw Error(err.message); 	// просто сбросим ошибку ближайшему catch
 	}
 })
 .then(data => {
