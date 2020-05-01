@@ -33,7 +33,7 @@ foreach($gpsdDevices["devices"] as $device) {
 	//else $devicePresent[] = $device['path']; 	// не считаем, что это правильное устройство
 }
 if(!$devicePresent) return 'no required devices present';
-//print_r($gpsdDevices); //echo "</pre><br>\n";
+//echo "<pre>\n"; print_r($devicePresent); echo "</pre><br>\n";
 
 $gpsdWATCH = fgets($gpsd); 	// статус WATCH
 //echo "Получен WATCH\n"; //echo "<pre>"; 
@@ -56,8 +56,8 @@ $tpv = array();
 foreach($gpsdData['tpv'] as $device) {
 	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
 	if(!in_array($device['device'],$devicePresent)) continue; 	// это не то устройство, которое потребовали
-	if($device['time'])	$tpv[$device['time']] = $device;
-	else $tpv[] = $device;
+	if($device['time'])	$tpv[$device['time']] = $device; 	// askGPSD, с ключём - время
+	else $tpv[] = $device; 	// с ключём  - целым.
 }
 //echo "Получены данные\n";
 //echo "<br>device=<pre>"; print_r($tpv); echo "</pre>\n";

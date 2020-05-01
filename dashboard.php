@@ -93,6 +93,7 @@ if(is_string($tpv)) {
 	$symbol = $tpv;
 	goto DISPLAY;
 }
+
 if($tpv['time']) { 	// иначе пусто преобразуется в очень давно
 	$gnssTime = new DateTime($tpv['time'],new DateTimeZone('UTC')); 	// объект, время в указанной TZ, или по грнвичу, если не
 	$gnssTime = $gnssTime->getTimestamp(); 	// число, unix timestamp - он вне часовых поясов
@@ -322,13 +323,12 @@ $gpsdData = askGPSD($gpsdHost,$gpsdPort,$SEEN_GPS); 	//
 //echo "Получено от gpsd:<pre>"; print_r($gpsdData); echo "</pre>";
 if(is_string($gpsdData)) return $gpsdData;
 
+$tpv = $_SESSION['tpv'];
 krsort($gpsdData); 	// отсортируем по времени к прошлому
 foreach($gpsdData as $device) {
 	if($device['mode'] == 3) { 	// последний по времени 3D fix 
-		$tpv = array(
-			'track' => $device['track'], 	// курс
-			'speed' => $device['speed'] 	// скорость
-		);
+		$tpv['track'] = $device['track']; 	// курс
+		$tpv['speed'] = $device['speed']; 	// скорость
 		// считаем, что это более достоверно
 		if($device['magtrack']) $tpv['magtrack'] = $device['magtrack']; 	// магнитный курс
 		if($device['magvar']) $tpv['magvar'] = $device['magvar']; 	// магнитное склонение
@@ -343,7 +343,9 @@ foreach($gpsdData as $device) {
 
 	if($tpv['track'] AND $tpv['speed'] AND $tpv['magtrack'] AND $tpv['magvar'] AND $tpv['depth'])	break;
 }
+$_SESSION['tpv'] = $tpv; 	// собираем не только последние значения, но аккумулируем все. Позволяет собрать из нескольких источников, но какие-то величины могут быть сильно старыми.
 
+//echo "Собрано:<pre>"; print_r($tpv); echo "</pre>";
 return $tpv;
 } // end function getData
 ?>
