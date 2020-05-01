@@ -99,7 +99,7 @@ if($tpv['time']) { 	// иначе пусто преобразуется в оч�
 	$gnssTime = $gnssTime->getTimestamp(); 	// число, unix timestamp - он вне часовых поясов
 
 	if((time()-$gnssTime)>30) {
-		$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели более, чем на 30 секунд 
+		$symbol = $dashboardGNSSoldTXT;	// данные устарели более, чем на 30 секунд 
 		goto DISPLAY;
 	}
 }
@@ -138,7 +138,7 @@ if($depthAlarm AND $tpv['depth']) {
 
 switch($mode) {
 case 'heading':
-	if($magnetic AND $tpv['magtrack']) {
+	if($magnetic AND ($tpv['magtrack']!==NULL)) {
 		if(!$header) $header = $dashboardMagHeadingTXT;
 		$symbol = round($tpv['magtrack']);
 	}
@@ -159,7 +159,7 @@ case 'depth':
 default:
 	if(!$header) $header = "$dashboardSpeedTXT, $dashboardSpeedMesTXT";
 	$symbol = round($tpv['speed']*60*60/1000,1); 	// скорость от gpsd - в метрах в секунду
-	if($tpv['depth']) {
+	if($tpv['depth']!==NULL) {
 		$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
 		$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
 		$mode = 'depth';
@@ -171,7 +171,7 @@ default:
 }
 
 $rumbNames = array(' N ','NNE',' NE ','ENE',' E ','ESE',' SE ','SSE',' S ','SSW',' SW ','WSW',' W ','WNW',' NW ','NNW');
-if($magnetic AND $tpv['magtrack']) $rumbNum = round($tpv['track']/22.5);
+if($magnetic AND ($tpv['magtrack']!==NULL)) $rumbNum = round($tpv['track']/22.5);
 else $rumbNum = round($tpv['track']/22.5);
 if($rumbNum==16) $rumbNum = 0;
 //echo "rumbNum=$rumbNum;<br>\n";
@@ -319,31 +319,42 @@ if($fontZ>1) {
 
 function getData($gpsdHost='localhost',$gpsdPort=2947) {
 /**/
+$dataTypes = array(  	// время в секундах после последнего обновления, после которого считается, что данные протухли
+'track' => 15, 	// курс
+'speed' => 10,	// скорость
+'magtrack' => 15, 	// магнитный курс
+'magvar' => 3600, 	// магнитное склонение
+'depth' => 5 	// глубина
+);
 $gpsdData = askGPSD($gpsdHost,$gpsdPort,$SEEN_GPS); 	// 
 //echo "Получено от gpsd:<pre>"; print_r($gpsdData); echo "</pre>";
 if(is_string($gpsdData)) return $gpsdData;
 
-$tpv = $_SESSION['tpv'];
+$tpv = $_SESSION['tpv']; $tpvTime = $_SESSION['tpvTime']; $currTime = time();
 krsort($gpsdData); 	// отсортируем по времени к прошлому
 foreach($gpsdData as $device) {
-	if($device['mode'] == 3) { 	// последний по времени 3D fix 
-		$tpv['track'] = $device['track']; 	// курс
-		$tpv['speed'] = $device['speed']; 	// скорость
-		// считаем, что это более достоверно
-		if($device['magtrack']) $tpv['magtrack'] = $device['magtrack']; 	// магнитный курс
-		if($device['magvar']) $tpv['magvar'] = $device['magvar']; 	// магнитное склонение
-		if($device['depth']) $tpv['depth'] = $device['depth']; 	// глубина
-	}
-	if(!$tpv['track']) $tpv['track'] = $device['track']; 	// курс
-	if(!$tpv['speed']) $tpv['speed'] = $device['speed']; 	// скорость
 	$tpv['time'] = $device['time'];
-	if(!$tpv['magtrack']) $tpv['magtrack'] = $device['magtrack']; 	// магнитный курс
-	if(!$tpv['magvar']) $tpv['magvar'] = $device['magvar']; 	// магнитное склонение
-	if(!$tpv['depth']) $tpv['depth'] = $device['depth']; 	// глубина
+	foreach($dataTypes as $data => $timeout) {
+		if(($currTime-$tpvTime[$data])>$timeout) $tpv[$data] = NULL;
+		if($device[$data]!==NULL) {
+			$tpv[$data] = (float)$device[$data];
+			$tpvTime[$data] = $currTime;
+		}
+	}
+	if($device['mode'] == 3) { 	// последний по времени 3D fix 
+		// считаем, что это более достоверно
+		$tpv['track'] = (float)$device['track']; 	// курс
+		$tpv['speed'] = (float)$device['speed']; 	// скорость
+	}
 
-	if($tpv['track'] AND $tpv['speed'] AND $tpv['magtrack'] AND $tpv['magvar'] AND $tpv['depth'])	break;
+	$enough = TRUE;
+	foreach($dataTypes as $data) {
+		if(!($enough = ($enough AND $tpv[$data]))) break;
+	}
+	if($enough) break; 	// прекратим просмотр устройств, если собрали все данные
 }
 $_SESSION['tpv'] = $tpv; 	// собираем не только последние значения, но аккумулируем все. Позволяет собрать из нескольких источников, но какие-то величины могут быть сильно старыми.
+$_SESSION['tpvTime'] = $tpvTime;
 
 //echo "Собрано:<pre>"; print_r($tpv); echo "</pre>";
 return $tpv;

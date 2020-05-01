@@ -8,7 +8,7 @@ $dataType - Bit vector of property flags. gpsd_json.5 ln 1355
 */
 if($dataType===NULL) $dataType=0x01;
 //echo "\n\nНачали. dataType=$dataType;<br>\n";
-$gpsd  = stream_socket_client('tcp://'.$host.':'.$port); // открыть сокет 
+$gpsd  = @stream_socket_client('tcp://'.$host.':'.$port); // открыть сокет 
 if(!$gpsd) return 'no GPSD';
 //stream_set_blocking($gpsd,FALSE); 	// установим неблокирующий режим чтения Что-то с ним не так...
 
