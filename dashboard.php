@@ -6,7 +6,7 @@ W  |   | |   |E
 WSW|   | |   |ESE
 SW |SSW|S|SSE|SE
 */
-$versionTXT = '1.2.1';
+$versionTXT = '1.2.2';
 // Интернационализация
 if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
 //if(TRUE) {
@@ -44,9 +44,16 @@ else {
 $gpsdHost = 'localhost'; $gpsdPort = 2947;
 require_once('fGPSD.php'); // fGPSD.php 
 
+$dataTypes = array(  	// время в секундах после последнего обновления, после которого считается, что данные протухли
+'track' => 15, 	// курс
+'speed' => 10,	// скорость
+'magtrack' => 15, 	// магнитный курс
+'magvar' => 3600, 	// магнитное склонение
+'depth' => 5 	// глубина
+);
+
 $mode = $_REQUEST['mode'];
-if($mode) $_SESSION['mode'] = $mode;
-else $mode = $_SESSION['mode'];
+if(!$mode) $mode = $_SESSION['mode'];
 $magnetic = $_REQUEST['magnetic'];
 //echo "Is NULL ".is_null($_REQUEST['magnetic'])."<br>\n";
 if($magnetic===NULL) $magnetic = $_SESSION['magnetic'];
@@ -87,13 +94,14 @@ else {
 }
 //echo "depthAlarm=$depthAlarm; minDepthValue=$minDepthValue; minSpeedAlarm=$minSpeedAlarm; minSpeedValue=$minSpeedValue; maxSpeedAlarm=$maxSpeedAlarm; maxSpeedValue=$maxSpeedValue;<br>\n";
 
-$tpv = getData($gpsdHost,$gpsdPort);
+$tpv = askGPSD($gpsdHost,$gpsdPort,$SEEN_GPS); 	// исходные данные
 //echo "Ответ:<pre>"; print_r($tpv); echo "</pre>";
 if(is_string($tpv)) {
 	$symbol = $tpv;
 	goto DISPLAY;
 }
-
+$tpv = getData('tpv',$tpv,$dataTypes); 	// требуемые данные в плоском массиве
+/*
 if($tpv['time']) { 	// иначе пусто преобразуется в очень давно
 	$gnssTime = new DateTime($tpv['time'],new DateTimeZone('UTC')); 	// объект, время в указанной TZ, или по грнвичу, если не
 	$gnssTime = $gnssTime->getTimestamp(); 	// число, unix timestamp - он вне часовых поясов
@@ -107,11 +115,11 @@ if($tpv['time']) { 	// иначе пусто преобразуется в оч�
 //	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели
 //	goto DISPLAY;
 //}
-
+*/
 $header = '';
 // Оповещения в порядке возрастания опасности, реально сработает последнее
 $alarm = FALSE;
-if($minSpeedAlarm AND $tpv['speed']) {
+if($minSpeedAlarm AND ($tpv['speed']!==NULL)) {
 	if($tpv['speed']*60*60/1000 <= $minSpeedValue) {
 		$mode = 'speed';
 		$header = $dashboardMinSpeedAlarmTXT;
@@ -119,7 +127,7 @@ if($minSpeedAlarm AND $tpv['speed']) {
 		$alarm = TRUE;
 	}
 }
-if($maxSpeedAlarm AND $tpv['speed']) {
+if($maxSpeedAlarm AND ($tpv['speed']!==NULL)) {
 	if($tpv['speed']*60*60/1000 >= $maxSpeedValue) {
 		$mode = 'speed';
 		$header = $dashboardMaxSpeedAlarmTXT;
@@ -127,7 +135,7 @@ if($maxSpeedAlarm AND $tpv['speed']) {
 		$alarm = TRUE;
 	}
 }
-if($depthAlarm AND $tpv['depth']) {
+if($depthAlarm AND ($tpv['depth']!==NULL)) {
 	if($tpv['depth'] <= $minDepthValue) {
 		$mode = 'depth';
 		$header = $dashboardDepthAlarmTXT;
@@ -136,43 +144,147 @@ if($depthAlarm AND $tpv['depth']) {
 	}
 }
 
+// Что будем рисовать
+//echo "mode=$mode; magnetic=$magnetic;";
 switch($mode) {
-case 'heading':
+case 'track':
+	// показываемое
 	if($magnetic AND ($tpv['magtrack']!==NULL)) {
 		if(!$header) $header = $dashboardMagHeadingTXT;
 		$symbol = round($tpv['magtrack']);
 	}
-	else {
+	elseif(($tpv['track']!==NULL)AND(!$magnetic)) {
 		if(!$header) $header = $dashboardHeadingTXT;
 		$symbol = round($tpv['track']); 	// 
 	}
-	$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
-	$mode = 'speed';
-	break;
-case 'depth':
-	if(!$header) $header = "$dashboardDepthTXT, $dashboardDepthMesTXT";
-	$symbol = round($tpv['depth'],1); 	// 
-	if($magnetic AND $tpv['magtrack']) $nextsymbol = "$dashboardMagHeadingTXT ".round($tpv['track']); 	// 
-	else $nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
-	$mode = 'heading';
-	break;
-default:
-	if(!$header) $header = "$dashboardSpeedTXT, $dashboardSpeedMesTXT";
-	$symbol = round($tpv['speed']*60*60/1000,1); 	// скорость от gpsd - в метрах в секунду
-	if($tpv['depth']!==NULL) {
-		$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
-		$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
+	else {
+		if(!$header) $header = $dashboardHeadingTXT;
+		$symbol = '';
 		$mode = 'depth';
 	}
-	else {
+	// следующее
+	if($tpv['depth']!==NULL) {
+		$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
+		$nextMode = 'depth';
+	}
+	elseif($tpv['speed']!==NULL) {
+		$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
+		$nextMode = 'speed';
+	}
+	else $nextsymbol = '';
+	break;
+case 'depth':
+	// показываемое
+	if(!$header) $header = "$dashboardDepthTXT, $dashboardDepthMesTXT";
+	if($tpv['depth']!==NULL)	$symbol = round($tpv['depth'],1); 	// 
+	else $mode = 'speed';
+	// следующее
+	if($tpv['speed']!==NULL) {
+		$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
+		$nextMode = 'speed';
+	}
+	elseif($tpv['track'] AND (!$magnetic)) {
 		$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
-		$mode = 'heading';
+		$nextMode = 'track';
+	}
+	elseif($magnetic AND $tpv['magtrack']) {
+		$nextsymbol = "$dashboardMagHeadingTXT ".round($tpv['magtrack']); 	// 
+		$nextMode = 'track';
+	}
+	else $nextsymbol = '';
+	break;
+default:
+	if($tpv['speed']!==NULL) {
+		// показываемое
+		if(!$header) $header = "$dashboardSpeedTXT, $dashboardSpeedMesTXT";
+		$symbol = round($tpv['speed']*60*60/1000,1); 	// скорость от gpsd - в метрах в секунду
+		// следующее
+		if($tpv['track'] AND (!$magnetic)) {
+			$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
+			$nextMode = 'track';
+		}
+		elseif($magnetic AND $tpv['magtrack']) {
+			$nextsymbol = "$dashboardMagHeadingTXT ".round($tpv['magtrack']); 	// 
+			$nextMode = 'track';
+		}
+		elseif($tpv['depth']!==NULL) {
+			$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
+			$nextMode = 'depth';
+		}
+		else $nextsymbol = '';
+	}
+	elseif($tpv['depth']!==NULL) {
+		// показываемое
+		if(!$header) $header = "$dashboardDepthTXT, $dashboardDepthMesTXT";
+		$symbol = round($tpv['depth'],1); 	// 
+		// следующее
+		if($tpv['speed']!==NULL) {
+			$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
+			$nextMode = 'speed';
+		}
+		elseif($tpv['track'] AND (!$magnetic)) {
+			$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
+			$nextMode = 'track';
+		}
+		elseif($magnetic AND $tpv['magtrack']) {
+			$nextsymbol = "$dashboardMagHeadingTXT ".round($tpv['magtrack']); 	// 
+			$nextMode = 'track';
+		}
+		else $nextsymbol = '';
+	}
+	elseif($tpv['track']!==NULL) {
+		// показываемое
+		if(!$header) $header = $dashboardHeadingTXT;
+		$symbol = round($tpv['track']); 	// 
+		// следующее
+		if($tpv['depth']!==NULL) {
+			$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
+			$nextMode = 'depth';
+		}
+		elseif($tpv['speed']!==NULL) {
+			$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
+			$nextMode = 'speed';
+		}
+		elseif($magnetic AND $tpv['magtrack']) {
+			$nextsymbol = "$dashboardMagHeadingTXT ".round($tpv['magtrack']); 	// 
+			$nextMode = 'track';
+		}
+		else $nextsymbol = '';
+	}
+	elseif($tpv['magtrack']!==NULL) {
+		// показываемое
+		if(!$header) $header = $dashboardMagHeadingTXT;
+		$symbol = round($tpv['magtrack']);
+		$magnetic = TRUE;
+		// следующее
+		if($tpv['depth']!==NULL) {
+			$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
+			$nextMode = 'depth';
+		}
+		elseif($tpv['speed']!==NULL) {
+			$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
+			$nextMode = 'speed';
+		}
+		elseif($tpv['track'] AND (!$magnetic)) {
+			$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
+			$nextMode = 'track';
+		}
+		else $nextsymbol = '';
+	}
+	else {
+		// показываемое
+		if(!$header) $header = "$dashboardSpeedTXT, $dashboardSpeedMesTXT";
+		$symbol = ''; 	// 
+		// следующее
+		$nextsymbol = '';
 	}
 }
+$_SESSION['mode'] = $mode;
 
 $rumbNames = array(' N ','NNE',' NE ','ENE',' E ','ESE',' SE ','SSE',' S ','SSW',' SW ','WSW',' W ','WNW',' NW ','NNW');
-if($magnetic AND ($tpv['magtrack']!==NULL)) $rumbNum = round($tpv['track']/22.5);
-else $rumbNum = round($tpv['track']/22.5);
+if($magnetic AND ($tpv['magtrack']!==NULL)) $rumbNum = round($tpv['magtrack']/22.5);
+elseif($tpv['track']!==NULL) $rumbNum = round($tpv['track']/22.5);
+else $rumbNum = NULL;
 if($rumbNum==16) $rumbNum = 0;
 //echo "rumbNum=$rumbNum;<br>\n";
 $currRumb = array();
@@ -298,7 +410,7 @@ if($fontZ>1) {
 				</div>
 			</button>
 		</a>
-		<a href="<?php echo $_SERVER['PHP_SELF'];?>?mode=<?php echo $mode; ?>" style="text-decoration:none;">
+		<a href="<?php echo $_SERVER['PHP_SELF'];?>?mode=<?php echo $nextMode; ?>" style="text-decoration:none;">
 			<button class='mid_symbol' style='width:70%;vertical-align:middle;'>
 				<span style=''>
 					<?php echo $nextsymbol;	?>
@@ -317,21 +429,18 @@ if($fontZ>1) {
 </html>
 <?php
 
-function getData($gpsdHost='localhost',$gpsdPort=2947) {
-/**/
-$dataTypes = array(  	// время в секундах после последнего обновления, после которого считается, что данные протухли
-'track' => 15, 	// курс
-'speed' => 10,	// скорость
-'magtrack' => 15, 	// магнитный курс
-'magvar' => 3600, 	// магнитное склонение
-'depth' => 5 	// глубина
-);
-$gpsdData = askGPSD($gpsdHost,$gpsdPort,$SEEN_GPS); 	// 
-//echo "Получено от gpsd:<pre>"; print_r($gpsdData); echo "</pre>";
-if(is_string($gpsdData)) return $gpsdData;
+function getData($dataName,$gpsdData,$dataTypes) {
+/* Аккумулирующий фильтр данных $gpsdData, полученных от функции askGPSD
+Данные аккумулируются в сессии с именем $dataName
+Какие данные нужно взять из $gpsdData и сколько хранить - указано в массиве $dataTypes
+Возвращает массив данных
 
-$tpv = $_SESSION['tpv']; $tpvTime = $_SESSION['tpvTime']; $currTime = time();
-krsort($gpsdData); 	// отсортируем по времени к прошлому
+В $gpsdData данные по устройствам, в результирующем массиве - без конкретного устройства
+*/
+//echo "Получено от gpsd:<pre>"; print_r($gpsdData); echo "</pre>";
+
+$tpv = $_SESSION[$dataName]; $tpvTime = $_SESSION[$dataName.'tpvTime']; $currTime = time();
+krsort($gpsdData); 	// отсортируем устройства по времени к прошлому
 foreach($gpsdData as $device) {
 	$tpv['time'] = $device['time'];
 	foreach($dataTypes as $data => $timeout) {
@@ -343,8 +452,8 @@ foreach($gpsdData as $device) {
 	}
 	if($device['mode'] == 3) { 	// последний по времени 3D fix 
 		// считаем, что это более достоверно
-		$tpv['track'] = (float)$device['track']; 	// курс
-		$tpv['speed'] = (float)$device['speed']; 	// скорость
+		$tpv['track'] = $device['track']; 	// курс, без явного преобразования типов, чтобы остался NULL
+		$tpv['speed'] = $device['speed']; 	// скорость
 	}
 
 	$enough = TRUE;
@@ -353,10 +462,11 @@ foreach($gpsdData as $device) {
 	}
 	if($enough) break; 	// прекратим просмотр устройств, если собрали все данные
 }
-$_SESSION['tpv'] = $tpv; 	// собираем не только последние значения, но аккумулируем все. Позволяет собрать из нескольких источников, но какие-то величины могут быть сильно старыми.
-$_SESSION['tpvTime'] = $tpvTime;
+$_SESSION[$dataName] = $tpv; 	// собираем не только последние значения, но аккумулируем все. Позволяет собрать из нескольких источников, но какие-то величины могут быть сильно старыми.
+$_SESSION[$dataName.'tpvTime'] = $tpvTime;
 
 //echo "Собрано:<pre>"; print_r($tpv); echo "</pre>";
 return $tpv;
 } // end function getData
+
 ?>
