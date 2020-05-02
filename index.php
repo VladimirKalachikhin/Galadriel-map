@@ -677,11 +677,18 @@ function realtimeTPVupdate(gpsdData) {
 	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
 	else	 		cursor.setIcon(GpsCursor);
 	// Направление с попыткой его запомнить при прекращении движения
-	if((gpsdData.heading !== null) && Math.round( gpsdData.velocity ) != 0) {heading = gpsdData.heading;} // если положение изменилось - возьмём новое направление, иначе - будет старое.
 	velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
-	cursor.setRotationAngle(heading); // повернём маркер
-	velocityVector.setRotationAngle(heading); // повернём указатель скорости
-	headingDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
+	if(gpsdData.heading === null) {
+		headingDisplay.innerHTML = '&nbsp;';
+		cursor.setRotationAngle(0); // повернём маркер
+		velocityVector.setRotationAngle(0); // повернём указатель скорости
+	}
+	else {
+		heading = gpsdData.heading; // если положение изменилось - возьмём новое направление, иначе - будет старое.
+		cursor.setRotationAngle(heading); // повернём маркер
+		velocityVector.setRotationAngle(heading); // повернём указатель скорости
+		headingDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
+	}
 	// Карту в положение
 	//console.log("followToCursor", followToCursor);
 	if(followToCursor && (! noFollowToCursor)) { 	// если сказано следовать курсору, и это разрешено глобально
@@ -709,24 +716,30 @@ function realtimeTPVupdate(gpsdData) {
 	}
 <?php 	} ?>
 	// Показ скорости и прочего
-	var velocity = Math.round((gpsdData.velocity*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
-	//alert("Скорость: "+velocity+"км/ч");
-	velocityDial.innerHTML = velocity;
+	if(gpsdData.velocity===null) {
+		velocityDial.innerHTML = '&nbsp;';
+		velocityVector.setIcon(NoCursor);
+	}
+	else {
+		var velocity = Math.round((gpsdData.velocity*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
+		//alert("Скорость: "+velocity+"км/ч");
+		velocityDial.innerHTML = velocity;
+		// Установим длину указателя скорости за  минуты
+		var metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
+		var velocityCursorLength = gpsdData.velocity*60*velocityVectorLengthInMn; 	// метров  за  минуты
+		velocityCursorLength = Math.round(velocityCursorLength/metresPerPixel);
+		//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.velocity='+gpsdData.velocity+'\nvelocityCursorLength='+velocityCursorLength);
+		//alert('metresPerPixel='+metresPerPixel+'\nvelocityCursorLength='+velocityCursorLength);
+		velocityCursor.options.iconSize=[5,velocityCursorLength];
+		velocityCursor.options.iconAnchor=[3,velocityCursorLength];
+		velocityVector.setIcon(velocityCursor);
+	}
 	// координаты курсора с точностью знаков
 	lat = Math.round(cursor.getLatLng().lat*10000)/10000; 	 	// широта
 	lng = Math.round(cursor.getLatLng().lng*10000)/10000; 	 	// долгота
 	//alert(cursor.getLatLng()+'\n'+lat+' '+lng);
 	locationDisplay.innerHTML = '<?php echo $latTXT?> '+lat+'<br><?php echo $longTXT?> '+lng;	
 	followSwitch.checked = !noFollowToCursor; 	// выставим переключатель на панели Настроек в текущее положение
-	// Установим длину указателя скорости за  минуты
-	var metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
-	var velocityCursorLength = gpsdData.velocity*60*velocityVectorLengthInMn; 	// метров  за  минуты
-	velocityCursorLength = Math.round(velocityCursorLength/metresPerPixel);
-	//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.velocity='+gpsdData.velocity+'\nvelocityCursorLength='+velocityCursorLength);
-	//alert('metresPerPixel='+metresPerPixel+'\nvelocityCursorLength='+velocityCursorLength);
-	velocityCursor.options.iconSize=[5,velocityCursorLength];
-	velocityCursor.options.iconAnchor=[3,velocityCursorLength];
-	velocityVector.setIcon(velocityCursor);
 	// Окружность точност ГПС
 	var errGNSS = (+gpsdData.errX+gpsdData.errY)/2;
 	if(!errGNSS) errGNSS = 10; // метров

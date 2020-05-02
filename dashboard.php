@@ -101,7 +101,7 @@ if(is_string($tpv)) {
 	goto DISPLAY;
 }
 $tpv = getData('tpv',$tpv,$dataTypes); 	// требуемые данные в плоском массиве
-/*
+
 if($tpv['time']) { 	// иначе пусто преобразуется в очень давно
 	$gnssTime = new DateTime($tpv['time'],new DateTimeZone('UTC')); 	// объект, время в указанной TZ, или по грнвичу, если не
 	$gnssTime = $gnssTime->getTimestamp(); 	// число, unix timestamp - он вне часовых поясов
@@ -115,7 +115,7 @@ if($tpv['time']) { 	// иначе пусто преобразуется в оч�
 //	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели
 //	goto DISPLAY;
 //}
-*/
+
 $header = '';
 // Оповещения в порядке возрастания опасности, реально сработает последнее
 $alarm = FALSE;
@@ -273,7 +273,7 @@ default:
 	}
 	else {
 		// показываемое
-		if(!$header) $header = "$dashboardSpeedTXT, $dashboardSpeedMesTXT";
+		//if(!$header) $header = "$dashboardSpeedTXT, $dashboardSpeedMesTXT";
 		$symbol = ''; 	// 
 		// следующее
 		$nextsymbol = '';
