@@ -32,7 +32,7 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  
 8. Display AIS info:  
  ![AIS info](screenshots/s9-1.png)<br>
-Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_.
+Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. 
  <br>
  
 9. Control the GaladrielCache Loader:   
@@ -49,7 +49,8 @@ Linux. Modern browsers include mobile.
 
 ## Install&configure:
 You must have a web server under Linux with php support. Just copy app, dependences and set paths.  
-Paths and other are set and describe in _params.php_
+Paths and other are set and describe in _params.php_  
+Additionally, you may need to set parameters in files  _askGPSD.php_ and _askAIS.php_ .
 
 ## Dependences and thanks
 * [Leaflet](https://leafletjs.com/) in _leaflet/_ directory
@@ -81,7 +82,7 @@ All you need to install, including dependences, are in _emergencykit/_.
 * [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) for ideas
 
 ## gpsd
-GaladrielMap gets realtime info, such as spatial data, AIS data, instruments from  [gpsd](https://gpsd.io/) via _askGPSD.php_ and _askAIS.php_ services. You may configure these services to you gpsd host and port. Defaults are localhost and 2947 port (default for gpsd).<br>
+GaladrielMap gets realtime info, such as spatial data, AIS data, instruments from  [gpsd](https://gpsd.io/) via _askGPSD.php_ and _askAIS.php_ services. You may configure these services to you gpsd host and port. Defaults are localhost and 2947 port (default for gpsd). In addition, you must specify the php cli filename on _askAIS.php_ to start [gpsdAISd](https://github.com/VladimirKalachikhin/gpsdAISd).  
 How to install and configure gpsd see [gpsd pages](https://gpsd.io/).
 
 ## Tracks
