@@ -54,8 +54,8 @@ foreach($gpsdData as $device) {
 		);
 	} 	// а более ранние 2D fixses игнорируем
 }
-//echo "Получены данные\n";
-//print_r($tpv);
+echo "Получены данные\n";
+print_r($tpv);
 
 if(!$tpv){ 	// координат нет, потому что не было ни одного готового устройства
     $gpsdData = array('error' => 'no fix from any devices'); 	// ничего нет, облом

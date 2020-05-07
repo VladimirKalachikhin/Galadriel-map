@@ -46,7 +46,7 @@ $gpsdData = fgets($gpsd); 	// {"class":"POLL","time":"2017-09-20T20:17:49.515Z",
 fclose($gpsd);
 //echo "Закрыт сокет\n";
 
-//echo "gpsdData: ";//echo "<pre>"; 
+//echo "gpsdData: "; //echo "<pre>"; 
 //print_r($gpsdData); //echo "</pre>\n";
 $gpsdData = json_decode($gpsdData,TRUE);
 //echo "<br>JSON gpsdData: ";echo "<pre>"; print_r($gpsdData); echo "</pre>\n";
