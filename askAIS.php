@@ -32,7 +32,7 @@ echo "aisJSONrealFileName=$aisJSONrealFileName;<br>\n";
 echo "aisJSONfileName=$aisJSONfileName;<br>\n";
 
 clearstatcache(TRUE,$aisJSONrealFileName);
-$aisDataTime=filectime($aisJSONrealFileName);
+$aisDataTime=@filectime($aisJSONrealFileName);
 echo time()-$aisDataTime."<br>\n";
 if((!$aisDataTime) OR (time()-$aisDataTime)>$freshData) { 	// данные AIS старые - запустим демон
 	echo "Daemon started<br>$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$host -p$port<br>";
