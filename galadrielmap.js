@@ -749,7 +749,7 @@ centerMark.setLatLng(map.getCenter()); 	// определена в index
 //centerMark.setLatLng(map.getBounds().getCenter()); 	// определена в index
 if(goToPositionManualFlag === false) { 	// если поле не юзают руками
 	const lat = Math.round(centerMark.getLatLng().lat*10000)/10000; 	 	// широта с четыремя знаками после запятой - 10см
-	const lng = Math.round(centerMark.getLatLng().lng*10000)/10000; 	 	// долгота
+	const lng = Math.round(((centerMark.getLatLng().lng%360+540)%360-180)*10000)/10000; 	 	// долгота
 	goToPositionField.value = lat + ' ' + lng;
 }
 }; // end function centerMarkPosition
