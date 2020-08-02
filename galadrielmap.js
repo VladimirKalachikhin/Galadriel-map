@@ -61,8 +61,8 @@ var expires =  new Date();
 var pos = JSON.stringify(map.getCenter());
 var zoom = JSON.stringify(map.getZoom());
 expires.setTime(expires.getTime() + (60*24*60*60*1000)); 	// протухнет через два месяца
-document.cookie = "GaladrielMapPosition="+pos+"; expires="+expires+"; path=/";
-document.cookie = "GaladrielMapZoom="+zoom+"; expires="+expires+"; path=/";
+document.cookie = "GaladrielMapPosition="+pos+"; expires="+expires+"; path=/; samesite=Lax";
+document.cookie = "GaladrielMapZoom="+zoom+"; expires="+expires+"; path=/; samesite=Lax";
 //alert('Сохранение параметров '+pos+zoom);
 // Сохранение показываемых карт
 let openedNames = [];
@@ -70,17 +70,17 @@ for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 	openedNames[i] = mapDisplayed.children[i].innerHTML; 	// 
 }
 openedNames = JSON.stringify(openedNames);
-document.cookie = "GaladrielMaps="+openedNames+"; expires="+expires+"; path=/";
+document.cookie = "GaladrielMaps="+openedNames+"; expires="+expires+"; path=/; samesite=Lax";
 // Сохранение показываемых маршрутов
 openedNames = [];
 for (let i = 0; i < routeDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
 	openedNames[i] = routeDisplayed.children[i].innerHTML; 	// 
 }
 openedNames = JSON.stringify(openedNames);
-document.cookie = "GaladrielRoutes="+openedNames+"; expires="+expires+"; path=/";
+document.cookie = "GaladrielRoutes="+openedNames+"; expires="+expires+"; path=/; samesite=Lax";
 // Сохранение переключателей
-document.cookie = "GaladrielcurrTrackSwitch="+Number(currTrackSwitch.checked)+"; expires="+expires+"; path=/"; 	// переключатель currTrackSwitch
-document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/"; 	// переключатель SelectedRoutesSwitch
+document.cookie = "GaladrielcurrTrackSwitch="+Number(currTrackSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель currTrackSwitch
+document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель SelectedRoutesSwitch
 }
 
 // Функции выбора - удаления карт
@@ -487,7 +487,7 @@ if(measuredPaths.length) { 	// если есть, что сохранять
 //alert(toSave.length);
 toSave = JSON.stringify(toSave);
 //alert(toSave);
-document.cookie = "GaladrielMapMeasuredPaths="+toSave+"; expires="+expires+"; path=/"; 	// если сечас и нет, чего сохранять - грохнем куки
+document.cookie = "GaladrielMapMeasuredPaths="+toSave+"; expires="+expires+"; path=/; samesite=Lax"; 	// если сечас и нет, чего сохранять - грохнем куки
 } 	// end function doSaveMeasuredPaths
 
 function doRestoreMeasuredPaths() {
