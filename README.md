@@ -9,9 +9,9 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  ![screen](screenshots/s10.png) 
 
 ## Features:
-0. English or Russian interface, dependent of browser language settings
-1. View one OSM-like on-line map or  
-2. with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) the stacked maps  
+1. English or Russian interface, dependent of browser language settings
+2. View one OSM-like on-line map or  
+3. with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) the stacked maps  
 [Open Sea Map](http://www.openseamap.org/)  
 [Open Topo Map](https://opentopomap.org/about)  
  or any number of other maps:  
@@ -20,26 +20,26 @@ The author is not responsible for the consequences of using the GaladrielMap as 
 3. Positioning via [gpsd](https://gpsd.io/) and display current (writing now) track file in gpx format:  
  ![Positioning](screenshots/s2.png)<br><br>
  
-4. Display routes and POIs files in gpx, kml and csv format:  
+5. Display routes and POIs files in gpx, kml and csv format:  
  ![Display routes and POIs](screenshots/s5.png)<br><br>
  
-5. Creating a route localy and save it to the server in gpx format (description below):  
+6. Creating a route localy and save it to the server in gpx format (description below):  
  ![Creating a route](screenshots/s3.png)<br><br>
  
-6. Exchange coordinates via clipboard (see screenshot above and description below)  
+7. Exchange coordinates via clipboard (see screenshot above and description below)  
 
-7.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)  
+8.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)  
  ![Weather forecast](screenshots/s8.png)<br><br>
  
-8. Display AIS info:  
+9. Display AIS info:  
  ![AIS info](screenshots/s9-1.png)<br>
 Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. 
  <br>
  
-9. Control the GaladrielCache Loader:   
+10. Control the GaladrielCache Loader:   
  ![Control Loader](screenshots/s4.png)<br><br>
  
-10. Dashboard.
+11. Dashboard.
  _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.   
  ![Dashboard velocity](screenshots/s6.jpg)<br>
  ![Dashboard heading](screenshots/s7.jpg)<br>
@@ -66,10 +66,6 @@ Additionally, you may need to set parameters in files  _askGPSD.php_ and _askAIS
 * [supercluster](https://github.com/mapbox/supercluster) as _supercluster/supercluster.js_
 * [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) in _coordinate-parser/_ directory
 * [gpsdAISd](https://github.com/VladimirKalachikhin/gpsdAISd) in _gpsdAISd/_
-<br>
-For more compability:
-* [fetch polyfill](https://github.com/github/fetch/) as _fetch/fetch.js_
-* [promise-polyfill](https://github.com/taylorhakes/promise-polyfill) as _promise-polyfill/promise.js_
 
 Create a local copy of dependences and/or edit _index.php_
 

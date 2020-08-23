@@ -13,35 +13,35 @@
 Приложение GaladrielMap создано на основе  замечательных проектов многих, без сомнения, выдающихся авторов, поэтому необходимо вручную установить большое количество [зависимостей](#dependences-and-thanks).  
 
 ## Возможности:
-0. Русский или английский интерфейс в зависимости от языковых настроек браузера  
-1. Показ одной OSM-like растровой онлайн карты, или
-2. С [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- произвольного количества карт как по-отдельности, так и наложенными друг на друга.  
+1. Русский или английский интерфейс в зависимости от языковых настроек браузера  
+2. Показ одной OSM-like растровой онлайн карты, или
+3. С [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- произвольного количества карт как по-отдельности, так и наложенными друг на друга.  
  ![stacked maps](screenshots/s1.png)
 В [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) сразу есть доступ к [Open Sea Map](http://www.openseamap.org/) и [Open Topo Map](https://opentopomap.org/about), а также возможность создавать собственные конфигурирации для доступа к другим онлайн картам.  
 
- 3. Показ скорости, направления и координат по информации от [gpsd](https://gpsd.io/) и отрисовка текущего пути, если таковой пишется где-нибудь в формате gpx:  
+ 4. Показ скорости, направления и координат по информации от [gpsd](https://gpsd.io/) и отрисовка текущего пути, если таковой пишется где-нибудь в формате gpx:  
  ![Positioning](screenshots/s2.png)<br><br>
  
- 4. Показ маршрутов и точек достопримечательностей из файлов в форматах gpx, kml и csv:  
+ 5. Показ маршрутов и точек достопримечательностей из файлов в форматах gpx, kml и csv:  
  ![Display routes and POIs](screenshots/s5.png)<br><br>
  
- 5. Планирование маршрута на клиентском устройстве, с возможностью сохранить маршрут на сервере в формате gpx:  
+ 6. Планирование маршрута на клиентском устройстве, с возможностью сохранить маршрут на сервере в формате gpx:  
  ![Creating a route](screenshots/s3.png)<br><br>
  
- 6. Обмен координатами через буфер обмена, переход по координатам, введённым с клавиатуры, получение координат точек достопримечательностей.  
+ 7. Обмен координатами через буфер обмена, переход по координатам, введённым с клавиатуры, получение координат точек достопримечательностей.  
  
-7.  Прогноз погоды от [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (только с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) версии 1.3 или больше)  
+8.  Прогноз погоды от [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (только с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) версии 1.3 или больше)  
  ![Weather forecast](screenshots/s8.png)<br><br>
  
-8. Отображение информации AIS:  
+9. Отображение информации AIS:  
  ![AIS info](screenshots/s9.png)<br>
  Отображение информации AIS отключено по умолчанию. Его можно включить, раскомментировав строку с переменной $aisServerURI в файле _params.php_.
  <br><br>
 
-9. Управление загрузчиком GaladrielCache:   
+10. Управление загрузчиком GaladrielCache:   
  ![Control Loader](screenshots/s4.png)<br><br>
  
-10. Приборная панель.  
+11. Приборная панель.  
  _dashboard.php_ -- отдельное приложение, предназначенное для показа некоторых имеющихся приборов на очень слабых и/или медленных клиентских устройствах. Например, на читалке электронных книг с E-ink экраном:
  ![Dashboard velocity](screenshots/s6.jpg)<br>
  ![Dashboard heading](screenshots/s7.jpg)<br>
@@ -71,10 +71,6 @@
 * [supercluster](https://github.com/mapbox/supercluster) установленный как _supercluster/supercluster.js_
 * [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) установленный в каталог _coordinate-parser/_ 
 * [gpsdAISd](https://github.com/VladimirKalachikhin/gpsdAISd) в каталоге _gpsdAISd/_ 
-
-Для совместимости со старыми браузерами, но не обязательно:
-* [fetch polyfill](https://github.com/github/fetch/) установленный как _fetch/fetch.js_
-* [promise-polyfill](https://github.com/taylorhakes/promise-polyfill) установленный как _promise-polyfill/promise.js_
 
 Для установки зависимостей нужно сделать локальную копию каждого проекта в каталоге приложения так, как это описано на сайте проекта, а потом, при необходимости, откорректировать пути в _index.php_
 
