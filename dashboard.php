@@ -307,7 +307,6 @@ if($fontZ>1) {
 	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 	<meta http-equiv="Pragma" content="no-cache" />
 	<meta http-equiv="Expires" content="0" />
-	<!--<meta http-equiv="refresh" content="2">-->
 	<?php if(!$menu) echo "<meta http-equiv='refresh' content='2; url={$_SERVER['PHP_SELF']}'>";?>
 	<script src="dashboard.js">	</script>
 	<?php if($alarm) echo "<script>$alarmJS</script>";?>
@@ -315,9 +314,14 @@ if($fontZ>1) {
    <title>Dashboard <?php echo $versionTXT;?></title>
 </head>
 <body style="margin:0; padding:0;">
+<?php /* ?>
+<div id='infoBox' style='font-size: 90%; position: absolute;'>
+</div>
 <script>
 //alert(window.outerWidth+' '+window.outerHeight);
+infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 </script>
+<?php */ ?>
 
 <?php if($menu) { ?>
 <form action='<?php echo $_SERVER['PHP_SELF'];?>' style = '

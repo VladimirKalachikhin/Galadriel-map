@@ -9,6 +9,7 @@ The author is not responsible for the consequences of using the GaladrielMap as 
  ![screen](screenshots/s10.png) 
 
 ## Features:
+0. English or Russian interface, dependent of browser language settings
 1. View one OSM-like on-line map or  
 2. with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) the stacked maps  
 [Open Sea Map](http://www.openseamap.org/)  
@@ -39,10 +40,13 @@ Displaying AIS data is disabled by default, so you must enable it by uncomment s
  ![Control Loader](screenshots/s4.png)<br><br>
  
 10. Dashboard.
- _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading. The Dashboard allows you to set a signal for dangerous events, such as shallow or speed. Set up your browser to allow sound signal.  
- No javascript, no fanciful css.  
- ![Dashboard velocity](screenshots/s7.jpg)<br>
- ![Dashboard heading](screenshots/s6.jpg)<br><br>
+ _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.   
+ ![Dashboard velocity](screenshots/s6.jpg)<br>
+ ![Dashboard heading](screenshots/s7.jpg)<br>
+ ![Dashboard depth](screenshots/s11.jpg)<br>
+ The Dashboard allows you to set a signal for dangerous events, such as shallow or speed. Set up your browser to allow sound signal.  
+ ![Dashboard alarm](screenshots/s12.jpg)<br>
+ No fanciful javascript, no fanciful css.  
 
 ## Compatibility
 Linux. Modern browsers include mobile.

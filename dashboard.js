@@ -1,9 +1,5 @@
 var snd = new Audio("img/beep-02.wav");  
-<<<<<<< HEAD
 function depthAlarm() { 	// 
-=======
-function depthAlarm() {
->>>>>>> withAIS
 	setInterval(function(){snd.play();},300)
 }
 function maxSpeedAlarm() {
