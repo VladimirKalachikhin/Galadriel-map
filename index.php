@@ -514,11 +514,11 @@ map.on("layeradd", function(event) {
 
 // Восстановим слои
 <?php if( $tileCachePath) { // если работаем через GaladrielCache?>
-var lauers = JSON.parse(getCookie('GaladrielMaps'));
+var layers = JSON.parse(getCookie('GaladrielMaps'));
 // Занесём слои на карту
-if(lauers) lauers.reverse().forEach(function(lauerName){ 	// потому что они там были для красоты последним слоем вверъ
+if(layers) layers.reverse().forEach(function(layerName){ 	// потому что они там были для красоты последним слоем вверъ
 		for (var i = 0; i < mapList.children.length; i++) { 	// для каждого потомка списка mapList
-			if (mapList.children[i].innerHTML==lauerName) { 	// 
+			if (mapList.children[i].innerHTML==layerName) { 	// 
 				selectMap(mapList.children[i]);
 				break;
 			}
@@ -534,9 +534,9 @@ if(SelectedRoutesSwitch.checked) {
 	let showRoutes = JSON.parse(getCookie('GaladrielRoutes'));
 	if(showRoutes) {
 		showRoutes.forEach(
-			function(lauerName){ 	// 
+			function(layerName){ 	// 
 				for (let i = 0; i < routeList.children.length; i++) { 	// для каждого потомка списка routeList маршрутов
-					if (routeList.children[i].innerHTML==lauerName) { 	// 
+					if (routeList.children[i].innerHTML==layerName) { 	// 
 						selectTrack(routeList.children[i],routeList,routeDisplayed,displayRoute)
 						break;
 					}
