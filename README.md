@@ -114,7 +114,7 @@ You can create and edit the route on the local device, and/or save it to server.
  Good case for use - navigational plotting by the navigator in a dry and warm booth for the steersman on the rain and wind.  
  But it is only a base gpx route editor. Gpx &lt;metadata&gt; not supported, and point &lt;extensions&gt; (GARMIN like it) not supported too. Be careful to edit and save exists gpx.
 
-## mapbox-style vector tiles maps
+## Mapbox-style vector tiles maps
 GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox style file](https://docs.mapbox.com/mapbox-gl-js/style-spec/) must be placed on `$mapSourcesDir` directory of the GaladrielCache with **{mapname}.json** name. Sprites and glyphs you can find in _styles/_ directory.
 
 ## Support

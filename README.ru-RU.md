@@ -8,40 +8,33 @@
 
 Внимание! Автор не несёт ответственности за последствия использования GaladrielMap для навигации!
 
-## v. 1.3
+## v. 1.4
  ![screen](screenshots/s10.png)  
 Приложение GaladrielMap создано на основе  замечательных проектов многих, без сомнения, выдающихся авторов, поэтому необходимо вручную установить большое количество [зависимостей](#dependences-and-thanks).  
 
 ## Возможности:
-1. Русский или английский интерфейс в зависимости от языковых настроек браузера  
-2. Показ одной OSM-like растровой онлайн карты, или
-3. С [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- произвольного количества карт как по-отдельности, так и наложенными друг на друга.  
+1. Поддержка растровых и векторных тайлов
+2. Русский или английский интерфейс в зависимости от языковых настроек браузера  
+3. Показ одной OSM-like растровой онлайн карты, или
+4. С [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- произвольного количества карт как по отдельности, так и наложенными друг на друга.  
  ![stacked maps](screenshots/s1.png)
 В [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) сразу есть доступ к [Open Sea Map](http://www.openseamap.org/) и [Open Topo Map](https://opentopomap.org/about), а также возможность создавать собственные конфигурирации для доступа к другим онлайн картам.  
-
- 4. Показ скорости, направления и координат по информации от [gpsd](https://gpsd.io/) и отрисовка текущего пути, если таковой пишется где-нибудь в формате gpx:  
+5. Показ скорости, направления и координат по информации от [gpsd](https://gpsd.io/) и отрисовка текущего пути, если таковой пишется где-нибудь в формате gpx:  
  ![Positioning](screenshots/s2.png)<br><br>
- 
- 5. Показ маршрутов и точек достопримечательностей из файлов в форматах gpx, kml и csv:  
+6. Показ маршрутов и точек достопримечательностей из файлов в форматах gpx, kml и csv:  
  ![Display routes and POIs](screenshots/s5.png)<br><br>
- 
- 6. Планирование маршрута на клиентском устройстве, с возможностью сохранить маршрут на сервере в формате gpx:  
+7. Планирование маршрута на клиентском устройстве, с возможностью сохранить маршрут на сервере в формате gpx:  
  ![Creating a route](screenshots/s3.png)<br><br>
- 
- 7. Обмен координатами через буфер обмена, переход по координатам, введённым с клавиатуры, получение координат точек достопримечательностей.  
- 
-8.  Прогноз погоды от [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (только с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) версии 1.3 или больше)  
+8. Обмен координатами через буфер обмена, переход по координатам, введённым с клавиатуры, получение координат точек достопримечательностей.  
+9.  Прогноз погоды от [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (только с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) версии 1.3 или больше)  
  ![Weather forecast](screenshots/s8.png)<br><br>
- 
-9. Отображение информации AIS:  
+10. Отображение информации AIS:  
  ![AIS info](screenshots/s9.png)<br>
  Отображение информации AIS отключено по умолчанию. Его можно включить, раскомментировав строку с переменной $aisServerURI в файле _params.php_.
  <br><br>
-
-10. Управление загрузчиком GaladrielCache:   
+11. Управление загрузчиком GaladrielCache:   
  ![Control Loader](screenshots/s4.png)<br><br>
- 
-11. Приборная панель.  
+ 12. Приборная панель.  
  _dashboard.php_ -- отдельное приложение, предназначенное для показа некоторых имеющихся приборов на очень слабых и/или медленных клиентских устройствах. Например, на читалке электронных книг с E-ink экраном:
  ![Dashboard velocity](screenshots/s6.jpg)<br>
  ![Dashboard heading](screenshots/s7.jpg)<br>
@@ -62,15 +55,17 @@
 Кроме того, в файле _askAIS.php_ может понадобится указать имя исполняемого файла интерпретатора php.
 
 ## Зависимости и благодарности
-* [Leaflet](https://leafletjs.com/), установленный в каталог _leaflet/_ 
-* [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) установленный как _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
-* [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) установленный как _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
+* [Leaflet](https://leafletjs.com/), установленная в каталог _leaflet/_ 
+* [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) установленная как _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
+* [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) установленная как _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
 * [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) установленный в каталог _leaflet-sidebar-v2/_ 
-* [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) установленный в каталог _Leaflet.Editable/_ 
-* [Leaflet Measure Path](https://github.com/ProminentEdge/leaflet-measure-path) установленный в каталог _leaflet-measure-path/_ 
+* [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) установленная в каталог _Leaflet.Editable/_ 
+* [Leaflet Measure Path](https://github.com/ProminentEdge/leaflet-measure-path) установленная в каталог _leaflet-measure-path/_ 
 * [supercluster](https://github.com/mapbox/supercluster) установленный как _supercluster/supercluster.js_
 * [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) установленный в каталог _coordinate-parser/_ 
 * [gpsdAISd](https://github.com/VladimirKalachikhin/gpsdAISd) в каталоге _gpsdAISd/_ 
+* [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) установленная в каталог _mapbox-gl-js/dist/_ 
+* [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) установленная как _mapbox-gl-leaflet/leaflet-mapbox-gl.js_
 
 Для установки зависимостей нужно сделать локальную копию каждого проекта в каталоге приложения так, как это описано на сайте проекта, а потом, при необходимости, откорректировать пути в _index.php_
 
@@ -84,6 +79,9 @@
 * [Map Icons Collection](https://mapicons.mapsmarker.com/) за использованные значки.
 * [On/Off FlipSwitch](https://proto.io/freebies/onoff/)
 * [leaflet-tracksymbol](https://github.com/lethexa/leaflet-tracksymbol) на основе которого сделано отображение данных AIS
+* [openmaptiles](https://github.com/openmaptiles/fonts) за Open Font Glyphs for GL Styles
+* [GitHub MAPBOX project](https://github.com/mapbox) за навигационные значки
+* [OpenMapTiles](https://github.com/openmaptiles) за Mapbox GL basemap style
 * [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) , откуда позаимствованы идеи и немножко кода
 
 ## gpsd
@@ -120,6 +118,11 @@ php chkGPXfiles.php
 Также этот инструмент может быть использован для редактирования существующего маршрута в формате gpx, загруженного с сервера через панель <img src="img/poi.svg" alt="Handle route" width="24px"> Например, штурман в тёплой рубке рисует маршрут на своём ноутбуке в GaladrielMap, и сохраняет его на сервере. Рулевой под ветром и дождём немедленно загружает этот маршрут на свой планшет, а штурман тем временем может его уточнить и продолжить. Сообщив рулевому об изменениях, конечно.
 
 Однако, инструмент имеет только самую базовую поддержку gpx. Так, &lt;metadata&gt; не поддерживаются, любимые GARMIN &lt;extensions&gt; тоже не поддерживаются. Поэтому следует быть осторожным при редактировании сторонних файлов gpx.
+
+### Векторные тайлы
+GaladrielMap имеет некоторую поддержку векторных тайлов в Mapbox-style . Такие карты могут отображаться.  
+Описывающий карту файл[Mapbox style](https://docs.mapbox.com/mapbox-gl-js/style-spec/) должен находиться в каталоге `$mapSourcesDir` GaladrielCache, и называться также, как файл источника карты, но с расширением **.json**. В файле Mapbox style можно использовать значки и шрифты (Sprites and glyphs) из каталога _styles/_ .
+
 
 ## Поддержка
 За чашку кофе через PayPal можно получить консультации по адресу [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  

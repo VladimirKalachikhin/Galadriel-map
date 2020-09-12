@@ -2,11 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-<<<<<<< HEAD
-$versionTXT = '1.3.1';
-=======
 $versionTXT = '1.4.0';
->>>>>>> withVectorTiles
 // Интернационализация
 require_once('internationalisation.php');
 
