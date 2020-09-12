@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.3.1';
+$versionTXT = '1.4.0';
 // Интернационализация
 require_once('internationalisation.php');
 
@@ -16,6 +16,15 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 			//$name=basename($name,'.php'); 	//
 			$name=explode('.php',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
 		}); 	// 
+	$vectorEnable = FALSE; 	// векторных карт у нас нет
+	if($mapSourcesDir[0]!='/') $fullMapSourcesDir = "$tileCachePath/$mapSourcesDir";	// если путь абсолютный (и в unix, конечно)
+	foreach($mapsInfo as $name) {
+		//echo "$fullMapSourcesDir/$name.json <br>\n";
+		if(file_exists("$fullMapSourcesDir/$name.json")) {
+			$vectorEnable = TRUE; 	// векторные карты у нас есть
+			break;
+		}
+	}
 // Получаем список выполняющихся заданий на скачивание
 	if($jobsDir[0]!='/') $jobsDir = "$tileCachePath/$jobsDir";	//  сделаем путь абсолютным, потому что jobsDir - из конфига GaladrielCache
 	if($jobsInWorkDir[0]!='/') $jobsInWorkDir = "$tileCachePath/$jobsInWorkDir";	//  сделаем путь абсолютным
@@ -81,10 +90,18 @@ if($routeDir) {
 	<meta http-equiv="Content-Script-Type" content="text/javascript">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" > <!--  tell the mobile browser to disable unwanted scaling of the page and set it to its actual size -->
 
+    <!-- Leaflet -->
 	<link rel="stylesheet" href="leaflet/leaflet.css" type="text/css">
 	<script src="leaflet/leaflet.js"></script>
+<?php if($vectorEnable) { ?>
+	<!-- Mapbox GL -->
+	<link href="mapbox-gl-js/dist/mapbox-gl.css" rel='stylesheet' />
+	<script src="mapbox-gl-js/dist/mapbox-gl.js"></script>
+<?php }?>
+    <!-- Leaflet sidebar -->
     <link rel="stylesheet" href="leaflet-sidebar-v2/css/leaflet-sidebar.min.css" />
 	<script src="leaflet-sidebar-v2/js/leaflet-sidebar.min.js"></script>
+
     <script src="L.TileLayer.Mercator/src/L.TileLayer.Mercator.js"></script>
 
 <?php if($gpsanddataServerURI) {?>
@@ -125,6 +142,9 @@ html, body, #mapid {
    </style>
 </head>
 <body>
+<?php if($vectorEnable) { ?>
+<script src="mapbox-gl-leaflet/leaflet-mapbox-gl.js"></script>
+<?php }?>
 <div id="sidebar" class="leaflet-sidebar collapsed">
 	<!-- Nav tabs -->
 	<div class="leaflet-sidebar-tabs">

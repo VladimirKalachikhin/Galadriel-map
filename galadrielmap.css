@@ -108,7 +108,7 @@
 	margin: 1rem auto;
 }
 .leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
-	margin: 1rem auto;
+	margin: 0.75rem auto;
 }
 .leaflet-sidebar-tabs > ul > li > a > img {
 	vertical-align: middle;

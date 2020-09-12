@@ -2,11 +2,11 @@
 require('params.php'); 	// пути и параметры
 
 // Получаем список имён карт
-if($mapSourcesDir[0]!='/') $mapSourcesDir = "$tileCachePath/$mapSourcesDir";	// если путь абсолютный (и в unix, конечно)
+if($mapSourcesDir[0]!='/') $fullMapSourcesDir = "$tileCachePath/$mapSourcesDir";	// если путь абсолютный (и в unix, конечно)
 
 $mapName = $_REQUEST['mapname'];
-//echo "mapSourcesDir=$mapSourcesDir; mapName=$mapName; <br>\n";
-include("$mapSourcesDir/$mapName.php");
+//echo "fullMapSourcesDir=$fullMapSourcesDir; mapName=$mapName; <br>\n";
+include("$fullMapSourcesDir/$mapName.php");
 $mapInfo = array(
 	'ext'=>$ext,
 	'epsg'=>$EPSG, 
@@ -14,6 +14,7 @@ $mapInfo = array(
 	'maxZoom'=>$maxZoom,
 	'data'=>$data
 );
+if(($ext=='pbf')and(file_exists("$fullMapSourcesDir/$mapName.json"))) $mapInfo['mapboxStyle'] = "$tileCacheServerPath/$mapSourcesDir/$mapName.json"; 	// путь в смысле web
 $mapInfo = json_encode($mapInfo);
 header('Content-Type: application/json;charset=utf-8;');
 echo "$mapInfo \n";
