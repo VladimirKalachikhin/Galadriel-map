@@ -116,18 +116,23 @@ function displayMap(mapname) {
  Если в параметрах карты есть проекция, и она EPSG3395, 
  или в имени карты есть EPSG3395 - делает слой в проекции с пересчётом с помощью L.tileLayer.Mercator
 */
-mapname=mapname.trim();
+mapname=mapname.trim(mapname);
+console.log()
 // Всегда будем спрашивать параметры карты
 let mapParm = new Array(); 	// переменная для параметров карты
 const xhr = new XMLHttpRequest();
 xhr.open('GET', 'askMapParm.php?mapname='+mapname, false); 	// Подготовим синхронный запрос
 xhr.send();
 if (xhr.status == 200) { 	// Успешно
-	mapParm = JSON.parse(xhr.responseText); 	// параметры карты: первый - расширение, второй - проекция
-	//alert('Получены параметры карты \n'+tileCacheURIthis);
+	try {
+		mapParm = JSON.parse(xhr.responseText); 	// параметры карты: первый - расширение, второй - проекция
+		//alert('Получены параметры карты \n'+tileCacheURIthis);
+	}
+	catch(err) { 	// у карты не было параметров. Например, мы не используем GaladrielCache.
+	}
 }
 // javascript в загружаемом источнике на открытие карты
-//console.log(mapParm['data']);
+//console.log(mapParm['mapboxStyle']);
 if(mapParm['data'] && mapParm['data']['javascriptOpen']) eval(mapParm['data']['javascriptOpen']);
 // Загружаемая карта - многослойная?
 if(Array.isArray(additionalTileCachePath)) { 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
@@ -148,6 +153,9 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 			//alert('on Ellipsoide')
 			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {}));
 		}
+		else if(mapParm['mapboxStyle']) { 	// векторные тайлы
+			savedLayers[mapname].addLayer(L.mapboxGL({style: mapParm['mapboxStyle']}));
+		}
 		else {
 			savedLayers[mapname].addLayer(L.tileLayer(tileCacheURIthis, {}));
 		}
@@ -161,6 +169,9 @@ else {
 	if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
 		//alert('on Ellipsoide')
 		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {});
+	}
+	else if(mapParm['mapboxStyle']) { 	// векторные тайлы
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.mapboxGL({style: mapParm['mapboxStyle']});
 	}
 	else {
 		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer(tileCacheURIthis, {});
