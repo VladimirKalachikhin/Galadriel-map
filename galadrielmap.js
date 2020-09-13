@@ -117,7 +117,6 @@ function displayMap(mapname) {
  или в имени карты есть EPSG3395 - делает слой в проекции с пересчётом с помощью L.tileLayer.Mercator
 */
 mapname=mapname.trim(mapname);
-console.log()
 // Всегда будем спрашивать параметры карты
 let mapParm = new Array(); 	// переменная для параметров карты
 const xhr = new XMLHttpRequest();
