@@ -73,7 +73,8 @@ Additionally, you may need to set parameters in files  _askGPSD.php_ and _askAIS
 Create a local copy of dependences and/or edit _index.php_
 
 ## Emergency kit
-All you need to install, including dependences, are in _emergencykit/_.
+All you need to install, including dependences, are in _emergencykit/_.  
+You may download full pack -- more 4MB, or without vector tiles support pack -- less them 1MB.
 
 ## More thanks
 * [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to show markers and non well-formed gpx files.
