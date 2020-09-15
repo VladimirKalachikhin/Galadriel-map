@@ -126,4 +126,4 @@ GaladrielMap имеет некоторую поддержку векторных
 
 
 ## Поддержка
-За чашку кофе через PayPal можно получить консультации по адресу [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  
+За чашку кофе [через PayPal](https://paypal.me/VladimirKalachikhin?locale.x=ru_RU) можно получить консультации по адресу [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  
