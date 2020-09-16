@@ -119,4 +119,4 @@ You can create and edit the route on the local device, and/or save it to server.
 GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox style file](https://docs.mapbox.com/mapbox-gl-js/style-spec/) must be placed on `$mapSourcesDir` directory of the GaladrielCache with **{mapname}.json** name. Sprites and glyphs you can find in _styles/_ directory.
 
 ## Support
-You can get support for GaladrielMap and GaladrielCahe for a beer [via PayPal](https://paypal.me/VladimirKalachikhin) or [YandexMoney](https://money.yandex.ru/to/4100115854556242) at [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  
+You can get support for GaladrielMap and GaladrielCahe for a beer [via PayPal](https://paypal.me/VladimirKalachikhin) or [YandexMoney](https://yasobe.ru/na/galadrielmap) at [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  
