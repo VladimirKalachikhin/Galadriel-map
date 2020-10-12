@@ -1,6 +1,6 @@
 # GaladrielMap [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 This is a web application -- the tiles map viewer. The application can be placed on a weak server such as RaspberryPi or NAS and used on full clients such as tablets and smartphones. Only browser need.  
-It is assumed that the application is used in the onboard local area network of the boat or camper. The author uses it from the wi-fi router/GSM modem under OpenWRT as a server on his sailboat "Galadriel".  
+It is assumed that the application is used in the onboard local area network of the boat or camper. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 The GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) but may be used with any tile OSM-like map sources or file tile cache for exploring the map.  
 The GaladrielMap created with use a lot of famous projects, so don't forget to install [dependenses](#dependences-and-thanks).  
 The author is not responsible for the consequences of using the GaladrielMap as a navigator!
