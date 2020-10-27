@@ -516,7 +516,7 @@ if(RestoreMeasuredPaths) {
 }
 }	// end function doRestoreMeasuredPaths
 
-function saveGPX(routeName,routeDescr) {
+function saveGPX() {
 /* Сохраняет на сервере маршрут из объекта currentRoute
 Считаем, что в currentRoute - именно тот объект, по которому щёлкнули, а не внешний, если он есть
 Считается, что функция вызывается по кнопке в интерфейсе, поэтому так
@@ -525,48 +525,66 @@ if(!currentRoute) { 	// глобальная переменная, должна 
 	routeSaveMessage.innerHTML = 'Error - no route selected.'
 	return;
 }
-if(routeDescr) { 	// юзер указал новое описание.
-	currentRoute.feature.properties.desc = routeDescr;
-}
+//console.log(currentRoute);
 let toSaveRoute; 	// тот объект, который будем сохранять - ранее загруженный gpx или только что нарисованный layer
-let fileName; 	// имя файла для сохранения
-if('fileName' in currentRoute.feature.properties) { 	// currentRoute - часть чего-то большего, и сохранять надо его
-	if(routeName) { 	// юзер указал новое имя - очевидно, в интерфейсе
-		savedLayers[currentRoute.feature.properties.fileName].options.fileName = routeName; 	// установим это имя для внешнего объекта
-		fileName = routeName;
-	}
-	else {
-		fileName = savedLayers[currentRoute.feature.properties.fileName].options.fileName;
-		routeSaveName.value = name; 	// запишем в интерфейс
-	}
-	toSaveRoute = savedLayers[currentRoute.feature.properties.fileName]; 	// сделаем самый верхний родительский объект объекта, по которому щёлкнули, сохраняемым. На самом деле, это невозможно, но у нас все загружаемые объекты верхнего уровня сохраняются в глобальном массиве
+let fileName = routeSaveName.value; 	// имя файла для сохранения, поле в интерфейсе
+if(! fileName) { 	// внезапно имени нет, хотя в index поле заполняется
+	fileName = new Date().toJSON();
+	routeSaveName.value = fileName;
 }
-else { 	// что-то локальное
-	if(routeName) { 	// юзер указал новое имя - очевидно, в интерфейсе
-		currentRoute.options.fileName = routeName; 	// установим это имя для внешнего объекта
-		fileName = routeName;
+// унифицируем сохраняемое.
+if('feature' in currentRoute) { 	// currentRoute - часть чего-то большего, и сохранять надо это что-то большее. При этом считаем, что у этого есть filename
+	//console.log('Layer');
+	let oldFileName;
+	if(savedLayers[currentRoute.feature.properties.fileName]) {
+		toSaveRoute = savedLayers[currentRoute.feature.properties.fileName]; 	// это весь объект, где-то внутри которого есть currentRoute
+		oldFileName = currentRoute.feature.properties.fileName;
 	}
-	else {
-		routeSaveName.value = new Date().toJSON(); 	// это будет name
-		fileName = routeSaveName.value;
+	else toSaveRoute = currentRoute;
+	// перепишем поля
+	currentRoute.feature.properties.fileName = fileName; 	// теперь изменим currentRoute, но в savedLayers
+	currentRoute.feature.properties.desc = routeSaveDescr.value; 	// поле в интерфейсе
+	if(oldFileName) {
+		delete savedLayers[oldFileName]; 	// этот объект там по имени файла, а имя-то мы и поменяем
+		savedLayers[currentRoute.feature.properties.fileName] = toSaveRoute;
 	}
-	toSaveRoute = currentRoute; 	// 
 }
+else { 	// 
+	//console.log('Polyline');
+	if(!('eachLayer' in currentRoute)) currentRoute = new L.layerGroup([currentRoute]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит, потому что всё же layergroup не layer
+	// дальше считаем, что у нас всё происходит в первом слое
+	let layers = currentRoute.getLayers()
+	if(!('feature' in layers[0])){
+		layers[0].feature = {'properties':{}}; 	// типа, оно будет JSONLayer
+		layers[0].feature.type = "Feature";
+	}
+	layers[0].feature.properties.fileName = fileName;
+	layers[0].feature.properties.desc = routeSaveDescr.value; 	// поле в интерфейсе
+	layers[0].feature.properties.isRoute = true; 	// укажем, что это путь
+	layers[0].feature.properties.name = fileName; 	// укажем, что это путь
+	toSaveRoute = currentRoute;
+}
+//		currentRoute.options.fileName = routeName; 	// установим это имя для внешнего объекта. ГДЕ ЭТО ИСПОЛЬЗУЕТСЯ? leaflet-omnivore.js строка 334
 //console.log(toSaveRoute);
+
+// Теперь делаем JSON, из которого сделаем gpx
+// Сначала соберём в pointsFeatureCollection реальные точки из данных superclaster
+let pointsFeatureCollection; 	// 
 // поскольку мы хотим toGeoJSON() все имеющиеся точки, а слой может быть superclaster, то будем доставать точки из supercluster'а
-let pointsFeatureCollection;
-if('eachLayer' in toSaveRoute) { 	// это LayerGroup
-	toSaveRoute.eachLayer( function (layer) { 	// для каждого слоя этой группы выполним
-		if('supercluster' in layer) { 	// это superclaster'изованный слой, с точками, надо полагать, ранее положенными в свойство layer.supercluster
-			pointsFeatureCollection = layer.supercluster.points; 	// считаем, что слой с точками только один. У нас, вроде, это так.
-		}
-	});
-}
+toSaveRoute.eachLayer( function (layer) { 	// для каждого слоя этой группы выполним
+	if('supercluster' in layer) { 	// это superclaster'изованный слой, с точками, надо полагать, ранее положенными в свойство layer.supercluster
+		//console.log(layer.supercluster.points);
+		pointsFeatureCollection = layer.supercluster.points; 	// считаем, что слой с точками только один. У нас, вроде, это так.
+	}
+});
 //console.log(pointsFeatureCollection);
+
+//console.log(toSaveRoute);
 let route = toSaveRoute.toGeoJSON(); 	// сделаем из Editable объект geoJSON
 //console.log(route);
+
 if(pointsFeatureCollection) { 	// это был supercluster, поэтому в geoJSON неизвестно, сколько оригинальных точек, а не все. Но у нас с собой было...
-	for(let i=0; i<route.features.length;i++) {
+	for(let i=0; i<route.features.length;i++) {	// выкинем все точки
 		if(route.features[i].geometry.type == 'Point') {
 			// delete route.features[i]; 	// так делать нельзя, потому что у всего используемого софта крыша едет от элемента массива undefined. Хотя это должно быть нормально в языке. Но что в этом языке нормально?
 			route.features.splice(i,1); 	// вырежем этот элемент из массива
@@ -576,6 +594,7 @@ if(pointsFeatureCollection) { 	// это был supercluster, поэтому в 
 }
 //console.log(route);
 route = toGPX(route); 	// сделаем gpx 
+//console.log(route);
 
 var xhr = new XMLHttpRequest();
 xhr.open('POST', 'saveGPX.php', true); 	// Подготовим асинхронный запрос
@@ -659,7 +678,8 @@ return gpxtrack;
 		if(geoJSON.features[i].properties.link) {
 			for ( let ii = 0; ii < geoJSON.features[i].properties.link.length; ii++) { 	// ссылок может быть много
 				//console.log(geoJSON.features[i].properties.link[ii]);
-				gpxtrack += '		<link http="' + geoJSON.features[i].properties.link[ii].getAttribute('href') + '">\n';
+				//gpxtrack += '		<link http="' + geoJSON.features[i].properties.link[ii].getAttribute('href') + '">\n';
+				gpxtrack += '		<link http="' + geoJSON.features[i].properties.link[ii].getAttribute('http') + '">\n';
 				for(let iii = 0; iii < geoJSON.features[i].properties.link[ii].children.length; iii++) {
 					//console.log(geoJSON.features[i].properties.link[ii].children[iii].textContent);
 					gpxtrack += '			<' + geoJSON.features[i].properties.link[ii].children[iii].nodeName +'>' + geoJSON.features[i].properties.link[ii].children[iii].textContent + '</' + geoJSON.features[i].properties.link[ii].children[iii].nodeName + '>\n';

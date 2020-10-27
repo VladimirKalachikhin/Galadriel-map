@@ -331,7 +331,7 @@ if(Points.length) {
 	updClaster(pointsLayer);	// galadrielmap.js  и покажем
 	layer.addLayer(pointsLayer);
 }
-layer.options.fileName = options.featureNameNode.innerText.trim();
+//layer.options.fileName = options.featureNameNode.innerText.trim(); // Оно не надо?
 //console.log(layer);
 //console.log(layer.getLayers());
 return layer;
@@ -471,7 +471,9 @@ for (var i=0; i<links.length; i++) {
 		break;
 	case "object":
 		for(var j=0; j<links[i].length; j++) { 	// для каждой ссылки
-			if(links[i][j].attributes.length) 		var link = links[i][j].attributes.href.value.trim();
+			//console.log(links[i][j]);
+			//if(links[i][j].attributes.length) 		var link = links[i][j].attributes.href.value.trim();
+			if(links[i][j].attributes.length) 		var link = links[i][j].attributes.http.value.trim();
 			else 	var link = links[i][j].innerHTML.trim();
 			linkHTML += '<a href="'+link+'" target=”_blank” >';
 			var text = ' ', textAttr;
