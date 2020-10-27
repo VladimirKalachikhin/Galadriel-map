@@ -52,6 +52,9 @@ Displaying AIS data is disabled by default, so you must enable it by uncomment s
 ## Compatibility
 Linux. Modern browsers include mobile.
 
+## Demo
+No live demo, but ready to use [virtual machine image](https://github.com/VladimirKalachikhin/GaladrielMap-Demo-image) exists.
+
 ## Install&configure:
 You must have a web server under Linux with php support. Just copy app, dependences and set paths.  
 Paths and other are set and describe in _params.php_  
