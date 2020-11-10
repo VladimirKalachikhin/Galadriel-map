@@ -5,8 +5,8 @@ ob_start(); 	// попробуем перехватить любой вывод 
 $gpsdHost = 'localhost';
 $gpsdPort = 2947;
 //$gpsdPort = 2957;
-$aisJSONfileName = 'aisJSONdata';
-//$aisJSONfileName = '/home/www-data/aisJSONdata';
+//$aisJSONfileName = 'aisJSONdata';
+$aisJSONfileName = '/home/www-data/gpsdAISd/aisJSONdata';
 $gpsdAISd = 'gpsdAISd/gpsdAISd.php';
 $phpCLIexec = 'php';
 $freshData = 60; 	// seconds. AIS data file are fresh only for this time. If older - not shown it.
@@ -32,15 +32,21 @@ echo "aisJSONrealFileName=$aisJSONrealFileName;<br>\n";
 echo "aisJSONfileName=$aisJSONfileName;<br>\n";
 
 clearstatcache(TRUE,$aisJSONrealFileName);
-$aisDataTime=@filectime($aisJSONrealFileName);
-echo time()-$aisDataTime."<br>\n";
-if((!$aisDataTime) OR (time()-$aisDataTime)>$freshData) { 	// данные AIS старые - запустим демон
-	echo "Daemon started<br>$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$host -p$port<br>";
-	//unlink($aisJSONrealFileName); 	// 
-	exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$host -p$port > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
-	//exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$host -p$port ",$out,$err); 	// 
-	//print_r($out); echo "$err\n";
-	return; 	// нет свежих данных
+if(file_exists($aisJSONrealFileName)) {
+	$aisDataTime=filectime($aisJSONrealFileName);
+	echo "возраст файла с целями ".(time()-$aisDataTime)." сек.<br>\n";
+	if((!$aisDataTime) OR (time()-$aisDataTime)>$freshData) { 	// данные AIS старые - запустим демон
+		echo "Daemon started<br>$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$host -p$port<br>";
+		//unlink($aisJSONrealFileName); 	// 
+		exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$host -p$port > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+		//exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$host -p$port ",$out,$err); 	// 
+		//print_r($out); echo "$err\n";
+		return; 	// нет свежих данных
+	}
+}
+else {
+	echo "Проблема: нет файла $aisJSONrealFileName<br>\n";
+	return;
 }
 // файл свежий
 $inputAISData = json_decode(file_get_contents($aisJSONrealFileName),TRUE); 	// 

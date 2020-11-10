@@ -780,13 +780,14 @@ setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},3000);
 //realtime(aisServerURI,realtimeAISupdate);
 
 function realtimeAISupdate(aisData) {
-//console.log(aisData);
+//console.log(aisData); 	// массив с данными целей
 let vehiclesVisible = [];
 for(const vehicle in aisData){
 	//console.log(aisData[vehicle]);
 	//console.log(aisData[vehicle].lat);	console.log(aisData[vehicle].lon);
 	//console.log(typeof(vehicles[vehicle]));
-	if(!vehicles[vehicle]) { 	// global var
+	if(!vehicles[vehicle]) { 	// global var, массив layers с целями
+		//console.log(vehicle);
 		vehicles[vehicle] = L.trackSymbol(L.latLng(0,0),{
 			trackId: vehicle,
 			leaderTime: velocityVectorLengthInMn*60,
@@ -795,7 +796,7 @@ for(const vehicle in aisData){
 			stroke: true,
 			opacity: 1.0,
 			weight: 1.0,
-			//noHeadingSymbol: [0.3,0, 0,0.3, -0.3,0, 0,-0.4]
+			//noHeadingSymbol: [0.3,0, 0,0.3, -0.3,0, 0,-0.4] 	// расстояния от центра, через которые нарисуют polyline
 		}).addTo(map);
 	}
 	//console.log(vehicles[vehicle]);

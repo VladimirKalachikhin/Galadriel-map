@@ -1,4 +1,5 @@
 <?php
+ob_start(); 	// попробуем перехватить любой вывод скрипта
 require('params.php'); 	// пути и параметры
 
 // Получаем список имён карт
@@ -16,6 +17,7 @@ $mapInfo = array(
 );
 if(($ext=='pbf')and(file_exists("$fullMapSourcesDir/$mapName.json"))) $mapInfo['mapboxStyle'] = "$tileCacheServerPath/$mapSourcesDir/$mapName.json"; 	// путь в смысле web
 $mapInfo = json_encode($mapInfo);
+ob_end_clean(); 			// очистим, если что попало в буфер
 header('Content-Type: application/json;charset=utf-8;');
 echo "$mapInfo \n";
 ?>
