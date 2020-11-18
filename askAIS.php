@@ -2,88 +2,95 @@
 /* 
 */
 ob_start(); 	// попробуем перехватить любой вывод скрипта
-$gpsdHost = 'localhost';
-$gpsdPort = 2947;
-//$gpsdPort = 2957;
-//$aisJSONfileName = 'aisJSONdata';
-$aisJSONfileName = '/home/www-data/gpsdAISd/aisJSONdata';
-$gpsdAISd = 'gpsdAISd/gpsdAISd.php';
-$phpCLIexec = 'php';
-$freshData = 60; 	// seconds. AIS data file are fresh only for this time. If older - not shown it.
+$path_parts = pathinfo(__FILE__); // определяем каталог скрипта
+chdir($path_parts['dirname']); // задаем директорию выполнение скрипта
+require('params.php'); 	// пути и параметры
 
-$LefletRealtime = json_encode(getAISnfo($aisJSONfileName,$gpsdHost,$gpsdPort)); 	// 
+echo "aisJSONfileName=$aisJSONfileName; netAISJSONfileName=$netAISJSONfileName; <br><br>\n";
 
+$AISdata = FALSE;
+if($aisJSONfileName and $netAISJSONfileName) { 	// Объединим данные AIS и netAIS
+	list($aisJSONfileName,$daemonRunningFlag) = getAISdFilesNames();
+	$netAISJSONfileName = getNetAISdFilesNames();
+	echo "aisJSONfileName=$aisJSONfileName; netAISJSONfileName=$netAISJSONfileName; <br><br>\n";
+	// Запускаем gpsdAISd
+	exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+	echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort<br><br>\n";
+	@unlink($daemonRunningFlag); 	// Удалим флаг в знак того, что мы читаем данные
+	clearstatcache(TRUE,$aisJSONfileName);
+	$AISdata = json_decode(file_get_contents($aisJSONfileName),TRUE); 	// 
+	if(! is_array($AISdata)) $AISdata=array();
+
+	clearstatcache(TRUE,$netAISJSONfileName);
+	$netAISdata = json_decode(file_get_contents($netAISJSONfileName),TRUE); 	// 
+	if(! is_array($netAISdata)) $netAISdata = array();
+	//echo "netAISdata <pre>"; print_r($netAISdata); echo "</pre><br>\n";
+	
+	foreach($netAISdata as $mmsi => $data) {
+		foreach($data as $key => $val) {
+			$AISdata[$mmsi][$key] = $val;
+		}
+	}
+	
+	//echo "AISdata <pre>"; print_r($AISdata); echo "</pre><br>\n";
+	$AISdata = json_encode($AISdata);
+}
+elseif($netAISJSONfileName) $aisJSONfileName = getNetAISdFilesNames();
+else {
+	list($aisJSONfileName,$daemonRunningFlag) = getAISdFilesNames();
+	clearstatcache(TRUE,$aisJSONfileName);
+	if(file_exists($daemonRunningFlag)) unlink($daemonRunningFlag); 	// Удалим флаг в знак того, что мы читаем данные
+	else {
+		echo "aisJSONfileName=$aisJSONfileName; netAISJSONfileName=$netAISJSONfileName; <br><br>\n";
+		// Запускаем gpsdAISd
+		exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+		echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort<br><br>\n";
+	}	
+}
+echo "aisJSONfileName=$aisJSONfileName;<br><br>\n";
+
+clearstatcache(TRUE,$aisJSONfileName);
 ob_end_clean(); 			// очистим, если что попало в буфер
 header('Content-Type: application/json;charset=utf-8;');
-echo "$LefletRealtime \n";
+if($AISdata === FALSE) echo file_get_contents($aisJSONfileName)."\n";
+else echo "$AISdata \n"; 	// 
 return;
 
-function getAISnfo($aisJSONfileName='aisJSONdata',$host='localhost',$port=2947) { 
-/* 
-Читает файл от демона gpsdAISd, пытаясь управлять этим демоном - по крайней мере, запуская
-*/
-global $freshData, $phpCLIexec, $gpsdAISd; 
 
+
+
+
+function getAISdFilesNames() {
+global $aisJSONfileName;
 $dirName = pathinfo($aisJSONfileName, PATHINFO_DIRNAME);
-echo "dirName=$dirName;<br>\n";
-if((!$dirName) OR ($dirName=='.')) $aisJSONrealFileName = sys_get_temp_dir()."/".pathinfo($aisJSONfileName,PATHINFO_BASENAME);
-else $aisJSONrealFileName = $aisJSONfileName;
-echo "aisJSONrealFileName=$aisJSONrealFileName;<br>\n";
-echo "aisJSONfileName=$aisJSONfileName;<br>\n";
+$fileName = pathinfo($aisJSONfileName,PATHINFO_BASENAME);
+if((!$dirName) OR ($dirName=='.')) {
+	$dirName = sys_get_temp_dir()."/gpsdAISd"; 	// права собственно на /tmp в системе могут быть замысловатыми
+	@mkdir($dirName, 0777,true); 	// 
+	@chmod($dirName,0777); 	// права будут только на каталог gpsdAISd. Если он вложенный, то на предыдущие, созданные по true в mkdir, прав не будет. Тогда надо использовать umask.
+	$aisJSONfileName = $dirName."/".$fileName;
+}
+$daemonRunningFlag = $aisJSONfileName.'Flag';
+// создадим сам файл, если надо
+clearstatcache(TRUE,$aisJSONfileName);
+if(!file_exists($aisJSONfileName)) {
+	file_put_contents($aisJSONfileName,json_encode(array()));
+	@chmod($aisJSONfileName,0666); 	// 
+}
+return [$aisJSONfileName,$daemonRunningFlag];
+}
 
-clearstatcache(TRUE,$aisJSONrealFileName);
-if(file_exists($aisJSONrealFileName)) {
-	$aisDataTime=filectime($aisJSONrealFileName);
-	echo "возраст файла с целями ".(time()-$aisDataTime)." сек.<br>\n";
-	if((!$aisDataTime) OR (time()-$aisDataTime)>$freshData) { 	// данные AIS старые - запустим демон
-		echo "Daemon started<br>$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$host -p$port<br>";
-		//unlink($aisJSONrealFileName); 	// 
-		exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$host -p$port > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
-		//exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$host -p$port ",$out,$err); 	// 
-		//print_r($out); echo "$err\n";
-		return; 	// нет свежих данных
-	}
+function getNetAISdFilesNames() {
+global $netAISJSONfileName;
+$dirName = pathinfo($netAISJSONfileName, PATHINFO_DIRNAME);
+$fileName = pathinfo($netAISJSONfileName,PATHINFO_BASENAME);
+if((!$dirName) OR ($dirName=='.')) {
+	$dirName = sys_get_temp_dir()."/netAIS"; 	// права собственно на /tmp в системе могут быть замысловатыми
+	@mkdir($dirName, 0777,true); 	// 
+	@chmod($dirName,0777); 	// права будут только на каталог netAIS. Если он вложенный, то на предыдущие, созданные по true в mkdir, прав не будет. Тогда надо использовать umask.
+	$netAISJSONfileName = $dirName."/".$fileName;
 }
-else {
-	echo "Проблема: нет файла $aisJSONrealFileName<br>\n";
-	return;
+return $netAISJSONfileName;
 }
-// файл свежий
-$inputAISData = json_decode(file_get_contents($aisJSONrealFileName),TRUE); 	// 
-if(!$inputAISData) return;
-$aisData = array();
-foreach($inputAISData as $vehicle => $data) {
-	//echo "<br>data=<pre>"; print_r($data); echo "</pre>\n";
-	$aisData[$vehicle]['mmsi'] = (string)$vehicle;
-	$aisData[$vehicle]['status_text'] = (string)$data['status_text'];
-	$aisData[$vehicle]['turn'] = (int)$data['turn']; 	// Rate of turn ROTAIS 0 to +126 = turning right at up to 708° per min or higher 0 to –126 = turning left at up to 708° per min or higher Values between 0 and 708° per min coded by ROTAIS = 4.733 SQRT(ROTsensor) degrees per min where  ROTsensor is the Rate of Turn as input by an external Rate of Turn Indicator (TI). ROTAIS is rounded to the nearest integer value. +127 = turning right at more than 5° per 30 s (No TI available) –127 = turning left at more than 5° per 30 s (No TI available) –128 (80 hex) indicates no turn information available (default). ROT data should not be derived from COG information.
-	$aisData[$vehicle]['speed'] = (float)$data['speed']; 	// SOG Speed over ground in m/sec 	(in 1/10 knot steps (0-102.2 knots) 1 023 = not available, 1 022 = 102.2 knots or higher)
-	$aisData[$vehicle]['lon'] = (float)$data['lon']; 	// Longitude in degrees	( 1/10 000 min (±180°, East = positive (as per 2’s complement), West = negative (as per 2’s complement). 181 = (6791AC0h) = not available = default) )
-	$aisData[$vehicle]['lat'] = (float)$data['lat']; 	// Latitude in degrees (1/10 000 min (±90°, North = positive (as per 2’s complement), South = negative (as per 2’s complement). 91° (3412140h) = not available = default))
-	$aisData[$vehicle]['course'] = (int)$data['course']; 	// COG Course over ground in degrees ( 1/10 = (0-3 599). 3 600 (E10h) = not available = default. 3 601-4 095 should not be used)
-	$aisData[$vehicle]['heading'] = (int)$data['heading']; 	// True heading Degrees (0-359) (511 indicates not available = default)
-	$aisData[$vehicle]['timestamp'] = (int)$data['timestamp']; 	// Unis timestamp. Time stamp UTC second when the report was generated by the electronic position system (EPFS) (0-59, or 60 if time stamp is not available, which should also be the default value, or 61 if positioning system is in manual input mode, or 62 if electronic position fixing system operates in estimated (dead reckoning) mode, or 63 if the positioning system is inoperative)
-	$aisData[$vehicle]['callSign'] = (string)$data['callsign']; 	// Call sign 7 x 6 bit ASCII characters, @@@@@@@ = not available = default. Craft associated with a parent vessel, should use “A” followed by the last 6 digits of the MMSI of the parent vessel. Examples of these craft include towed vessels, rescue boats, tenders, lifeboats and liferafts.
-	$aisData[$vehicle]['shipname'] = (string)$data['shipname']; 	// Maximum 20 characters 6 bit ASCII, as defined in Table 47 “@@@@@@@@@@@@@@@@@@@@” = not available = default. The Name should be as shown on the station radio license. For SAR aircraft, it should be set to “SAR AIRCRAFT NNNNNNN” where NNNNNNN equals the aircraft registration number.
-	$aisData[$vehicle]['shiptype_text'] = (string)$data['shiptype_text']; 	//
-	if($data['shiptype']===NULL) $aisData[$vehicle]['shiptype'] = NULL;
-	else $aisData[$vehicle]['shiptype'] = (int)$data['shiptype']; 	// 0 - знаечение, поэтому сохраним null
-	$aisData[$vehicle]['to_bow'] = (float)$data['to_bow']; 	// Reference point for reported position. Also indicates the dimension of ship (m) (see Fig. 42 and § 3.3.3) For SAR aircraft, the use of this field may be decided by the responsible administration. If used it should indicate the maximum dimensions of the craft. As default should A = B = C = D be set to “0”
-	$aisData[$vehicle]['to_stern'] = (float)$data['to_stern']; 	// Reference point for reported position.
-	$aisData[$vehicle]['to_port'] = (float)$data['to_port']; 	// Reference point for reported position.
-	$aisData[$vehicle]['to_starboard'] = (float)$data['to_starboard']; 	// Reference point for reported position.
-	$aisData[$vehicle]['epfd_text'] = (string)$data['epfd_text']; 	// 
-	$aisData[$vehicle]['eta'] = $data['eta']; 	// ETA Estimated time of arrival; MMDDHHMM UTC Bits 19-16: month; 1-12; 0 = not available = default  Bits 15-11: day; 1-31; 0 = not available = default Bits 10-6: hour; 0-23; 24 = not available = default Bits 5-0: minute; 0-59; 60 = not available = default For SAR aircraft, the use of this field may be decided by the responsible administration
-	$aisData[$vehicle]['draught'] = (float)$data['draught']; 	// Maximum present static draught In m ( 1/10 m, 255 = draught 25.5 m or greater, 0 = not available = default; in accordance with IMO Resolution A.851 Not applicable to SAR aircraft, should be set to 0)
-	$aisData[$vehicle]['destination'] = (string)$data['destination']; 	// Destination Maximum 20 characters using 6-bit ASCII; @@@@@@@@@@@@@@@@@@@@ = not available For SAR aircraft, the use of this field may be decided by the responsible administration
-	$aisData[$vehicle]['length'] = (float)$data['length']; 	// Length of ship in m
-	$aisData[$vehicle]['beam'] = (float)$data['beam']; 	// Beam of ship in m
-	$aisData[$vehicle]['hazard_text'] = (string)$data['hazard_text']; 	// 
-	$aisData[$vehicle]['loaded_text'] = (string)$data['loaded_text']; 	// 
-}
-//echo "Получены данные\n";
-//print_r($aisData);
-return $aisData;
-} // end function getAISnfo
 
 ?>

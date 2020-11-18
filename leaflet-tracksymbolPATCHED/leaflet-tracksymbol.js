@@ -100,7 +100,7 @@ L.TrackSymbol = L.Path.extend({
     this._path.setAttribute('d',this.getPathString());
   },
 
-	addData: function(aisData){
+	addData: function(aisData){ 	// aisData опрелён во внешней функции, типа - глобален
 
 		this._speed = aisData.speed;
 		delete aisData.speed;
@@ -139,18 +139,18 @@ L.TrackSymbol = L.Path.extend({
        	if(this._speed) speedKMH = Math.round((this._speed*60*60/1000)*10)/10+' Km/h';
 		let PopupContent = `
 <div>
-<span style='font-size:120%';'>${this.options.shipname}</span><br>
+<span style='font-size:120%';'>${this.options.shipname||''}</span><br>
 	<div style='width:100%;'>
-	${this.options.mmsi} <span style='float:right;'>${this.options.callSign}</span>
+	${this.options.mmsi} <span style='float:right;'>${this.options.callSign||''}</span>
 	<div>
-${this.options.shiptype_text}<br>
+${this.options.shiptype_text||''}<br>
 	<div style='width:100%;background-color:lavender;'>
-	<span style='font-size:110%;'>${this.options.status_text}</span><br>
+	<span style='font-size:110%;'>${this.options.status_text||''}</span><br>
 	</div>
 	<div style='width:100%;'>
-	<span >${this.options.destination}</span><span style='float:right;'>${speedKMH}</span>
+	<span >${this.options.destination||''}</span><span style='float:right;'>${speedKMH}</span>
 	</div>
-${this.options.hazard_text} ${this.options.loaded_text}<br>
+${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>
 <span style='float:right;'>This on <a href='http://www.marinetraffic.com/ais/details/ships/mmsi:${this.options.mmsi}' target='_blank'>MarineTraffic.com</a></span><br>
 </div>
 		`;

@@ -81,7 +81,6 @@ if($routeDir) {
 		}); 	// 
 	sort($routeInfo);
 }
-
 ?>
 <!DOCTYPE html >
 <html lang="ru">
@@ -776,7 +775,7 @@ if($aisServerURI) { // если нет источника текущих дан�
 // Данные AIS
 // 	Запуск периодических функций
 //setInterval(function(){realtime(aisServerURI,function(data){console.log(data);});},1000);
-setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},3000);
+setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},5000);
 //realtime(aisServerURI,realtimeAISupdate);
 
 function realtimeAISupdate(aisData) {
@@ -788,6 +787,16 @@ for(const vehicle in aisData){
 	//console.log(typeof(vehicles[vehicle]));
 	if(!vehicles[vehicle]) { 	// global var, массив layers с целями
 		//console.log(vehicle);
+		//console.log(aisData[vehicle]);
+		if(aisData[vehicle].netAIS) { 	// цель получена от netAIS
+			var defaultSymbol = [1*0.5,0, 0.25*0.5,0.25*0.5, 0,1*0.5, -0.25*0.5,0.5*0.5, -1*0.5,0.75*0.5, -1*0.5,-0.75*0.5, -0.25*0.5,-0.5*0.5, 0,-1*0.5, 0.25*0.5,-0.25*0.5]; 	// треугольник, расстояния от центра, через которые нарисуют polyline
+			var noHeadingSymbol = [1*0.35,0, 0.75*0.35,0.5*0.35, 1*0.35,1*0.35, 0.5*0.35,0.75*0.35, 0,1*0.35, -0.5*0.35,0.75*0.35, -1*0.35,1*0.35, -0.75*0.35,0.5*0.35, -1*0.35,0, -0.75*0.35,-0.5*0.35, -1*0.35,-1*0.35, -0.5*0.35,-0.75*0.35, 0,-1*0.35, 0.5*0.35,-0.75*0.35, 1*0.35,-1*0.35, 0.75*0.35,-0.5*0.35]; 	// ромбик: правый, верхний, левый, нижний ПРотив часовой от правого?
+			//console.log(aisData[vehicle]);
+		}
+		else { 	// цель получена от локального приёмника AIS
+			var defaultSymbol = [0.8,0, -0.3,0.35, -0.3,-0.35]; 	// треугольник вправо, расстояния от центра, через которые нарисуют polyline
+			var noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
+		}
 		vehicles[vehicle] = L.trackSymbol(L.latLng(0,0),{
 			trackId: vehicle,
 			leaderTime: velocityVectorLengthInMn*60,
@@ -796,7 +805,8 @@ for(const vehicle in aisData){
 			stroke: true,
 			opacity: 1.0,
 			weight: 1.0,
-			//noHeadingSymbol: [0.3,0, 0,0.3, -0.3,0, 0,-0.4] 	// расстояния от центра, через которые нарисуют polyline
+			defaultSymbol: defaultSymbol,
+			noHeadingSymbol: noHeadingSymbol 	// 
 		}).addTo(map);
 	}
 	//console.log(vehicles[vehicle]);

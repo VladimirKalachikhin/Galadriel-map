@@ -78,6 +78,7 @@ if(is_string($gpsdData)) {
 
 krsort($gpsdData); 	// отсортируем по времени к прошлому
 $lat=0; $lon=0; $heading=0; $speed=0;
+$tpv = array();
 foreach($gpsdData as $device) {
 	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
 	if($device['mode'] < 2) continue; 	// координат нет или это не ГПС
