@@ -16,7 +16,7 @@ $tileCacheURI = "$tileCacheServerPath/tiles.php?z={z}&x={x}&y={y}&r={map}"; 	// 
 $gpsanddataServerURI = 'askGPSD.php'; 	// uri of the active data service, if present. Commonly spatial and vehicle data.
 $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service, if present
 
-// Positioning support 
+// Positioning support
 $gpsdHost = 'localhost';
 $gpsdPort = 2947;
 
