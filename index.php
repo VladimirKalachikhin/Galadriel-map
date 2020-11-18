@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.4.0';
+$versionTXT = '1.4.1';
 // Интернационализация
 require_once('internationalisation.php');
 
