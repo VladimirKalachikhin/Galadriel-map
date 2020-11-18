@@ -15,12 +15,12 @@ if($aisJSONfileName and $netAISJSONfileName) { 	// Объединим данны
 	echo "aisJSONfileName=$aisJSONfileName; netAISJSONfileName=$netAISJSONfileName; <br><br>\n";
 	clearstatcache(TRUE,$daemonRunningFlag);
 	if(file_exists($daemonRunningFlag)) {
-	// Запускаем gpsdAISd
 		echo "daemonRunningFlag exists.<br>\n";
 		unlink($daemonRunningFlag); 	// Удалим флаг в знак того, что мы читаем данные
 		clearstatcache(TRUE,$daemonRunningFlag);
 	}
 	else {
+		// Запускаем gpsdAISd
 		exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
 		echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort<br><br>\n";
 	}

@@ -21,13 +21,13 @@ $gpsdHost = 'localhost';
 $gpsdPort = 2947;
 
 // AIS & netAIS support
-$aisServerURI = 'askAIS.php'; 	// uri of the AIS data service, if present. Comment it if no need any AIS support.
+//$aisServerURI = 'askAIS.php'; 	// uri of the AIS data service, if present. Comment it if no need any AIS support.
 // AIS
 $aisJSONfileName = 'aisJSONdata';	//  Comment this if no need AIS support. To collect AIS data file. Without path - in /tmp, but has troubles on this case.
 //$aisJSONfileName = '/home/www-data/gpsdAISd/aisJSONdata'; 	// Comment this if no need AIS support
 $gpsdAISd = 'gpsdAISd/gpsdAISd.php'; 	// Daemon to collect local AIS data. Require if $aisJSONfileName, system path
-// netAIS
-$netAISJSONfileName = 'netaisJSONdata'; 	//  Comment this if no need netAIS support. файл данных AIS, такой же, как у gpsdAISd. Туда добавляются цели от netAIS
+// netAIS NOT AVAILABLE
+//$netAISJSONfileName = 'netaisJSONdata'; 	//  Comment this if no need netAIS support. файл данных AIS, такой же, как у gpsdAISd. Туда добавляются цели от netAIS
 //$netAISJSONfileName = '/home/www-data/gpsdAISd/netAISJSONdata'; 	//  Comment this if no need netAIS support. файл данных AIS, такой же, как у gpsdAISd. Туда добавляются цели от netAIS
 // Run netAIS daemon netAIS/netAISclient.php periodicaly via cron.
 
