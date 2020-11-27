@@ -48,6 +48,13 @@
  * @param latlng {LanLng} The initial position of the symbol.
  * @param options {Object} The initial options described above.
  */
+
+// определение имени файла этого скрипта
+var scripts = document.getElementsByTagName('script');
+var index = scripts.length - 1; 	// это так, потому что эта часть сработает при загрузке скрипта, и он в этот момент - последний http://feather.elektrum.org/book/src.html
+var thisScript = scripts[index];
+//console.log(thisScript);
+
 L.TrackSymbol = L.Path.extend({
 
   initialize: function (latlng, options) {
@@ -137,18 +144,67 @@ L.TrackSymbol = L.Path.extend({
        	//console.log(this.options);
        	let speedKMH='';
        	if(this._speed) speedKMH = Math.round((this._speed*60*60/1000)*10)/10+' Km/h';
+      
+		let iconName;
+		switch(+aisData['status']) {
+		case 0: 	// under way using engine
+			iconName = 'boat.png';
+			break;
+		case 1: 	// at anchor
+			iconName = 'anchorage.png';
+			break;
+		case 2: 	// not under command
+			iconName = 'wine.png';
+			break;
+		case 3: 	// restricted maneuverability
+			iconName = 'shore.png';
+			break;
+		case 4: 	// constrained by her draught
+			iconName = 'shallow.png';
+			break;
+		case 5: 	// moored
+			iconName = 'pier.png';
+			break;
+		case 6: 	// aground
+			iconName = 'shipwreck.png';
+			break;
+		case 7: 	// engaged in fishing
+			iconName = 'fishing.png';
+			break;
+		case 8: 	// under way sailing
+			iconName = 'sailing.png';
+			break;
+		case 11: 	// power-driven vessel towing astern (regional use)
+			iconName = 'waterskiing.png';
+			break;
+		case 12: 	// power-driven vessel pushing ahead or towing alongside (regional use)
+			iconName = 'waterskiing.png';
+			break;
+		default: 	// undefined = default
+			iconName = '';
+			break;
+		}
+		//console.log(thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName);
+		if(iconName) iconName = '<img width="24px" style="float:right;" src="'+(thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName)+'">';
+		let statusText;
+		if(!aisData.status_text) statusText = AISstatusTXT[aisData.status];
+		else statusText = aisData.status_text.trim();
+
 		let PopupContent = `
 <div>
 <span style='font-size:120%';'>${this.options.shipname||''}</span><br>
+	${iconName}
 	<div style='width:100%;'>
 	${this.options.mmsi} <span style='float:right;'>${this.options.callSign||''}</span>
 	<div>
-${this.options.shiptype_text||''}<br>
+	<div style="text-align: left;">
+		${this.options.shiptype_text||''}
+	</div>
 	<div style='width:100%;background-color:lavender;'>
-	<span style='font-size:110%;'>${this.options.status_text||''}</span><br>
+		<span style='font-size:110%;'>${statusText||''}</span><br>
 	</div>
 	<div style='width:100%;'>
-	<span >${this.options.destination||''}</span><span style='float:right;'>${speedKMH}</span>
+		<span >${this.options.destination||''}</span><span style='float:right;'>${speedKMH}</span>
 	</div>
 ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>
 <span style='float:right;'>This on <a href='http://www.marinetraffic.com/ais/details/ships/mmsi:${this.options.mmsi}' target='_blank'>MarineTraffic.com</a></span><br>
