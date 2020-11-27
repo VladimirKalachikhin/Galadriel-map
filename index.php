@@ -81,6 +81,17 @@ if($routeDir) {
 		}); 	// 
 	sort($routeInfo);
 }
+// Обслужим файл целей netAIS
+if(file_exists($netAISJSONfileName)) {
+	$aisData = json_decode(file_get_contents($netAISJSONfileName),TRUE); 	// 
+	// Почистим файл от старых целей. Нормально это делают и сервер и клиент, но клиент может быть не запущен
+	$now = time();
+	foreach($aisData as $veh => &$data) {
+		if(($now-$data['timestamp'])>$noVehicleTimeout) unset($aisData[$veh]);
+	}
+	// зальём обратно
+	file_put_contents($netAISJSONfileName,json_encode($aisData)); 	// 
+}
 ?>
 <!DOCTYPE html >
 <html lang="ru">
@@ -436,7 +447,9 @@ var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
 var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
 var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
 var vehicles = []; 	// list of visible by AIS data vehicle objects 
-
+var AISstatusTXT = {
+<?php foreach($AISstatusTXT as $k => $v) echo "$k: '$v',\n";?>
+}
 
 // Определим карту
 var map = L.map('mapid', {

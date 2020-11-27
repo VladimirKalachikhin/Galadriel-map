@@ -10,8 +10,8 @@ echo "aisJSONfileName=$aisJSONfileName; netAISJSONfileName=$netAISJSONfileName; 
 
 $AISdata = FALSE;
 if($aisJSONfileName and $netAISJSONfileName) { 	// Объединим данные AIS и netAIS
-	list($aisJSONfileName,$daemonRunningFlag) = getAISdFilesNames();
-	$netAISJSONfileName = getNetAISdFilesNames();
+	list($aisJSONfileName,$daemonRunningFlag) = getAISdFilesNames($aisJSONfileName);
+	$netAISJSONfileName = getNetAISdFilesNames($netAISJSONfileName);
 	echo "aisJSONfileName=$aisJSONfileName; netAISJSONfileName=$netAISJSONfileName; <br><br>\n";
 	clearstatcache(TRUE,$daemonRunningFlag);
 	if(file_exists($daemonRunningFlag)) {
@@ -21,8 +21,8 @@ if($aisJSONfileName and $netAISJSONfileName) { 	// Объединим данны
 	}
 	else {
 		// Запускаем gpsdAISd
-		exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
-		echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort<br><br>\n";
+		exec("$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+		echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort<br><br>\n";
 	}
 	clearstatcache(TRUE,$aisJSONfileName);
 	$AISdata = json_decode(file_get_contents($aisJSONfileName),TRUE); 	// 
@@ -42,9 +42,9 @@ if($aisJSONfileName and $netAISJSONfileName) { 	// Объединим данны
 	//echo "AISdata <pre>"; print_r($AISdata); echo "</pre><br>\n";
 	$AISdata = json_encode($AISdata);
 }
-elseif($netAISJSONfileName) $aisJSONfileName = getNetAISdFilesNames();
+elseif($netAISJSONfileName) $aisJSONfileName = getNetAISdFilesNames($netAISJSONfileName);
 else {
-	list($aisJSONfileName,$daemonRunningFlag) = getAISdFilesNames();
+	list($aisJSONfileName,$daemonRunningFlag) = getAISdFilesNames($aisJSONfileName);
 	echo "aisJSONfileName=$aisJSONfileName; daemonRunningFlag=$daemonRunningFlag;<br><br>\n";
 	clearstatcache(TRUE,$daemonRunningFlag);
 	if(file_exists($daemonRunningFlag)) {
@@ -54,8 +54,8 @@ else {
 	}
 	else {
 		// Запускаем gpsdAISd
-		exec("$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
-		echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort<br><br>\n";
+		exec("$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+		echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort<br><br>\n";
 	}	
 }
 echo "aisJSONfileName=$aisJSONfileName;<br><br>\n";
@@ -71,8 +71,7 @@ return;
 
 
 
-function getAISdFilesNames() {
-global $aisJSONfileName;
+function getAISdFilesNames($aisJSONfileName) {
 $dirName = pathinfo($aisJSONfileName, PATHINFO_DIRNAME);
 $fileName = pathinfo($aisJSONfileName,PATHINFO_BASENAME);
 if((!$dirName) OR ($dirName=='.')) {
@@ -91,8 +90,7 @@ if(!file_exists($aisJSONfileName)) {
 return [$aisJSONfileName,$daemonRunningFlag];
 }
 
-function getNetAISdFilesNames() {
-global $netAISJSONfileName;
+function getNetAISdFilesNames($netAISJSONfileName) {
 $dirName = pathinfo($netAISJSONfileName, PATHINFO_DIRNAME);
 $fileName = pathinfo($netAISJSONfileName,PATHINFO_BASENAME);
 if((!$dirName) OR ($dirName=='.')) {
