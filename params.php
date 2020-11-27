@@ -16,7 +16,7 @@ $tileCacheURI = "$tileCacheServerPath/tiles.php?z={z}&x={x}&y={y}&r={map}"; 	// 
 $gpsanddataServerURI = 'askGPSD.php'; 	// uri of the active data service, if present. Commonly spatial and vehicle data.
 $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service, if present
 
-// Positioning support
+// Positioning support    
 $gpsdHost = 'localhost';
 $gpsdPort = 2947;
 
@@ -25,11 +25,10 @@ $gpsdPort = 2947;
 // AIS
 $aisJSONfileName = 'aisJSONdata';	//  Comment this if no need AIS support. To collect AIS data file. Without path - in /tmp, but has troubles on this case.
 //$aisJSONfileName = '/home/www-data/gpsdAISd/aisJSONdata'; 	// Comment this if no need AIS support
-$gpsdAISd = 'gpsdAISd/gpsdAISd.php'; 	// Daemon to collect local AIS data. Require if $aisJSONfileName, system path
-// netAIS NOT AVAILABLE
-//$netAISJSONfileName = 'netaisJSONdata'; 	//  Comment this if no need netAIS support. файл данных AIS, такой же, как у gpsdAISd. Туда добавляются цели от netAIS
-//$netAISJSONfileName = '/home/www-data/gpsdAISd/netAISJSONdata'; 	//  Comment this if no need netAIS support. файл данных AIS, такой же, как у gpsdAISd. Туда добавляются цели от netAIS
-// Run netAIS daemon netAIS/netAISclient.php periodicaly via cron.
+$gpsdAISdPath = 'gpsdAISd';
+$gpsdAISd = 'gpsdAISd.php'; 	// Daemon to collect local AIS data. Require if $aisJSONfileName, system path
+// netAIS
+$netAISPath = '/home/www-data/netAIS'; 	//  Comment this if no need netAIS support.
 
 // System
 //$phpCLIexec = '/usr/bin/php-cli'; 	// php-cli executed name on your OS
@@ -38,4 +37,6 @@ $phpCLIexec = 'php'; 	// php-cli executed name on your OS
 
 // Settings of a tile cache/proxy app
 if( $tileCachePath) require("$tileCachePath/params.php"); 	// 
+// Settings of a netAIS app
+if( $netAISPath) require("$netAISPath/params.php"); 	// 
 ?>
