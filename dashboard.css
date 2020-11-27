@@ -12,7 +12,7 @@
 		font-size:7px;
 	}
 }
-@media (max-height: 256px) and (max-height: 356px) {
+@media (min-height: 256px) and (max-height: 356px) {
 	.big_symbol {
 		font-size:200px;
 	}

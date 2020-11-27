@@ -1,6 +1,6 @@
 <?php
 if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
-//if(TRUE) { 	// клиент - нерусский
+//if(TRUE) { 	// 
 	$homeHeaderTXT = 'Maps';
 	$dashboardHeaderTXT = 'Velocity&heading';
 	$dashboardSpeedMesTXT = 'km/h';
@@ -43,6 +43,20 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$completeTXT = 'complete';
 	$copyToClipboardMessageOkTXT = 'Copy to clipboard OK ';
 	$copyToClipboardMessageBadTXT = 'Copy to clipboard FAILED ';
+
+	$AISstatusTXT = array(
+	0=>'under way using engine',
+	1=>'at anchor',
+	2=>'not under command',
+	3=>'restricted maneuverability',
+	4=>'constrained by her draught',
+	5=>'moored',
+	6=>'aground',
+	7=>'engaged in fishing',
+	8=>'under way sailing',
+	11=>'power-driven vessel towing astern',
+	12=>'power-driven vessel pushing ahead or towing alongside'
+	);
 }
 else {
 	$homeHeaderTXT = 'Карты';
@@ -87,5 +101,19 @@ else {
 	$completeTXT = 'выполнено';
 	$copyToClipboardMessageOkTXT = 'Копирование в буфер обмена выполнено ';
 	$copyToClipboardMessageBadTXT = 'Копирование в буфер обмена не удалось ';
+	
+	$AISstatusTXT = array(
+	0=>'Двигаюсь под мотором',
+	1=>'На якоре',
+	2=>'Без экипажа',
+	3=>'Ограничен в манёвре',
+	4=>'Ограничен осадкой',
+	5=>'Ошвартован',
+	6=>'На мели',
+	7=>'Занят ловлей рыбы',
+	8=>'Двигаюсь под парусом',
+	11=>'Тяну буксир',
+	12=>'Толкаю состав или буксирую под бортом'
+	);
 }
 ?>
