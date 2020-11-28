@@ -9,7 +9,7 @@
 Внимание! Автор не несёт ответственности за последствия использования GaladrielMap для навигации!
 
 ## v. 1.4
- ![screen](screenshots/s10.png)  
+ ![screen](screenshots/s10.png)<br>
 Приложение GaladrielMap создано на основе  замечательных проектов многих, без сомнения, выдающихся авторов, поэтому необходимо вручную установить большое количество [зависимостей](#dependences-and-thanks).  
 
 ## Возможности:
@@ -19,6 +19,7 @@
 4. С [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- произвольного количества карт как по отдельности, так и наложенными друг на друга.  
  ![stacked maps](screenshots/s1.png)
 В [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) сразу есть доступ к [Open Sea Map](http://www.openseamap.org/) и [Open Topo Map](https://opentopomap.org/about), а также возможность создавать собственные конфигурирации для доступа к другим онлайн картам.  
+
 5. Показ скорости, направления и координат по информации от [gpsd](https://gpsd.io/) и отрисовка текущего пути, если таковой пишется где-нибудь в формате gpx:  
  ![Positioning](screenshots/s2.png)<br><br>
 6. Показ маршрутов и точек достопримечательностей из файлов в форматах gpx, kml и csv:  
@@ -29,9 +30,12 @@
 9.  Прогноз погоды от [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (только с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) версии 1.3 или больше)  
  ![Weather forecast](screenshots/s8.png)<br><br>
 10. Отображение информации AIS:  
- ![AIS info](screenshots/s9.png)<br>
- Отображение информации AIS отключено по умолчанию. Его можно включить, раскомментировав строку с переменной $aisServerURI в файле _params.php_.
- <br><br>
+ ![AIS info](screenshots/s9.png)  
+ Отображение информации AIS отключено по умолчанию. Его можно включить, раскомментировав строку с переменной $aisServerURI в файле _params.php_.  
+ <br>
+11. Поддержка [netAIS](https://github.com/VladimirKalachikhin/netAIS):  
+ ![netAIS](screenshots/s13.png)<br>
+ Три участника одной группы видят положение друг-друга на своих картах.<br> <br>
 11. Управление загрузчиком GaladrielCache:   
  ![Control Loader](screenshots/s4.png)<br><br>
  12. Приборная панель.  

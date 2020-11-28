@@ -37,10 +37,15 @@ The author is not responsible for the consequences of using the GaladrielMap as 
 Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. 
  <br>
  
+11. [netAIS](https://github.com/VladimirKalachikhin/netAIS) support:  
+ ![netAIS](screenshots/s13.png)<br>
+ Three members of the same private group see each other on its screens.  
+ <br>
+
 11. Control the GaladrielCache Loader:   
  ![Control Loader](screenshots/s4.png)<br><br>
  
-12. Dashboard.
+13. Dashboard.
  _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.   
  ![Dashboard velocity](screenshots/s6.jpg)<br>
  ![Dashboard heading](screenshots/s7.jpg)<br>
