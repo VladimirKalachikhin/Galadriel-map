@@ -42,7 +42,7 @@
 10. Отображение информации AIS:  
  ![AIS info](screenshots/s9.png)<br>
 
-11. Поддержка [netAIS](https://github.com/VladimirKalachikhin/netAIS):  
+11. Поддержка [netAIS](https://github.com/VladimirKalachikhin/netAIS/blob/master/README.ru-RU.md):  
  ![netAIS](screenshots/s13.png)<br>
  Три участника одной группы видят положение друг-друга на своих картах.<br> 
  
