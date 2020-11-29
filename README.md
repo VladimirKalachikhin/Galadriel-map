@@ -1,12 +1,14 @@
 # GaladrielMap [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
-This is a web application -- the tiles map viewer. The application can be placed on a weak server such as RaspberryPi or NAS and used on full clients such as tablets and smartphones. Only browser need.  
-It is assumed that the application is used in the onboard local area network of the boat or camper. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
-The GaladrielMap designed for use mainly with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) but may be used with any tile OSM-like map sources or file tile cache for exploring the map.  
-The GaladrielMap created with use a lot of famous projects, so don't forget to install [dependenses](#dependences-and-thanks).  
-The author is not responsible for the consequences of using the GaladrielMap as a navigator!
+This a server-based chart plotter navigation software. The application can be placed on a weak server such as RaspberryPi or NAS and used on full clients such as tablets and smartphones. Only browser need.  
+
+Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features.
 
 ## v. 1.4
- ![screen](screenshots/s10.png) 
+ ![screen](screenshots/s10.png) <br>
+It is assumed that the application is used in the onboard local area network of the boat or camper. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
+**The author is not responsible for the consequences of using the GaladrielMap as a navigator.**
+
+The GaladrielMap created with use a lot of famous projects, so don't forget to install [dependenses](#dependences-and-thanks).  
 
 ## Features:
 1. Both raster and vector tiles support.
@@ -16,34 +18,32 @@ The author is not responsible for the consequences of using the GaladrielMap as 
 [Open Sea Map](http://www.openseamap.org/)  
 [Open Topo Map](https://opentopomap.org/about)  
  or any number of other maps:  
- ![stacked maps](screenshots/s1.png)<br><br>
+ ![stacked maps](screenshots/s1.png)<br>
  
 5. Positioning via [gpsd](https://gpsd.io/) and display current (writing now) track file in gpx format:  
- ![Positioning](screenshots/s2.png)<br><br>
+ ![Positioning](screenshots/s2.png)<br>
  
 6. Display routes and POIs files in gpx, kml and csv format:  
- ![Display routes and POIs](screenshots/s5.png)<br><br>
+ ![Display routes and POIs](screenshots/s5.png)<br>
  
 7. Creating a route localy and save it to the server in gpx format (description below):  
- ![Creating a route](screenshots/s3.png)<br><br>
+ ![Creating a route](screenshots/s3.png)<br>
  
 8. Exchange coordinates via clipboard (see screenshot above and description below)  
 
 9.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)  
- ![Weather forecast](screenshots/s8.png)<br><br>
+ ![Weather forecast](screenshots/s8.png)<br>
  
 10. Display AIS info:  
  ![AIS info](screenshots/s9-1.png)<br>
-Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. 
- <br>
  
 11. [netAIS](https://github.com/VladimirKalachikhin/netAIS) support:  
  ![netAIS](screenshots/s13.png)<br>
  Three members of the same private group see each other on its screens.  
- <br>
 
-11. Control the GaladrielCache Loader:   
- ![Control Loader](screenshots/s4.png)<br><br>
+12. Control the GaladrielCache Loader:   
+ ![Control Loader](screenshots/s4.png)<br>
+ Set region, start loader, watch the progress.  
  
 13. Dashboard.
  _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.   
@@ -63,7 +63,7 @@ No live demo, but ready to use [virtual machine image](https://github.com/Vladim
 ## Install&configure:
 You must have a web server under Linux with php support. Just copy app, dependences and set paths.  
 Paths and other are set and describe in _params.php_  
-Additionally, you may need to set parameters in files  _askGPSD.php_ and _askAIS.php_ .
+Additionally, you may need to set parameters in file  _askGPSD.php_.
 
 ## Dependences and thanks
 * [Leaflet](https://leafletjs.com/) in _leaflet/_ directory
@@ -97,8 +97,8 @@ You may download full pack -- more 4MB, or without vector tiles support pack -- 
 * [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) for ideas
 
 ## gpsd
-GaladrielMap gets realtime info, such as spatial data, AIS data, instruments from  [gpsd](https://gpsd.io/) via _askGPSD.php_ and _askAIS.php_ services. You may configure these services to you gpsd host and port. Defaults are localhost and 2947 port (default for gpsd). In addition, you must specify the php cli filename on _askAIS.php_ to start [gpsdAISd](https://github.com/VladimirKalachikhin/gpsdAISd).  
-How to install and configure gpsd see [gpsd pages](https://gpsd.io/).
+GaladrielMap gets realtime info, such as spatial data, AIS data, instruments from  [gpsd](https://gpsd.io/) via _askGPSD.php_ and _askAIS.php_ services. You may configure these services to you gpsd host and port. Defaults are localhost and 2947 port (default for gpsd). How to install and configure gpsd see [gpsd pages](https://gpsd.io/).  
+Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. 
 
 ## Tracks
 You may use `gpxlogger` app from gpsd-clients packet to logging track on your server. GaladrielMap displaying current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
