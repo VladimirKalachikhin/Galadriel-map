@@ -7,53 +7,80 @@ function askGPSD($host='localhost',$port=2947,$dataType=NULL) {
 $dataType - Bit vector of property flags. gpsd_json.5 ln 1355
 */
 if($dataType===NULL) $dataType=0x01;
-//echo "\n\nНачали. dataType=$dataType;<br>\n";
-$gpsd  = @stream_socket_client('tcp://'.$host.':'.$port); // открыть сокет 
+//echo "\n\nНачали. dataType=$dataType;host:$host:$port<br>\n";
+$gpsd  = @stream_socket_client('tcp://'.$host.':'.$port,$errno,$errstr); // открыть сокет 
 if(!$gpsd) return 'no GPSD';
 //stream_set_blocking($gpsd,FALSE); 	// установим неблокирующий режим чтения Что-то с ним не так...
-
-//echo "Открыт сокет<br>\n";
-$gpsdVersion = fgets($gpsd); 	// {"class":"VERSION","release":"3.15","rev":"3.15-2build1","proto_major":3,"proto_minor":11}
-//echo "Получен VERSION $gpsdVersion\n";
-
-fwrite($gpsd, '?WATCH={"enable":true};'); 	// велим демону включить устройства
-//echo "Отправлено ВКЛЮЧИТЬ<br>\n";
-
-$gpsdDevices = fgets($gpsd); 	// {"class":"DEVICES","devices":[{"class":"DEVICE","path":"/tmp/ttyS21","activated":"2017-09-20T20:13:02.636Z","native":0,"bps":38400,"parity":"N","stopbits":1,"cycle":1.00}]}
-//echo "Получен DEVICES<br>\n"; 
-//print_r($gpsdDevices); //echo "</pre><br>\n";
-$gpsdDevices = json_decode($gpsdDevices,TRUE);
-//echo "<pre>"; print_r($gpsdDevices); echo "</pre><br>\n";
-$devicePresent = array();
-foreach($gpsdDevices["devices"] as $device) {
-	if($device['flags']) { 	// флага может не быть в случае, если это непонятное для gpsd устройство
-		if((int)$device['flags']&$dataType) $devicePresent[] = $device['path']; 	// список требуемых среди обнаруженных и понятых устройств.
-		//echo "device['flags']={$device['flags']}; dataType=$dataType; ".($device['flags']&$dataType)."<br>";
+//echo "Socket opened, handshaking\n";
+$controlClasses = array('VERSION','DEVICES','DEVICE','WATCH');
+$WATCHsend = FALSE; $POLLsend = FALSE;
+do { 	// при каскадном соединении нескольких gpsd заголовков может быть много
+	$buf = fgets($gpsd); 
+	if($buf === FALSE) { 	// gpsd умер
+	    @socket_close($gpsd);
+		$msg = "Failed to read data from gpsd: $errstr";
+		echo "$msg<br>\n"; 
+		return $msg;
 	}
-	//else $devicePresent[] = $device['path']; 	// не считаем, что это правильное устройство
-}
+	if (!$buf = trim($buf)) {
+		continue;
+	}
+	$buf = json_decode($buf,TRUE);
+	switch($buf['class']){
+	case 'VERSION': 	// можно получить от slave gpsd посде WATCH
+		if(!$WATCHsend) { 	// команды WATCH ещё не посылали
+			$res = fwrite($gpsd, '?WATCH={"enable":true};'."\n"); 	// велим демону включить устройства
+			if($res === FALSE) { 	// gpsd умер
+				socket_close($gpsd);
+				$msg =  "Failed to send WATCH to gpsd: $errstr";
+				echo "$msg<br>\n"; 
+				return $msg;
+			}
+			$WATCHsend = TRUE;
+			//echo "Sending TURN ON\n";
+		}
+		break;
+	case 'DEVICES': 	// соберём подключенные устройства со всех gpsd, включая slave
+		//echo "Received DEVICES\n"; //
+		$devicePresent = array();
+		foreach($buf["devices"] as $device) {
+			if($device['flags']&$dataType) $devicePresent[] = $device['path']; 	// список требуемых среди обнаруженных и понятых устройств.
+		}
+		break;
+	case 'DEVICE': 	// здесь информация о подключенных slave gpsd, т.е., общая часть path в имени устройства. Полезно для опроса конкретного устройства, но нам не надо. 
+		//echo "Received about slave DEVICE<br>\n"; //
+		break;
+	case 'WATCH': 	// 
+		//echo "Received WATCH<br>\n"; //
+		//print_r($gpsdWATCH); //
+		if(!$POLLsend) { 	// к slave gpsd POLL не отсылают? Тогда шлём POLL после первого WATCH
+			//echo "<br>Отправлено ДАЙ!<br>\n";
+			$res = fwrite($gpsd, '?POLL;'."\n"); 	// запросим данные
+			if($res === FALSE) { 	// gpsd умер
+				socket_close($gpsd);
+				$msg =  "Failed to send POLL to gpsd: $errstr";
+				echo "$msg<br>\n"; 
+				return $msg;
+			}
+			$POLLsend = TRUE;
+		}
+		break;
+	}
+	
+}while(in_array($buf['class'],$controlClasses));
+
 if(!$devicePresent) return 'no required devices present';
 //echo "<pre>\n"; print_r($devicePresent); echo "</pre><br>\n";
 
-$gpsdWATCH = fgets($gpsd); 	// статус WATCH
-//echo "Получен WATCH\n"; //echo "<pre>"; 
-//print_r($gpsdWATCH); //echo "</pre><br>\n";
-
-fwrite($gpsd, '?POLL;'); 	// запросим данные
-//echo "<br>Отправлено ДАЙ!<br>\n";
-$gpsdData = fgets($gpsd); 	// {"class":"POLL","time":"2017-09-20T20:17:49.515Z","active":1,"tpv":[{"class":"TPV","device":"/tmp/ttyS21","mode":3,"time":"2017-09-20T23:17:48.000Z","ept":0.005,"lat":37.859215000,"lon":23.873236667,"alt":256.900,"track":146.4000,"speed":3694.843,"climb":-141.300}],"gst":[{"class":"GST","device":"/tmp/ttyS21","time":"1970-01-01T00:00:00.000Z","rms":0.000,"major":0.000,"minor":0.000,"orient":0.000,"lat":0.000,"lon":0.000,"alt":0.000}],"sky":[{"class":"SKY","device":"/tmp/ttyS21","time":"1970-01-01T00:00:00.000Z"}]}
-
+@fwrite($gpsd, '?WATCH={"enable":false};'."\n"); 	// велим демону выключить устройства
 fclose($gpsd);
 //echo "Закрыт сокет\n";
 
-//echo "gpsdData: "; //echo "<pre>"; 
-//print_r($gpsdData); //echo "</pre>\n";
-$gpsdData = json_decode($gpsdData,TRUE);
 //echo "<br>JSON gpsdData: ";echo "<pre>"; print_r($gpsdData); echo "</pre>\n";
-if(!$gpsdData['active']) return 'no any active devices';
+if(!$buf['active']) return 'no any active devices';
 
 $tpv = array();
-foreach($gpsdData['tpv'] as $device) {
+foreach($buf['tpv'] as $device) {
 	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
 	if(!in_array($device['device'],$devicePresent)) continue; 	// это не то устройство, которое потребовали
 	if($device['time'])	$tpv[$device['time']] = $device; 	// askGPSD, с ключём - время
@@ -61,7 +88,7 @@ foreach($gpsdData['tpv'] as $device) {
 }
 //echo "Получены данные\n";
 //echo "<br>device=<pre>"; print_r($tpv); echo "</pre>\n";
-//print_r($gpsdData);
+//print_r($buf);
 return $tpv;
 } // end function askGPSD
 

@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.4.2';
+$versionTXT = '1.4.3'; 	// upd to stacked gpsd's
 // Интернационализация
 require_once('internationalisation.php');
 
