@@ -2,8 +2,9 @@
 /* POLL your gpsd
 */
 ob_start(); 	// попробуем перехватить любой вывод скрипта
-$gpsdHost = 'localhost';
-$gpsdPort = 2947;
+include('params.php'); 	// пути и параметры
+if(!$gpsdHost) $gpsdHost = 'localhost';
+if(!$gpsdPort) $gpsdPort = 2947;
 require_once('fGPSD.php'); // fGPSD.php
 
 $LefletRealtime = json_encode(getPosAndInfo($gpsdHost,$gpsdPort)); 	// получим ВремяПозициюСкорость от gpsd

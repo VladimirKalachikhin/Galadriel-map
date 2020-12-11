@@ -19,9 +19,11 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // Positioning support    
 $gpsdHost = 'localhost';
 $gpsdPort = 2947;
+$PosFreshBefore = 1; 	// seconds. The position is considered correct no longer than this time. If the position older - cursor is grey.
 
 // AIS & netAIS support
 //$aisServerURI = 'askAIS.php'; 	// uri of the AIS data service, if present. Comment it if no need any AIS support.
+$noVehicleTimeout = 600; 	// seconds, time of continuous absence of the vessel in AIS, when reached - is deleted from the data. "when a ship is moored or at anchor, the position message is only broadcast every 180 seconds;"
 // AIS
 $aisJSONfileName = 'aisJSONdata';	//  Comment this if no need AIS support. To collect AIS data file. Without path - in /tmp, but has troubles on this case.
 //$aisJSONfileName = '/home/www-data/gpsdAISd/aisJSONdata'; 	// Comment this if no need AIS support

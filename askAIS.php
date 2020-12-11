@@ -21,8 +21,8 @@ if($aisJSONfileName and $netAISJSONfileName) { 	// Объединим данны
 	}
 	else {
 		// Запускаем gpsdAISd
-		exec("$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
-		echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort<br><br>\n";
+		exec("$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName --nvto$noVehicleTimeout -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+		echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName --nvto$noVehicleTimeout -h$gpsdHost -p$gpsdPort<br><br>\n";
 	}
 	clearstatcache(TRUE,$aisJSONfileName);
 	$AISdata = json_decode(file_get_contents($aisJSONfileName),TRUE); 	// 

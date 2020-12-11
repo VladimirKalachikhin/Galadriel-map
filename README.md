@@ -63,7 +63,6 @@ No live demo, but ready to use [virtual machine image](https://github.com/Vladim
 ## Install&configure:
 You must have a web server under Linux with php support. Just copy app, dependences and set paths.  
 Paths and other are set and describe in _params.php_  
-Additionally, you may need to set parameters in file  _askGPSD.php_.
 
 ## Dependences and thanks
 * [Leaflet](https://leafletjs.com/) in _leaflet/_ directory
