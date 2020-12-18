@@ -25,7 +25,7 @@ if($lat AND $lon) { 	// пишем трек
 }
 else { 	// читаем трек
 	$currTrackFileName = $_REQUEST['currTrackName'];
-	//$currTrackFileName = "z_2019-03-18_223538";
+	//$currTrackFileName = "2020-12-18_141744";
 	if(! $currTrackFileName) $currTrackFileName = $argv[1];
 	if(! $currTrackFileName) goto END;
 	$currTrackFileName = "$trackDir/$currTrackFileName.gpx";
@@ -61,14 +61,12 @@ if($_SESSION['lastTrkPt'] <> $lastTrkPt) { 	// вернём, если точка
 	header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Дата в прошлом
 	//header ("Content-Type: text/XML");
 	header('Content-Type: application/json;charset=utf-8;');
-	echo("$lastTrkPtGPX\n");
+	echo($lastTrkPtGPX);
 	$content_lenght = ob_get_length();
 	header("Content-Length: $content_lenght");
 	ob_end_flush(); 	// отправляем и прекращаем буферизацию
 }
-
 END:
-ob_clean(); 	// очистим, если что попало в буфер
 return;
 
 function gpx2geoJSONpoint($gpxPts) {
@@ -84,7 +82,7 @@ $geoJSON = array(
 	),
 	'id' => 'gps',
 	'properties' => null
-	),
+	)
 )
 );
 foreach($gpxPts as $gpxPt) {

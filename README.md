@@ -100,7 +100,8 @@ GaladrielMap gets realtime info, such as spatial data, AIS data, instruments fro
 Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. 
 
 ## Tracks
-You may use `gpxlogger` app from gpsd-clients packet to logging track on your server. GaladrielMap displaying current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
+You may use `gpxlogger` app from gpsd-clients packet to logging track on your server. Control `gpxlogger` are in <img src="img/track.svg" alt="Handle route" width="24px"> tab.  
+GaladrielMap displaying current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
 Run _chkGPXfiles.php_ in cli to repair non-well-formed gpx files for other applications.
 
 ## CSV

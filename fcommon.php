@@ -54,5 +54,33 @@ fclose($f);
 return $output;
 } // end function tailCustom
 
+function gpxloggerRun(){
+global $gpxlogger;
+if(!trim($gpxlogger)) $gpxlogger = 'gpxlogger';
+$name = substr("$gpxlogger ",0,strpos("$gpxlogger ",' '));
+exec("ps -A w | grep  '$gpxlogger'",$psList);
+//print_r($psList);
+$run = FALSE;
+foreach($psList as $str) {
+	$str = explode(' ',trim($str)); 	// массив слов
+	$pid = $str[0];
+	foreach($str as $w) {
+		switch($w){
+		case 'watch':
+		case 'ps':
+		case 'grep':
+		case 'sh':
+		case 'bash': 	// если встретилось это слово -- это не та строка
+			break 2;
+		case $name:
+			$run=$pid;
+			break 3;
+		}
+	}
+}
+//echo "run=$run;\n";
+return $run;
+}
+
 ?>
 

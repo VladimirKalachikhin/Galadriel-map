@@ -38,6 +38,8 @@ centerMarkOff
 
 copyToClipboard()
 
+function loggingRun() запускает/останавливает запись трека
+
 realtime(dataUrl,fUpdate)
 
 Классы
@@ -215,7 +217,6 @@ trackDisplayed - объект ul, список выбранных
 displayTrack - функция показывания того, что соответствует выбранному элементу
 global deSelectTrack()
 */
-//alert(node.innerHTML);
 //console.log(trackDisplayed.firstChild);
 trackDisplayed.insertBefore(node,trackDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.onclick = function(event){deSelectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
@@ -245,17 +246,18 @@ removeMap(node.innerHTML);
 }
 
 function displayTrack(trackNameNode) {
-/* рисует трек в именем в trackNameNode
+/* рисует трек с именем в trackNameNode
 global trackDirURI, window, currentTrackName
 */
 //alert(trackName);
 var trackName = trackNameNode.innerText.trim();
-if( savedLayers[trackName] && (trackName != currentTrackName)) savedLayers[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем
+if( savedLayers[trackName] && (trackName != currentTrackName)) savedLayers[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем в updateCurrTrack
 else {
 	var options = {featureNameNode : trackNameNode};
 	var xhr = new XMLHttpRequest();
 	//alert(trackDirURI+'/'+trackName+'.gpx');
 	xhr.open('GET', encodeURI(trackDirURI+'/'+trackName+'.gpx'), true); 	// Подготовим асинхронный запрос
+	xhr.overrideMimeType( "text/plain; charset=x-user-defined" ); 	// тупые уроды из Mozilla считают, что если не указан mime type ответа -- то он text/xml. Файлы они, очевидно, не скачивают.
 	xhr.send();
 	xhr.onreadystatechange = function() { // trackName - внешняя
 		if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
@@ -265,7 +267,7 @@ else {
 		}
 		//console.log('|'+this.responseText.slice(-10)+'|');
 		if(this.responseText.slice(-10).indexOf('</gpx>') == -1) {
-			savedLayers[trackName] = omnivore.gpx.parse(this.responseText + '  </trkseg>\n </trk>\n</gpx>',options); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
+			savedLayers[trackName] = omnivore.gpx.parse(this.responseText.trim()+'\n  </trkseg>\n </trk>\n</gpx>',options); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
 		}
 		else {
 			savedLayers[trackName] = omnivore.gpx.parse(this.responseText,options); 	// responseXML иногда почему-то кривой
@@ -309,6 +311,7 @@ var xhr = new XMLHttpRequest();
 // Получим последнюю путевую точку или последний сегмент, или последний трек из текущего трека
 let parm = '';
 if(LatLng) parm = '&lat='+LatLng.lat+'&lon='+LatLng.lng;
+//console.log(currentTrackServerURI,currentTrackName);
 xhr.open('GET', encodeURI(currentTrackServerURI+'?currTrackName='+currentTrackName+parm), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
@@ -318,9 +321,10 @@ xhr.onreadystatechange = function() { //
 		console.log('Server return '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
 		return; 	// что-то не то с сервером
 	}
-	//console.log(this.responseText);
-	if(this.responseText) {
+	//console.log(this.status,'|'+this.response+'|');
+	if(this.responseText.trim()) {
 		//console.log(JSON.parse(this.responseText));
+		//console.log('|'+this.responseText.slice(-20)+'|');
 		if(savedLayers[currentTrackName].getLayers()) { 	// это layerGroup
 			savedLayers[currentTrackName].getLayers()[0].addData(JSON.parse(this.responseText)); 	// добавим полученное к слою с текущим треком
 			//console.log(savedLayers[currentTrackName].getLayers()[0]);
@@ -846,6 +850,69 @@ else {
 	if(typeof copyToClipboard !== 'undefined') copyToClipboard.remove();
 }
 } // end function doCopyToClipboard
+
+
+function loggingRun() {
+/* запускает/останавливает запись трека по кнопке в интерфейсе */
+let logging = 'logging.php';
+if(loggingSwitch.checked) logging += '?startLogging=1';
+else logging += '?stopLogging=1';
+loggingCheck(logging);
+} // end function restartLoader
+
+function loggingCheck(logging='logging.php') {
+/* проверяет, ведётся ли запись трека */
+let xhr = new XMLHttpRequest();
+xhr.open('GET', encodeURI(logging), true); 	// Подготовим асинхронный запрос
+xhr.send();
+xhr.onreadystatechange = function() { // 
+	if (this.readyState != 4) return; 	// запрос ещё не завершился
+	if (this.status != 200) return; 	// что-то не то с сервером
+	let status = JSON.parse(this.response);
+	if(status[0]) { 	// состояние gpxlogger после выполнения logging.php, 1 или 0
+		loggingIndicator.style.color='green';
+		loggingIndicator.innerText='\u2B24';
+		// Новый текущий трек
+		const newTrackName = status[1].slice(0,status[1].lastIndexOf('.')); 	// имя нового текущего (пишущийся сейчас) трека -- имя файла без расширения		
+		if(!newTrackName) return; 	// не было возвращено имени, хотя запись трека работает: она работает давно, и этот файл нам известен
+		let newTrackLI = document.getElementById(newTrackName); 	// его всегда нет?
+		//console.log(newTrackLI);
+		if(!newTrackLI) {
+			//console.log(tracks.querySelector('li[title="Current Track"]'));
+			//tracks.querySelector('li[title="Current Track"]').classList.remove("currentTrackName");
+			document.getElementById(currentTrackName).classList.remove("currentTrackName");
+			//tracks.querySelector('li[title="Current Track"]').title='';
+			document.getElementById(currentTrackName).title='';
+			newTrackLI = trackLiTemplate.cloneNode(true);
+			newTrackLI.id = newTrackName;
+			newTrackLI.innerText = newTrackName;
+			newTrackLI.hidden=false;
+			newTrackLI.classList.add("currentTrackName");
+			newTrackLI.title='Current track';
+			//console.log(newTrackLI);
+			trackList.append(newTrackLI);
+			currentTrackName = newTrackName;
+			currentTrackShowedFlag = false; 	// флаг, что у нас новый текущий трек. Обрабатывается в realtimeTPVupdate index.php
+		} 	// иначе он и так текущий
+	}
+	else {
+		if(loggingSwitch.checked){
+			loggingIndicator.style.color='red';
+			loggingIndicator.innerText='\u2B24';
+		}
+		else {
+			loggingIndicator.innerText='';
+		}
+	}
+return;
+}
+} // end function loggingCheck
+
+
+
+
+
+
 
 function realtime(dataUrl,fUpdate) {
 /*

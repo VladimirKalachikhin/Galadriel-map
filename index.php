@@ -2,7 +2,11 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.4.3'; 	// upd to stacked gpsd's
+$versionTXT = '1.5.0';
+/* 
+1.5.0	with track logging control. Fixed crazy Firefox XMLHttpRequest mime-type defaults.
+1.4.3	upd to stacked gpsd's
+*/
 // Интернационализация
 require_once('internationalisation.php');
 
@@ -92,6 +96,9 @@ if(file_exists($netAISJSONfileName)) {
 	// зальём обратно
 	file_put_contents($netAISJSONfileName,json_encode($aisData)); 	// 
 }
+
+// Проверим состояние записи трека
+$gpxloggerRun = gpxloggerRun();
 ?>
 <!DOCTYPE html >
 <html lang="ru">
@@ -161,7 +168,7 @@ html, body, #mapid {
 		<ul role="tablist" id="featuresList">
 			<li id="homeTab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
 			<li id="dashboardTab" <?php if(!$gpsanddataServerURI) echo 'class="disabled"';?>><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
-			<li id="tracksTab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
+			<li id="tracksTab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%" OnClick='loggingCheck();'></a></li>
 			<li id="measureTab" ><a href="#measure" role="tab"><img src="img/route.svg" alt="Create route" width="70%"></a></li>
 			<li id="routesTab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
 		</ul>
@@ -219,16 +226,29 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 		<!-- Треки -->
 		<div class="leaflet-sidebar-pane" id="tracks">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<div style="margin: 1rem;">
+				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="loggingSwitch" onChange="loggingRun();" <?php if($gpxloggerRun) echo "checked"; ?>>
+					<label class="onoffswitch-label" for="loggingSwitch">
+						<span class="onoffswitch-inner"></span>
+						<span class="onoffswitch-switch"></span>
+					</label>
+				</div>
+			<div style="padding:1rem 0 0 0;font-size:120%">
+				<span id="loggingIndicator" style="font-size:100%;<?php if($gpxloggerRun) echo"color:green;"; ?>"><?php if($gpxloggerRun) echo '&#x2B24;'; ?></span> <?php echo $loggingTXT;?>
+			</div>
+			</div>
 			<ul id="trackDisplayed">
 			</ul>
 			<ul id="trackList">
 <?php
 foreach($trackInfo as $trackName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
 ?>
-					<li onClick='{selectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack)}' <?php if($trackName == $currentTrackName) echo "id='currentTrackLi' class='currentTrackName' title='Current track'"; echo ">$trackName";?></li>
+					<li onClick='{selectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack)}' <?php echo " id='$trackName' "; if($trackName == $currentTrackName) echo "title='Current Track' class='currentTrackName' title='Current track'"; echo ">$trackName";?></li>
 <?php
 }
 ?>
+					<li hidden onClick='{selectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack)}' id='trackLiTemplate' class='currentTrackName' title='Current track'></li>
 			</ul>
 		</div>
 		<!-- Расстояния -->
@@ -346,7 +366,7 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 			</div>
 			<div style="font-size:120%;margin:1rem 0;">
 				<h3>
-					<span id="loaderIndicator" style="font-size:200%;
+					<span id="loaderIndicator" style="font-size:100%;
 <?php if($jobsInfo) { ?>
 <?php 		if($schedPID) { ?>
 					  color: green;" title="<?php echo $downloadLoaderIndicatorOnTXT;?>">&#9786;
@@ -371,7 +391,7 @@ foreach($jobsInfo as $jobName) { 	//
 		<!-- Настройки -->
 		<div class="leaflet-sidebar-pane" id="settings">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $settingsHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div style="margin: 1rem 1rem;">
+			<div style="margin: 1rem 1rem;"> <?php// Следование за курсором ?>
 					<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="followSwitch" onChange="noFollowToCursor=!noFollowToCursor; CurrnoFollowToCursor=noFollowToCursor;" checked>
 						<label class="onoffswitch-label" for="followSwitch">
@@ -381,7 +401,7 @@ foreach($jobsInfo as $jobName) { 	//
 					</div>
 					<span style="font-size:120%"><?php echo $settingsCursorTXT;?></span>
 			</div>
-			<div style="margin: 1rem 1rem;">
+			<div style="margin: 1rem 1rem;"> <?php// Текущий трек всегда показывается ?>
 					<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="currTrackSwitch" onChange="" checked>
 						<label class="onoffswitch-label" for="currTrackSwitch">
@@ -391,7 +411,7 @@ foreach($jobsInfo as $jobName) { 	//
 					</div>
 				<span style="font-size:120%"><?php echo $settingsTrackTXT;?></span>
 			</div>
-			<div style="margin: 1rem 1rem;">
+			<div style="margin: 1rem 1rem;"> <?php// Выбранные маршруты всегда показываются ?>
 					<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="SelectedRoutesSwitch" onChange="">
 						<label class="onoffswitch-label" for="SelectedRoutesSwitch">
@@ -742,7 +762,9 @@ function realtimeTPVupdate(gpsdData) {
 			}
 		}
 		else { 	// текущий трек ещё не был загружен
-			selectTrack(currentTrackLi,trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно galadrielmap.js
+			//console.log(document.getElementById(currentTrackName));
+			//console.log(tracks.querySelector('li[title="Current Track"]'));
+			selectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно. galadrielmap.js
 			currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
 		}
 	}

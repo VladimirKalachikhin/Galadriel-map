@@ -19,7 +19,12 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // Positioning support    
 $gpsdHost = 'localhost';
 $gpsdPort = 2947;
-$PosFreshBefore = 1; 	// seconds. The position is considered correct no longer than this time. If the position older - cursor is grey.
+$PosFreshBefore = 5; 	// seconds. The position is considered correct no longer than this time. If the position older - cursor is grey.
+
+// Logging
+// install gpsd-utils for gpxlogger
+$loggerNoFixTimeout = 30; 	// sec A new track is created if there's no fix written for an interval
+$loggerMinMovie = 5; 	// m Motions shorter than this will not be logged
 
 // AIS & netAIS support
 //$aisServerURI = 'askAIS.php'; 	// uri of the AIS data service, if present. Comment it if no need any AIS support.

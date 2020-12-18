@@ -12,6 +12,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$dashboardSpeedZoomMesTXT = 'minutes';
 
 	$tracksHeaderTXT = 'Tracks';
+	$loggingTXT = 'Track logging';
 
 	$measureHeaderTXT = 'Handle route';
 	$routeControlsBeginTXT = 'Begin';
@@ -70,6 +71,7 @@ else {
 	$dashboardSpeedZoomMesTXT = 'минут';
 
 	$tracksHeaderTXT = 'Треки';
+	$loggingTXT = 'Запись пути';
 
 	$measureHeaderTXT = 'Маршрут';
 	$routeControlsBeginTXT = 'Начать';
