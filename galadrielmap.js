@@ -880,9 +880,11 @@ xhr.onreadystatechange = function() { //
 		if(!newTrackLI) {
 			//console.log(tracks.querySelector('li[title="Current Track"]'));
 			//tracks.querySelector('li[title="Current Track"]').classList.remove("currentTrackName");
-			document.getElementById(currentTrackName).classList.remove("currentTrackName");
-			//tracks.querySelector('li[title="Current Track"]').title='';
-			document.getElementById(currentTrackName).title='';
+			if(currentTrackName) {
+				document.getElementById(currentTrackName).classList.remove("currentTrackName");
+				//tracks.querySelector('li[title="Current Track"]').title='';
+				document.getElementById(currentTrackName).title='';
+			}
 			newTrackLI = trackLiTemplate.cloneNode(true);
 			newTrackLI.id = newTrackName;
 			newTrackLI.innerText = newTrackName;

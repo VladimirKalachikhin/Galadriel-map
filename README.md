@@ -58,7 +58,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 Linux. Modern browsers include mobile.
 
 ## Demo
-No live demo, but ready to use [virtual machine image](https://github.com/VladimirKalachikhin/GaladrielMap-Demo-image/blob/master/README.md) exists.
+[Available](https://github.com/VladimirKalachikhin/GaladrielMap-Demo-image/blob/master/README.md) ready to use virtual machine disk image and Raspberry Pi bootable image.
 
 ## Install&configure:
 You must have a web server under Linux with php support. Just copy app, dependences and set paths.  
