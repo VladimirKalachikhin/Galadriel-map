@@ -52,6 +52,9 @@
 	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
 		right: 220px; 
 	}
+	.leaflet-measure-path-measurement {
+		font-size: 12px;
+	}
 }
 @media (min-width: 768px) and (max-width: 991px) {
 	.leaflet-sidebar { 	/* исходно на 40 пикселов больше, чем leaflet-sidebar-pane */
@@ -66,6 +69,9 @@
 	}
 	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
 		right: 300px; 
+	}
+	.leaflet-measure-path-measurement {
+		font-size: 15px;
 	}
 }
 @media (min-width: 992px) and (max-width: 1199px) {
@@ -82,6 +88,9 @@
 	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
 		right: 315px; 
 	}
+	.leaflet-measure-path-measurement {
+		font-size: 17px;
+	}
 }
 @media (min-width: 1200px) {
 	.leaflet-sidebar {
@@ -96,6 +105,9 @@
 	}
 	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
 		right: 335px; 
+	}
+	.leaflet-measure-path-measurement {
+		font-size: 20px;
 	}
 }
 .leaflet-sidebar-left .leaflet-sidebar-close-icn {
@@ -114,7 +126,9 @@
 	vertical-align: middle;
 }
 
-/**/
+
+
+/* Свои стили */
 ul {
   list-style-type: none;
   margin: 2rem 0 2rem 0;
@@ -230,7 +244,7 @@ ul {
     border-radius: 0px 5px 5px 0px;
 }
 .routeControls > input[type="radio"]:checked + label {
-	background-color: rgb(233, 233, 233));
+	background-color: rgb(233, 233, 233);
 	box-shadow: 5px 5px 7px #9b9b9b inset;
 }
 .routeControls > input[type="radio"]:disabled + label {

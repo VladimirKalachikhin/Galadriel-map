@@ -73,13 +73,13 @@
 
 ## Зависимости и благодарности
 * [Leaflet](https://leafletjs.com/), установленная в каталог _leaflet/_ 
-* [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) установленная как _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
+* [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) установленный в каталог _coordinate-parserPATCHED/_ 
 * [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) установленная как _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
-* [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) установленный в каталог _leaflet-sidebar-v2/_ 
 * [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) установленная в каталог _Leaflet.Editable/_ 
+* [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) установленная как _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
 * [Leaflet Measure Path](https://github.com/ProminentEdge/leaflet-measure-path) установленная в каталог _leaflet-measure-path/_ 
+* [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) установленный в каталог _leaflet-sidebar-v2/_ 
 * [supercluster](https://github.com/mapbox/supercluster) установленный как _supercluster/supercluster.js_
-* [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) установленный в каталог _coordinate-parser/_ 
 * [gpsdAISd](https://github.com/VladimirKalachikhin/gpsdAISd) в каталоге _gpsdAISd/_ 
 * [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) установленная в каталог _mapbox-gl-js/dist/_ 
 * [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) установленная как _mapbox-gl-leaflet/leaflet-mapbox-gl.js_

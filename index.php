@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.5.0';
+$versionTXT = '1.5.1';
 /* 
 1.5.0	with track logging control. Fixed crazy Firefox XMLHttpRequest mime-type defaults.
 1.4.3	upd to stacked gpsd's
@@ -133,9 +133,9 @@ $gpxloggerRun = gpxloggerRun();
 	<link rel="stylesheet" href="leaflet-measure-path/leaflet-measure-path.css" />
 	<script src="leaflet-measure-path/leaflet-measure-path.js"></script>
 
-	<script src="coordinate-parser/coordinates.js">	</script>
-	<script src="coordinate-parser/validator.js"></script>
-	<script src="coordinate-parser/coordinate-number.js"></script> 
+	<script src="coordinate-parserPATCHED/coordinates.js">	</script>
+	<script src="coordinate-parserPATCHED/validator.js"></script>
+	<script src="coordinate-parserPATCHED/coordinate-number.js"></script> 
 
 	<script src="leaflet-tracksymbolPATCHED/leaflet-tracksymbol.js"></script>
 	
@@ -440,7 +440,7 @@ if(! startCenter) startCenter = L.latLng([55.754,37.62]); 	// начальная
 var startZoom = JSON.parse(getCookie('GaladrielMapZoom'));
 if(! startZoom) startZoom = 12; 	// начальный масштаб
 var heading = 0; 	// начальное направление
-var PosFreshBefore = <?php echo $PosFreshBefore * 1000000;?>; 	// время в микросекундах, через которое положение считается протухшим
+var PosFreshBefore = <?php echo $PosFreshBefore * 1000;?>; 	// время в милисекундах, через которое положение считается протухшим
 var followToCursor = true; 	// карта следует за курсором Обеспечивает только паузу следования при перемещениях и масштабировании карты руками
 var noFollowToCursor = false; 	// карта никогда не следует за курсором Глобальное отключение следования. Само не восстанавливается.
 var CurrnoFollowToCursor = 1; 	// глобальная переменная для сохранения состояния

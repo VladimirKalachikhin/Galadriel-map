@@ -411,6 +411,7 @@ else { 	// это индивидуальная точка
 			//direction: 'auto', 
 			direction: 'left', 
 			//offset: [-16,-25],
+			offset: [-32,0],
 			className: 'wpTooltip', 	// css class
 			opacity: 0.75
 		});

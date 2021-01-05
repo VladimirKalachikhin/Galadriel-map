@@ -66,16 +66,16 @@ Paths and other are set and describe in _params.php_
 
 ## Dependences and thanks
 * [Leaflet](https://leafletjs.com/) in _leaflet/_ directory
-* [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) as _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
+* [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) in _coordinate-parserPATCHED/_ directory
 * [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) as _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
-* [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) in _leaflet-sidebar-v2/_ directory
 * [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) in _Leaflet.Editable/_ directory
+* [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) as _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
 * [Leaflet Measure Path](https://github.com/ProminentEdge/leaflet-measure-path) in _leaflet-measure-path/_ directory
-* [supercluster](https://github.com/mapbox/supercluster) as _supercluster/supercluster.js_
-* [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) in _coordinate-parser/_ directory
-* [gpsdAISd](https://github.com/VladimirKalachikhin/gpsdAISd) in _gpsdAISd/_ directory
+* [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) in _leaflet-sidebar-v2/_ directory
 * [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) in _mapbox-gl-js/dist/_ directory
 * [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) as _mapbox-gl-leaflet/leaflet-mapbox-gl.js_
+* [supercluster](https://github.com/mapbox/supercluster) as _supercluster/supercluster.js_
+* [gpsdAISd](https://github.com/VladimirKalachikhin/gpsdAISd) in _gpsdAISd/_ directory
 
 Create a local copy of dependences and/or edit _index.php_
 

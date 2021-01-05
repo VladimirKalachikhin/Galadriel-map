@@ -29,7 +29,7 @@ if($aisJSONfileName and $netAISJSONfileName) { 	// Объединим данны
 	if(! is_array($AISdata)) $AISdata=array();
 
 	clearstatcache(TRUE,$netAISJSONfileName);
-	$netAISdata = json_decode(file_get_contents($netAISJSONfileName),TRUE); 	// 
+	$netAISdata = json_decode(@file_get_contents($netAISJSONfileName),TRUE); 	// 
 	if(! is_array($netAISdata)) $netAISdata = array();
 	//echo "netAISdata <pre>"; print_r($netAISdata); echo "</pre><br>\n";
 	

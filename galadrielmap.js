@@ -811,7 +811,7 @@ function flyByString(stringPos){
 let error;
 //console.log(stringPos);
 try {
-    var position = new Coordinates(stringPos);
+    var position = new Coordinates(stringPos); 	// https://github.com/otto-dev/coordinate-parser
 	//console.log(position);
 	map.setView(L.latLng([position.getLatitude(),position.getLongitude()])); 	// подвинем карту в указанное место
 } catch (error) { 	// строка - не координаты
@@ -844,7 +844,8 @@ if(typeof(text) === 'string') {
 		copyToClipboardMessage.style.color='red';
 		copyToClipboardMessage.innerText = copyToClipboardMessageBadTXT;
 	}
-	let remCopyToClipboardField = setTimeout(doCopyToClipboard,PosFreshBefore); 	// удалим поле через PosFreshBefore, определённый в index
+	console.log('PosFreshBefore',PosFreshBefore);
+	setTimeout(doCopyToClipboard,PosFreshBefore); 	// удалим поле через PosFreshBefore, определённый в index
 }
 else {
 	if(typeof copyToClipboard !== 'undefined') copyToClipboard.remove();
