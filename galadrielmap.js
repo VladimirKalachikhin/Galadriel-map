@@ -266,8 +266,16 @@ else {
 			return; 	// что-то не то с сервером
 		}
 		//console.log('|'+this.responseText.slice(-10)+'|');
-		if(this.responseText.slice(-10).indexOf('</gpx>') == -1) {
-			savedLayers[trackName] = omnivore.gpx.parse(this.responseText.trim()+'\n  </trkseg>\n </trk>\n</gpx>',options); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
+		let str = this.responseText.trim().slice(-12);
+		//console.log('|'+str+'|');
+		if(str.indexOf('</gpx>') == -1) {
+			// может получиться кривой gpx -- по разным причинам
+			if(str.indexOf('</trkpt>')==-1) { 	// на самом деле, здесь </metadata>, т.е., gpxlogger запустился, но ничего не пишет: нет gpsd, нет спутников, нет связи...
+				savedLayers[trackName] = omnivore.gpx.parse(this.responseText.trim()+'\n</gpx>',options); // 
+			}
+			else {
+				savedLayers[trackName] = omnivore.gpx.parse(this.responseText.trim()+'\n  </trkseg>\n </trk>\n</gpx>',options); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
+			}
 		}
 		else {
 			savedLayers[trackName] = omnivore.gpx.parse(this.responseText,options); 	// responseXML иногда почему-то кривой
