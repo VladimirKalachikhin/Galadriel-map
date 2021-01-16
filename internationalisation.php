@@ -7,7 +7,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$dashboardHeadingTXT = 'Heading';
 	$dashboardHeadingAltTXT = 'Истинный курс';
 	$dashboardPosTXT = 'Position';
-	$dashboardPosAltTXT = 'Широта / Долгота';
+	$dashboardPosAltTXT = 'Широта &nbsp; Долгота';
 	$dashboardSpeedZoomTXT = 'Velocity vector - distance for';
 	$dashboardSpeedZoomMesTXT = 'minutes';
 
@@ -66,7 +66,7 @@ else {
 	$dashboardHeadingTXT = 'Истинный курс';
 	$dashboardHeadingAltTXT = 'Heading';
 	$dashboardPosTXT = 'Местоположение';
-	$dashboardPosAltTXT = 'Latitude / Longitude';
+	$dashboardPosAltTXT = 'Latitude &nbsp; Longitude';
 	$dashboardSpeedZoomTXT = 'Вектор скорости - расстояние за';
 	$dashboardSpeedZoomMesTXT = 'минут';
 
