@@ -114,7 +114,7 @@ removeMap(node.innerHTML);
 
 function displayMap(mapname) {
 /* Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
- Если для запросов тайлов нужно их расширение - делает запрос к askMapParm.php для получения
+ Делает запрос к askMapParm.php для получения параметров карты
  Если в параметрах карты есть проекция, и она EPSG3395, 
  или в имени карты есть EPSG3395 - делает слой в проекции с пересчётом с помощью L.tileLayer.Mercator
 */
@@ -133,10 +133,10 @@ if (xhr.status == 200) { 	// Успешно
 	}
 }
 // javascript в загружаемом источнике на открытие карты
-//console.log(mapParm['mapboxStyle']);
+//console.log(mapParm);
 if(mapParm['data'] && mapParm['data']['javascriptOpen']) eval(mapParm['data']['javascriptOpen']);
 // Загружаемая карта - многослойная?
-if(Array.isArray(additionalTileCachePath)) { 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
+if(Array.isArray(additionalTileCachePath)) { 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Например, Weather.php
 	let currZoom; 
 	if(savedLayers[mapname]) {
 		if(savedLayers[mapname].options.zoom) currZoom = savedLayers[mapname].options.zoom;
@@ -166,7 +166,7 @@ else {
 	let mapnameThis = mapname+additionalTileCachePath;
 	let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
 	if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
-	//alert(tileCacheURIthis);
+	//console.log(tileCacheURIthis);
 	if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
 		//alert('on Ellipsoide')
 		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {});
@@ -918,6 +918,31 @@ xhr.onreadystatechange = function() { //
 return;
 }
 } // end function loggingCheck
+
+function coverage(){
+//console.log(cowerSwitch);
+//console.log(mapDisplayed.firstElementChild);
+if(cowerSwitch.checked){ 	// переключатель в интерфейсе загрузчика
+	if(mapDisplayed.firstElementChild){ 	// список показываемых карт не пуст
+		const mapname = mapDisplayed.firstChild.innerText;
+		displayMap(mapname+'_COVER');
+		coverMap.innerHTML = mapname;
+	}
+	else cowerSwitch.checked = false;
+}
+else {
+	console.log(savedLayers);
+	for (let mapname in savedLayers) {
+		if(mapname.indexOf('_COVER')!=-1) {
+			//console.log(mapname);
+			savedLayers[mapname].remove();
+			//break; 	// почему-то иногда не удаляется предыдущий... Восстанавливается из куки?
+		}
+	}
+	coverMap.innerHTML = '';
+}
+return;
+} // end function coverage
 
 
 

@@ -25,6 +25,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	
 	$routesHeaderTXT = 'Routes and POI';
 	
+	$coverTXT = 'Coverage by the zoom';
 	$downloadHeaderTXT = 'Download';
 	$downloadZoomTXT = 'Zoom';
 	$downloadJobListTXT = 'Started downloading';
@@ -84,6 +85,7 @@ else {
 	
 	$routesHeaderTXT = 'Места и маршруты';
 	
+	$coverTXT = 'Покрытие масштабом';
 	$downloadHeaderTXT = 'Загрузки';
 	$downloadZoomTXT = 'Масштаб';
 	$downloadJobListTXT = 'Поставлены загрузки';

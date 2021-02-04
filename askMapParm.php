@@ -7,7 +7,10 @@ if($mapSourcesDir[0]!='/') $fullMapSourcesDir = "$tileCachePath/$mapSourcesDir";
 
 $mapName = $_REQUEST['mapname'];
 //echo "fullMapSourcesDir=$fullMapSourcesDir; mapName=$mapName; <br>\n";
-include("$fullMapSourcesDir/$mapName.php");
+if(strpos($mapSourcesName,'_COVER')) { 	// нужно показать покрытие, а не саму карту
+	include("$fullMapSourcesDir/common_COVER"); 	// файл, описывающий источник тайлов покрытия, используемые ниже переменные - оттуда.
+}
+else include("$fullMapSourcesDir/$mapName.php"); 	//  файл, описывающий источник, используемые ниже переменные - оттуда.
 $mapInfo = array(
 	'ext'=>$ext,
 	'epsg'=>$EPSG, 

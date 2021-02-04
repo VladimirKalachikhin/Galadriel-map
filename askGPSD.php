@@ -7,6 +7,7 @@ if(!$gpsdHost) $gpsdHost = 'localhost';
 if(!$gpsdPort) $gpsdPort = 2947;
 require_once('fGPSD.php'); // fGPSD.php
 
+//echo "$gpsdHost,$gpsdPort\n";
 $LefletRealtime = json_encode(getPosAndInfo($gpsdHost,$gpsdPort)); 	// получим ВремяПозициюСкорость от gpsd
 
 ob_end_clean(); 			// очистим, если что попало в буфер

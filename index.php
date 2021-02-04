@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.5.1';
+$versionTXT = '1.6.0';
 /* 
 1.5.0	with track logging control. Fixed crazy Firefox XMLHttpRequest mime-type defaults.
 1.4.3	upd to stacked gpsd's
@@ -234,9 +234,9 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-			<div style="padding:1rem 0 0 0;font-size:120%">
-				<span id="loggingIndicator" style="font-size:100%;<?php if($gpxloggerRun) echo"color:green;"; ?>"><?php if($gpxloggerRun) echo '&#x2B24;'; ?></span> <?php echo $loggingTXT;?>
-			</div>
+				<div style="padding:1rem 0 0 0;font-size:120%">
+					<span id="loggingIndicator" style="font-size:100%;<?php if($gpxloggerRun) echo"color:green;"; ?>"><?php if($gpxloggerRun) echo '&#x2B24;'; ?></span> <?php echo $loggingTXT;?>
+				</div>
 			</div>
 			<ul id="trackDisplayed">
 			</ul>
@@ -330,6 +330,21 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 		<!-- Загрузчик -->
 		<div class="leaflet-sidebar-pane" id="download">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<div style="margin: 1rem 0 3rem 0;padding:0 0.5rem 0 0;">
+				<div style="margin:0 0 0.5rem 0">
+					<div class="onoffswitch" style="float:right;margin: 0.3rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="cowerSwitch" onChange="coverage();">
+						<label class="onoffswitch-label" for="cowerSwitch">
+							<span class="onoffswitch-inner"></span>
+							<span class="onoffswitch-switch"></span>
+						</label>
+					</div>
+					<div style="width:73%;">
+						<span style='font-size:120%;'><?php echo $coverTXT;?></span> <span id='cover_zoom' style='font-size:150%;font-weight:bold;'></span>
+					</div>
+				</div>
+				<span id='coverMap' style='font-size:150%;'></span> 
+			</div>
 			<h2 style=''><?php echo $downloadZoomTXT;?>: <span id='current_zoom'></span></h2>
 			<div class="" style="font-size:120%;margin:0;">
 				<form id="dwnldJob" onSubmit="createDwnldJob();return false;" onreset="current_zoom.innerHTML=map.getZoom(); downJob=false;//alert('reset');">
@@ -338,10 +353,10 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 						<div style='height:25vh;overflow-y:auto;overflow-x:hidden;grid-column:1/3'> 
 							<div style='display:grid; grid-template-columns: auto auto; grid-column-gap: 3px;'>
 								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:7rem;font-size:150%;'>
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:6rem;font-size:150%;'>
 								</div>
 								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:7rem;font-size:150%;' 
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:6rem;font-size:150%;' 
 										onChange="
 											//console.log(this.parentNode);
 											downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание
@@ -555,6 +570,7 @@ map.on('zoomend', function(event) {
 	let zoom = event.target.getZoom();
 	//alert(zoom);
 	if(!downJob) current_zoom.innerHTML = zoom;
+	cover_zoom.innerHTML = zoom+8;
 	
 });
 <?php if($trackDir OR $routeDir) {?>
@@ -610,7 +626,8 @@ tileGrid.createTile = function (coords) {
 	tile.innerHTML = '<div style="padding:1rem;">'+coords.z+'<br>'+coords.x+' / '+coords.y+'</div>';
 	return tile;
 }
-if( !downJob) current_zoom.innerHTML = map.getZoom(); 	// текущий масштаб отобразим а панели скачивания
+if( !downJob) current_zoom.innerHTML = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
+cover_zoom.innerHTML = map.getZoom()+8;
 
 // Рисование маршрута
 var measuredPaths = [];
