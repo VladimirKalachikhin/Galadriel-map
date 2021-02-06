@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.6.0';
+$versionTXT = '1.6.1';
 /* 
 1.5.0	with track logging control. Fixed crazy Firefox XMLHttpRequest mime-type defaults.
 1.4.3	upd to stacked gpsd's
@@ -347,10 +347,10 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 			</div>
 			<h2 style=''><?php echo $downloadZoomTXT;?>: <span id='current_zoom'></span></h2>
 			<div class="" style="font-size:120%;margin:0;">
-				<form id="dwnldJob" onSubmit="createDwnldJob();return false;" onreset="current_zoom.innerHTML=map.getZoom(); downJob=false;//alert('reset');">
+				<form id="dwnldJob" onSubmit="createDwnldJob(); downJob=false; return false;" onreset="current_zoom.innerHTML=map.getZoom(); downJob=false;//alert('reset');">
 					<div style='display:grid;grid-template-columns:auto auto;'>
 						<div>X</div><div>Y</div>
-						<div style='height:25vh;overflow-y:auto;overflow-x:hidden;grid-column:1/3'> 
+						<div style='height:28vh;overflow-y:auto;overflow-x:hidden;grid-column:1/3'>
 							<div style='display:grid; grid-template-columns: auto auto; grid-column-gap: 3px;'>
 								<div style='margin-bottom:10px;'>
 									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:6rem;font-size:150%;'>

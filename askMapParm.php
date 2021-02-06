@@ -6,8 +6,8 @@ require('params.php'); 	// пути и параметры
 if($mapSourcesDir[0]!='/') $fullMapSourcesDir = "$tileCachePath/$mapSourcesDir";	// если путь абсолютный (и в unix, конечно)
 
 $mapName = $_REQUEST['mapname'];
-//echo "fullMapSourcesDir=$fullMapSourcesDir; mapName=$mapName; <br>\n";
-if(strpos($mapSourcesName,'_COVER')) { 	// нужно показать покрытие, а не саму карту
+//error_log("askMapParm.php: fullMapSourcesDir=$fullMapSourcesDir; mapName=$mapName;");
+if(strpos($mapName,'_COVER')) { 	// нужно показать покрытие, а не саму карту
 	include("$fullMapSourcesDir/common_COVER"); 	// файл, описывающий источник тайлов покрытия, используемые ниже переменные - оттуда.
 }
 else include("$fullMapSourcesDir/$mapName.php"); 	//  файл, описывающий источник, используемые ниже переменные - оттуда.

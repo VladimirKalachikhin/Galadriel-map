@@ -43,7 +43,8 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 
 12. Control the GaladrielCache Loader:   
  ![Control Loader](screenshots/s4.png)<br>
- Set region, start loader, watch the progress.  
+Set region, start loader, watch the progress. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
+For see of loaded tiles use coverage switch.
  
 13. Dashboard.
  _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.   

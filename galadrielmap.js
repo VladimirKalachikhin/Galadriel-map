@@ -931,7 +931,7 @@ if(cowerSwitch.checked){ 	// переключатель в интерфейсе 
 	else cowerSwitch.checked = false;
 }
 else {
-	console.log(savedLayers);
+	//console.log(savedLayers);
 	for (let mapname in savedLayers) {
 		if(mapname.indexOf('_COVER')!=-1) {
 			//console.log(mapname);
