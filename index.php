@@ -254,7 +254,8 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 		<!-- Расстояния -->
 		<div class="leaflet-sidebar-pane" id="measure">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $measureHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div id='routeControls' class="routeControls" style="padding: 1rem 0; text-align: center;">
+			<?php // Кнопки создания/редактирования маршрута ?>
+			<div id='routeControls' class="routeControls" style="padding:1rem 0 2rem; text-align: center;">
 				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
 					onChange="
 						if(L.Browser.mobile && L.Browser.touch) var weight = 15; 	// мобильный браузер
@@ -294,20 +295,26 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				>
 				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
 			</div>
+			<?php // Поиск места ?>
 			<div style="width:95%;">
-				<div style="width:10rem; text-align: center;">
-					<button onClick='goToPositionField.value += "°";goToPositionField.focus();' style="width:2.1rem;height:1.5rem;margin:0 0.5rem 0 0;"><span style="font-weight: bold; font-size:150%;">°</span></button>
-					<button onClick='goToPositionField.value += "′";goToPositionField.focus();' style="width:2.1rem;height:1.5rem;margin:0 0.5rem 0 0;"><span style="font-weight: bold; font-size:150%;">′</span></button>
-					<button onClick='goToPositionField.value += "″";goToPositionField.focus();' style="width:2.1rem;height:1.5rem;margin:0 0.5rem 0 0;"><span style="font-weight: bold; font-size:150%;">″</span></button><br>
+				<div style="width:10rem;margin:0;padding:0;">
+					<button onClick='goToPositionField.value += "°";goToPositionField.focus();' style="width:2.1rem;height:1.5rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">°</span></button>
+					<button onClick='goToPositionField.value += "′";goToPositionField.focus();' style="width:2.1rem;height:1.5rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">′</span></button>
+					<button onClick='goToPositionField.value += "″";goToPositionField.focus();' style="width:2.1rem;height:1.5rem;margin:0 0rem 0 0;"><span style="font-weight: bold; font-size:150%;">″</span></button><br>
 				</div>
+				<span style=""><?php echo $dashboardPosAltTXT;?></span><br>
 				<input id = 'goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:9rem;font-size:150%;'>			
 				<button id = 'goToPositionButton' onClick='flyByString(this.value);' type='submit' style="width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
-				<span style=""><?php echo $dashboardPosAltTXT;?></span>
 			</div>
+			<div  style='width:98%;height:10rem;overflow:auto;margin:0.3rem 0;'>
+				<ul id='geocodedList' style=''>
+				</ul>
+			</div>
+			<?php // Сохранение маршрута ?>
 			<div style="width:95%; padding: 1rem 0; text-align: center;">
 				<h3><?php echo $routeSaveTitle;?></h3>
 				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:95%;font-size:150%;'>
-				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='7' cols='255' placeholder='<?php echo $routeSaveDescrTXT;?>' style='width:93%;padding: 0.5rem 3%;'></textarea>
+				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='5' cols='255' placeholder='<?php echo $routeSaveDescrTXT;?>' style='width:93%;padding: 0.5rem 3%;'></textarea>
 				<button onClick='saveGPX();' type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
 			</div>			

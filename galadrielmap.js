@@ -36,9 +36,10 @@ nextColor(color,step)
 centerMarkOn
 centerMarkOff
 
-copyToClipboard()
+flyByString(stringPos) Получает строку предположительно с координатами, и перемещает туда центр карты
+doCopyToClipboard()
 
-function loggingRun() запускает/останавливает запись трека
+loggingRun() запускает/останавливает запись трека
 
 realtime(dataUrl,fUpdate)
 
@@ -824,6 +825,31 @@ try {
 	map.setView(L.latLng([position.getLatitude(),position.getLongitude()])); 	// подвинем карту в указанное место
 } catch (error) { 	// строка - не координаты
 	//alert(error);
+	let xhr = new XMLHttpRequest();
+	const url = encodeURI('https://nominatim.openstreetmap.org/search/'+stringPos+'?format=jsonv2');
+	xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
+	//xhr.setRequestHeader('User-Agent','Galadriel-map'); 	// nominatim.org требует?
+	//xhr.setRequestHeader('Referer',url); 	// nominatim.org требует?
+	xhr.send();
+	xhr.onreadystatechange = function() { // 
+		if (this.readyState != 4) return; 	// запрос ещё не завершился
+		if (this.status != 200) return; 	// что-то не то с сервером
+		const nominatim = JSON.parse(this.response);
+		//console.log(nominatim);
+		geocodedList.innerHTML = ""; 	// очистим список
+		for(const geoObj of nominatim){
+			//console.log(geoObj);
+			let optNode = document.createElement('li');
+			optNode.innerText = geoObj.display_name;
+			optNode.style.margin='1rem 0';
+			optNode.onclick = function(e) {
+				//console.log(e); 
+				//e.target.style.backgroundColor='silver';
+				map.setView(L.latLng([geoObj.lat,geoObj.lon]))
+			};
+			geocodedList.append(optNode);
+		}
+	}
 }
 } // end function flyByString
 
@@ -852,7 +878,7 @@ if(typeof(text) === 'string') {
 		copyToClipboardMessage.style.color='red';
 		copyToClipboardMessage.innerText = copyToClipboardMessageBadTXT;
 	}
-	console.log('PosFreshBefore',PosFreshBefore);
+	//console.log('PosFreshBefore',PosFreshBefore);
 	setTimeout(doCopyToClipboard,PosFreshBefore); 	// удалим поле через PosFreshBefore, определённый в index
 }
 else {

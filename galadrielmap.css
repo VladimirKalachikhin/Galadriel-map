@@ -129,12 +129,12 @@
 
 
 /* Свои стили */
-ul {
+ul { /* нужно, чтобы стили выше работали */
   list-style-type: none;
   margin: 2rem 0 2rem 0;
   padding: 0;
 }
-#mapList, #mapDisplayed, #trackList, #trackDisplayed, #routeList, #routeDisplayed {
+#mapList, #mapDisplayed, #trackList, #trackDisplayed, #routeList, #routeDisplayed, #geocodedList {
 	cursor: pointer;
 	font: 200 20px/1.5 Helvetica, Verdana, sans-serif;
 	border-bottom: 1px solid #ccc;

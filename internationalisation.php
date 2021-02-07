@@ -20,7 +20,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$routeControlsClearTXT = 'Erase';
 	$goToPositionTXT = 'Flay map to';
 	$routeSaveTXT = 'Label';
-	$routeSaveTitle = 'Save to server';
+	$routeSaveTitle = 'Save route to a server';
 	$routeSaveDescrTXT = 'Description to route';
 	
 	$routesHeaderTXT = 'Routes and POI';
@@ -80,7 +80,7 @@ else {
 	$routeControlsClearTXT = 'Стереть';
 	$routeSaveTXT = 'Название';
 	$goToPositionTXT = 'Переместить карту в';
-	$routeSaveTitle = 'Сохранить на сервере';
+	$routeSaveTitle = 'Сохранить маршрут на сервере';
 	$routeSaveDescrTXT = 'Описание маршрута';
 	
 	$routesHeaderTXT = 'Места и маршруты';
