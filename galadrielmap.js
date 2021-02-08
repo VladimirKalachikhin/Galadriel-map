@@ -794,7 +794,7 @@ if(goToPositionManualFlag === false) { 	// если поле не юзают р�
 	const lat = Math.round(centerMark.getLatLng().lat*10000)/10000; 	 	// широта с четыремя знаками после запятой - 10см
 	const lng = Math.round(((centerMark.getLatLng().lng%360+540)%360-180)*10000)/10000; 	 	// долгота
 	goToPositionField.value = lat + ' ' + lng;
-}
+} 	// а когда руками, т.е., фокус в поле -- координаты перестают изменяться. Карта же может двигаться за курсором
 }; // end function centerMarkPosition
 
 function centerMarkOn() {
@@ -803,7 +803,7 @@ centerMarkPosition();
 centerMark.addTo(map);
 map.on('move', centerMarkPosition);
 goToPositionField.addEventListener('focus', function(e){goToPositionManualFlag=true;}); 	// при получении фокуса - прекратить обновление
-goToPositionField.addEventListener('blur', function(e){
+goToPositionField.addEventListener('blur', function(e){ 	// когда теряет фокус. В результате, даже если карта движется, с полем можно работать
 			goToPositionButton.value = goToPositionField.value; 	// разбор введённого как координат происходит потом, когда координаты действительно нужны - для скорости
 			goToPositionManualFlag=false;
 		}
@@ -817,18 +817,19 @@ map.off('move', centerMarkPosition);
 
 function flyByString(stringPos){
 /* Получает строку предположительно с координатами, и перемещает туда центр карты */
+//console.log('goToPositionButton',goToPositionButton.value,'goToPositionField',goToPositionField.value);
+if(!stringPos) stringPos = map.getCenter().lat+' '+map.getCenter().lng; 	// map -- глобально определённая карта
+//console.log('stringPos',stringPos);
 let error;
-//console.log(stringPos);
 try {
     var position = new Coordinates(stringPos); 	// https://github.com/otto-dev/coordinate-parser
 	//console.log(position);
-	map.setView(L.latLng([position.getLatitude(),position.getLongitude()])); 	// подвинем карту в указанное место
-} catch (error) { 	// строка - не координаты
-	//alert(error);
+	const lat=position.getLatitude();
+	const lon=position.getLongitude();
+	map.setView(L.latLng([lat,lon])); 	// подвинем карту в указанное место
 	let xhr = new XMLHttpRequest();
-	const url = encodeURI('https://nominatim.openstreetmap.org/search/'+stringPos+'?format=jsonv2');
+	const url = encodeURI('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lon);
 	xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
-	//xhr.setRequestHeader('User-Agent','Galadriel-map'); 	// nominatim.org требует?
 	//xhr.setRequestHeader('Referer',url); 	// nominatim.org требует?
 	xhr.send();
 	xhr.onreadystatechange = function() { // 
@@ -836,22 +837,44 @@ try {
 		if (this.status != 200) return; 	// что-то не то с сервером
 		const nominatim = JSON.parse(this.response);
 		//console.log(nominatim);
-		geocodedList.innerHTML = ""; 	// очистим список
-		for(const geoObj of nominatim){
-			//console.log(geoObj);
-			let optNode = document.createElement('li');
-			optNode.innerText = geoObj.display_name;
-			optNode.style.margin='1rem 0';
-			optNode.onclick = function(e) {
-				//console.log(e); 
-				//e.target.style.backgroundColor='silver';
-				map.setView(L.latLng([geoObj.lat,geoObj.lon]))
-			};
-			geocodedList.append(optNode);
-		}
+		updGeocodeList(nominatim);
+	}	
+} catch (error) { 	// строка - не координаты
+	//alert(error);
+	let xhr = new XMLHttpRequest();
+	const url = encodeURI('https://nominatim.openstreetmap.org/search/'+stringPos+'?format=jsonv2'); 	// прямое геокодирование
+	xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
+	//xhr.setRequestHeader('Referer',url); 	// nominatim.org требует?
+	xhr.send();
+	xhr.onreadystatechange = function() { // 
+		if (this.readyState != 4) return; 	// запрос ещё не завершился
+		if (this.status != 200) return; 	// что-то не то с сервером
+		const nominatim = JSON.parse(this.response);
+		//console.log(nominatim);
+		updGeocodeList(nominatim);
 	}
 }
 } // end function flyByString
+function updGeocodeList(nominatim){
+if(!Array.isArray(nominatim)) nominatim = [nominatim];
+geocodedList.innerHTML = ""; 	// очистим список
+for(const geoObj of nominatim){
+	//console.log(geoObj);
+	let optNode = document.createElement('li');
+	optNode.innerText = geoObj.display_name;
+	optNode.style.margin='1rem 0';
+	optNode.style.whiteSpace = 'nowrap';
+	optNode.onclick = function(e) {
+		//console.log(e); 
+		for(let liNode of geocodedList.children){
+			liNode.style.backgroundColor='inherit';
+		}
+		e.target.style.backgroundColor='#d5d5d5';
+		map.setView(L.latLng([geoObj.lat,geoObj.lon]))
+	};
+	geocodedList.append(optNode);
+}
+} // end function updGeocodeList
 
 
 // Копирование в буфер обмена

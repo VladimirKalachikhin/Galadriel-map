@@ -2,8 +2,10 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.6.1';
+$versionTXT = '1.7.0';
 /* 
+1.7.0 	geocoding feature
+1.6		support of GaladrielCache cobering feature
 1.5.0	with track logging control. Fixed crazy Firefox XMLHttpRequest mime-type defaults.
 1.4.3	upd to stacked gpsd's
 */
@@ -307,7 +309,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				<button id = 'goToPositionButton' onClick='flyByString(this.value);' type='submit' style="width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
 			</div>
 			<div  style='width:98%;height:10rem;overflow:auto;margin:0.3rem 0;'>
-				<ul id='geocodedList' style=''>
+				<ul id='geocodedList'>
 				</ul>
 			</div>
 			<?php // Сохранение маршрута ?>
