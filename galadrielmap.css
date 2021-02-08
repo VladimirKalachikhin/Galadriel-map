@@ -129,16 +129,23 @@
 
 
 /* Свои стили */
-ul { /* нужно, чтобы стили выше работали */
+
+ul { /* нужно, чтобы стили работали */
   list-style-type: none;
   margin: 2rem 0 2rem 0;
   padding: 0;
 }
-#mapList, #mapDisplayed, #trackList, #trackDisplayed, #routeList, #routeDisplayed, #geocodedList {
+/*#mapList, #mapDisplayed, #trackList, #trackDisplayed, #routeList, #routeDisplayed, #geocodedList */
+.commonList {
 	cursor: pointer;
 	font: 200 20px/1.5 Helvetica, Verdana, sans-serif;
 	border-bottom: 1px solid #ccc;
 	margin-bottom: 1rem;
+	overflow:auto;
+}
+.commonList > li {
+	margin: 0 0 0.5rem 0;
+	white-space: nowrap;
 }
 .currentTrackName {
 	background-color:  rgba(227, 231, 251, 0.5); /* бледно-голубой */

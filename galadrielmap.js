@@ -862,8 +862,6 @@ for(const geoObj of nominatim){
 	//console.log(geoObj);
 	let optNode = document.createElement('li');
 	optNode.innerText = geoObj.display_name;
-	optNode.style.margin='1rem 0';
-	optNode.style.whiteSpace = 'nowrap';
 	optNode.onclick = function(e) {
 		//console.log(e); 
 		for(let liNode of geocodedList.children){

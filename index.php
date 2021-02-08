@@ -185,9 +185,9 @@ html, body, #mapid {
 		<div class="leaflet-sidebar-pane" id="home">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<br>
-			<ul id="mapDisplayed">
+			<ul id="mapDisplayed" class='commonList'>
 			</ul>
-			<ul id="mapList">
+			<ul id="mapList" class='commonList'>
 <?php
 foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
 ?>
@@ -240,9 +240,9 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 					<span id="loggingIndicator" style="font-size:100%;<?php if($gpxloggerRun) echo"color:green;"; ?>"><?php if($gpxloggerRun) echo '&#x2B24;'; ?></span> <?php echo $loggingTXT;?>
 				</div>
 			</div>
-			<ul id="trackDisplayed">
+			<ul id="trackDisplayed" class='commonList'>
 			</ul>
-			<ul id="trackList">
+			<ul id="trackList" class='commonList'>
 <?php
 foreach($trackInfo as $trackName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
 ?>
@@ -309,7 +309,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				<button id = 'goToPositionButton' onClick='flyByString(this.value);' type='submit' style="width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
 			</div>
 			<div  style='width:98%;height:10rem;overflow:auto;margin:0.3rem 0;'>
-				<ul id='geocodedList'>
+				<ul id='geocodedList' class='commonList'>
 				</ul>
 			</div>
 			<?php // Сохранение маршрута ?>
@@ -324,9 +324,9 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 		<!-- Места и маршруты -->
 		<div class="leaflet-sidebar-pane" id="routes">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $routesHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<ul id="routeDisplayed">
+			<ul id="routeDisplayed" class='commonList'>
 			</ul>
-			<ul id="routeList">
+			<ul id="routeList" class='commonList'>
 <?php
 foreach($routeInfo as $routeName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
 ?>

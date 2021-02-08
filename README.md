@@ -28,6 +28,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
  
 7. Creating a route localy and save it to the server in gpx format (description below):  
  ![Creating a route](screenshots/s3.png)<br>
+Also possible to find coordinates by geographical name or post address, if there is an Internet connection, of course. And vice versa -- getting the nearest address for screen centre.
  
 8. Exchange coordinates via clipboard (see screenshot above and description below)  
 
