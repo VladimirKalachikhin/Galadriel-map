@@ -59,6 +59,7 @@ global $gpxlogger;
 if(!trim($gpxlogger)) $gpxlogger = 'gpxlogger';
 $name = substr("$gpxlogger ",0,strpos("$gpxlogger ",' '));
 exec("ps -A w | grep  '$gpxlogger'",$psList);
+if(!$psList) exec("ps w | grep  '$gpxlogger'",$psList); 	// for OpenWRT. For others -- let's hope so all run from one user
 //print_r($psList);
 $run = FALSE;
 foreach($psList as $str) {

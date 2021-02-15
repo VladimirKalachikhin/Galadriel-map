@@ -840,7 +840,7 @@ try {
 		updGeocodeList(nominatim);
 	}	
 } catch (error) { 	// строка - не координаты
-	//alert(error);
+	//console.log(stringPos,error);
 	let xhr = new XMLHttpRequest();
 	const url = encodeURI('https://nominatim.openstreetmap.org/search/'+stringPos+'?format=jsonv2'); 	// прямое геокодирование
 	xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
