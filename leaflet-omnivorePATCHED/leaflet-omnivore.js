@@ -457,7 +457,7 @@ if(feature.properties.link) links.push(feature.properties.link);
 if(feature.properties.url) links.push(feature.properties.url);
 if(!links.length) return popUpHTML;
 // имеются ссылки
-//console.log(links);
+//console.log('имеются ссылки',links);
 for (var i=0; i<links.length; i++) {
 	var linkHTML = '';
 	switch(typeof(links[i])) {
@@ -473,8 +473,8 @@ for (var i=0; i<links.length; i++) {
 	case "object":
 		for(var j=0; j<links[i].length; j++) { 	// для каждой ссылки
 			//console.log(links[i][j]);
-			//if(links[i][j].attributes.length) 		var link = links[i][j].attributes.href.value.trim();
-			if(links[i][j].attributes.length) 		var link = links[i][j].attributes.http.value.trim();
+			if(links[i][j].attributes.length) 		var link = links[i][j].attributes.href.value.trim();
+			//if(links[i][j].attributes.length) 		var link = links[i][j].attributes.http.value.trim(); 	// зачем это было? Правильно же attributes.href?
 			else 	var link = links[i][j].innerHTML.trim();
 			linkHTML += '<a href="'+link+'" target=”_blank” >';
 			var text = ' ', textAttr;
