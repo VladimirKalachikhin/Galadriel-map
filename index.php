@@ -479,6 +479,7 @@ var currentTrackServerURI = '<?php echo $currentTrackServerURI;?>'; 	// адре
 var trackDirURI = '<?php echo $trackDir;?>'; 	// адрес каталога с треками
 var routeDirURI = '<?php echo $routeDir;?>'; 	// адрес каталога с маршрутами
 var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущего (пишущегося сейчас) трека
+var updateRouteServerURI = '<?php echo $updateRouteServerURI;?>'; 	// url службы динамического обновления маршрутов
 if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked = true; 	// показывать текущий трек вместе с курсором
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch'));
 if(getCookie('GaladrielSelectedRoutesSwitch') == undefined) SelectedRoutesSwitch.checked = false; 	// показывать выбранные маршруты
