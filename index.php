@@ -330,7 +330,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 <?php
 foreach($routeInfo as $routeName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
 ?>
-					<li onClick='{selectTrack(event.currentTarget,routeList,routeDisplayed,displayRoute)}' <?php echo ">$routeName";?></li>
+					<li onClick='{selectTrack(event.currentTarget,routeList,routeDisplayed,displayRoute)}'<?php echo " id='$routeName'>$routeName"; // однако, имена в track и route могут совпадать...?></li>
 <?php
 }
 ?>
@@ -887,8 +887,42 @@ for(const vehicle in vehicles){
 
 <?php
 }
+
+if($updateRouteServerURI) { // если нет сервиса обновления маршрута - не нужны и обработчики 
 ?>
 
+// Динамическое обновление показываемых маршрутов
+// 	Запуск периодических функций
+var updateRoutesInterval = setInterval(function(){realtime(updateRouteServerURI,routeUpdate);},2000);
+
+function routeUpdate(changedRouteNames) {
+/* Вызывается из-под realtime */
+//console.log(changedRouteNames);
+if(routeDisplayed.innerHTML.trim() == "") { 	// не показывается ни одного маршрута
+	updateRoutesInterval = clearInterval(updateRoutesInterval); 	// прекратим следить за изменениями
+	routeDisplayed.addEventListener("DOMNodeInserted", function (event) { 	// добавим обработчик события изменения DOM
+		updateRoutesInterval = setInterval(function(){realtime(updateRouteServerURI,routeUpdate);},2000); 	// запустим слежение за изменением показываемых маршрутов
+		routeDisplayed.removeEventListener("DOMNodeInserted", this); 	// удаляем обработчик
+	}
+	, false);
+	return;
+}
+/* в связи с возможностью наличия в trackDisplayed дублирующихся id --
+может быть, вместо document.getElementById(name) сделать цикл по потомкам routeDisplayed? */
+let node;
+for(const name of changedRouteNames){
+	node = document.getElementById(name); 	// однако, в trackDisplayed могут быть те же имена. Забить? в querySelector требуется экранирование пробелов и спец-символов. Это секс.
+	if(node.parentNode != routeDisplayed) continue; 	// элемент, конечно, всегда есть, нужно, чтобы он показывался
+	//console.log(node);
+	savedLayers[name].remove(); 	// удалим слой с карты
+	savedLayers[name] = null; 	// удалим сам слой
+	displayRoute(node); 	// перересуем маршрут
+}
+} // end  function routeUpdate
+
+<?php
+}
+?>
 var savePositionProcess = setInterval(doSavePosition,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery
 document.getElementById("followSwitch").checked = true; 	// выставим переключатель на панели Настроек в правильное положение
 </script>

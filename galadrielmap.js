@@ -11,6 +11,7 @@ removeMap(mapname)
 selectTrack()
 deSelectTrack()
 displayTrack()
+displayRoute(routeNameNode)
 updateCurrTrack()
 
 createDwnldJob() 	создаёт файлы заданий и запускает загрузчик
@@ -33,13 +34,18 @@ realUpdClaster(layer)
 
 nextColor(color,step)
 
+centerMarkPosition() // Показ координат центра и переход по введённым
 centerMarkOn
 centerMarkOff
 
 flyByString(stringPos) Получает строку предположительно с координатами, и перемещает туда центр карты
-doCopyToClipboard()
+updGeocodeList(nominatim)
+doCopyToClipboard() Копирование в буфер обмена
 
 loggingRun() запускает/останавливает запись трека
+loggingCheck(logging='logging.php')
+
+coverage()
 
 realtime(dataUrl,fUpdate)
 
@@ -206,7 +212,8 @@ if(savedLayers[mapname].options.zoom) {
 	map.setZoom(savedLayers[mapname].options.zoom); 	// вернём масштаб как было
 	savedLayers[mapname].options.zoom = false;
 }
-savedLayers[mapname].remove();
+savedLayers[mapname].remove(); 	// удалим слой с карты
+//savedLayers[mapname] = null; 	// удалим сам слой. Но это не надо, ибо включение/выключение отображения слоёв должно быть быстро, и обычно их не надо повторно получать с сервера
 }
 
 // Функции выбора - удаления треков
@@ -296,6 +303,7 @@ var options = {featureNameNode : routeNameNode};
 if( savedLayers[routeName]) savedLayers[routeName].addTo(map); 	// нарисуем его на карте. 
 else {
 	var routeType =  routeName.slice((routeName.lastIndexOf(".") - 1 >>> 0) + 2).toLowerCase(); 	// https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
+	//console.log(routeType);
 	switch(routeType) {
 	case 'gpx':
 		savedLayers[routeName] = omnivore.gpx(routeDirURI+'/'+routeName,options);
@@ -855,6 +863,7 @@ try {
 	}
 }
 } // end function flyByString
+
 function updGeocodeList(nominatim){
 if(!Array.isArray(nominatim)) nominatim = [nominatim];
 geocodedList.innerHTML = ""; 	// очистим список
@@ -990,7 +999,6 @@ else {
 }
 return;
 } // end function coverage
-
 
 
 

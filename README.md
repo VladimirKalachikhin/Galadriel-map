@@ -104,13 +104,15 @@ Displaying AIS data is disabled by default, so you must enable it by uncomment s
 ## Tracks
 You may use `gpxlogger` app from gpsd-clients packet to logging track on your server. Control `gpxlogger` are in <img src="img/track.svg" alt="Handle tracks" width="24px"> tab.  
 GaladrielMap displaying current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
-Run _chkGPXfiles.php_ in cli to repair non-well-formed gpx files for other applications.
+Run _chkGPXfiles.php_ in cli to repair non-well-formed gpx files for other applications.  
+Tracks placed in _tracks_ directory on the server as it described in _params.php_.
 
 ## CSV
 Comma-Separated Values text file - the simplest way of cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.  
-The first line in the csv file must be field names. Good choice is a `"number","name","description","type","link","latitude","longitude"`  
+The first line in the CSV file must be field names. Good choice is a `"number","name","description","type","link","latitude","longitude"`  
 Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
-A real example of using csv to store information about ports and piers on Lake Saimaa in Finland - [SaimaaPOI](https://github.com/VladimirKalachikhin/Saimaa-POI). File with geospatial photolinks on csv format - is a good example too.
+A real example of using CSV to store information about ports and piers on Lake Saimaa in Finland - [SaimaaPOI](https://github.com/VladimirKalachikhin/Saimaa-POI). File with geospatial photolinks on CSV format - is a good example too.  
+Place your CSV to _route_ directory on the server as it directory described in _params.php_. Avoid setting file names in _route_ same as names in _tracks_ directory.
 
 ## Exchange coordinates
 To get current position to clipboard to share it via other apps - tap on Position on <img src="img/speed1.svg" alt="Dashboard" width="24px"> tab.  
@@ -120,7 +122,7 @@ To fly map by coordinates type they of any format to this field and press button
 
 ## Create and edit route
 Open <img src="img/route.svg" alt="Handle route" width="24px"> tab to navigational plotting feature.  
-You can create and edit the route on the local device, and/or save it to server.  
+You can create and edit the route on the local device, and/or save it to server to _route_ directory.  
  This feature includes a base gpx route editing tool. You can edit any gpx route from the server in the same way as local route, and save it under the same or new name.  
  Good case for use - navigational plotting by the navigator in a dry and warm booth for the steersman on the rain and wind.  
  But it is only a base gpx route editor. Gpx &lt;metadata&gt; not supported, and point &lt;extensions&gt; (GARMIN like it) not supported too. Be careful to edit and save exists gpx.
