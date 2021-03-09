@@ -123,9 +123,10 @@ To fly map by coordinates type they of any format to this field and press button
 ## Create and edit route
 Open <img src="img/route.svg" alt="Handle route" width="24px"> tab to navigational plotting feature.  
 You can create and edit the route on the local device, and/or save it to server to _route_ directory.  
- This feature includes a base gpx route editing tool. You can edit any gpx route from the server in the same way as local route, and save it under the same or new name.  
+ This feature includes a base gpx route editing tool. You can edit any gpx route from the server in the same way as local route, and save it under the same or new name. Edited routes updated automatically on all connected devices.  
  Good case for use - navigational plotting by the navigator in a dry and warm booth for the steersman on the rain and wind.  
- But it is only a base gpx route editor. Gpx &lt;metadata&gt; not supported, and point &lt;extensions&gt; (GARMIN like it) not supported too. Be careful to edit and save exists gpx.
+ But it is only a base gpx route editor. Gpx &lt;metadata&gt; not supported, and point &lt;extensions&gt; (GARMIN like it) not supported too. Be careful to edit and save exists gpx.  
+ Also be careful with danger of unauthorized edit routes from guests and childrens. Disable the auto-update routes via _params.php_.
 
 ## Mapbox-style vector tiles maps
 GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox style file](https://docs.mapbox.com/mapbox-gl-js/style-spec/) must be placed on `$mapSourcesDir` directory of the GaladrielCache with **{mapname}.json** name. Sprites and glyphs you can find in _styles/_ directory.

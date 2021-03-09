@@ -2,8 +2,9 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.7.1';
+$versionTXT = '1.7.2';
 /* 
+1.7.2 	auto-update edited routes
 1.7.0 	geocoding feature
 1.6		support of GaladrielCache cobering feature
 1.5.0	with track logging control. Fixed crazy Firefox XMLHttpRequest mime-type defaults.
@@ -901,7 +902,9 @@ function routeUpdate(changedRouteNames) {
 if(routeDisplayed.innerHTML.trim() == "") { 	// не показывается ни одного маршрута
 	updateRoutesInterval = clearInterval(updateRoutesInterval); 	// прекратим следить за изменениями
 	routeDisplayed.addEventListener("DOMNodeInserted", function (event) { 	// добавим обработчик события изменения DOM
-		updateRoutesInterval = setInterval(function(){realtime(updateRouteServerURI,routeUpdate);},2000); 	// запустим слежение за изменением показываемых маршрутов
+		if(! updateRoutesInterval) { 	// никогда не должно быть здесь updateRoutesInterval, но оно может не успеть
+			updateRoutesInterval = setInterval(function(){realtime(updateRouteServerURI,routeUpdate);},2000); 	// запустим слежение за изменением показываемых маршрутов
+		}
 		routeDisplayed.removeEventListener("DOMNodeInserted", this); 	// удаляем обработчик
 	}
 	, false);
