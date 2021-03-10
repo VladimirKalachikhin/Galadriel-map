@@ -3,7 +3,7 @@ This a server-based chart plotter navigation software for pleasure crafts and of
 
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features.
 
-## v. 1.6
+## v. 1.7
  ![screen](screenshots/s10.png) <br>
 It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 **The author is not responsible for the consequences of using the GaladrielMap as a navigator.**
