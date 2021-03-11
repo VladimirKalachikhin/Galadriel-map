@@ -2,8 +2,9 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.7.2';
+$versionTXT = '1.8.0';
 /* 
+1.8.0 	MOB feature
 1.7.2 	auto-update edited routes
 1.7.0 	geocoding feature
 1.6		support of GaladrielCache cobering feature
