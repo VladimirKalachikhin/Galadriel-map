@@ -47,11 +47,22 @@ loggingCheck(logging='logging.php')
 
 coverage()
 
+MOBalarm()
+MOBclose()
+
+
 realtime(dataUrl,fUpdate)
 
 Классы
 L.Control.CopyToClipboard
 */
+/*
+// определение имени файла этого скрипта, например, чтобы знать пути на сервере
+const index = document.getElementsByTagName('script').length - 1; 	// это так, потому что эта часть сработает при загрузке скрипта, и он в этот момент - последний http://feather.elektrum.org/book/src.html
+var galadrielmapScript = scripts[index];
+//console.log(galadrielmapScript);
+*/
+
 function getCookie(name) {
 // возвращает cookie с именем name, если есть, если нет, то undefined
 name=name.trim();
@@ -1000,9 +1011,26 @@ else {
 return;
 } // end function coverage
 
+/*
+function MOBalarm() {
+//
+const latlng = cursor.getLatLng();
+const icon = L.icon({ 	// этот значёк будет создаваться каждый раз, но ведь нечасто?
+	iconUrl: "img/mob_marker.png",
+	iconSize: [32, 37],
+	iconAnchor: [16, 37],
+	tooltipAnchor: [16,-25],
+});
+let marker = L.marker(latlng, { 	// маркер для этой точки
+	icon: icon
+});
 
+} // end function MOBalarm
 
+function MOBclose() {
+} // end function MOBclose
 
+*/
 
 
 function realtime(dataUrl,fUpdate) {

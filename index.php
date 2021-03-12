@@ -177,6 +177,7 @@ html, body, #mapid {
 			<li id="routesTab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
 		</ul>
 		<ul role="tablist" id="settingsList">
+			<li id="MOB-tab"><a href="#MOB" role="tab"><img src="img/mob.svg" alt="activate MOB" width="70%"></a></li>
 			<li id="download-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
 			<li><a href="#settings" role="tab"><img src="img/settings1.svg" alt="settings" width="70%"></a></li>
 		</ul>
@@ -338,6 +339,16 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 ?>
 			</ul>
 		</div>
+		<!-- MOB -->
+		<div class="leaflet-sidebar-pane" id="MOB">
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close" style="background-color:red;">Человек за бортом!<span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<div style="margin: 1rem 1rem;"> <?php//  ?>
+			</div>
+			<div style="margin: 1rem 1rem;"> <?php//  ?>
+			</div>
+			<div style="margin: 1rem 1rem;text-align:center; position: absolute; bottom: 0;""> <?php// Отбой ?>
+			</div>
+		</div>
 		<!-- Загрузчик -->
 		<div class="leaflet-sidebar-pane" id="download">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
@@ -419,33 +430,33 @@ foreach($jobsInfo as $jobName) { 	//
 		<div class="leaflet-sidebar-pane" id="settings">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $settingsHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<div style="margin: 1rem 1rem;"> <?php// Следование за курсором ?>
-					<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
-						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="followSwitch" onChange="noFollowToCursor=!noFollowToCursor; CurrnoFollowToCursor=noFollowToCursor;" checked>
-						<label class="onoffswitch-label" for="followSwitch">
-							<span class="onoffswitch-inner"></span>
-							<span class="onoffswitch-switch"></span>
-						</label>
-					</div>
-					<span style="font-size:120%"><?php echo $settingsCursorTXT;?></span>
+				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="followSwitch" onChange="noFollowToCursor=!noFollowToCursor; CurrnoFollowToCursor=noFollowToCursor;" checked>
+					<label class="onoffswitch-label" for="followSwitch">
+						<span class="onoffswitch-inner"></span>
+						<span class="onoffswitch-switch"></span>
+					</label>
+				</div>
+				<span style="font-size:120%"><?php echo $settingsCursorTXT;?></span>
 			</div>
 			<div style="margin: 1rem 1rem;"> <?php// Текущий трек всегда показывается ?>
-					<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
-						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="currTrackSwitch" onChange="" checked>
-						<label class="onoffswitch-label" for="currTrackSwitch">
-							<span class="onoffswitch-inner"></span>
-							<span class="onoffswitch-switch"></span>
-						</label>
-					</div>
+				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="currTrackSwitch" onChange="" checked>
+					<label class="onoffswitch-label" for="currTrackSwitch">
+						<span class="onoffswitch-inner"></span>
+						<span class="onoffswitch-switch"></span>
+					</label>
+				</div>
 				<span style="font-size:120%"><?php echo $settingsTrackTXT;?></span>
 			</div>
 			<div style="margin: 1rem 1rem;"> <?php// Выбранные маршруты всегда показываются ?>
-					<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
-						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="SelectedRoutesSwitch" onChange="">
-						<label class="onoffswitch-label" for="SelectedRoutesSwitch">
-							<span class="onoffswitch-inner"></span>
-							<span class="onoffswitch-switch"></span>
-						</label>
-					</div>
+				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="SelectedRoutesSwitch" onChange="">
+					<label class="onoffswitch-label" for="SelectedRoutesSwitch">
+						<span class="onoffswitch-inner"></span>
+						<span class="onoffswitch-switch"></span>
+					</label>
+				</div>
 				<span style="font-size:120%"><?php echo $settingsRoutesAlwaysTXT;?></span>
 			</div>
 		</div>
@@ -702,37 +713,32 @@ var NoGpsCursor = L.icon({
 var velocityCursor = L.icon({
 	iconUrl: './img/1x1.png',
 	//iconUrl: './img/minLine.svg',
-	iconSize:     [5, 1], // size of the icon
-	iconAnchor:   [3, 1], // point of the icon which will correspond to marker's location
+	//iconSize:     [5, 1], // size of the icon
+	//iconAnchor:   [0, 0], // point of the icon which will correspond to marker's location
 });
 
-var NoCursor = L.icon({
-	iconUrl: './img/1x1.png',
-	iconSize:     [0, 0], // size of the icon
-	iconAnchor:   [0, 0], // point of the icon which will correspond to marker's location
-});
 // курсор
-var cursor = L.marker(startCenter, {
+let cursor = L.marker(startCenter, {
 	'icon': GpsCursor,
 	rotationAngle: heading, // начальный угол поворота маркера
 	rotationOrigin: "50% 50%" 	// вертим маркер вокруг центра
-}).addTo(map);
+});
 // указатель скорости
-var velocityVector = L.marker(cursor.getLatLng(), {
+let velocityVector = L.marker(cursor.getLatLng(), {
 	'icon': velocityCursor,
 	rotationAngle: heading, // начальный угол поворота маркера
 	rotationOrigin: "100% 100%", 	// вертим вокруг дальнего конца
 	opacity: 0.1
-}).addTo(map);
+});
 velocityVectorLengthInMnDisplay.innerHTML = velocityVectorLengthInMn; 	// нарисуем цену вектора скорости на панели управления
-
 // Точность ГПС
-var GNSScircle = L.circle(cursor.getLatLng(), {
+let GNSScircle = L.circle(cursor.getLatLng(), {
 	'radius': 10,
 	'color':'#000000',
 	'weight':1,
 	'opacity':0.1
-}).addTo(map);
+});
+var positionCursor = L.layerGroup([cursor,velocityVector,GNSScircle]);
 
 // Позиционирование
 // 	Запуск периодических функций
@@ -744,11 +750,7 @@ function realtimeTPVupdate(gpsdData) {
 	//console.log(gpsdData);
 	// Положение неизвестно
 	if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null)) { 	// 
-		cursor.setIcon(NoCursor); 	// отключим курсоры
-		velocityVector.setIcon(NoCursor);
-		//velocityDial.innerHTML = ''; 	// может быть, следует знать, какой была скорость и координаты до пропадания приборов?
-		GNSScircle.setRadius(0);
-		//alert('Чёта с ГПС'); 
+		positionCursor.remove(); 	// уберём курсор с карты
 		return;
 	}
 	// Свежее ли положение известно
@@ -771,6 +773,7 @@ function realtimeTPVupdate(gpsdData) {
 		velocityVector.setRotationAngle(heading); // повернём указатель скорости
 		headingDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
 	}
+	positionCursor.addTo(map); 	// добавить курсор на карту
 	// Карту в положение
 	//console.log("followToCursor", followToCursor);
 	if(followToCursor && (! noFollowToCursor)) { 	// если сказано следовать курсору, и это разрешено глобально
@@ -815,7 +818,7 @@ function realtimeTPVupdate(gpsdData) {
 		//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.velocity='+gpsdData.velocity+'\nvelocityCursorLength='+velocityCursorLength);
 		//alert('metresPerPixel='+metresPerPixel+'\nvelocityCursorLength='+velocityCursorLength);
 		velocityCursor.options.iconSize=[5,velocityCursorLength];
-		velocityCursor.options.iconAnchor=[3,velocityCursorLength];
+		//velocityCursor.options.iconAnchor=[3,velocityCursorLength];
 		velocityVector.setIcon(velocityCursor);
 	}
 	// координаты курсора с точностью знаков
