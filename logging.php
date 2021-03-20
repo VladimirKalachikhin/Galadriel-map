@@ -9,7 +9,7 @@ require('params.php'); 	// пути и параметры
 //$loggerNoFixTimeout = 30; 	// sec A new track is created if there's no fix written for an interval
 //$loggerMinMovie = 5; 	// m Motions shorter than this will not be logged
 // from params.php
-$gpxlogger = "gpxlogger -r -i $loggerNoFixTimeout -m $loggerMinMovie"; 	
+$gpxlogger = "gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. С $gpsdHost:$gpsdPort почему-то не работает в Ubuntu 20	
 $outpuFileName = ''; 	
 
 //$_REQUEST['startLogging'] = 1;
@@ -27,7 +27,7 @@ else {
 	if($_REQUEST['startLogging']) { 	
 		$outpuFileName = date('Y-m-d_His').'.gpx'; 	
 		$fullOutpuFileName = $trackDir.'/'.$outpuFileName; 	
-		$LoggerPid = exec("$gpxlogger -f $fullOutpuFileName $gpsdHost:$gpsdPort> /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+		$LoggerPid = exec("$gpxlogger -f $fullOutpuFileName > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
 		$status=(int)gpxloggerRun(); 	// оно могло и не запуститься
 		if($status) echo "Started logging track to $outpuFile\n";
 		else echo "Unable to start logging\n";

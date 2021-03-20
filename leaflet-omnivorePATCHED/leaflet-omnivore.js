@@ -371,6 +371,7 @@ function getMarkerToPoint(geoJsonPoint, latlng, parameters) { 	//  https://leafl
 // Сам маркер - Marker
 if(!parameters) parameters = {};
 var marker = L.marker(latlng, { 	// маркер для этой точки
+	riseOnHover: true
 });
 if(geoJsonPoint.properties.cluster) { 	// это кластер
 	//console.log(geoJsonPoint);

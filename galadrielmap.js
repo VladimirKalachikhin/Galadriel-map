@@ -50,6 +50,7 @@ coverage()
 MOBalarm()
 MOBclose()
 
+bearing(latlng1, latlng2)
 
 realtime(dataUrl,fUpdate)
 
@@ -1011,26 +1012,82 @@ else {
 return;
 } // end function coverage
 
-/*
 function MOBalarm() {
 //
-const latlng = cursor.getLatLng();
-const icon = L.icon({ 	// этот значёк будет создаваться каждый раз, но ведь нечасто?
-	iconUrl: "img/mob_marker.png",
-	iconSize: [32, 37],
-	iconAnchor: [16, 37],
-	tooltipAnchor: [16,-25],
-});
-let marker = L.marker(latlng, { 	// маркер для этой точки
-	icon: icon
-});
+let latlng;
+if(map.hasLayer(cursor)) latlng = cursor.getLatLng(); 	// координаты известны и показываются, хотя, возможно, устаревшие
+else return false;
 
+currentMOBmarker = L.marker(latlng, { 	// маркер для этой точки
+	icon: mobIcon,
+	draggable: true,
+});
+currentMOBmarker.on('click', function(ev){currentMOBmarker = ev.target;}); 	// текущим будет маркер, по которому кликнули
+mobMarker.addLayer(currentMOBmarker);
+if(!map.hasLayer(mobMarker)) mobMarker.addTo(map); 	// выставим маркер
+
+if(currentTrackServerURI && !loggingSwitch.checked) {
+	loggingSwitch.checked = true;
+	loggingRun(); 	// хотя в loggingSwitch стоит onChange="loggingRun();" изменение loggingSwitch.checked = true; не приводит к срабатыванию обработчика
+}
+if(mobMarker.getLayers().length > 2) delMOBmarkerButton.disabled = false;
+
+const expires =  new Date();
+expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
+const toSave = JSON.stringify(mobMarker.toGeoJSON());
+document.cookie = "GaladrielMapMOB="+toSave+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
+return true;
 } // end function MOBalarm
 
 function MOBclose() {
+mobMarker.remove(); 	// убрать мультислой-маркер с карты
+mobMarker.clearLayers(); 	// очистить мультислой от маркеров
+mobMarker.addLayer(toMOBline); 	// вернём туда линию
+document.cookie = "GaladrielMapMOB=; expires=0; path=/; samesite=Lax"; 	// удалим куку
+azimuthMOBdisplay.innerHTML = '&nbsp;';
+distanceMOBdisplay.innerHTML = '&nbsp;';
+directionMOBdisplay.innerHTML = '&nbsp;';
+locationMOBdisplay.innerHTML = '&nbsp;';
+delMOBmarkerButton.disabled = true;
 } // end function MOBclose
 
-*/
+function delMOBmarker(){
+/* mobMarker это LayerGroup */
+let layers = mobMarker.getLayers();
+if(layers.length < 3) return; // т.е., там линия и один маркер
+mobMarker.removeLayer(currentMOBmarker);
+layers = mobMarker.getLayers(); 	// мы не знаем, какой именно маркер был удалён -- текущий мог быть любым
+//console.log(layers);
+for(let i=layers.length-1; i>=0; i--){ 	// мы не знаем, где там линия
+	//if (layers[i] instanceof L.marker) { 	// почему это здесь не работает?
+	if (layers[i].options.icon) {
+		currentMOBmarker = layers[i]; 	// последний маркер в mobMarker, но в layers их же прежнее число
+		break;
+	}
+}
+//currentMOBmarker = layers[layers.length-1]; 	// последний маркер в mobMarker, но в layers их же прежнее число
+if(layers.length < 3) delMOBmarkerButton.disabled = true; // т.е., там линия и один маркер
+} // end function delMOBmarker
+
+
+function bearing(latlng1, latlng2) {
+/**/
+const rad = Math.PI/180;
+let lat1 = latlng1.lat * rad,
+lat2 = latlng2.lat * rad,
+lon1 = latlng1.lng * rad,
+lon2 = latlng2.lng * rad;
+
+let y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+let x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+
+let bearing = ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+if(bearing >= 360) bearing = bearing-360;
+
+return bearing;
+} // end function bearing
+
+
 
 
 function realtime(dataUrl,fUpdate) {
@@ -1062,8 +1119,6 @@ fetch(dataUrl)
 })
 
 } 	// end function realtime
-
-
 
 /* Определения классов */
 // control для копирования в клипбоард

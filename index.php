@@ -177,8 +177,8 @@ html, body, #mapid {
 			<li id="routesTab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
 		</ul>
 		<ul role="tablist" id="settingsList">
-			<li id="MOB-tab"><a href="#MOB" role="tab"><img src="img/mob.svg" alt="activate MOB" width="70%"></a></li>
-			<li id="download-tab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
+			<li id="MOBtab"><a href="#MOB" role="tab"><img src="img/mob.svg" alt="activate MOB" width="70%"></a></li>
+			<li <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
 			<li><a href="#settings" role="tab"><img src="img/settings1.svg" alt="settings" width="70%"></a></li>
 		</ul>
 	</div>
@@ -201,11 +201,11 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 			</ul>
 		</div>
 		<!-- Приборы -->
-		<div class="leaflet-sidebar-pane" id="dashboard">
+		<div class="leaflet-sidebar-pane" id="dashboard" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $dashboardHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div class="big_symbol" onClick="if(! noFollowToCursor) map.setView(cursor.getLatLng());"> <!-- передвинуть карту на место курсора -->
+			<div class="big_symbol" onClick="if(! noFollowToCursor) map.setView(cursor.getLatLng());"> <?php // передвинуть карту на место курсора ?>
 				<div>
-					<div style="line-height:0.5;margin-top:2em;">				
+					<div style="line-height:0.5;">				
 						<span id='velocityDial'></span><br><span style="font-size:50%;"><?php echo $dashboardSpeedMesTXT;?></span>
 					</div>
 					<div style="font-size:50%;line-height:0.5;">
@@ -231,6 +231,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 		<!-- Треки -->
 		<div class="leaflet-sidebar-pane" id="tracks">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+<?php if($currentTrackServerURI){ // если сконфигурирована служба записи пути ?>
 			<div style="margin: 1rem;">
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="loggingSwitch" onChange="loggingRun();" <?php if($gpxloggerRun) echo "checked"; ?>>
@@ -243,6 +244,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 					<span id="loggingIndicator" style="font-size:100%;<?php if($gpxloggerRun) echo"color:green;"; ?>"><?php if($gpxloggerRun) echo '&#x2B24;'; ?></span> <?php echo $loggingTXT;?>
 				</div>
 			</div>
+<?php } ?>
 			<ul id="trackDisplayed" class='commonList'>
 			</ul>
 			<ul id="trackList" class='commonList'>
@@ -340,13 +342,40 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 			</ul>
 		</div>
 		<!-- MOB -->
-		<div class="leaflet-sidebar-pane" id="MOB">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close" style="background-color:red;">Человек за бортом!<span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div style="margin: 1rem 1rem;"> <?php//  ?>
+		<div class="leaflet-sidebar-pane" style="height:90%;" id="MOB">
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close" style="background-color:red;"><?php echo $mobTXT; ?><span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<div style="margin: 1rem 1rem;width:90%;text-align: center;">
+				<button onClick='MOBalarm();' style="width:75%;"><span style=""><?php echo $addMarkerTXT; ?></span></button>
 			</div>
-			<div style="margin: 1rem 1rem;"> <?php//  ?>
+			<div class="big_symbol" style="line-height: normal;align-items: center;height:70%;" onClick="map.setView(currentMOBmarker.getLatLng());"> <?php //  передвинуть карту на место текущего маркера MOB ?>
+				<div style=''><?php // объемлющий div необходим ?>
+						<div style="font-size:40%;">
+							<span style="font-size:50%;display:block;"><?php echo $bearingTXT; ?></span>
+							<span style="font-size:40%;display:block;"><?php echo $altBearingTXT; ?></span>
+							<span style="margin:0.5rem;display:block;" id='azimuthMOBdisplay'> </span>
+						</div>
+						<div style="font-size:65%;margin:1rem 0;">
+							<span style="font-size:40%;display:block;">Расстояние, <?php echo $dashboardMeterMesTXT ?></span>
+							<span style="font-size:30%;display:block;">distance</span>
+							<span style="margin:0.5rem;display:block;" id='distanceMOBdisplay'> </span>
+							<span style="font-size:75%;margin:0.5rem;display:block;" id='directionMOBdisplay'></span>
+						</div>
+						<div style="font-size:40%;" onClick="doCopyToClipboard(Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+' '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000);" >
+							<span style="font-size:50%;display:block;"><?php echo $dashboardPosTXT;?></span>
+							<span style="font-size:40%;display:block;"><?php echo $dashboardPosAltTXT;?></span>
+							<span style="margin:0.5rem;display:block;" id='locationMOBdisplay'></span>
+						</div>
+				</div>
 			</div>
-			<div style="margin: 1rem 1rem;text-align:center; position: absolute; bottom: 0;""> <?php// Отбой ?>
+			<div style="position: absolute; bottom: 1rem;width:90%;text-align: center;"> <?php// Отбой ?>
+				<button onClick='delMOBmarker();' id='delMOBmarkerButton' style="width:80%;margin:1rem 0;font-size:75%;" disabled ><span style=""><?php echo $removeMarkerTXT; ?></span></button>
+				<div>
+				<a style="position:relative;left:-1rem;font-size:100%;color:gray;" onClick='
+					this.nextElementSibling.disabled=false;
+					this.style.color="green";
+				'>&#x2B24;</a>
+				<button onClick='MOBclose();' style="width:75%;" disabled><span style=""><?php echo $cancelMOBTXT; ?></span></button>
+				</div>
 			</div>
 		</div>
 		<!-- Загрузчик -->
@@ -354,7 +383,7 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<div style="margin: 1rem 0 3rem 0;padding:0 0.5rem 0 0;">
 				<div style="margin:0 0 0.5rem 0">
-					<div class="onoffswitch" style="float:right;margin: 0.3rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+					<div class="onoffswitch" style="float:right;margin: 0.3rem auto;"> <?php //  Переключатель https://proto.io/freebies/onoff/  ?>
 						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="cowerSwitch" onChange="coverage();">
 						<label class="onoffswitch-label" for="cowerSwitch">
 							<span class="onoffswitch-inner"></span>
@@ -469,14 +498,15 @@ foreach($jobsInfo as $jobName) { 	//
 
 // Карта
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте
-var gpsanddataServerURI = '<?php echo $gpsanddataServerURI;?>'; 	// адрес для подключения к сервису координат и приборов
-var aisServerURI = '<?php echo $aisServerURI;?>'; 	// адрес для подключения к сервису AIS
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
 var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
-var startCenter = JSON.parse(getCookie('GaladrielMapPosition'));
+var startCenter = JSON.parse(getCookie('GaladrielMapPosition')); 	// getCookie from galadrielmap.js
 if(! startCenter) startCenter = L.latLng([55.754,37.62]); 	// начальная точка
-var startZoom = JSON.parse(getCookie('GaladrielMapZoom'));
+var startZoom = JSON.parse(getCookie('GaladrielMapZoom')); 	// getCookie from galadrielmap.js
 if(! startZoom) startZoom = 12; 	// начальный масштаб
+var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
+// ГПС
+var gpsanddataServerURI = '<?php echo $gpsanddataServerURI;?>'; 	// адрес для подключения к сервису координат и приборов
 var heading = 0; 	// начальное направление
 var PosFreshBefore = <?php echo $PosFreshBefore * 1000;?>; 	// время в милисекундах, через которое положение считается протухшим
 var followToCursor = true; 	// карта следует за курсором Обеспечивает только паузу следования при перемещениях и масштабировании карты руками
@@ -485,30 +515,38 @@ var CurrnoFollowToCursor = 1; 	// глобальная переменная дл
 var followPause = 10 * 1000; 	// пауза следования карты за курсором, когда карту подвинули руками, микросекунд
 var savePositionEvery = 30 * 1000; 	// будем сохранять положение каждые микросекунд. В настоящее время только кладётся кука
 var followPaused; 	// объект таймера, который восстанавливает следование курсору
-var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
-var downJob = false; 	// флаг - не создаётся ли задание на скачивание
 var velocityVectorLengthInMn = 10; 	// длинной в сколько минут пути рисуется линия скорости
+// AIS
+var aisServerURI = '<?php echo $aisServerURI;?>'; 	// адрес для подключения к сервису AIS
+var vehicles = []; 	// list of visible by AIS data vehicle objects 
+var AISstatusTXT = {
+<?php foreach($AISstatusTXT as $k => $v) echo "$k: '$v',\n";?>
+}
+// Loader
+var downJob = false; 	// флаг - не создаётся ли задание на скачивание
+// Пути и маршруты
 var currentTrackServerURI = '<?php echo $currentTrackServerURI;?>'; 	// адрес для подключения к сервису, отдающему сегменты текущего трека
 var trackDirURI = '<?php echo $trackDir;?>'; 	// адрес каталога с треками
 var routeDirURI = '<?php echo $routeDir;?>'; 	// адрес каталога с маршрутами
 var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущего (пишущегося сейчас) трека
 var updateRouteServerURI = '<?php echo $updateRouteServerURI;?>'; 	// url службы динамического обновления маршрутов
 if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked = true; 	// показывать текущий трек вместе с курсором
-else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch'));
+else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch')); 	// getCookie from galadrielmap.js
 if(getCookie('GaladrielSelectedRoutesSwitch') == undefined) SelectedRoutesSwitch.checked = false; 	// показывать выбранные маршруты
-else SelectedRoutesSwitch.checked = Boolean(+getCookie('GaladrielSelectedRoutesSwitch'));
+else SelectedRoutesSwitch.checked = Boolean(+getCookie('GaladrielSelectedRoutesSwitch')); 	// getCookie from galadrielmap.js
 var currentRoute; 	// объект Editable, по которому щёлкнули. Типа, текущий.
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.
+// Dashboard
 var lat; 	 	// широта
 var lng; 	 	// долгота, округлённые до 4-х знаков
 var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
 var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
+// Прокладка
 var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
-var vehicles = []; 	// list of visible by AIS data vehicle objects 
-var AISstatusTXT = {
-<?php foreach($AISstatusTXT as $k => $v) echo "$k: '$v',\n";?>
-}
+// MOB
+var currentMOBmarker;
+<?php echo $relBearingTXT; ?>
 
 // Определим карту
 var map = L.map('mapid', {
@@ -563,6 +601,9 @@ sidebar.on("content", function(event){ 	// Событие открытия? па
 		if(CurrnoFollowToCursor === 1)CurrnoFollowToCursor = noFollowToCursor;  // запомним состояние глобального признака следования за курсором, если ещё не запоминали
 		noFollowToCursor = true; 	// отключим следование за курсором
 		break;
+	case 'MOB': 	// человек за бортом
+		if(!map.hasLayer(mobMarker)) MOBalarm();
+		break;
 	}
 });
 sidebar.on("closing", function(){
@@ -606,7 +647,7 @@ map.on("layeradd", function(event) {
 
 // Восстановим слои
 <?php if( $tileCachePath) { // если работаем через GaladrielCache?>
-var layers = JSON.parse(getCookie('GaladrielMaps'));
+var layers = JSON.parse(getCookie('GaladrielMaps')); 	// getCookie from galadrielmap.js
 // Занесём слои на карту
 if(layers) layers.reverse().forEach(function(layerName){ 	// потому что они там были для красоты последним слоем вверъ
 		for (var i = 0; i < mapList.children.length; i++) { 	// для каждого потомка списка mapList
@@ -623,7 +664,7 @@ displayMap('default');
 
 // Восстановим показываемые треки
 if(SelectedRoutesSwitch.checked) {
-	let showRoutes = JSON.parse(getCookie('GaladrielRoutes'));
+	let showRoutes = JSON.parse(getCookie('GaladrielRoutes')); 	// getCookie from galadrielmap.js
 	if(showRoutes) {
 		showRoutes.forEach(
 			function(layerName){ 	// 
@@ -713,21 +754,22 @@ var NoGpsCursor = L.icon({
 var velocityCursor = L.icon({
 	iconUrl: './img/1x1.png',
 	//iconUrl: './img/minLine.svg',
-	//iconSize:     [5, 1], // size of the icon
-	//iconAnchor:   [0, 0], // point of the icon which will correspond to marker's location
 });
 
 // курсор
+let NoCursor = L.icon({
+	iconUrl: './img/1x1.png',
+	iconSize:     [0, 0], // size of the icon
+});
 let cursor = L.marker(startCenter, {
 	'icon': GpsCursor,
 	rotationAngle: heading, // начальный угол поворота маркера
-	rotationOrigin: "50% 50%" 	// вертим маркер вокруг центра
+	rotationOrigin: "50% 50%", 	// вертим маркер вокруг центра
 });
 // указатель скорости
 let velocityVector = L.marker(cursor.getLatLng(), {
 	'icon': velocityCursor,
 	rotationAngle: heading, // начальный угол поворота маркера
-	rotationOrigin: "100% 100%", 	// вертим вокруг дальнего конца
 	opacity: 0.1
 });
 velocityVectorLengthInMnDisplay.innerHTML = velocityVectorLengthInMn; 	// нарисуем цену вектора скорости на панели управления
@@ -735,10 +777,46 @@ velocityVectorLengthInMnDisplay.innerHTML = velocityVectorLengthInMn; 	// нар
 let GNSScircle = L.circle(cursor.getLatLng(), {
 	'radius': 10,
 	'color':'#000000',
-	'weight':1,
-	'opacity':0.1
+	'weight':0,
+	'opacity':0.1,
+	'fillOpacity':0.1
 });
-var positionCursor = L.layerGroup([cursor,velocityVector,GNSScircle]);
+var positionCursor = L.layerGroup([GNSScircle,velocityVector,cursor]);
+
+// MOB marker
+var mobIcon = L.icon({ 	// 
+	iconUrl: "img/mob_marker.png",
+	//iconUrl: "img/mob.png",
+	iconSize: [32, 37],
+	//iconSize: [64, 74],
+	iconAnchor: [16, 37],
+	//iconAnchor: [32, 74],
+	tooltipAnchor: [16,-25],
+	className: 'mobIcon'	
+});
+// линия между положением и указанным маркером MOB
+var toMOBline = L.polyline([], { 	
+	color: 'red',
+	weight: 10,
+	opacity:0.3,
+})
+// восстановим маркеры
+var mobMarker = getCookie('GaladrielMapMOB'); 	// getCookie from galadrielmap.js
+if(mobMarker) {
+	// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
+	mobMarker = L.geoJSON(JSON.parse(mobMarker));
+	mobMarker.eachLayer(function (layer) {
+		if(layer instanceof L.Marker)	{
+			layer.setIcon(mobIcon);
+			currentMOBmarker = layer; 	// последний станет текущим
+		}
+		else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
+	});
+	mobMarker.addLayer(toMOBline);
+	mobMarker.addTo(map);
+}
+else mobMarker = L.layerGroup().addLayer(toMOBline);
+
 
 // Позиционирование
 // 	Запуск периодических функций
@@ -751,15 +829,39 @@ function realtimeTPVupdate(gpsdData) {
 	// Положение неизвестно
 	if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null)) { 	// 
 		positionCursor.remove(); 	// уберём курсор с карты
+		velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
+		headingDisplay.innerHTML = '&nbsp;';
+		locationDisplay.innerHTML = '&nbsp;';
+		//MOBtab.className='disabled'; 	// если нет курсора (координат) -- невозможно включить режим MOB. Это плохая идея.
 		return;
 	}
 	// Свежее ли положение известно
+	//MOBtab.className=''; 	// координаты появились -- можно включить режим MOB
 	cursor.setLatLng(L.latLng(gpsdData.lat,gpsdData.lon));
 	var positionTime = new Date(gpsdData.time);
 	var now = new Date();
-	//alert("Время ГПС "+positionTime+'\n'+"Сейчас    "+now);
 	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
-	else	 		cursor.setIcon(GpsCursor);
+	else 	cursor.setIcon(GpsCursor);
+	
+	// Показ скорости и прочего
+	var metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
+	if(gpsdData.velocity===null) {
+		velocityDial.innerHTML = '&nbsp;';
+		velocityVector.setIcon(NoCursor);
+	}
+	else {
+		var velocity = Math.round((gpsdData.velocity*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
+		//alert("Скорость: "+velocity+"км/ч");
+		velocityDial.innerHTML = velocity;
+		// Установим длину указателя скорости за  минуты
+		var velocityCursorLength = gpsdData.velocity*60*velocityVectorLengthInMn; 	// метров  за  минуты
+		velocityCursorLength = Math.round(velocityCursorLength/metresPerPixel);
+		//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.velocity='+gpsdData.velocity+'\nvelocityCursorLength='+velocityCursorLength);
+		velocityCursor.options.iconSize=[5,velocityCursorLength];
+		velocityCursor.options.iconAnchor=[3,velocityCursorLength];
+		velocityVector.setIcon(velocityCursor); 	// изменить иконку у маркера
+	}
+	
 	// Направление с попыткой его запомнить при прекращении движения
 	velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
 	if(gpsdData.heading === null) {
@@ -774,6 +876,14 @@ function realtimeTPVupdate(gpsdData) {
 		headingDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
 	}
 	positionCursor.addTo(map); 	// добавить курсор на карту
+
+	// Окружность точност ГПС
+	var errGNSS = (+gpsdData.errX+gpsdData.errY)/2;
+	if(!errGNSS) errGNSS = 10; // метров
+	if(errGNSS/metresPerPixel > 15) GNSScircle.setRadius(errGNSS); 	// кружок точности больше кружка курсора
+	else GNSScircle.setRadius(0);
+	GNSScircle.setLatLng(cursor.getLatLng());
+
 	// Карту в положение
 	//console.log("followToCursor", followToCursor);
 	if(followToCursor && (! noFollowToCursor)) { 	// если сказано следовать курсору, и это разрешено глобально
@@ -782,6 +892,7 @@ function realtimeTPVupdate(gpsdData) {
 		map.setView(cursor.getLatLng()); // подвинем карту на позицию маркера
 		userMoveMap = true;
 	}
+
 <?php 	if($currentTrackServerURI) { ?>
 	// Текущий трек
 	if(currentTrackName && currTrackSwitch.checked) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек
@@ -802,36 +913,34 @@ function realtimeTPVupdate(gpsdData) {
 		}
 	}
 <?php 	} ?>
-	// Показ скорости и прочего
-	if(gpsdData.velocity===null) {
-		velocityDial.innerHTML = '&nbsp;';
-		velocityVector.setIcon(NoCursor);
-	}
-	else {
-		var velocity = Math.round((gpsdData.velocity*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
-		//alert("Скорость: "+velocity+"км/ч");
-		velocityDial.innerHTML = velocity;
-		// Установим длину указателя скорости за  минуты
-		var metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
-		var velocityCursorLength = gpsdData.velocity*60*velocityVectorLengthInMn; 	// метров  за  минуты
-		velocityCursorLength = Math.round(velocityCursorLength/metresPerPixel);
-		//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.velocity='+gpsdData.velocity+'\nvelocityCursorLength='+velocityCursorLength);
-		//alert('metresPerPixel='+metresPerPixel+'\nvelocityCursorLength='+velocityCursorLength);
-		velocityCursor.options.iconSize=[5,velocityCursorLength];
-		//velocityCursor.options.iconAnchor=[3,velocityCursorLength];
-		velocityVector.setIcon(velocityCursor);
-	}
+
 	// координаты курсора с точностью знаков
 	lat = Math.round(cursor.getLatLng().lat*10000)/10000; 	 	// широта
 	lng = Math.round(cursor.getLatLng().lng*10000)/10000; 	 	// долгота
 	//alert(cursor.getLatLng()+'\n'+lat+' '+lng);
 	locationDisplay.innerHTML = '<?php echo $latTXT?> '+lat+'<br><?php echo $longTXT?> '+lng;	
-	followSwitch.checked = !noFollowToCursor; 	// выставим переключатель на панели Настроек в текущее положение
-	// Окружность точност ГПС
-	var errGNSS = (+gpsdData.errX+gpsdData.errY)/2;
-	if(!errGNSS) errGNSS = 10; // метров
-	GNSScircle.setLatLng(cursor.getLatLng());
-	GNSScircle.setRadius(errGNSS);
+	followSwitch.checked = !noFollowToCursor; 	// выставим переключатель на панели Настроек в текущее положение	
+	
+	// MOB
+	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
+		//console.log(mobMarker.getLayers());
+		let latlng1 = cursor.getLatLng();
+		let latlng2 = currentMOBmarker.getLatLng();
+		toMOBline.setLatLngs([latlng1,latlng2]); 	// обновим линию к текущему маркеру MOB
+		// информация о MOB на панели
+		const azimuth = bearing(latlng1, latlng2);
+		azimuthMOBdisplay.innerHTML = Math.round(azimuth);
+		distanceMOBdisplay.innerHTML = Math.round(latlng1.distanceTo(latlng2));
+		locationMOBdisplay.innerHTML = '<?php echo $latTXT?> '+Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+'<br><?php echo $longTXT?> '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000;	
+		if(gpsdData.heading !== null) { 	// если доступен истинный курс, heading есть всегда
+			let relBearing = azimuth-heading-22.5;
+			if(relBearing<0) relBearing = 360+relBearing;
+			relBearing = Math.floor(relBearing/45); 	// курсовой угол (relative bearing) / 45 градусов -- номер сектора, против часовой стрелки
+			if(relBearing>0) relBearing = relBearing+1;
+			if(relBearing>7) relBearing = 0;
+			directionMOBdisplay.innerHTML = relBearingTXT[relBearing];
+		}
+	}
 };
 
 <?php 
