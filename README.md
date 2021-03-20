@@ -60,6 +60,9 @@ For see of loaded tiles use coverage switch.
 Linux. Modern browsers include mobile.
 
 ## Demo
+[Live demo](http://130.61.159.53/map/). Sometimes there floating a virtual sailboat.
+
+## Ready to use images
 [Available](https://github.com/VladimirKalachikhin/GaladrielMap-Demo-image/blob/master/README.md) ready to use virtual machine disk image and Raspberry Pi bootable image.
 
 ## Install&configure:
