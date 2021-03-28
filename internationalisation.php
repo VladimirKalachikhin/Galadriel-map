@@ -4,6 +4,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$homeHeaderTXT = 'Maps';
 	$dashboardHeaderTXT = 'Velocity&heading';
 	$dashboardSpeedMesTXT = 'km/h';
+	$dashboardMeterMesTXT = 'meters';
 	$dashboardHeadingTXT = 'Heading';
 	$dashboardHeadingAltTXT = 'Истинный курс';
 	$dashboardPosTXT = 'Position';
@@ -59,11 +60,29 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	11=>'power-driven vessel towing astern',
 	12=>'power-driven vessel pushing ahead or towing alongside'
 	);
+
+	$mobTXT = "A man overboard!";
+	$addMarkerTXT = "Another marker";
+	$bearingTXT = "Bearing";
+	$altBearingTXT = "Абсолютный азимут";
+	$removeMarkerTXT = "Remove marker";
+	$cancelMOBTXT = "Cancel";
+	$relBearingTXT = "var relBearingTXT = [
+	'straight ahead',
+	'right ahead',
+	'to starboard',	
+	'right rear',
+	'directly astern',
+	'left rear',
+	'to port',	
+	'left ahead',
+	];";
 }
 else {
 	$homeHeaderTXT = 'Карты';
 	$dashboardHeaderTXT = 'Скорость и направление';
 	$dashboardSpeedMesTXT = 'км/ч';
+	$dashboardMeterMesTXT = 'м.';
 	$dashboardHeadingTXT = 'Истинный курс';
 	$dashboardHeadingAltTXT = 'Heading';
 	$dashboardPosTXT = 'Местоположение';
@@ -119,5 +138,22 @@ else {
 	11=>'Тяну буксир',
 	12=>'Толкаю состав или буксирую под бортом'
 	);
+
+	$mobTXT = "Человек за бортом!";
+	$addMarkerTXT = "Ещё маркер";
+	$bearingTXT = "Абсолютный азимут";
+	$altBearingTXT = "bearing";
+	$removeMarkerTXT = "Убрать маркер";
+	$cancelMOBTXT = "Завершить";
+	$relBearingTXT = "var relBearingTXT = [
+	'прямо по курсу',
+	'справа впереди',
+	'справа по борту',	
+	'справа сзади',
+	'сзади по корме',
+	'слева сзади',
+	'слева по борту',	
+	'слева впереди',
+	];";
 }
 ?>

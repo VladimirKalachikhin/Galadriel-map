@@ -371,6 +371,7 @@ function getMarkerToPoint(geoJsonPoint, latlng, parameters) { 	//  https://leafl
 // Сам маркер - Marker
 if(!parameters) parameters = {};
 var marker = L.marker(latlng, { 	// маркер для этой точки
+	riseOnHover: true
 });
 if(geoJsonPoint.properties.cluster) { 	// это кластер
 	//console.log(geoJsonPoint);
@@ -450,7 +451,7 @@ function getLinksHTML(feature) {
 из атрибутов link в feature. Оформляет ссылки как может.
 Пытается обнаружить ссылки на картинки и показывает для них фотоаппаратик.
 */
-var camImgPath = thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/icons/cam.svg";
+var camImgPath = leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/"))+"/icons/cam.svg";
 var popUpHTML = '';
 var links = [];
 if(feature.properties.link) links.push(feature.properties.link);
@@ -536,8 +537,8 @@ if(feature.properties) {
 // определение имени файла этого скрипта
 var scripts = document.getElementsByTagName('script');
 var index = scripts.length - 1; 	// это так, потому что эта часть сработает при загрузке скрипта, и он в этот момент - последний http://feather.elektrum.org/book/src.html
-var thisScript = scripts[index];
-//console.log(thisScript);
+var leafletOmnivoreScript = scripts[index];
+//console.log(leafletOmnivoreScript);
 
 var iconServer = { 	// типа, объект, централизованно раздающий icon
 iconsByType: {}, 	// сюда будем складывать L.icon каждого типа
@@ -553,8 +554,8 @@ if(iconName) {
 	if(this.iconsByType[iconName] === undefined) { 	// такая icon ещё не получена
 		this.iconsByType[iconName] = true; 	// укажем, что понеслось получать
 		// получить асинхронно
-		//console.log(thisScript.src.substr(0, thisScript.src.lastIndexOf("/")));
-		fetch(thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName+".png")
+		//console.log(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/")));
+		fetch(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/"))+"/symbols/"+iconName+".png")
 		.then(function(response) {
 			//console.log(response);
 			if(response.ok)	return response.blob(); 	// руками обработаем ошибки сервера

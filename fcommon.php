@@ -55,12 +55,14 @@ return $output;
 } // end function tailCustom
 
 function gpxloggerRun(){
-global $gpxlogger;
-if(!trim($gpxlogger)) $gpxlogger = 'gpxlogger';
+/* Определяет, запущен ли gpxlogger
+Возвращает его PID
+*/
+$gpxlogger = 'gpxlogger'; 	// будем искать именно эту строку, потому что с параметрами почему-то не находит
 $name = substr("$gpxlogger ",0,strpos("$gpxlogger ",' '));
 exec("ps -A w | grep  '$gpxlogger'",$psList);
 if(!$psList) exec("ps w | grep  '$gpxlogger'",$psList); 	// for OpenWRT. For others -- let's hope so all run from one user
-//print_r($psList);
+//echo "<pre>"; print_r($psList);echo "</pre>";
 $run = FALSE;
 foreach($psList as $str) {
 	$str = explode(' ',trim($str)); 	// массив слов

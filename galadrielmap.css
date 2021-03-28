@@ -38,43 +38,55 @@
   text-align: center;
   cursor: pointer; 
 }
-@media (max-width: 767px) {
+@media (max-width: 767px) { /* 854×480 */
+	.leaflet-sidebar-header {
+		font-size: 10px;
+	}
 	.leaflet-sidebar { 	/*  */
-		width: 200px;
-		max-width: 200px; 
+		width: 160px;
+		max-width: 160px; 
 	}
 	.leaflet-sidebar-pane {
-		min-width: 180px; 
+		min-width: 140px; 
 	} 
 	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
-		left: 220px; 
+		left: 160px; 
 	}
 	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
-		right: 220px; 
+		right: 160px; 
+	}
+	.leaflet-measure-path-measurement {
+		font-size: 9px;
+	}
+	.big_symbol {
+		font-size:30px;
+	}
+}
+@media (min-width: 768px) and (max-width: 991px) {
+	.leaflet-sidebar-header {
+		font-size: 15px;
+	}
+	.leaflet-sidebar { 	/* исходно на 40 пикселов больше, чем leaflet-sidebar-pane */
+		width: 250px;
+		max-width: 250px; 
+	}
+	.leaflet-sidebar-pane {
+		min-width: 230px; 
+	} 
+	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
+		left: 280px; 
+	}
+	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
+		right: 280px; 
 	}
 	.leaflet-measure-path-measurement {
 		font-size: 12px;
 	}
-}
-@media (min-width: 768px) and (max-width: 991px) {
-	.leaflet-sidebar { 	/* исходно на 40 пикселов больше, чем leaflet-sidebar-pane */
-		width: 285px;
-		max-width: 285px; 
-	}
-	.leaflet-sidebar-pane {
-		min-width: 250px; 
-	} 
-	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
-		left: 300px; 
-	}
-	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
-		right: 300px; 
-	}
-	.leaflet-measure-path-measurement {
-		font-size: 15px;
+	.big_symbol {
+		font-size:50px;
 	}
 }
-@media (min-width: 992px) and (max-width: 1199px) {
+@media (min-width: 992px) and (max-width: 1199px) { /* 1920x1200 */
 	.leaflet-sidebar {
 		width: 300px;
 		max-width: 300px; 
@@ -89,7 +101,10 @@
 		right: 315px; 
 	}
 	.leaflet-measure-path-measurement {
-		font-size: 17px;
+		font-size: 15px;
+	}
+	.big_symbol {
+		font-size:55px;
 	}
 }
 @media (min-width: 1200px) {
@@ -107,7 +122,10 @@
 		right: 335px; 
 	}
 	.leaflet-measure-path-measurement {
-		font-size: 20px;
+		font-size: 19px;
+	}
+	.big_symbol {
+		font-size:65px;
 	}
 }
 .leaflet-sidebar-left .leaflet-sidebar-close-icn {
@@ -119,9 +137,35 @@
 .leaflet-sidebar-tabs > ul {
 	margin: 1rem auto;
 }
-.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
-	margin: 0.75rem auto;
+
+@media (min-height: 500px) {
+	.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
+		margin: 0 auto;
+	}
+	#MOB-tab {
+		margin-top:1rem;
+		margin-bottom:1rem;
+	}
 }
+@media (min-height: 501px) and (max-height: 649px) {
+	.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
+		margin: 0.5rem auto;
+	}
+	#MOB-tab {
+		margin-top:1rem;
+		margin-bottom:50%;
+	}
+}
+@media (min-height: 650px) {
+	.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
+		margin: 0.75rem auto;
+	}
+	#MOB-tab {
+		margin-top:1rem;
+		margin-bottom:100%;
+	}
+}
+
 .leaflet-sidebar-tabs > ul > li > a > img {
 	vertical-align: middle;
 }
@@ -150,34 +194,14 @@ ul { /* нужно, чтобы стили работали */
 .currentTrackName {
 	background-color:  rgba(227, 231, 251, 0.5); /* бледно-голубой */
 }
-@media (max-width: 767px) {
-	.big_symbol {
-		font-size:50px;
-	}
-}
-@media (min-width: 768px) and (max-width: 991px) {
-	.big_symbol {
-		font-size:55px;
-	}
-}
-@media (min-width: 992px) and (max-width: 1199px) {
-	.big_symbol {
-		font-size:60px;
-	}
-}
-@media (min-width: 1200px) {
-	.big_symbol {
-		font-size:75px;
-	}
-}
 .big_symbol {
-	height:5em; 
-	width: 100%;
+	height:95%;
+	width: 100%;	
 	display: flex;
     justify-content: center; /*Центрирование по горизонтали*/
-    align-items: center;     /*Центрирование по вертикали */
+    align-items: center;    /* Центрирование по вертикали */
     text-align: center;
-    padding: 0 auto;
+    /*padding: 0 auto;*/
 }
 
 /* Переключатель https://proto.io/freebies/onoff/ */
@@ -270,4 +294,8 @@ ul { /* нужно, чтобы стили работали */
     max-height: 55vh;
     overflow-y: auto;
 }
+.mobIcon {
+	opacity: 0.7;
+}
+
 

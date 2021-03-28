@@ -47,11 +47,23 @@ loggingCheck(logging='logging.php')
 
 coverage()
 
+MOBalarm()
+MOBclose()
+
+bearing(latlng1, latlng2)
+
 realtime(dataUrl,fUpdate)
 
 Классы
 L.Control.CopyToClipboard
 */
+/*
+// определение имени файла этого скрипта, например, чтобы знать пути на сервере
+const index = document.getElementsByTagName('script').length - 1; 	// это так, потому что эта часть сработает при загрузке скрипта, и он в этот момент - последний http://feather.elektrum.org/book/src.html
+var galadrielmapScript = scripts[index];
+//console.log(galadrielmapScript);
+*/
+
 function getCookie(name) {
 // возвращает cookie с именем name, если есть, если нет, то undefined
 name=name.trim();
@@ -319,17 +331,14 @@ else {
 }
 } // end function displayRoute
 
-function updateCurrTrack(LatLng) {
-/* Текущий трек дорсовывается по асинхронным запросам к серверу
-От сервера получается точка в формате gpx - структура типа trkpt
+function updateCurrTrack() {
+/* От сервера получается точка в формате gpx - структура типа trkpt
 global window currentTrackServerURI, currentTrackName
 */
 var xhr = new XMLHttpRequest();
 // Получим последнюю путевую точку или последний сегмент, или последний трек из текущего трека
-let parm = '';
-if(LatLng) parm = '&lat='+LatLng.lat+'&lon='+LatLng.lng;
 //console.log(currentTrackServerURI,currentTrackName);
-xhr.open('GET', encodeURI(currentTrackServerURI+'?currTrackName='+currentTrackName+parm), true); 	// Подготовим асинхронный запрос
+xhr.open('GET', encodeURI(currentTrackServerURI+'?currTrackName='+currentTrackName), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
@@ -338,15 +347,32 @@ xhr.onreadystatechange = function() { //
 		console.log('Server return '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
 		return; 	// что-то не то с сервером
 	}
-	//console.log(this.status,'|'+this.response+'|');
-	if(this.responseText.trim()) {
-		//console.log(JSON.parse(this.responseText));
-		//console.log('|'+this.responseText.slice(-20)+'|');
-		if(savedLayers[currentTrackName].getLayers()) { 	// это layerGroup
-			savedLayers[currentTrackName].getLayers()[0].addData(JSON.parse(this.responseText)); 	// добавим полученное к слою с текущим треком
-			//console.log(savedLayers[currentTrackName].getLayers()[0]);
+	const resp = JSON.parse(this.responseText);
+	//console.log(resp);
+	if(resp.logging){ 	// лог пишется
+		if(loggingIndicator !== undefined){ 	// лампочка в интерфейсе
+			loggingIndicator.style.color='green';
+			loggingIndicator.innerText='\u2B24';
 		}
-		else savedLayers[currentTrackName].addData(JSON.parse(this.responseText)); 	// добавим полученное к слою с текущим треком
+		if(resp.pt) { 	// есть данные
+			if(savedLayers[currentTrackName].getLayers()) { 	// это layerGroup
+				savedLayers[currentTrackName].getLayers()[0].addData(resp.pt); 	// добавим полученное к слою с текущим треком
+				//console.log(savedLayers[currentTrackName].getLayers()[0]);
+			}
+			else savedLayers[currentTrackName].addData(resp.pt); 	// добавим полученное к слою с текущим треком
+		}
+	}
+	else { 	// лог не пишется
+		if(loggingIndicator !== undefined){
+			if(loggingSwitch.checked){ 	// лампочка и переключатель в интерфейсе
+				loggingIndicator.style.color='red';
+				loggingIndicator.innerText='\u2B24';
+			}
+			else {
+				loggingIndicator.style.color='';
+				loggingIndicator.innerText='';
+			}
+		}
 	}
 }
 } // end function updateCurrTrack
@@ -1001,15 +1027,132 @@ return;
 } // end function coverage
 
 
+function MOBalarm() {
+//
+let latlng;
+if(map.hasLayer(cursor)) latlng = cursor.getLatLng(); 	// координаты известны и показываются, хотя, возможно, устаревшие
+else return false;
+
+currentMOBmarker = L.marker(latlng, { 	// маркер для этой точки
+	icon: mobIcon,
+	draggable: true,
+});
+currentMOBmarker.on('click', function(ev){
+	currentMOBmarker = ev.target;
+	clearCurrentStatus(); 	// удалим признак current у всех маркеров
+	currentMOBmarker.feature.properties.current = true;
+	sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
+}); 	// текущим будет маркер, по которому кликнули
+currentMOBmarker.on('dragend', sendMOBtoServer); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось
+clearCurrentStatus(); 	// удалим признак current у всех маркеров
+currentMOBmarker.feature = { 	// укажем признак "текущий маркер" как GeoJson свойство
+	type: 'Feature',
+	properties: {current: true},
+};
+mobMarker.addLayer(currentMOBmarker);
+if(!map.hasLayer(mobMarker)) mobMarker.addTo(map); 	// выставим маркер
+
+if(loggingIndicator !== undefined && !loggingSwitch.checked) {
+	loggingSwitch.checked = true;
+	loggingRun(); 	// хотя в loggingSwitch стоит onChange="loggingRun();" изменение loggingSwitch.checked = true; не приводит к срабатыванию обработчика
+}
+if(mobMarker.getLayers().length > 2) delMOBmarkerButton.disabled = false;
+
+sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
+/*
+const toSave = JSON.stringify(mobMarker.toGeoJSON());
+const expires =  new Date();
+expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
+document.cookie = "GaladrielMapMOB="+toSave+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
+*/
+return true;
+} // end function MOBalarm
+
+
+function clearCurrentStatus() {
+/* удаляет признак "текущий маркер" у всех маркеров мультислоя mobMarker */
+mobMarker.eachLayer(function (layer) { 	// удалим признак current у какого-то маркера
+	if((layer instanceof L.Marker) && (layer.feature.properties.current == true))	{
+		layer.feature.properties.current = false;
+	}
+});
+} // end function clearCurrentStatus
+
+
+function MOBclose() {
+mobMarker.remove(); 	// убрать мультислой-маркер с карты
+mobMarker.clearLayers(); 	// очистить мультислой от маркеров
+mobMarker.addLayer(toMOBline); 	// вернём туда линию
+upData.MOB = 'close'; 	// передадим на сервер, что режим MOB прекращён
+//document.cookie = "GaladrielMapMOB=; expires=0; path=/; samesite=Lax"; 	// удалим куку
+azimuthMOBdisplay.innerHTML = '&nbsp;';
+distanceMOBdisplay.innerHTML = '&nbsp;';
+directionMOBdisplay.innerHTML = '&nbsp;';
+locationMOBdisplay.innerHTML = '&nbsp;';
+delMOBmarkerButton.disabled = true;
+} // end function MOBclose
+
+
+function delMOBmarker(){
+/* Удаляет текущий маркер MOD
+mobMarker это LayerGroup 
+*/
+let layers = mobMarker.getLayers();
+if(layers.length < 3) return; // т.е., там линия и один маркер
+mobMarker.removeLayer(currentMOBmarker);
+layers = mobMarker.getLayers(); 	// мы не знаем, какой именно маркер был удалён -- текущий мог быть любым
+//console.log(layers);
+for(let i=layers.length-1; i>=0; i--){ 	// мы не знаем, где там линия
+	//if (layers[i] instanceof L.marker) { 	// почему это здесь не работает?
+	if (layers[i].options.icon) {
+		currentMOBmarker = layers[i]; 	// последний маркер в mobMarker, но в layers их же прежнее число
+		break;
+	}
+}
+//currentMOBmarker = layers[layers.length-1]; 	// последний маркер в mobMarker, но в layers их же прежнее число
+if(layers.length < 3) delMOBmarkerButton.disabled = true; // т.е., там линия и один маркер
+sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
+} // end function delMOBmarker
+
+
+function sendMOBtoServer(){
+/* Кладёт данные MOB в массив, который передаётся на сервер 
+каждый оборот главной функции realtime */
+upData.MOB = mobMarker.toGeoJSON(); 	// отдадим данные MOB для передачи на сервер
+} // end function sendMOBtoServer
+
+
+function bearing(latlng1, latlng2) {
+/**/
+const rad = Math.PI/180;
+let lat1 = latlng1.lat * rad,
+lat2 = latlng2.lat * rad,
+lon1 = latlng1.lng * rad,
+lon2 = latlng2.lng * rad;
+
+let y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+let x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+
+let bearing = ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+if(bearing >= 360) bearing = bearing-360;
+
+return bearing;
+} // end function bearing
 
 
 
 
-function realtime(dataUrl,fUpdate) {
+function realtime(dataUrl,fUpdate,upData) {
 /*
 fUpdate - функция обновления. Все должно делаться в ней. Получает json object
 */
 //console.log(dataUrl);
+//console.log('RealTime upData',upData);
+if(upData) {
+	if(dataUrl.includes('?')) dataUrl += '&upData=';
+	else dataUrl += '?upData=';
+	dataUrl += encodeURI(JSON.stringify(upData));
+}
 fetch(dataUrl)
 .then((response) => {
     return response.text();
@@ -1026,7 +1169,10 @@ fetch(dataUrl)
 	}
 })
 .then(data => {
-	//console.log(data);
+	//console.log('RealTime inbound data',data);
+	for (let prop in upData) {  	// очистим передаваемые данные, раз сеанс связи состоялся
+		delete upData[prop];
+	}
 	fUpdate(data);
 })
 .catch( (err) => {
@@ -1034,8 +1180,6 @@ fetch(dataUrl)
 })
 
 } 	// end function realtime
-
-
 
 /* Определения классов */
 // control для копирования в клипбоард
