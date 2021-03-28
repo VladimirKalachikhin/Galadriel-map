@@ -32,8 +32,12 @@ $PosFreshBefore = 5; 	// seconds. The position is considered correct no longer t
 
 // 	Запись пути Logging
 //		установите gpsd-utils, в состав которых входит gpxlogger  install gpsd-utils for gpxlogger
-// 		url службы записи пути
-$currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service, if present
+//		если эта переменная не установлена -- считается, что запись пути осуществляется чем-то другим
+//		запуск gpxlogger. $gpsdHost:$gpsdPort подставляются всегда, в конце строки запуска.
+$gpxlogger = "gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. С $gpsdHost:$gpsdPort почему-то не работает в Ubuntu 20	
+//$gpxlogger = "gpxlogger -e sockets -r -i $loggerNoFixTimeout -m $loggerMinMovie"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. $gpsdHost:$gpsdPort always added to launch line end. If not set -- logging is not done by gpxlogger
+// 		url службы записи пути. Если не установлена -- записи пути не происходит
+$currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service, if present. If not -- not logging activity
 // 		при потере позиции на столько секунд будет создан новый путь
 $loggerNoFixTimeout = 30; 	// sec A new track is created if there's no fix written for an interval
 // 		новые координаты записываются каждые столько секунд

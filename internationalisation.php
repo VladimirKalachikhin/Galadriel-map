@@ -64,9 +64,11 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$mobTXT = "A man overboard!";
 	$addMarkerTXT = "Another marker";
 	$bearingTXT = "Bearing";
+	$distanceTXT = 'Distance';
+	$altDistanceTXT = 'расстояние';
 	$altBearingTXT = "Абсолютный азимут";
 	$removeMarkerTXT = "Remove marker";
-	$cancelMOBTXT = "Cancel";
+	$cancelMOBTXT = "Terminate";
 	$relBearingTXT = "var relBearingTXT = [
 	'straight ahead',
 	'right ahead',
@@ -143,6 +145,8 @@ else {
 	$addMarkerTXT = "Ещё маркер";
 	$bearingTXT = "Абсолютный азимут";
 	$altBearingTXT = "bearing";
+	$distanceTXT = 'Расстояние';
+	$altDistanceTXT = 'distance';
 	$removeMarkerTXT = "Убрать маркер";
 	$cancelMOBTXT = "Завершить";
 	$relBearingTXT = "var relBearingTXT = [

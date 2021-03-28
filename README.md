@@ -3,7 +3,7 @@ This a server-based chart plotter navigation software for pleasure crafts and of
 
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features.
 
-## v. 1.7
+## v. 1.8
  ![screen](screenshots/s10.png) <br>
 It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 **The author is not responsible for the consequences of using the GaladrielMap as a navigator.**
@@ -35,19 +35,23 @@ Also possible to find coordinates by geographical name or post address, if there
 9.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)  
  ![Weather forecast](screenshots/s8.png)<br>
  
-10. Display AIS info:  
+10. A man overboard feature
+![Control Loader](screenshots/s14.png)<br>
+Sets marker, stretches the line to and indicates distance and direction to MOB just by open tab.
+ 
+11. Display AIS info:  
  ![AIS info](screenshots/s9-1.png)<br>
  
-11. [netAIS](https://github.com/VladimirKalachikhin/netAIS) support:  
+12. [netAIS](https://github.com/VladimirKalachikhin/netAIS) support:  
  ![netAIS](screenshots/s13.png)<br>
- Three members of the same private group see each other on its screens.  
+ Three members of the same private group see each other on its screens.
 
-12. Control the GaladrielCache Loader:   
+13. Control the GaladrielCache Loader:   
  ![Control Loader](screenshots/s4.png)<br>
-Set region, start loader, watch the progress. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
+Sets region, start loader, watch the progress. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
 For see of loaded tiles use coverage switch.
  
-13. Dashboard.
+14. Dashboard.
  _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.   
  ![Dashboard velocity](screenshots/s6.jpg)<br>
  ![Dashboard heading](screenshots/s7.jpg)<br>
@@ -116,6 +120,11 @@ The first line in the CSV file must be field names. Good choice is a `"number","
 Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
 A real example of using CSV to store information about ports and piers on Lake Saimaa in Finland - [SaimaaPOI](https://github.com/VladimirKalachikhin/Saimaa-POI). File with geospatial photolinks on CSV format - is a good example too.  
 Place your CSV to _route_ directory on the server as it directory described in _params.php_. Avoid setting file names in _route_ same as names in _tracks_ directory.
+
+## A man overboard
+Tap to <img src="img/mob.svg" alt="MOB button" width="24px"> opens MOB tab and start MOB mode. Track logging turned on, positions the MOB markers saved to the server. You may add new markers and dragging markers to a new position. Tap to marker to select it for stretches the direction line to. Tap on indication of MOB position copies it to clipboard.  
+MOB information spreading to all connected devices and may edit from any of this.  
+To finalize MOB mode tap to the dot left of the "Terminate" button first.  
 
 ## Exchange coordinates
 To get current position to clipboard to share it via other apps - tap on Position on <img src="img/speed1.svg" alt="Dashboard" width="24px"> tab.  

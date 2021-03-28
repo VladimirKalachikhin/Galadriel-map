@@ -355,8 +355,8 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 							<span style="margin:0.5rem;display:block;" id='azimuthMOBdisplay'> </span>
 						</div>
 						<div style="font-size:65%;margin:1rem 0;">
-							<span style="font-size:40%;display:block;">Расстояние, <?php echo $dashboardMeterMesTXT ?></span>
-							<span style="font-size:30%;display:block;">distance</span>
+							<span style="font-size:40%;display:block;"><?php echo $distanceTXT ?>, <?php echo $dashboardMeterMesTXT ?></span>
+							<span style="font-size:30%;display:block;"><?php echo $altDistanceTXT ?></span>
 							<span style="margin:0.5rem;display:block;" id='distanceMOBdisplay'> </span>
 							<span style="font-size:75%;margin:0.5rem;display:block;" id='directionMOBdisplay'></span>
 						</div>
@@ -887,7 +887,7 @@ function realtimeTPVupdate(gpsdData) {
 	var positionTime = new Date(gpsdData.time);
 	var now = new Date();
 	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
-	else 	cursor.setIcon(GpsCursor);
+	else cursor.setIcon(GpsCursor);
 	
 	// Показ скорости и прочего
 	var metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
