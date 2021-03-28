@@ -1,12 +1,12 @@
 <?php session_start();
-/* This is a current track server. Read gpx from gpxlogger directory.
-Отдаёт последнюю структуру типа trkpt из незакрытого файла gpx
+/* This is a current track server. Read gpx from gpxlogger directory. 
+Work with any logger, not obligatory gpxlogger
+Отдаёт последнюю структуру типа trkpt из незакрытого файла gpx.
+Файл может писаться чем угодно.
 Имя файла без расширения передаётся в первом параметре или в currTrackName
 Файл ищется в $trackDir из params.php
 Если файл закрыт, или какие-то проблемы с последней точкой - не отдаёт ничего
 
-Если переданы координаты - их же и возвращает в виде trkpt.
-to do: записывать трек с переданными координатами
 */
 
 ob_start(); 	// попробуем перехватить любой вывод скрипта
@@ -17,27 +17,30 @@ require_once('fcommon.php');
 require('params.php'); 	// пути и параметры
 
 if($trackDir[0]!='/') $trackDir = "$selfPath/$trackDir";	// если путь относительный - будет абсолютный
-$lat = $_REQUEST['lat'];
-$lon = $_REQUEST['lon'];
-//$lat=61.078342; $lon=28.259774;
-if($lat AND $lon) { 	// пишем трек
-	$lastTrkPt = "<trkpt lat=\"$lat\" lon=\"$lon\">\n\t<time>".date('c')."</time>\n</trkpt>";
+
+$currTrackFileName = $_REQUEST['currTrackName'];
+//$currTrackFileName = "2020-12-18_141744";
+if(! $currTrackFileName) $currTrackFileName = $argv[1];
+if(! $currTrackFileName) return;
+$currTrackFileName = "$trackDir/$currTrackFileName.gpx";
+//echo "currTrackFileName=$currTrackFileName; <br>\n";
+
+// определимЮ записывается ли трек
+$treckLogging = false; $lastTrkPtGPX = false;
+$tailStrings = 5 * 20; 	// сколько строк заведомо включает последнюю trkpt. Спецификация говорит, что trkpt может иметь 20 строк
+clearstatcache(TRUE,"$currTrackFileName");
+$lastTrkPt = explode("\n",tailCustom($currTrackFileName,$tailStrings));
+$lastTrkPt = array_filter( $lastTrkPt,'strlen'); 	// удалим пустые строки
+//echo "lastTrkPt:<pre>"; print_r($lastTrkPt); echo "</pre>";
+if($gpxlogger) { 	// params.php трек записывает gpxlogger
+	if(gpxloggerRun()) $treckLogging = true;
 }
-else { 	// читаем трек
-	$currTrackFileName = $_REQUEST['currTrackName'];
-	//$currTrackFileName = "2020-12-18_141744";
-	if(! $currTrackFileName) $currTrackFileName = $argv[1];
-	if(! $currTrackFileName) goto END;
-	$currTrackFileName = "$trackDir/$currTrackFileName.gpx";
-	//echo "currTrackFileName=$currTrackFileName; <br>\n";
+else {
+	if( trim(end($lastTrkPt)) != '</gpx>') $treckLogging = true; 	// если это завершённый GPX -- укажем, что трек не пишется
+}
+//echo "treckLogging=$treckLogging;<br>\n";
 
-	$tailStrings = 5 * 20; 	// сколько строк заведомо включает последнюю trkpt. Спецификация говорит, что trkpt может иметь 20 строк
-
-	clearstatcache(TRUE,"$currTrackFileName");
-	$lastTrkPt = explode("\n",tailCustom($currTrackFileName,$tailStrings));
-	$lastTrkPt = array_filter( $lastTrkPt,'strlen'); 	// удалим пустые строки
-	//echo "lastTrkPt:<pre>"; print_r($lastTrkPt); echo "</pre>";
-	if( trim(end($lastTrkPt)) == '</gpx>') goto END; 	// если это завершённый GPX
+if($treckLogging) { 	// трек пишется - читаем трек
 	$lastTrkPtStart = NULL; $lastTrkPtEnd = NULL;
 	foreach($lastTrkPt as $i => $str) {
 		if(substr(trim($str),0,6) == '<trkpt') 	$lastTrkPtStart = $i; 	// номер строки начала точки
@@ -45,27 +48,29 @@ else { 	// читаем трек
 	//	elseif(trim($str) == '</trkseg>') 	$lastTrkSegEnd = $i; 	// номер строки конца сегмента
 	}
 	//echo "lastTrkPtStart=$lastTrkPtStart; lastTrkPtEnd=$lastTrkPtEnd; lastTrkSegEnd=$lastTrkSegEnd; <br>\n";
-	if($lastTrkPtStart > $lastTrkPtEnd) goto END; 	// что-то пошло не так
-	if(($lastTrkPtStart===NULL) OR ($lastTrkPtEnd===NULL)) goto END; 	// точки там нет
-	$lastTrkPt = implode("\n",array_slice($lastTrkPt,$lastTrkPtStart,$lastTrkPtEnd-$lastTrkPtStart+1));
+	if(($lastTrkPtStart!==NULL) and ($lastTrkPtEnd!==NULL) and ($lastTrkPtStart < $lastTrkPtEnd)) { 	// точка есть
+		$lastTrkPt = implode("\n",array_slice($lastTrkPt,$lastTrkPtStart,$lastTrkPtEnd-$lastTrkPtStart+1));
+		//echo "lastTrkPt:<pre>"; print_r(htmlentities($lastTrkPt)); echo "</pre>"; 
+		//echo htmlentities("<trkseg>\n".$_SESSION['lastTrkPt']."\n$lastTrkPt\n</trkseg>\n"); goto END;
+		//echo "lastTrkPt:<pre>"; print_r($lastTrkPt); echo "</pre>"; 
+
+		if($_SESSION['lastTrkPt'] <> $lastTrkPt) { 	// вернём, если точка изменилась
+			//$lastTrkPtGPX = "<trkseg>\n".$_SESSION['lastTrkPt']."\n$lastTrkPt\n</trkseg>\n"; 	// всегда будем оформлять две последних путевых точек как отдельный сегмент
+			$lastTrkPtGPX = gpx2geoJSONpoint(array($_SESSION['lastTrkPt'],$lastTrkPt)); 	// сделаем из двух последних точек GeoJSON LineString
+			$_SESSION['lastTrkPt'] = $lastTrkPt;
+		}
+	}
 }
-//echo "lastTrkPt:<pre>"; print_r(htmlentities($lastTrkPt)); echo "</pre>"; 
-//echo htmlentities("<trkseg>\n".$_SESSION['lastTrkPt']."\n$lastTrkPt\n</trkseg>\n"); goto END;
-//echo "lastTrkPt:<pre>"; print_r($lastTrkPt); echo "</pre>"; 
+$output = array('logging' => $treckLogging,'pt' => $lastTrkPtGPX);
 ob_clean(); 	// очистим, если что попало в буфер
-if($_SESSION['lastTrkPt'] <> $lastTrkPt) { 	// вернём, если точка изменилась
-	//$lastTrkPtGPX = "<trkseg>\n".$_SESSION['lastTrkPt']."\n$lastTrkPt\n</trkseg>\n"; 	// всегда будем оформлять две последних путевых точек как отдельный сегмент
-	$lastTrkPtGPX = gpx2geoJSONpoint(array($_SESSION['lastTrkPt'],$lastTrkPt)); 	// сделаем из двух последних точек GeoJSON LineString
-	$_SESSION['lastTrkPt'] = $lastTrkPt;
-	header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
-	header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Дата в прошлом
-	//header ("Content-Type: text/XML");
-	header('Content-Type: application/json;charset=utf-8;');
-	echo($lastTrkPtGPX);
-	$content_lenght = ob_get_length();
-	header("Content-Length: $content_lenght");
-	ob_end_flush(); 	// отправляем и прекращаем буферизацию
-}
+header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
+header("Expires: Sat, 26 Jul 1997 05:00:00 GMT"); // Дата в прошлом
+header('Content-Type: application/json;charset=utf-8;');
+echo json_encode($output);
+$content_lenght = ob_get_length();
+header("Content-Length: $content_lenght");
+ob_end_flush(); 	// отправляем и прекращаем буферизацию
+
 END:
 return;
 
@@ -108,6 +113,6 @@ foreach($gpxPts as $gpxPt) {
 }
 //echo "geoJSON:<pre>"; print_r($geoJSON); echo "</pre>"; 
 
-return json_encode($geoJSON);
+return $geoJSON;
 } // end function gpx2geoJSONpoint
 ?>

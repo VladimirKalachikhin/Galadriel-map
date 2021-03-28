@@ -231,7 +231,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 		<!-- Треки -->
 		<div class="leaflet-sidebar-pane" id="tracks">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-<?php if($currentTrackServerURI){ // если сконфигурирована служба записи пути ?>
+<?php if($gpxlogger){ // если запись пути осуществляется gpxlogger'ом ?>
 			<div style="margin: 1rem;">
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="loggingSwitch" onChange="loggingRun();" <?php if($gpxloggerRun) echo "checked"; ?>>
@@ -547,6 +547,8 @@ var goToPositionManualFlag = false; 	// флаг, что поле goToPositionFi
 // MOB
 var currentMOBmarker;
 <?php echo $relBearingTXT; ?>
+// main output data
+var upData = {};
 
 // Определим карту
 var map = L.map('mapid', {
@@ -800,6 +802,7 @@ var toMOBline = L.polyline([], {
 	weight: 10,
 	opacity:0.3,
 })
+/*
 // восстановим маркеры
 var mobMarker = getCookie('GaladrielMapMOB'); 	// getCookie from galadrielmap.js
 if(mobMarker) {
@@ -816,16 +819,59 @@ if(mobMarker) {
 	mobMarker.addTo(map);
 }
 else mobMarker = L.layerGroup().addLayer(toMOBline);
-
+*/
+var mobMarker = L.layerGroup().addLayer(toMOBline);
 
 // Позиционирование
 // 	Запуск периодических функций
-//setInterval(function(){realtime(gpsanddataServerURI,function(data){console.log(data);});},1000);
-setInterval(function(){realtime(gpsanddataServerURI,realtimeTPVupdate);},1000); 	// данные позиционирования
+//setInterval(function(){realtime(gpsanddataServerURI,realtimeTPVupdate,lat);},1000); 	// данные позиционирования. Однако, function(){} компилячится каждый оборот, что как бы неправильно.
+setInterval(realtime,1000,gpsanddataServerURI,realtimeTPVupdate,upData); 	// данные позиционирования. Здесь компилячится при загрузке, и параметры передаются в realtime один раз. Что исключает динамические параметры. А как же передача по ссылке?
 
 // Realtime периодическое обновление
 function realtimeTPVupdate(gpsdData) {
-	//console.log(gpsdData);
+	//console.log('Index gpsdData',gpsdData);
+	//console.log('Index gpsdData.MOB',gpsdData.MOB);
+	// pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
+	if(gpsdData.MOB === undefined) { 	// режима MOB нет
+		if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
+			MOBclose(); 	// пришло, что режима MOB нет -- завершим его
+		}
+	}
+	else if(gpsdData.MOB===true){ 	//console.log('режим MOB есть, но новых данных нет');
+		if(! map.hasLayer(mobMarker)){ 	//console.log('не показывается мультислой с маркерами MOB'); 
+			upData.MOB = 0; 	// передадим на сервер, что хотим данные MOB 
+		}
+	}
+	else { 	//console.log('режим MOB есть, пришли новые данные');
+		// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
+		//console.log('Index gpsdData.MOB',gpsdData.MOB);
+		mobMarker.remove(); 	// убрать мультислой-маркер с карты
+		mobMarker = null; 	// реально удалим объект
+		mobMarker = L.geoJSON(gpsdData.MOB); 	// создадим новый объект
+		mobMarker.eachLayer(function (layer) {
+			if(layer instanceof L.Marker)	{
+				layer.setIcon(mobIcon);
+				layer.on('click', function(ev){
+					currentMOBmarker = ev.target;
+					clearCurrentStatus(); 	// удалим признак current у всех маркеров
+					currentMOBmarker.feature.properties.current = true;
+					sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
+				}); 	// текущим будет маркер, по которому кликнули
+				console.log(layer);
+				if(layer.feature.properties.current) currentMOBmarker = layer; 	// текущим станет указанный в переданных данных
+			}
+			else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
+		});
+		mobMarker.addLayer(toMOBline);
+		mobMarker.addTo(map); 	// покажем мультислой с маркерами MOB
+		mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable
+			if(layer instanceof L.Marker)	{	
+				layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
+				layer.on('dragend', sendMOBtoServer); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось
+			}
+		});
+	}
+	//console.log(mobMarker);
 	// Положение неизвестно
 	if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null)) { 	// 
 		positionCursor.remove(); 	// уберём курсор с карты
@@ -912,7 +958,7 @@ function realtimeTPVupdate(gpsdData) {
 			currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
 		}
 	}
-<?php 	} ?>
+<?php } ?>
 
 	// координаты курсора с точностью знаков
 	lat = Math.round(cursor.getLatLng().lat*10000)/10000; 	 	// широта
@@ -922,7 +968,7 @@ function realtimeTPVupdate(gpsdData) {
 	followSwitch.checked = !noFollowToCursor; 	// выставим переключатель на панели Настроек в текущее положение	
 	
 	// MOB
-	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
+	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB 
 		//console.log(mobMarker.getLayers());
 		let latlng1 = cursor.getLatLng();
 		let latlng2 = currentMOBmarker.getLatLng();
@@ -941,6 +987,7 @@ function realtimeTPVupdate(gpsdData) {
 			directionMOBdisplay.innerHTML = relBearingTXT[relBearing];
 		}
 	}
+	
 };
 
 <?php 
@@ -951,8 +998,8 @@ if($aisServerURI) { // если нет источника текущих дан�
 
 // Данные AIS
 // 	Запуск периодических функций
-//setInterval(function(){realtime(aisServerURI,function(data){console.log(data);});},1000);
-setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},5000);
+//setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},5000);
+setInterval(realtime,5000,aisServerURI,realtimeAISupdate);
 //realtime(aisServerURI,realtimeAISupdate);
 
 function realtimeAISupdate(aisData) {
@@ -1007,7 +1054,8 @@ if($updateRouteServerURI) { // если нет сервиса обновлени
 
 // Динамическое обновление показываемых маршрутов
 // 	Запуск периодических функций
-var updateRoutesInterval = setInterval(function(){realtime(updateRouteServerURI,routeUpdate);},2000);
+//var updateRoutesInterval = setInterval(function(){realtime(updateRouteServerURI,routeUpdate);},2000);
+var updateRoutesInterval = setInterval(realtime,2000,updateRouteServerURI,routeUpdate);
 
 function routeUpdate(changedRouteNames) {
 /* Вызывается из-под realtime */

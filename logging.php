@@ -8,26 +8,33 @@ require('params.php'); 	// пути и параметры
 
 //$loggerNoFixTimeout = 30; 	// sec A new track is created if there's no fix written for an interval
 //$loggerMinMovie = 5; 	// m Motions shorter than this will not be logged
-// from params.php
-$gpxlogger = "gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. С $gpsdHost:$gpsdPort почему-то не работает в Ubuntu 20	
 $outpuFileName = ''; 	
 
 //$_REQUEST['startLogging'] = 1;
 //$_REQUEST['stopLogging'] = 1;
 
-if($status=(int)gpxloggerRun()) { 	// fcommon.php
+$status=(int)gpxloggerRun();
+echo "status=$status;<br>\n";
+if($status) { 	// fcommon.php
 	if($_REQUEST['stopLogging']) { 	
 		exec("kill $status");
 		$status=(int)gpxloggerRun(); 	// оно могло и не убиться
 		if($status) echo "Unable to stop logging\n";
 		else echo "Stoped logging\n";
 	}
+	else { 	// вернём имя последнего трека
+		$trackNames = glob($trackDir.'/*gpx');
+		if($currTrackFirst) $outpuFileName = $trackNames[0]; 	// params.php
+		else $outpuFileName = $trackNames[count($trackNames)-1];
+		$outpuFileName = explode('/',$outpuFileName); 	// выделим имя файла, которое, в принципе, может быть кириллицей
+		$outpuFileName = $outpuFileName[count($outpuFileName)-1];
+	}
 }
 else {
 	if($_REQUEST['startLogging']) { 	
 		$outpuFileName = date('Y-m-d_His').'.gpx'; 	
 		$fullOutpuFileName = $trackDir.'/'.$outpuFileName; 	
-		$LoggerPid = exec("$gpxlogger -f $fullOutpuFileName > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+		$LoggerPid = exec("$gpxlogger -f $fullOutpuFileName $gpsdHost:$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
 		$status=(int)gpxloggerRun(); 	// оно могло и не запуститься
 		if($status) echo "Started logging track to $outpuFile\n";
 		else echo "Unable to start logging\n";
