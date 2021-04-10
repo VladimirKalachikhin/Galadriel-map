@@ -39,7 +39,7 @@ if(isset($upData['MOB'])) { 	echo "режим MOB должен быть вклю
 
 // Соберём данные
 // MOB
-$MOBtime = filectime($MOBdataFilePath.$MOBdataFileName);
+$MOBtime = @filectime($MOBdataFilePath.$MOBdataFileName);
 echo "MOBtime=$MOBtime;<br>\n";
 if($MOBtime) { 	// режим MOB
 	if($MOBtime > $_SESSION['MOBsending']) { 	// этому клиенту данные ещё не сообщали

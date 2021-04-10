@@ -41,7 +41,8 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 		$jobSize = filesize("$jobsDir/$jobName");
 		$jobComleteSize =  @filesize("$jobsInWorkDir/$jobName"); 	// файла в этот момент может уже и не оказаться
 		//echo "jobSize=$jobSize; jobComleteSize=$jobComleteSize; <br>\n";
-		$jobsInfo[$i] = array($jobName, round((($jobSize-$jobComleteSize)/$jobSize)*100)); 	// выполнено
+		if($jobComleteSize==0) $jobComleteSize = $jobSize;
+		$jobsInfo[$i] = array($jobName, round((1-$jobComleteSize/$jobSize)*100)); 	// выполнено
 	}
 	//echo "jobsInfo:<pre>"; print_r($jobsInfo); echo "</pre>";
 	$schedInfo = glob("$jobsDir/*.slock"); 	// имеющиеся PIDs запущенных планировщиков. Должен быть только один, но мало ли...
@@ -857,7 +858,7 @@ function realtimeTPVupdate(gpsdData) {
 					currentMOBmarker.feature.properties.current = true;
 					sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
 				}); 	// текущим будет маркер, по которому кликнули
-				console.log(layer);
+				//console.log(layer);
 				if(layer.feature.properties.current) currentMOBmarker = layer; 	// текущим станет указанный в переданных данных
 			}
 			else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
