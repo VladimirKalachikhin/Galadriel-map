@@ -1,78 +1,53 @@
 # GaladrielMap [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
-This a server-based chart plotter navigation software for pleasure crafts and off-road cars. The application can be placed on a weak server such as RaspberryPi or NAS and used on full clients such as tablets and smartphones. Only browser need.  
+This a server-based chart plotter navigation software for pleasure crafts and off-road cars. The application can be placed on a weak server such as RaspberryPi, NAS or router and used on full clients such as tablets and smartphones. Only browser need.
 
-Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features.
-
+<br>
 ## v. 1.8
  ![screen](screenshots/s10.png) <br>
-It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
-**The author is not responsible for the consequences of using the GaladrielMap as a navigator.**
+ Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
+**The author is not responsible for the consequences of using the GaladrielMap for navigation.**
 
 The GaladrielMap created with use a lot of famous projects, so don't forget to install [dependenses](#dependences-and-thanks).  
 
+<br>
 ## Features:
-1. Both raster and vector tiles support.
-2. English or Russian interface, dependent of browser language settings
-3. View one OSM- or mapbox-like on-line map or  
-4. with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) some a stacked maps  
-[Open Sea Map](http://www.openseamap.org/)  
-[Open Topo Map](https://opentopomap.org/about)  
- or any number of other maps:  
- ![stacked maps](screenshots/s1.png)<br>
- 
-5. Positioning via [gpsd](https://gpsd.io/) and display current (writing now) track file in gpx format:  
- ![Positioning](screenshots/s2.png)<br>
- 
-6. Display routes and POIs files in gpx, kml and csv format:  
- ![Display routes and POIs](screenshots/s5.png)<br>
- 
-7. Creating a route localy and save it to the server in gpx format (description below):  
- ![Creating a route](screenshots/s3.png)<br>
-Also possible to find coordinates by geographical name or post address, if there is an Internet connection, of course. And vice versa -- getting the nearest address for screen centre.
- 
-8. Exchange coordinates via clipboard (see screenshot above and description below)  
+1. [Online or offline user-defined maps](#maps)
+2. [Positioning](#positioning) via [gpsd](https://gpsd.io/)
+3. [Tracking](#tracking)
+4. [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
+5. [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
+6. [Exchange coordinates](#exchange-coordinates) via clipboard
+7. [Weather forecast](#weather-forecast) from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
+8. [Display AIS info](display-ais-info)
+9. [netAIS support](#netais)
+10. [A Man OverBoard feature](a-man-overboard)
+11. Optimised for E-Ink screens [Dashboard](#dashboard)
+12. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
+13. English or Russian interface, dependent of browser language settings
 
-9.  Weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/) (with GaladrielCache v.1.3 or above)  
- ![Weather forecast](screenshots/s8.png)<br>
- 
-10. A man overboard feature
-![Control Loader](screenshots/s14.png)<br>
-Sets marker, stretches the line to and indicates distance and direction to MOB just by open tab.
- 
-11. Display AIS info:  
- ![AIS info](screenshots/s9-1.png)<br>
- 
-12. [netAIS](https://github.com/VladimirKalachikhin/netAIS) support:  
- ![netAIS](screenshots/s13.png)<br>
- Three members of the same private group see each other on its screens.
-
-13. Control the GaladrielCache Loader:   
- ![Control Loader](screenshots/s4.png)<br>
-Sets region, start loader, watch the progress. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
-For see of loaded tiles use coverage switch.
- 
-14. Dashboard.
- _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.   
- ![Dashboard velocity](screenshots/s6.jpg)<br>
- ![Dashboard heading](screenshots/s7.jpg)<br>
- ![Dashboard depth](screenshots/s11.jpg)<br>
- The Dashboard allows you to set a signal for dangerous events, such as shallow or speed. Set up your browser to allow sound signal.  
- ![Dashboard alarm](screenshots/s12.jpg)<br>
- No fanciful javascript, no fanciful css.  
-
+<br>
 ## Compatibility
 Linux. Modern browsers include mobile.
 
+<br>
 ## Demo
 [Live demo](http://130.61.159.53/map/). Sometimes there floating a virtual sailboat.
 
+<br>
 ## Ready to use images
-[Available](https://github.com/VladimirKalachikhin/GaladrielMap-Demo-image/blob/master/README.md) ready to use virtual machine disk image and Raspberry Pi bootable image.
+[Available](https://github.com/VladimirKalachikhin/GaladrielMap-Demo-image/blob/master/README.md) ready to use virtual machine disk image and Raspberry Pi bootable image. It's a fully configured Linux system with GaladrielMap, GaladrielCache, netAIS, gpsd, gpxlogger, etc. for test and builds own onboard server. 
 
+<br>
 ## Install&configure:
 You must have a web server under Linux with php support. Just copy app, dependences and set paths.  
 Paths and other are set and describe in _params.php_  
 
+<br>
+## Emergency kit
+All you need to install, including dependences, are in _emergencykit/_.  
+You may download full pack -- more 4MB, or without vector tiles support pack -- less them 1MB.
+
+<br>
 ## Dependences and thanks
 * [Leaflet](https://leafletjs.com/) in _leaflet/_ directory
 * [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) in _coordinate-parserPATCHED/_ directory
@@ -88,10 +63,7 @@ Paths and other are set and describe in _params.php_
 
 Create a local copy of dependences and/or edit _index.php_
 
-## Emergency kit
-All you need to install, including dependences, are in _emergencykit/_.  
-You may download full pack -- more 4MB, or without vector tiles support pack -- less them 1MB.
-
+<br>
 ## More thanks
 * [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to show markers and non well-formed gpx files.
 * [Metrize Icons by Alessio Atzeni](https://icon-icons.com/pack/Metrize-Icons/1130) for icons.
@@ -104,44 +76,105 @@ You may download full pack -- more 4MB, or without vector tiles support pack -- 
 * [OpenMapTiles](https://github.com/openmaptiles) for Mapbox GL basemap style
 * [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) for ideas
 
-## gpsd
-GaladrielMap gets realtime info, such as spatial data, AIS data, instruments from  [gpsd](https://gpsd.io/) via _askGPSD.php_ and _askAIS.php_ services. You may configure these services to you gpsd host and port. Defaults are localhost and 2947 port (default for gpsd). How to install and configure gpsd see [gpsd pages](https://gpsd.io/).  
-Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. 
+<br>
+## Maps
+The GaladrielMap applies [OSM-style tiles map](https://wiki.openstreetmap.org/wiki/Tiles), both raster and vector. It can be one OSM- or mapbox-like on-line map or with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) any number of stacked maps, online and offline.  
+![stacked maps](screenshots/s1.png)<br>
+The map source is set in the  _params.php_, and if it is [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) (default), you have available any number of user-defined map sources. How to define a new map -- described in [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) project.  
+At least, it include  
+[Open Sea Map](http://www.openseamap.org/)  
+[Open Topo Map](https://opentopomap.org/about)  
+maps.
 
-## Tracks
-You may use `gpxlogger` app from gpsd-clients packet to logging track on your server. Control `gpxlogger` are in <img src="img/track.svg" alt="Handle tracks" width="24px"> tab.  
+### Mapbox-style vector tiles maps
+GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox style file](https://docs.mapbox.com/mapbox-gl-js/style-spec/) must be placed on `$mapSourcesDir` directory of the [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) with **{mapname}.json** name. (See [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) docs.) Sprites and glyphs you can find in _styles/_ directory.
+
+<br>
+## Positioning
+ ![Positioning](screenshots/s2.png)<br>
+ GaladrielMap gets realtime spatial data and other info via [gpsd](https://gpsd.io/). Usually enough plug a GNSS receiver to the server.  
+How to install and configure gpsd see [gpsd pages](https://gpsd.io/).  
+Map **always** sets to current position. This behavior can be temporarily disabled on the <img src="img/settings1.svg" alt="Settings" width="24px"> menu. Following the cursor is disabled if <img src="img/route.svg" alt="Route" width="24px"> or <img src="img/download1.svg" alt="Loader" width="24px"> menu are open.
+
+<br>
+## Tracking
+GaladrielMap use `gpxlogger` app from gpsd-clients packet to logging track on your server. Control `gpxlogger` are in <img src="img/track.svg" alt="Handle tracks" width="24px"> tab.  
 GaladrielMap displaying current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
 Run _chkGPXfiles.php_ in cli to repair non-well-formed gpx files for other applications.  
-Tracks placed in _tracks_ directory on the server as it described in _params.php_.
+Tracks placed in _tracks_ directory on the server as it described in _params.php_.  
+Installation and configuring the `gpxlogger` described in  [gpsd](https://gpsd.io/) documentation. You may use any other server-side logger for tracking in gpx format, set up it in _params.php_.
 
-## CSV
+<br>
+## Routes and POIs
+ ![Display routes and POIs](screenshots/s5.png)<br>
+ GaladrielMap display routes and PointOfInterest on gpx, kml and csv formats. Place you routes and POIs files to _route_ directory on the server as it directory described in _params.php_. Open <img src="img/poi.svg" alt="POI" width="24px"> tab.
+### CSV
 Comma-Separated Values text file - the simplest way of cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.  
 The first line in the CSV file must be field names. Good choice is a `"number","name","description","type","link","latitude","longitude"`  
 Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
 A real example of using CSV to store information about ports and piers on Lake Saimaa in Finland - [SaimaaPOI](https://github.com/VladimirKalachikhin/Saimaa-POI). File with geospatial photolinks on CSV format - is a good example too.  
 Place your CSV to _route_ directory on the server as it directory described in _params.php_. Avoid setting file names in _route_ same as names in _tracks_ directory.
 
-## A man overboard
+<br>
+## Creating and edit a route
+ ![Creating a route](screenshots/s3.png)<br>
+Open <img src="img/route.svg" alt="Handle route" width="24px"> tab to navigational plotting feature. You can create and edit a route on the local device, and/or save it to server to _route_ directory.  
+ This feature includes a base gpx route editing tool. You can edit any gpx route from the server in the same way as local route, and save it under the same or new name. Displaying edited routes update automatically on all connected devices.  
+ Good case for use -- navigational plotting by the navigator in a dry and warm booth for the steersman on the rain and wind.  
+ But it is only a base gpx route editor. Gpx &lt;metadata&gt; not supported, and point &lt;extensions&gt; (GARMIN like it) not supported too. Be careful to edit and save exists gpx.  
+ Also be careful with danger of unauthorized edit routes from guests and childrens. Disable the auto-update routes via _params.php_.  
+ 
+For route planning, it is useful to find coordinates by geographical name or postal address, if there is an Internet connection, of course. And vice versa -- getting the nearest address for the screen centre. Use the input field for it.
+
+<br>
+## Exchange coordinates
+To get current position to clipboard to share it via other apps - tap on Position on <img src="img/speed1.svg" alt="Dashboard" width="24px"> tab.  
+Also, tap on POI name on point's popup to get a position of this point.  
+To get coordinates of any point - open <img src="img/route.svg" alt="Handle route" width="24px"> tab. Coordinates of crosshair will be in the input text field.  
+To fly map by coordinates type they of any format to this field and press button.
+
+<br>
+## Weather forecast
+ ![Weather forecast](screenshots/s8.png)<br>
+If there is an Internet connection you can get the weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/).
+
+<br>
+## Display AIS info
+![AIS info](screenshots/s9-1.png)<br>
+GaladrielMap displayed AIS data via [gpsd](https://gpsd.io/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
+Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_.  
+
+<br>
+## netAIS support
+![netAIS](screenshots/s13.png)<br>
+The [netAIS](https://github.com/VladimirKalachikhin/netAIS) is the local service to exchange position information inside of a private group via internet.  
+GaladrielMap displayed full netAIS info, include text messages.  
+For example, three members of the same private group see each other on its screens.
+
+<br>
+## A Man OverBoard
+![A Man OverBoard](screenshots/s14.png)<br>
+Sets marker, stretches the line to and indicates distance and direction to MOB just by open tab.  
 Tap to <img src="img/mob.svg" alt="MOB button" width="24px"> opens MOB tab and start MOB mode. Track logging turned on, positions the MOB markers saved to the server. You may add new markers and dragging markers to a new position. Tap to marker to select it for stretches the direction line to. Tap on indication of MOB position copies it to clipboard.  
 MOB information spreading to all connected devices and may edit from any of this.  
 To finalize MOB mode tap to the dot left of the "Terminate" button first.  
 
-## Exchange coordinates
-To get current position to clipboard to share it via other apps - tap on Position on <img src="img/speed1.svg" alt="Dashboard" width="24px"> tab.  
-Also, tap on POI name on point's popup to get a position of this point.  
-To get coordinates of any point - open <img src="img/route.svg" alt="Handle route" width="24px"> tab. Coordinates of crosshair will be in text field.  
-To fly map by coordinates type they of any format to this field and press button.
+<br>
+## Dashboard
+ _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.   
+ ![Dashboard velocity](screenshots/s6.jpg)<br>
+ ![Dashboard heading](screenshots/s7.jpg)<br>
+ ![Dashboard depth](screenshots/s11.jpg)<br>
+ The Dashboard allows you to set a signal for dangerous events, such as shallow or speed. Set up your browser to allow sound signal.  
+ ![Dashboard alarm](screenshots/s12.jpg)<br>
+ No fanciful javascript, no fanciful css.  
 
-## Create and edit route
-Open <img src="img/route.svg" alt="Handle route" width="24px"> tab to navigational plotting feature.  
-You can create and edit the route on the local device, and/or save it to server to _route_ directory.  
- This feature includes a base gpx route editing tool. You can edit any gpx route from the server in the same way as local route, and save it under the same or new name. Edited routes updated automatically on all connected devices.  
- Good case for use - navigational plotting by the navigator in a dry and warm booth for the steersman on the rain and wind.  
- But it is only a base gpx route editor. Gpx &lt;metadata&gt; not supported, and point &lt;extensions&gt; (GARMIN like it) not supported too. Be careful to edit and save exists gpx.  
- Also be careful with danger of unauthorized edit routes from guests and childrens. Disable the auto-update routes via _params.php_.
-
-## Mapbox-style vector tiles maps
-GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox style file](https://docs.mapbox.com/mapbox-gl-js/style-spec/) must be placed on `$mapSourcesDir` directory of the GaladrielCache with **{mapname}.json** name. Sprites and glyphs you can find in _styles/_ directory.
-
+<br>
+## The GaladrielCache Loader
+ ![Control Loader](screenshots/s4.png)<br>
+Sets region, start loader, watch the progress. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
+For see of loaded tiles use coverage switch.
+ 
+<br>
 ## Support
 You can get support for GaladrielMap and GaladrielCahe for a beer [via PayPal](https://paypal.me/VladimirKalachikhin) or [YandexMoney](https://yasobe.ru/na/galadrielmap) at [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  
