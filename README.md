@@ -3,14 +3,14 @@ This a server-based chart plotter navigation software for pleasure crafts and of
 
 <br>
 ## v. 1.8
- ![screen](screenshots/s10.png) <br>
- Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
+![screen](screenshots/s10.png) <br>
+Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 **The author is not responsible for the consequences of using the GaladrielMap for navigation.**
 
 The GaladrielMap created with use a lot of famous projects, so don't forget to install [dependenses](#dependences-and-thanks).  
 
 <br>
-## Features:
+## Features
 1. [Online or offline user-defined maps](#maps)
 2. [Positioning](#positioning) via [gpsd](https://gpsd.io/)
 3. [Tracking](#tracking)
@@ -40,7 +40,7 @@ Linux. Modern browsers include mobile.
 <br>
 ## Install&configure:
 You must have a web server under Linux with php support. Just copy app, dependences and set paths.  
-Paths and other are set and describe in _params.php_  
+Paths and other are set and describe in _params.php_
 
 <br>
 ## Emergency kit
