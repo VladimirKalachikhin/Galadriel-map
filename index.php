@@ -498,6 +498,7 @@ foreach($jobsInfo as $jobName) { 	//
 <script> "use strict";
 
 // Карта
+var defaultMap = 'OpenTopoMap'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
 var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
@@ -660,6 +661,14 @@ if(layers) layers.reverse().forEach(function(layerName){ 	// потому что
 			}
 		}
 	});
+else {
+	for (var i = 0; i < mapList.children.length; i++) { 	// для каждого потомка списка mapList
+		if (mapList.children[i].innerHTML==defaultMap) { 	// найдём, который из них defaultMap
+			selectMap(mapList.children[i]); 	// и покажкм его
+			break;
+		}
+	}
+}
 <?php }
 else {?>
 displayMap('default');
