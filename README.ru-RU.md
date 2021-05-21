@@ -171,4 +171,7 @@ GaladrielMap поддерживает все возможности сервис
 Чтобы видеть, какие участки карты уже есть в кеше -- можно включить показ схемы покрытия.
  
 ## Поддержка
+
+[Обсуждение](https://github.com/VladimirKalachikhin/Galadriel-map/discussions)
+
 За чашку кофе [через ЯндексДеньги](https://yasobe.ru/na/galadrielmap) или [PayPal](https://paypal.me/VladimirKalachikhin?locale.x=ru_RU) можно получить консультации по адресу [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  

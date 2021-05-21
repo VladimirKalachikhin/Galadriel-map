@@ -177,4 +177,7 @@ For see of loaded tiles use coverage switch.
  
 
 ## Support
+
+[Discussions](https://github.com/VladimirKalachikhin/Galadriel-map/discussions)
+
 You can get support for GaladrielMap and GaladrielCahe for a beer [via PayPal](https://paypal.me/VladimirKalachikhin) or [YandexMoney](https://yasobe.ru/na/galadrielmap) at [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  
