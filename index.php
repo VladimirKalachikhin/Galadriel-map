@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.8.0';
+$versionTXT = '1.8.1';
 /* 
 1.8.0 	MOB feature
 1.7.2 	auto-update edited routes

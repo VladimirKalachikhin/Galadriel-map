@@ -27,6 +27,8 @@ $gpsdHost = 'localhost';
 //$gpsdHost = '192.168.10.20';
 // порт url демона gpsd
 $gpsdPort = 2947;
+// Signal K
+//$signalKhost = array(['localhost',3000]);
 // если время последнего определения положения отличается от текущего на столько секунд -- положение показывается как устаревшее (серый курсор)
 $PosFreshBefore = 5; 	// seconds. The position is considered correct no longer than this time. If the position older - cursor is grey.
 

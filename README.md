@@ -12,7 +12,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 
 ## Features
 1. [Online or offline user-defined maps](#maps)
-2. [Positioning](#positioning) via [gpsd](https://gpsd.io/)
+2. [Positioning](#positioning) via [gpsd](https://gpsd.io/) or [Signal K](https://signalk.org/)
 3. [Tracking](#tracking)
 4. [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
 5. [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
@@ -93,7 +93,11 @@ GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox sty
 ## Positioning
  ![Positioning](screenshots/s2.png)<br>
  GaladrielMap gets realtime spatial data and other info via [gpsd](https://gpsd.io/). Usually enough plug a GNSS receiver to the server.  
-How to install and configure gpsd see [gpsd pages](https://gpsd.io/).  
+How to install and configure gpsd see [gpsd pages](https://gpsd.io/).
+
+Another way is to use [Signal K](https://signalk.org/) infrastructure. If no spatial info sources sets in _params.php_, GaladrielMap  will try found the Signal K service on your local network, and get a position from it.  
+However, it is better to set the Signal K server address in _params.php_ if you are going to use Signal K.
+
 Map **always** sets to current position. This behavior can be temporarily disabled on the <img src="img/settings1.svg" alt="Settings" width="24px"> menu. Following the cursor is disabled if <img src="img/route.svg" alt="Route" width="24px"> or <img src="img/download1.svg" alt="Loader" width="24px"> menu are open.
 
 
@@ -161,7 +165,8 @@ To finalize MOB mode tap to the dot left of the "Terminate" button first.
 
 
 ## Dashboard
- _dashboard.php_ - the separate app to display some instruments if it is in your board network, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.   
+ _dashboard.php_ - the separate app to display some instruments attached to gpsd, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.  
+Instruments from Signal K not displayed.  
  ![Dashboard velocity](screenshots/s6.jpg)<br>
  ![Dashboard heading](screenshots/s7.jpg)<br>
  ![Dashboard depth](screenshots/s11.jpg)<br>

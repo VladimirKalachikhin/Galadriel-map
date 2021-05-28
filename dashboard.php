@@ -6,9 +6,10 @@ W  |   | |   |E
 WSW|   | |   |ESE
 SW |SSW|S|SSE|SE
 */
-$versionTXT = '1.2.2';
-$gpsdHost = 'localhost'; $gpsdPort = 2947;
+$versionTXT = '1.2.3';
 require_once('fGPSD.php'); // fGPSD.php 
+
+include('params.php'); 	// пути и параметры
 
 $dataTypes = array(  	// время в секундах после последнего обновления, после которого считается, что данные протухли
 'track' => 15, 	// курс
@@ -96,7 +97,7 @@ else {
 }
 //echo "depthAlarm=$depthAlarm; minDepthValue=$minDepthValue; minSpeedAlarm=$minSpeedAlarm; minSpeedValue=$minSpeedValue; maxSpeedAlarm=$maxSpeedAlarm; maxSpeedValue=$maxSpeedValue;<br>\n";
 
-$tpv = askGPSD($gpsdHost,$gpsdPort,$SEEN_GPS); 	// исходные данные
+$tpv = askGPSD($gpsdHost,$gpsdPort); 	// исходные данные
 //echo "Ответ:<pre>"; print_r($tpv); echo "</pre>";
 if(is_string($tpv)) {
 	$symbol = $tpv;

@@ -6,8 +6,8 @@ session_start();
 ob_start(); 	// попробуем перехватить любой вывод скрипта
 chdir(pathinfo(__FILE__, PATHINFO_DIRNAME)); // задаем директорию выполнение скрипта
 include('params.php'); 	// пути и параметры
-if(!$gpsdHost) $gpsdHost = 'localhost';
-if(!$gpsdPort) $gpsdPort = 2947;
+if($gpsdHost) $host = $gpsdHost;
+else $host = $signalKhost;
 //echo "$gpsdHost,$gpsdPort\n";
 require_once('fGPSD.php'); // fGPSD.php
 $MOBdataFileName = 'MOB.json';
@@ -52,7 +52,7 @@ session_write_close();
 echo "<pre>";print_r($outData);echo "</pre>";
 
 // Отправим данные
-$outData = json_encode(array_merge($outData,getPosAndInfo($gpsdHost,$gpsdPort))); 	// получим ВремяПозициюСкорость от gpsd
+$outData = json_encode(array_merge($outData,getPosAndInfo($host,$gpsdPort))); 	// получим ВремяПозициюСкорость от gpsd
 
 ob_end_clean(); 			// очистим, если что попало в буфер
 header('Content-Type: application/json;charset=utf-8;');
