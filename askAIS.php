@@ -1,33 +1,33 @@
 <?php
 /* 
 */
+session_start();
 ob_start(); 	// попробуем перехватить любой вывод скрипта
 $path_parts = pathinfo(__FILE__); // определяем каталог скрипта
 chdir($path_parts['dirname']); // задаем директорию выполнение скрипта
 require('params.php'); 	// пути и параметры
 
-echo "aisJSONfileName=$aisJSONfileName; netAISJSONfileName=$netAISJSONfileName; <br><br>\n";
+$daemonRunningFTimeOut = 60; 	// сек. Если gpsdAISd не обновлял флаг-файл столько -- он умер
 
-$AISdata = FALSE;
-if($aisJSONfileName and $netAISJSONfileName) { 	// Объединим данные AIS и netAIS
-	list($aisJSONfileName,$daemonRunningFlag) = getAISdFilesNames($aisJSONfileName);
-	$netAISJSONfileName = getNetAISdFilesNames($netAISJSONfileName);
-	echo "aisJSONfileName=$aisJSONfileName; netAISJSONfileName=$netAISJSONfileName; <br><br>\n";
+//echo "aisJSONfileName=$aisJSONfileName; netAISJSONfileName=$netAISJSONfileName; <br><br>\n";
+list($aisJSONfileName,$daemonRunningFlag) = getAISdFilesNames($aisJSONfileName);
+//echo "aisJSONfileName=$aisJSONfileName; daemonRunningFlag=$daemonRunningFlag;<br>\n";
+clearstatcache(TRUE,$daemonRunningFlag);
+if(file_exists($daemonRunningFlag)) {
+	echo "daemonRunningFlag exists.<br>\n";
+	unlink($daemonRunningFlag); 	// Удалим флаг в знак того, что мы читаем данные
 	clearstatcache(TRUE,$daemonRunningFlag);
-	if(file_exists($daemonRunningFlag)) {
-		echo "daemonRunningFlag exists.<br>\n";
-		unlink($daemonRunningFlag); 	// Удалим флаг в знак того, что мы читаем данные
-		clearstatcache(TRUE,$daemonRunningFlag);
-	}
-	else {
-		// Запускаем gpsdAISd
-		exec("$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName --nvto$noVehicleTimeout -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
-		echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName --nvto$noVehicleTimeout -h$gpsdHost -p$gpsdPort<br><br>\n";
-	}
-	clearstatcache(TRUE,$aisJSONfileName);
-	$AISdata = json_decode(file_get_contents($aisJSONfileName),TRUE); 	// 
-	if(! is_array($AISdata)) $AISdata=array();
+}
+else {
+	// Запускаем gpsdAISd
+	exec("$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName -h$host -p$port > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+	echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName -h$host -p$port<br><br>\n";
+}	
 
+$AISdata = json_decode(file_get_contents($aisJSONfileName),TRUE);
+if(!$AISdata) $AISdata = array();
+if( $netAISJSONfileName) { 	// Объединим данные AIS и netAIS
+	$netAISJSONfileName = getNetAISdFilesNames($netAISJSONfileName);
 	clearstatcache(TRUE,$netAISJSONfileName);
 	$netAISdata = json_decode(@file_get_contents($netAISJSONfileName),TRUE); 	// 
 	if(! is_array($netAISdata)) $netAISdata = array();
@@ -35,36 +35,17 @@ if($aisJSONfileName and $netAISJSONfileName) { 	// Объединим данны
 	
 	foreach($netAISdata as $mmsi => $data) {
 		foreach($data as $key => $val) {
-			$AISdata[$mmsi][$key] = $val;
+			$AISdata['AIS'][$mmsi][$key] = $val;
 		}
 	}
 	
 	//echo "AISdata <pre>"; print_r($AISdata); echo "</pre><br>\n";
-	$AISdata = json_encode($AISdata);
 }
-elseif($netAISJSONfileName) $aisJSONfileName = getNetAISdFilesNames($netAISJSONfileName);
-else {
-	list($aisJSONfileName,$daemonRunningFlag) = getAISdFilesNames($aisJSONfileName);
-	echo "aisJSONfileName=$aisJSONfileName; daemonRunningFlag=$daemonRunningFlag;<br><br>\n";
-	clearstatcache(TRUE,$daemonRunningFlag);
-	if(file_exists($daemonRunningFlag)) {
-		echo "daemonRunningFlag exists.<br>\n";
-		unlink($daemonRunningFlag); 	// Удалим флаг в знак того, что мы читаем данные
-		clearstatcache(TRUE,$daemonRunningFlag);
-	}
-	else {
-		// Запускаем gpsdAISd
-		exec("$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
-		echo "gpsdAISd daemon started as:<br>$phpCLIexec $gpsdAISdPath/$gpsdAISd -o$aisJSONfileName -h$gpsdHost -p$gpsdPort<br><br>\n";
-	}	
-}
-echo "aisJSONfileName=$aisJSONfileName;<br><br>\n";
 
-clearstatcache(TRUE,$aisJSONfileName);
 ob_end_clean(); 			// очистим, если что попало в буфер
 header('Content-Type: application/json;charset=utf-8;');
-if($AISdata === FALSE) echo file_get_contents($aisJSONfileName)."\n";
-else echo "$AISdata \n"; 	// 
+echo json_encode($AISdata['AIS'])."\n"; 	// 
+
 return;
 
 

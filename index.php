@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.8.1';
+$versionTXT = '1.8.2';
 /* 
 1.8.0 	MOB feature
 1.7.2 	auto-update edited routes
@@ -207,11 +207,15 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 			<div class="big_symbol" onClick="if(! noFollowToCursor) map.setView(cursor.getLatLng());"> <?php // передвинуть карту на место курсора ?>
 				<div>
 					<div style="line-height:0.5;">				
-						<span id='velocityDial'></span><br><span style="font-size:50%;"><?php echo $dashboardSpeedMesTXT;?></span>
+						<div style="font-size:50%;"><?php echo $dashboardSpeedTXT;?></div><br>
+						<div id='velocityDial'></div><br>
+						<div style="font-size:50%;"><?php echo $dashboardSpeedMesTXT;?></div>
+					</div>
+					<div id='depthDial' style="line-height:0.5;">				
 					</div>
 					<div style="font-size:50%;line-height:0.5;">
-						<br><br><span style="font-size:50%;"><?php echo $dashboardHeadingTXT;?></span><br>
-						<span style="font-size:30%; "><?php echo $dashboardHeadingAltTXT;?></span>
+						<br><br><span style="font-size:50%;"><?php echo $dashboardHeadingTXT;?></span>
+						<span style="font-size:30%; "><br><?php echo $dashboardHeadingAltTXT;?></span>
 					</div>
 					<div style="font-size:50%;">
 						<span id='headingDisplay'></span>
@@ -544,6 +548,8 @@ var lat; 	 	// широта
 var lng; 	 	// долгота, округлённые до 4-х знаков
 var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
 var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
+var dashboardDepthMesTXT = '<?php echo $dashboardDepthMesTXT;?>';
+var dashboardMeterMesTXT = '<?php echo $dashboardMeterMesTXT;?>';
 // Прокладка
 var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
 // MOB
@@ -917,6 +923,12 @@ function realtimeTPVupdate(gpsdData) {
 		velocityCursor.options.iconAnchor=[3,velocityCursorLength];
 		velocityVector.setIcon(velocityCursor); 	// изменить иконку у маркера
 	}
+	if(gpsdData.depth) {
+		depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+gpsdData.depth+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
+	}
+	else {
+		depthDial.innerHTML = '';
+	}
 	
 	// Направление с попыткой его запомнить при прекращении движения
 	velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
@@ -1022,14 +1034,16 @@ for(const vehicle in aisData){
 	if(!vehicles[vehicle]) { 	// global var, массив layers с целями
 		//console.log(vehicle);
 		//console.log(aisData[vehicle]);
+		var defaultSymbol;
+		var noHeadingSymbol;
 		if(aisData[vehicle].netAIS) { 	// цель получена от netAIS
-			var defaultSymbol = [1*0.5,0, 0.25*0.5,0.25*0.5, 0,1*0.5, -0.25*0.5,0.5*0.5, -1*0.5,0.75*0.5, -1*0.5,-0.75*0.5, -0.25*0.5,-0.5*0.5, 0,-1*0.5, 0.25*0.5,-0.25*0.5]; 	// треугольник, расстояния от центра, через которые нарисуют polyline
-			var noHeadingSymbol = [1*0.35,0, 0.75*0.35,0.5*0.35, 1*0.35,1*0.35, 0.5*0.35,0.75*0.35, 0,1*0.35, -0.5*0.35,0.75*0.35, -1*0.35,1*0.35, -0.75*0.35,0.5*0.35, -1*0.35,0, -0.75*0.35,-0.5*0.35, -1*0.35,-1*0.35, -0.5*0.35,-0.75*0.35, 0,-1*0.35, 0.5*0.35,-0.75*0.35, 1*0.35,-1*0.35, 0.75*0.35,-0.5*0.35]; 	// ромбик: правый, верхний, левый, нижний ПРотив часовой от правого?
+			defaultSymbol = [1*0.5,0, 0.25*0.5,0.25*0.5, 0,1*0.5, -0.25*0.5,0.5*0.5, -1*0.5,0.75*0.5, -1*0.5,-0.75*0.5, -0.25*0.5,-0.5*0.5, 0,-1*0.5, 0.25*0.5,-0.25*0.5]; 	// треугольник, расстояния от центра, через которые нарисуют polyline
+			noHeadingSymbol = [1*0.35,0, 0.75*0.35,0.5*0.35, 1*0.35,1*0.35, 0.5*0.35,0.75*0.35, 0,1*0.35, -0.5*0.35,0.75*0.35, -1*0.35,1*0.35, -0.75*0.35,0.5*0.35, -1*0.35,0, -0.75*0.35,-0.5*0.35, -1*0.35,-1*0.35, -0.5*0.35,-0.75*0.35, 0,-1*0.35, 0.5*0.35,-0.75*0.35, 1*0.35,-1*0.35, 0.75*0.35,-0.5*0.35]; 	// ромбик: правый, верхний, левый, нижний ПРотив часовой от правого?
 			//console.log(aisData[vehicle]);
 		}
 		else { 	// цель получена от локального приёмника AIS
-			var defaultSymbol = [0.8,0, -0.3,0.35, -0.3,-0.35]; 	// треугольник вправо, расстояния от центра, через которые нарисуют polyline
-			var noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
+			defaultSymbol = [0.8,0, -0.3,0.35, -0.3,-0.35]; 	// треугольник вправо, расстояния от центра, через которые нарисуют polyline
+			noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
 		}
 		vehicles[vehicle] = L.trackSymbol(L.latLng(0,0),{
 			trackId: vehicle,

@@ -2,8 +2,10 @@
 if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
 //if(TRUE) { 	// 
 	$homeHeaderTXT = 'Maps';
-	$dashboardHeaderTXT = 'Velocity&heading';
+	$dashboardHeaderTXT = 'Speed&heading';
+	$dashboardSpeedTXT = 'Speed';
 	$dashboardSpeedMesTXT = 'km/h';
+	$dashboardDepthMesTXT = 'Depth';
 	$dashboardMeterMesTXT = 'meters';
 	$dashboardHeadingTXT = 'Heading';
 	$dashboardHeadingAltTXT = 'Истинный курс';
@@ -83,7 +85,9 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 else {
 	$homeHeaderTXT = 'Карты';
 	$dashboardHeaderTXT = 'Скорость и направление';
+	$dashboardSpeedTXT = 'Скорость';
 	$dashboardSpeedMesTXT = 'км/ч';
+	$dashboardDepthMesTXT = 'Глубина';
 	$dashboardMeterMesTXT = 'м.';
 	$dashboardHeadingTXT = 'Истинный курс';
 	$dashboardHeadingAltTXT = 'Heading';

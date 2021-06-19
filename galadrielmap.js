@@ -1145,6 +1145,7 @@ return bearing;
 function realtime(dataUrl,fUpdate,upData) {
 /*
 fUpdate - функция обновления. Все должно делаться в ней. Получает json object
+upData - данные для отправки
 */
 //console.log(dataUrl);
 //console.log('RealTime upData',upData);

@@ -2,11 +2,10 @@
 
 $SEEN_GPS = 0x01; $SEEN_AIS = 0x08;
 
-function askGPSD($host='localhost',$port=2947,$dataType=NULL) {
+function askGPSD($host='localhost',$port=2947,$dataType=0x01) {
 /*
 $dataType - Bit vector of property flags. gpsd_json.5 ln 1355
 */
-if($dataType===NULL) $dataType=0x01;
 //echo "\n\nНачали. dataType=$dataType;host:$host:$port<br>\n";
 $gpsd  = @stream_socket_client('tcp://'.$host.':'.$port,$errno,$errstr); // открыть сокет 
 if(!$gpsd) return 'no GPSD';
@@ -16,6 +15,7 @@ $controlClasses = array('VERSION','DEVICES','DEVICE','WATCH');
 $WATCHsend = FALSE; $POLLsend = FALSE;
 do { 	// при каскадном соединении нескольких gpsd заголовков может быть много
 	$buf = fgets($gpsd); 
+	//echo "<br>buf: ";echo "<pre>"; print_r($buf); echo "</pre>\n";
 	if($buf === FALSE) { 	// gpsd умер
 	    @socket_close($gpsd);
 		$msg = "Failed to read data from gpsd: $errstr";
@@ -68,6 +68,7 @@ do { 	// при каскадном соединении нескольких gps
 	}
 	
 }while(in_array($buf['class'],$controlClasses));
+//echo "buf: ";echo "<pre>"; print_r($buf); echo "</pre>\n";
 
 if(!$devicePresent) return 'no required devices present';
 //echo "<pre>\n"; print_r($devicePresent); echo "</pre><br>\n";
@@ -76,19 +77,30 @@ if(!$devicePresent) return 'no required devices present';
 fclose($gpsd);
 //echo "Закрыт сокет\n";
 
-//echo "<br>JSON gpsdData: ";echo "<pre>"; print_r($gpsdData); echo "</pre>\n";
 if(!$buf['active']) return 'no any active devices';
 
 $tpv = array();
 foreach($buf['tpv'] as $device) {
 	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
 	if(!in_array($device['device'],$devicePresent)) continue; 	// это не то устройство, которое потребовали
+	// Поток всякого из сети будем брать от специального демона, а не по POLL
+	if(substr($device['device'],0,6) == 'tcp://') {
+		//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
+		//if(!$_SESSION[$device['device']]) $_SESSION[$device['device']] = array();
+		foreach($device as $type => $val) { 	// возможно, и не стоит? Данные могут быть очень неактуальны
+			$_SESSION[$device['device']][$type] = $val;
+		}
+		$device = $_SESSION[$device['device']];
+	}
+	
 	if($device['time'])	$tpv[$device['time']] = $device; 	// askGPSD, с ключём - время
-	else $tpv[] = $device; 	// с ключём  - целым.
+	else {
+		//$device['time'] = $buf['time']; 	// девайс не указал время -- используем время из сессии gpsd. А откуда gpsd его берёт?
+		$tpv[] = $device; 	// с ключём  - целым.
+	}
+	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
 }
-//echo "Получены данные\n";
-//echo "<br>device=<pre>"; print_r($tpv); echo "</pre>\n";
-//print_r($buf);
+//echo "Получены данные <pre>"; print_r($tpv); echo "</pre>\n";
 return $tpv;
 } // end function askGPSD
 
@@ -129,9 +141,13 @@ if(is_string($gpsdData)) {
 krsort($gpsdData); 	// отсортируем по времени к прошлому
 $lat=0; $lon=0; $heading=0; $speed=0;
 $tpv = array();
+$anyDepth = FALSE;
 foreach($gpsdData as $device) {
 	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
-	if($device['mode'] < 2) continue; 	// координат нет или это не ГПС
+	if($device['mode'] < 2) { 	// координат нет или это не ГПС
+		if($device['depth']) $anyDepth = $device['depth'];
+		continue;
+	}
 	if($device['mode'] == 3) { 	// последний по времени 3D fix - больше ничего не надо
 		$tpv = array(
 			'lon' => $device['lon'], 	// долгота
@@ -141,7 +157,8 @@ foreach($gpsdData as $device) {
 			'time' => $device['time'],
 			'errX' => $device['epx'], 	// метры ошибки по x
 			'errY' => $device['epy'], 	// метры ошибки по y
-			'errS' => $device['eps'] 	// метры/сек ошибки скорости
+			'errS' => $device['eps'], 	// метры/сек ошибки скорости
+			'depth' => $device['depth'] 	// метры глубина
 		);
 		break;
 	}
@@ -154,7 +171,8 @@ foreach($gpsdData as $device) {
 			'time' => $device['time'],
 			'errX' => $device['epx'], 	// метры ошибки по x
 			'errY' => $device['epy'], 	// метры ошибки по y
-			'errS' => $device['eps'] 	// метры/сек ошибки скорости
+			'errS' => $device['eps'], 	// метры/сек ошибки скорости
+			'depth' => $device['depth'] 	// метры глубина
 		);
 	} 	// а более ранние 2D fixses игнорируем
 }
@@ -165,6 +183,7 @@ if(!$tpv){ 	// координат нет, потому что не было ни
     $gpsdData = array('error' => 'no fix from any devices'); 	// ничего нет, облом
     return $gpsdData;
 }
+if(!$tpv['depth'] and $anyDepth) $tpv['depth'] = $anyDepth;
 return $tpv;
 } // end function getPosAndInfoFromGPSD
 
@@ -254,24 +273,25 @@ foreach($findServers as $serverID => $server){
 	//print_r($http_response_header);
 	//print_r($signalkDiscovery);
 	$APIurl = $signalkDiscovery['endpoints']['v1']['signalk-http'];
-	$position = json_decode(file_get_contents($APIurl."vessels/{$server['self']}/navigation"),TRUE);
+	$vessel = json_decode(file_get_contents($APIurl."vessels/{$server['self']}"),TRUE);
+	$position = $vessel['navigation'];
 	//print_r($position);
 	if(! $position) { 	// нет такого ресурса
 		unset($findServers[$serverID]);
 		continue;
 	}
 	$timestamp = strtotime($position['position']['timestamp']);
+	$TPV = array('time' => $timestamp);
 	if($position['position']['value']['longitude'] and $position['position']['value']['latitude']) {
-		$TPV = array(
-			'lon' => $position['position']['value']['longitude'], 	// долгота
-			'lat' => $position['position']['value']['latitude'], 	// широта
-			'heading' => $position['courseOverGroundTrue']['value']*180/M_PI, 	// курс, исходно -- в радианах
-			'velocity' => $position['speedOverGround']['value'], 	// скорость m/sec
-			'time' => $timestamp,
-		);
-		$spatialInfo[$timestamp] = $TPV;
+		$TPV['lon'] = $position['position']['value']['longitude']; 	// долгота
+		$TPV['lat'] = $position['position']['value']['latitude']; 	// широта
+		$TPV['heading'] = $position['courseOverGroundTrue']['value']*180/M_PI; 	// курс, исходно -- в радианах
+		$TPV['velocity'] = $position['speedOverGround']['value']; 	// скорость m/sec
 		//echo date(DATE_RFC2822,$timestamp).' '.$position['position']['timestamp'];
 	}
+	if($vessel['environment']['depth']['belowSurface']) $TPV['depth'] = $vessel['environment']['depth']['belowSurface']['value'];
+	elseif($vessel['environment']['depth']['belowTransducer']) $TPV['depth'] = $vessel['environment']['depth']['belowTransducer']['value'];
+	$spatialInfo[$timestamp] = $TPV;
 }
 krsort($spatialInfo); 	// отсортируем по времени к прошлому
 //print_r(reset($spatialInfo));

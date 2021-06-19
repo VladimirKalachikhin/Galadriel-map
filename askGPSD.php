@@ -5,20 +5,20 @@
 session_start();
 ob_start(); 	// попробуем перехватить любой вывод скрипта
 chdir(pathinfo(__FILE__, PATHINFO_DIRNAME)); // задаем директорию выполнение скрипта
-include('params.php'); 	// пути и параметры
+require_once('params.php'); 	// пути и параметры
 if($gpsdHost) $host = $gpsdHost;
 else $host = $signalKhost;
 //echo "$gpsdHost,$gpsdPort\n";
-require_once('fGPSD.php'); // fGPSD.php
+require_once('fGPSD.php'); // fGPSD.php, требует наличия session_start() для того, чтобы нормально обрабатывался результат чтения gpsd'ом потока NMEA из tcp
 $MOBdataFileName = 'MOB.json';
 $MOBdataFilePath = 'MOB/';
 $outData = array();
 
 // Примем данные
 $upData = $_REQUEST['upData'];
-echo "upData=$upData;<br>\n";
+//echo "upData=$upData;<br>\n";
 $upData = json_decode($upData, true);
-echo "File ".pathinfo(__FILE__, PATHINFO_DIRNAME)."<br>\nВходящие:<pre>";print_r($upData);echo "</pre>";
+//echo "File ".pathinfo(__FILE__, PATHINFO_DIRNAME)."<br>\nВходящие:<pre>";print_r($upData);echo "</pre>";
 
 // Обработаем данные
 if(isset($upData['MOB'])) { 	echo "режим MOB должен быть включён<br>\n";
@@ -49,7 +49,7 @@ if($MOBtime) { 	// режим MOB
 	else $outData['MOB'] = true; 	// сообщим о режиме MOB
 }
 session_write_close();
-echo "<pre>";print_r($outData);echo "</pre>";
+//echo "<pre>";print_r($outData);echo "</pre>";
 
 // Отправим данные
 $outData = json_encode(array_merge($outData,getPosAndInfo($host,$gpsdPort))); 	// получим ВремяПозициюСкорость от gpsd

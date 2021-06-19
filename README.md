@@ -29,6 +29,10 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 ## Compatibility
 Linux. Modern browsers include mobile.
 
+## Limitations
+You may want to use some tcp streams as a data source in GaladrielMap. It's may be a stream from hardware instruments multiplexor or software multiplexor such as [Signal K](https://signalk.org/). Due to [gpsd](https://gpsd.io/) and [Signal K](https://signalk.org/) limitations data from tcp streams can be shown with some delay, and be not quite relevant. This does not apply to coordinates, velocity and heading. This data is always correct.  
+This limitation applies only to tcp streams data sources for [gpsd](https://gpsd.io/) and [Signal K](https://signalk.org/) daemons. Devices, directly plugged to [gpsd](https://gpsd.io/) (or [Signal K](https://signalk.org/), if [Signal K](https://signalk.org/) used instead [gpsd](https://gpsd.io/), see [Positioning](#positioning)) displayed correctly.
+
 
 ## Demo
 Full feature [live demo](http://130.61.159.53/map/). Sometimes there floating a virtual sailboat.

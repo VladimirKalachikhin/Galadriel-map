@@ -115,6 +115,8 @@ L.TrackSymbol = L.Path.extend({
 		delete aisData.course;
 		this._heading = aisData.heading * Math.PI/180;
 		delete aisData.heading;
+		if(!this._heading && this._course) this._heading = this._course;
+		else if(!this._course && this._heading) this._course = this._heading;
 		if(aisData.to_bow && aisData.to_stern && aisData.to_port && aisData.to_starboard) {
 			this.options.gpsRefPos = [aisData.to_bow, aisData.to_stern, aisData.to_port, aisData.to_starboard];
 			this._gpsRefPos = this.options.gpsRefPos;
