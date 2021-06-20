@@ -185,6 +185,14 @@ html, body, #mapid {
 	</div>
 	<!-- Tab panes -->
 	<div class="leaflet-sidebar-content" id='tabPanes'>
+<?php /* ?>
+<div id='infoBox' style='font-size: 90%; position: absolute;'>
+</div>
+<script>
+//alert(window.outerWidth+' '+window.outerHeight);
+infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
+</script>
+<?php */ ?>
 		<!-- Карты -->
 		<div class="leaflet-sidebar-pane" id="home">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
@@ -206,21 +214,21 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $dashboardHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<div class="big_symbol" onClick="if(! noFollowToCursor) map.setView(cursor.getLatLng());"> <?php // передвинуть карту на место курсора ?>
 				<div>
-					<div style="line-height:0.5;">				
+					<div style="line-height:0.4;">				
 						<div style="font-size:50%;"><?php echo $dashboardSpeedTXT;?></div><br>
 						<div id='velocityDial'></div><br>
 						<div style="font-size:50%;"><?php echo $dashboardSpeedMesTXT;?></div>
 					</div>
-					<div id='depthDial' style="line-height:0.5;">				
+					<div id='depthDial' style="line-height:0.4;">				
 					</div>
-					<div style="font-size:50%;line-height:0.5;">
+					<div style="font-size:50%;line-height:0.4;">
 						<br><br><span style="font-size:50%;"><?php echo $dashboardHeadingTXT;?></span>
 						<span style="font-size:30%; "><br><?php echo $dashboardHeadingAltTXT;?></span>
 					</div>
 					<div style="font-size:50%;">
 						<span id='headingDisplay'></span>
 					</div>
-					<div style="font-size:50%;line-height:0.5;" onClick="doCopyToClipboard(lat+' '+lng);" >
+					<div style="font-size:50%;line-height:0.4;" onClick="doCopyToClipboard(lat+' '+lng);" >
 						<br><span style="font-size:50%;"><?php echo $dashboardPosTXT;?></span><br>
 						<span style="font-size:30%; "><?php echo $dashboardPosAltTXT;?></span>
 					</div>

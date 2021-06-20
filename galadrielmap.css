@@ -40,7 +40,7 @@
 }
 @media (max-width: 767px) { /* 854×480 */
 	.leaflet-sidebar-header {
-		font-size: 10px;
+		font-size: 9px;
 	}
 	.leaflet-sidebar { 	/*  */
 		width: 160px;
@@ -59,12 +59,12 @@
 		font-size: 9px;
 	}
 	.big_symbol {
-		font-size:30px;
+		font-size:20px;
 	}
 }
 @media (min-width: 768px) and (max-width: 991px) {
 	.leaflet-sidebar-header {
-		font-size: 15px;
+		font-size: 12px;
 	}
 	.leaflet-sidebar { 	/* исходно на 40 пикселов больше, чем leaflet-sidebar-pane */
 		width: 250px;
@@ -83,16 +83,19 @@
 		font-size: 12px;
 	}
 	.big_symbol {
-		font-size:50px;
+		font-size:25px;
 	}
 }
 @media (min-width: 992px) and (max-width: 1199px) { /* 1920x1200 */
+	.leaflet-sidebar-header {
+		font-size: 15px;
+	}
 	.leaflet-sidebar {
-		width: 300px;
-		max-width: 300px; 
+		width: 270px;
+		max-width: 270px; 
 	}
 	.leaflet-sidebar-pane {
-		min-width: 280px; 
+		min-width: 250px; 
 	} 
 	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
 		left: 315px; 
@@ -104,7 +107,7 @@
 		font-size: 15px;
 	}
 	.big_symbol {
-		font-size:55px;
+		font-size:40px;
 	}
 }
 @media (min-width: 1200px) {
@@ -125,7 +128,7 @@
 		font-size: 19px;
 	}
 	.big_symbol {
-		font-size:65px;
+		font-size:52px;
 	}
 }
 .leaflet-sidebar-left .leaflet-sidebar-close-icn {
