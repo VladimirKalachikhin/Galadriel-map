@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.8.2';
+$versionTXT = '1.8.3';
 /* 
 1.8.0 	MOB feature
 1.7.2 	auto-update edited routes
@@ -317,16 +317,16 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 			</div>
 			<?php // Поиск места ?>
 			<div style="width:95%;">
-				<div style="width:10rem;margin:0;padding:0;">
-					<button onClick='goToPositionField.value += "°";goToPositionField.focus();' style="width:2.1rem;height:1.5rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">°</span></button>
-					<button onClick='goToPositionField.value += "′";goToPositionField.focus();' style="width:2.1rem;height:1.5rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">′</span></button>
-					<button onClick='goToPositionField.value += "″";goToPositionField.focus();' style="width:2.1rem;height:1.5rem;margin:0 0rem 0 0;"><span style="font-weight: bold; font-size:150%;">″</span></button><br>
+				<div style="margin:0;padding:0;">
+					<button onClick='goToPositionField.value += "°";goToPositionField.focus();' style="width:2rem;height:1.5rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">°</span></button>
+					<button onClick='goToPositionField.value += "′";goToPositionField.focus();' style="width:2rem;height:1.5rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">′</span></button>
+					<button onClick='goToPositionField.value += "″";goToPositionField.focus();' style="width:2rem;height:1.5rem;margin:0 0rem 0 0;"><span style="font-weight: bold; font-size:150%;">″</span></button><br>
 				</div>
 				<span style=""><?php echo $dashboardPosAltTXT;?></span><br>
-				<input id = 'goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:9rem;font-size:150%;'>			
-				<button id = 'goToPositionButton' onClick='flyByString(this.value);' style="width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
+				<input id = 'goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:8.5rem;font-size:150%;'>			
+				<button id = 'goToPositionButton' onClick='flyByString(this.value);' style="width:3rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
 			</div>
-			<div  style='width:98%;height:10rem;overflow:auto;margin:0.3rem 0;'>
+			<div  style='width:98%;height:12rem;overflow:auto;margin:0.3rem 0;'>
 				<ul id='geocodedList' class='commonList'>
 				</ul>
 			</div>
@@ -417,10 +417,10 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 						<div style='height:28vh;overflow-y:auto;overflow-x:hidden;grid-column:1/3'>
 							<div style='display:grid; grid-template-columns: auto auto; grid-column-gap: 3px;'>
 								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:6rem;font-size:150%;'>
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:5rem;font-size:150%;'>
 								</div>
 								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:6rem;font-size:150%;' 
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:5rem;font-size:150%;' 
 										onChange="
 											//console.log(this.parentNode);
 											downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание
@@ -438,7 +438,7 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 							</div>
 						</div>
 					</div>
-					<div style="width:85%;margin: 0 auto;">
+					<div style="width:90%;">
 						<button type='reset' style="margin-top:5px;width:4rem;padding:0.2rem;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px" ></button>
 						<button type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 					</div>
