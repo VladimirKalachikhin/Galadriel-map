@@ -22,11 +22,18 @@ $tileCacheURI = "$tileCacheServerPath/tiles.php?z={z}&x={x}&y={y}&r={map}"; 	// 
 // 	Позиционирование Positioning support    
 // url службы, отдающей координаты. При отсутствии -- позиционировании карты не будет
 $gpsanddataServerURI = 'askGPSD.php'; 	// uri of the active data service, if present. Commonly spatial and vehicle data.
+
 // url демона gpsd, к которому должна обращаться служба позиционирования
-$gpsdHost = 'localhost';
-//$gpsdHost = '192.168.10.20';
-// порт url демона gpsd
-$gpsdPort = 2947;
+$gpsdHost = 'localhost'; 	// gpsd host
+//$gpsdHost = '192.168.10.10';
+// порт демона gpsd
+//$gpsdPort = 2947; 	// gpsd port
+$gpsdPort = 3838; 	// gpsdPROXY
+
+// если используется gpsdPROXY, и он нигде не запускается отдельно, укажите здесь полное имя для его запуска:
+// If you use gpsdPROXY, and no start it separately, place full filename here to start it:
+$gpsdPROXYname = 'gpsdPROXY/gpsdPROXY.php';
+
 // Signal K
 //$signalKhost = array(['localhost',3000]);
 // если время последнего определения положения отличается от текущего на столько секунд -- положение показывается как устаревшее (серый курсор)
@@ -50,14 +57,6 @@ $loggerMinMovie = 5; 	// m Motions shorter than this will not be logged
 $aisServerURI = 'askAIS.php'; 	// uri of the AIS data service, if present. Comment it if no need any AIS support.
 // время в секундах, в течении которого цель AIS отображается после получения от неё последней информации
 $noVehicleTimeout = 600; 	// seconds, time of continuous absence of the vessel in AIS, when reached - is deleted from the data. "when a ship is moored or at anchor, the position message is only broadcast every 180 seconds;"
-// 		AIS
-// путь в файловой системе к служебному файлу службы AIS. При отсутствии -- отображения информации AIS не будет. Без указания пути -- файл будет храниться в /tmp Это рекомендуется для "упрощённых систем" (например, OpenWRT), но настоятельно не рекомендуется для "полных" систем.
-//$aisJSONfileName = 'aisJSONdata';	//  Comment this if no need AIS support. To collect AIS data file. Without path - in /tmp, but has troubles on this case.
-$aisJSONfileName = '/home/www-data/gpsdAISd/aisJSONdata'; 	// Comment this if no need AIS support
-// путь в файловой системе к программе поддержки AIS
-$gpsdAISdPath = 'gpsdAISd';
-// url службы поддержки AIS
-$gpsdAISd = 'gpsdAISd.php'; 	// Daemon to collect local AIS data. Require if $aisJSONfileName, system path
 // 		netAIS
 // путь в файловой системе к программе поддержки обмена положением через Интернет (netAIS)
 $netAISPath = '/home/www-data/netAIS'; 	//  Comment this if no need netAIS support.

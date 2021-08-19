@@ -6,6 +6,7 @@ function askGPSD($host='localhost',$port=2947,$dataType=0x01) {
 /*
 $dataType - Bit vector of property flags. gpsd_json.5 ln 1355
 */
+$SEEN_GPS = 0x01; $SEEN_AIS = 0x08;
 //echo "\n\nНачали. dataType=$dataType;host:$host:$port<br>\n";
 $gpsd  = @stream_socket_client('tcp://'.$host.':'.$port,$errno,$errstr); // открыть сокет 
 if(!$gpsd) return 'no GPSD';
@@ -80,25 +81,32 @@ fclose($gpsd);
 if(!$buf['active']) return 'no any active devices';
 
 $tpv = array();
-foreach($buf['tpv'] as $device) {
-	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
-	//if(!in_array($device['device'],$devicePresent)) continue; 	// это не то устройство, которое потребовали. Однако, в случае gpsdPROXY или каскадного соединения gpsd здесь будет оригинальное устройство, сгенерировавшее данный, а в $devicePresent -- устройство, от которого данные получены. И будет неправильный облом.
-	//print "Поток всякого из сети будем брать от специального демона, а не по POLL<br>\n";
-	if(substr($device['device'],0,6) == 'tcp://') {
+switch($dataType){
+case $SEEN_GPS: 	// запросили только данные time-position-velosity
+	foreach($buf['tpv'] as $device) {
 		//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
-		//if(!$_SESSION[$device['device']]) $_SESSION[$device['device']] = array();
-		foreach($device as $type => $val) { 	// возможно, и не стоит? Данные могут быть очень неактуальны
-			$_SESSION[$device['device']][$type] = $val;
+		//if(!in_array($device['device'],$devicePresent)) continue; 	// это не то устройство, которое потребовали. Однако, в случае gpsdPROXY или каскадного соединения gpsd здесь будет оригинальное устройство, сгенерировавшее данный, а в $devicePresent -- устройство, от которого данные получены. И будет неправильный облом.
+		if($device['time'])	$tpv[$device['time']] = $device; 	// askGPSD, с ключём - время
+		else {
+			$tpv[] = $device; 	// с ключём  - целым.
 		}
-		$device = $_SESSION[$device['device']];
+		//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
 	}
-	
-	if($device['time'])	$tpv[$device['time']] = $device; 	// askGPSD, с ключём - время
-	else {
-		//$device['time'] = $buf['time']; 	// девайс не указал время -- используем время из сессии gpsd. А откуда gpsd его берёт?
-		$tpv[] = $device; 	// с ключём  - целым.
+	break;
+case $SEEN_AIS: 	// запросили только AIS
+	if($buf['ais']) $tpv = $buf['ais'];
+	else $tpv = array();
+	break;
+case $SEEN_GPS | $SEEN_AIS: 	// запросили TPV _И_ AIS (по | биты выставлени и там и там)
+	foreach($buf['tpv'] as $device) {
+		if($device['time'])	$tpv['tpv'][$device['time']] = $device; 	// askGPSD, с ключём - время
+		else {
+			$tpv['tpv'][] = $device; 	// с ключём  - целым.
+		}
 	}
-	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
+	if($buf['ais']) $tpv['ais'] = $buf['ais'];
+	else $tpv['ais'] = array();
+	break;
 }
 //echo "Получены данные <pre>"; print_r($tpv); echo "</pre>\n";
 return $tpv;
@@ -137,6 +145,7 @@ if(is_string($gpsdData)) {
     $gpsdData = array('error' => $gpsdData); 	// 
     return $gpsdData;
 }
+//echo "<br>askGPSD=<pre>"; print_r($gpsdData); echo "</pre>\n";
 
 krsort($gpsdData); 	// отсортируем по времени к прошлому
 $lat=0; $lon=0; $heading=0; $speed=0;

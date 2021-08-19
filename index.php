@@ -2,8 +2,9 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.8.4';
+$versionTXT = '1.9.0';
 /* 
+1.9.0 	use gpsdPROXY instead gpsdAISd
 1.8.0 	MOB feature
 1.7.2 	auto-update edited routes
 1.7.0 	geocoding feature
@@ -11,6 +12,11 @@ $versionTXT = '1.8.4';
 1.5.0	with track logging control. Fixed crazy Firefox XMLHttpRequest mime-type defaults.
 1.4.3	upd to stacked gpsd's
 */
+// start gpsdPROXY
+if($gpsdPROXYname){
+	exec("$phpCLIexec $gpsdPROXYname > /dev/null 2>&1 &");
+}
+
 // Интернационализация
 require_once('internationalisation.php');
 

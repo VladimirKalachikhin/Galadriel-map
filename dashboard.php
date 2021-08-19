@@ -443,6 +443,11 @@ function getData($dataName,$gpsdData,$dataTypes) {
 Какие данные нужно взять из $gpsdData и сколько хранить - указано в массиве $dataTypes
 Возвращает массив данных
 
+В настоящее время предполагается, что используется gpsdPROXY, и смысла в аккумулировании нет:
+оно выполняется gpsdPROXY. Однако $dataTypes содержит список типов данных, которые надо извлечь
+и которые dashboard может показать.
+Но, однако, источником может быть не только gpsdPROXY, поэтому попытка аккумуляции оставлена
+
 В $gpsdData данные по устройствам, в результирующем массиве - без конкретного устройства
 */
 //echo "Получено от gpsd:<pre>"; print_r($gpsdData); echo "</pre>";
@@ -452,6 +457,7 @@ krsort($gpsdData); 	// отсортируем устройства по врем
 foreach($gpsdData as $device) {
 	$tpv['time'] = $device['time'];
 	foreach($dataTypes as $data => $timeout) {
+		// а вдруг у нас не gpadPROXY, а что-то, что не контролирует время жизни?
 		if(($currTime-$tpvTime[$data])>$timeout) $tpv[$data] = NULL; 	// обнулим, если эти данные появлялись давно. Вне зависимости от возраста самих данных, которого может и не быть
 		if($device[$data]!==NULL) {
 			$tpv[$data] = (float)$device[$data];

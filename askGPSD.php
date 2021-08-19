@@ -9,7 +9,7 @@ require_once('params.php'); 	// пути и параметры
 if($gpsdHost) $host = $gpsdHost;
 else $host = $signalKhost;
 //echo "$gpsdHost,$gpsdPort\n";
-require_once('fGPSD.php'); // fGPSD.php, требует наличия session_start() для того, чтобы нормально обрабатывался результат чтения gpsd'ом потока NMEA из tcp
+require_once('fGPSD.php'); // fGPSD.php
 $MOBdataFileName = 'MOB.json';
 $MOBdataFilePath = 'MOB/';
 $outData = array();
