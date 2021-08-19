@@ -71,7 +71,7 @@ do { 	// при каскадном соединении нескольких gps
 //echo "buf: ";echo "<pre>"; print_r($buf); echo "</pre>\n";
 
 if(!$devicePresent) return 'no required devices present';
-//echo "<pre>\n"; print_r($devicePresent); echo "</pre><br>\n";
+//echo "devicePresent: <pre>\n"; print_r($devicePresent); echo "</pre><br>\n";
 
 @fwrite($gpsd, '?WATCH={"enable":false};'."\n"); 	// велим демону выключить устройства
 fclose($gpsd);
@@ -82,8 +82,8 @@ if(!$buf['active']) return 'no any active devices';
 $tpv = array();
 foreach($buf['tpv'] as $device) {
 	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
-	if(!in_array($device['device'],$devicePresent)) continue; 	// это не то устройство, которое потребовали
-	// Поток всякого из сети будем брать от специального демона, а не по POLL
+	//if(!in_array($device['device'],$devicePresent)) continue; 	// это не то устройство, которое потребовали. Однако, в случае gpsdPROXY или каскадного соединения gpsd здесь будет оригинальное устройство, сгенерировавшее данный, а в $devicePresent -- устройство, от которого данные получены. И будет неправильный облом.
+	//print "Поток всякого из сети будем брать от специального демона, а не по POLL<br>\n";
 	if(substr($device['device'],0,6) == 'tcp://') {
 		//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
 		//if(!$_SESSION[$device['device']]) $_SESSION[$device['device']] = array();

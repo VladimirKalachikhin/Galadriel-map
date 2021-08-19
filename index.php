@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.8.3';
+$versionTXT = '1.8.4';
 /* 
 1.8.0 	MOB feature
 1.7.2 	auto-update edited routes
@@ -902,6 +902,7 @@ function realtimeTPVupdate(gpsdData) {
 		velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
 		headingDisplay.innerHTML = '&nbsp;';
 		locationDisplay.innerHTML = '&nbsp;';
+		depthDial.innerHTML = '';
 		//MOBtab.className='disabled'; 	// если нет курсора (координат) -- невозможно включить режим MOB. Это плохая идея.
 		return;
 	}
