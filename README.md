@@ -30,9 +30,9 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 Linux. Modern browsers include mobile.
 
 ## Limitations
-You may want to use some tcp streams as a data source in GaladrielMap. It's may be a stream from hardware instruments multiplexor or software multiplexor such as [Signal K](https://signalk.org/). Due to [gpsd](https://gpsd.io/) and [Signal K](https://signalk.org/) limitations data from tcp streams can be shown with some delay, and be not quite relevant. This does not apply to coordinates, velocity and heading. This data is always correct.  
-This limitation applies only to tcp streams data sources for [gpsd](https://gpsd.io/) and [Signal K](https://signalk.org/) daemons. Devices, directly plugged to [gpsd](https://gpsd.io/) (or [Signal K](https://signalk.org/), if [Signal K](https://signalk.org/) used instead [gpsd](https://gpsd.io/), see [Positioning](#positioning)) displayed correctly.
+You may want to use some tcp streams as a data source in GaladrielMap. It's may be a stream from hardware instruments multiplexor or software multiplexor such as [Signal K](https://signalk.org/). Due to [gpsd](https://gpsd.io/) and [Signal K](https://signalk.org/) limitations data from tcp streams and instruments can be shown with some delay, and be not quite relevant. This does not apply to coordinates, velocity and heading. This data is always correct.  
 
+Usage [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) as data service (not by default) removes these restrictions.
 
 ## Demo
 Full feature [live demo](http://130.61.159.53/map/). Sometimes there floating a virtual sailboat.
@@ -149,9 +149,8 @@ If there is an Internet connection you can get the weather forecast from [Thomas
 
 ## Display AIS info
 ![AIS info](screenshots/s9-1.png)<br>
-GaladrielMap displayed AIS data via [gpsd](https://gpsd.io/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
-Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_.  
-
+GaladrielMap displayed AIS data via [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) from [gpsd](https://gpsd.io/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
+Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. As displaying AIS data need gpsdPROXY, you MUST use gpsdPROXY as position data service. Set up $gpsdHost and $gpsdPort variables in _params.php_ to this.
 
 ## netAIS support
 ![netAIS](screenshots/s13.png)<br>
@@ -169,14 +168,15 @@ To finalize MOB mode tap to the dot left of the "Terminate" button first.
 
 
 ## Dashboard
- _dashboard.php_ - the separate app to display some instruments attached to gpsd, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.  
+_dashboard.php_ - the separate app to display some instruments attached to gpsd, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.  
 Instruments from Signal K not displayed.  
  ![Dashboard velocity](screenshots/s6.jpg)<br>
  ![Dashboard heading](screenshots/s7.jpg)<br>
  ![Dashboard depth](screenshots/s11.jpg)<br>
  The Dashboard allows you to set a signal for dangerous events, such as shallow or speed. Set up your browser to allow sound signal.  
  ![Dashboard alarm](screenshots/s12.jpg)<br>
- No fanciful javascript, no fanciful css.  
+No fanciful javascript, no fanciful css.  
+Highly recommended to use [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) if you want to see data other them velocity.
 
 
 ## The GaladrielCache Loader
