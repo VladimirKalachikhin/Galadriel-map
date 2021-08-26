@@ -1016,10 +1016,9 @@ function realtimeTPVupdate(gpsdData) {
 		distanceMOBdisplay.innerHTML = Math.round(latlng1.distanceTo(latlng2));
 		locationMOBdisplay.innerHTML = '<?php echo $latTXT?> '+Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+'<br><?php echo $longTXT?> '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000;	
 		if(gpsdData.heading !== null) { 	// если доступен истинный курс, heading есть всегда
-			let relBearing = azimuth-heading-22.5;
+			let relBearing = azimuth-heading+22.5;	// половина от 45 против часовой стрелки
 			if(relBearing<0) relBearing = 360+relBearing;
 			relBearing = Math.floor(relBearing/45); 	// курсовой угол (relative bearing) / 45 градусов -- номер сектора, против часовой стрелки
-			if(relBearing>0) relBearing = relBearing+1;
 			if(relBearing>7) relBearing = 0;
 			directionMOBdisplay.innerHTML = relBearingTXT[relBearing];
 		}
