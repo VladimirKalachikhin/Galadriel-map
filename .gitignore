@@ -2,6 +2,7 @@ info.php
 *~
 test*
 _*
+*.backup
 *.zip
 L.TileLayer.Mercator*
 Leaflet*
