@@ -8,7 +8,6 @@ require_once('fGPSD.php'); // fGPSD.php
 require('params.php'); 	// пути и параметры
 
 $SEEN_AIS = 0x08;
-//echo "netAISJSONfileName=$netAISJSONfileName; <br><br>\n";
 
 $AISdata = askGPSD($gpsdHost,$gpsdPort,$SEEN_AIS); 	// исходные данные
 //echo "Ответ:<pre>"; print_r($AISdata); echo "</pre>";
@@ -16,15 +15,20 @@ if(is_string($AISdata)) {
 	$AISdata = '{"error":"'.$AISdata.'"}';
 	goto DISPLAY;
 }
-if( $netAISJSONfileName) { 	// Объединим данные AIS и netAIS
-	$netAISJSONfileName = getNetAISdFilesNames($netAISJSONfileName);
-	clearstatcache(TRUE,$netAISJSONfileName);
-	$netAISdata = json_decode(@file_get_contents($netAISJSONfileName),TRUE); 	// 
-	if(! is_array($netAISdata)) $netAISdata = array();
-	//echo "netAISdata <pre>"; print_r($netAISdata); echo "</pre><br>\n";
-	
-	foreach($netAISdata as $mmsi => $data) {
-		$AISdata[$mmsi] = $data;
+if( $netAISPath) { 	// Объединим данные AIS и netAIS
+	$netAISJSONfilesDir = getAISdFilesNames($netAISJSONfilesDir); 	// определим имя и создадим каталог для данных netAIS
+	//echo "netAISJSONfilesDir=$netAISJSONfilesDir;<br>\n";
+	$netAISfileNames = preg_grep('~onion~', scandir($netAISJSONfilesDir)); 	// возьмём только файлы onion
+	foreach($netAISfileNames as $netAISJSONfileName){
+		$netAISJSONfileName = $netAISJSONfilesDir.$netAISJSONfileName;
+		//echo "netAISJSONfileName=$netAISJSONfileName; <br><br>\n";
+		clearstatcache(TRUE,$netAISJSONfileName);
+		$netAISdata = json_decode(file_get_contents($netAISJSONfileName),TRUE); 	// 
+		if(! is_array($netAISdata)) $netAISdata = array();
+		//echo "netAISdata <pre>"; print_r($netAISdata); echo "</pre><br>\n";		
+		foreach($netAISdata as $mmsi => $data) {
+			$AISdata[$mmsi] = $data;
+		}
 	}
 	//echo "AISdata <pre>"; print_r($AISdata); echo "</pre><br>\n";
 }
@@ -38,16 +42,19 @@ return;
 
 
 
-function getNetAISdFilesNames($netAISJSONfileName) {
-$dirName = pathinfo($netAISJSONfileName, PATHINFO_DIRNAME);
-$fileName = pathinfo($netAISJSONfileName,PATHINFO_BASENAME);
+function getAISdFilesNames($path) {
+$path = rtrim($path,'/');
+if(!$path) $path = 'data';
+$dirName = pathinfo($path, PATHINFO_DIRNAME);
+$fileName = pathinfo($path,PATHINFO_BASENAME);
 if((!$dirName) OR ($dirName=='.')) {
 	$dirName = sys_get_temp_dir()."/netAIS"; 	// права собственно на /tmp в системе могут быть замысловатыми
 	@mkdir($dirName, 0777,true); 	// 
 	@chmod($dirName,0777); 	// права будут только на каталог netAIS. Если он вложенный, то на предыдущие, созданные по true в mkdir, прав не будет. Тогда надо использовать umask.
-	$netAISJSONfileName = $dirName."/".$fileName;
+	$path = $dirName."/".$fileName.'/';
 }
-return $netAISJSONfileName;
-}
+else $path .= '/';
+return $path;
+} // end function getAISdFilesNames
 
 ?>
