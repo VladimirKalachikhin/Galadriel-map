@@ -7,6 +7,7 @@ function askGPSD($host='localhost',$port=2947,$dataType=0x01) {
 $dataType - Bit vector of property flags. gpsd_json.5 ln 1355
 */
 $SEEN_GPS = 0x01; $SEEN_AIS = 0x08;
+global $spatialProvider;
 //echo "\n\nНачали. dataType=$dataType;host:$host:$port<br>\n";
 $gpsd  = @stream_socket_client('tcp://'.$host.':'.$port,$errno,$errstr); // открыть сокет 
 if(!$gpsd) return 'no GPSD';
@@ -38,6 +39,7 @@ do { 	// при каскадном соединении нескольких gps
 				return $msg;
 			}
 			$WATCHsend = TRUE;
+			$spatialProvider = $buf['release'];
 			//echo "Sending TURN ON\n";
 		}
 		break;
@@ -205,7 +207,7 @@ function getPosAndInfoFromSignalK($server=array()) {
 Серверы SignslK через какое-то время перестают быть видимыми через zeroconf, хотя, вроде, работают.
 Поэтому обнаружение их никак не гарантируется.
 */
-
+global $spatialProvider;
 //error_log("fGPSD.php getPosAndInfoFromSignalK: asking spatial info from SignalK");
 $serversDirName = sys_get_temp_dir().'/signalK';
 $serversName = $serversDirName.'/signalKservers';
@@ -272,6 +274,7 @@ if(!$findServers) {
 //error_log("fGPSD.php getPosAndInfoFromSignalK: SignalK services found!");
 //print_r($findServers);
 // Серверы обнаружены
+$spatialProvider = 'signalk-server';
 $spatialInfo = array();
 foreach($findServers as $serverID => $server){
 	$signalkDiscovery = json_decode(file_get_contents("http://{$server['host']}:{$server['port']}/signalk"),TRUE);

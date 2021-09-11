@@ -42,15 +42,15 @@ $PosFreshBefore = 5; 	// seconds. The position is considered correct no longer t
 // 	Запись пути Logging
 //		установите gpsd-utils, в состав которых входит gpxlogger  install gpsd-utils for gpxlogger
 //		если эта переменная не установлена -- считается, что запись пути осуществляется чем-то другим
-//		запуск gpxlogger. $gpsdHost:$gpsdPort подставляются всегда, в конце строки запуска.
-$gpxlogger = "gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. С $gpsdHost:$gpsdPort почему-то не работает в Ubuntu 20	
-//$gpxlogger = "gpxlogger -e sockets -r -i $loggerNoFixTimeout -m $loggerMinMovie"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. $gpsdHost:$gpsdPort always added to launch line end. If not set -- logging is not done by gpxlogger
+//		запуск gpxlogger. -f& заменяется на имя файла лога
+$gpxlogger = "gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie -f& $gpsdHost:2947"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. -f& replaced by log filename
+//$gpxlogger = "gpxlogger -e sockets -r -i $loggerNoFixTimeout -m $loggerMinMovie -f& $gpsdHost:2947"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. $gpsdHost:$gpsdPort always added to launch line end. If not set -- logging is not done by gpxlogger
 // 		url службы записи пути. Если не установлена -- записи пути не происходит
 $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service, if present. If not -- not logging activity
 // 		при потере позиции на столько секунд будет создан новый путь
 $loggerNoFixTimeout = 30; 	// sec A new track is created if there's no fix written for an interval
 // 		новые координаты записываются каждые столько секунд
-$loggerMinMovie = 5; 	// m Motions shorter than this will not be logged
+$loggerMinMovie = 5; 	// m Motions shorter than this will not be logged 
 
 // 	Поддержка Системы Автоматической Идентификации (AIS) и средства обмена положением через Интернет (netAIS)  AIS & netAIS support
 // url службы AIS. При отсутствии -- отображения информации AIS и netAIS не будет. Если не используется -- рекомендуется закомментировать эту строку для экономии ресурсов. AIS -- это очень ресурсоёмко.
@@ -59,7 +59,12 @@ $aisServerURI = 'askAIS.php'; 	// uri of the AIS data service, if present. Comme
 $noVehicleTimeout = 600; 	// seconds, time of continuous absence of the vessel in AIS, when reached - is deleted from the data. "when a ship is moored or at anchor, the position message is only broadcast every 180 seconds;"
 // 		netAIS
 // путь в файловой системе к программе поддержки обмена положением через Интернет (netAIS)
-$netAISPath = '/home/www-data/netAIS'; 	//  Comment this if no need netAIS support.
+// нет необходимости указывать этот путь, если используется один и тот же gpsdPROXY и для GaladrielMap, и для netAIS
+// путь необходимо указать, если gpsdPROXY не используется, или используется только одним из приложений.
+// File path to netAIS app.
+// If both GaladrielMap and netAIS use one gpsdPROXY -- no need to set this path. If only one -- 
+// it's need for netAIS work.
+//$netAISPath = '/home/www-data/netAIS'; 	//  
 
 // 	Динамическое обновление маршрутов  Route updater
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
