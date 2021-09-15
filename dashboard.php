@@ -150,6 +150,7 @@ if($depthAlarm and ($tpv['depth']!==NULL)) {
 
 // Что будем рисовать
 //echo "mode=$mode; magnetic=$magnetic;";
+//echo"tpv['speed']=".$tpv['speed']."<br>\n";
 switch($mode) {
 case 'track':
 	// показываемое
@@ -168,7 +169,7 @@ case 'track':
 	}
 	// следующее
 	if($tpv['depth']!==NULL) {
-		$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
+		$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// 
 		$nextMode = 'depth';
 	}
 	elseif($tpv['speed']!==NULL) {

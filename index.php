@@ -874,7 +874,7 @@ function realtimeTPVupdate(gpsdData) {
 	//console.log('Index gpsdData',gpsdData);
 	//console.log('Index gpsdData.MOB',gpsdData.MOB);
 	// pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
-	if(gpsdData.MOB === undefined) { 	// режима MOB нет
+	if(gpsdData.MOB == undefined || gpsdData.MOB == null) { 	// режима MOB нет
 		if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
 			MOBclose(); 	// пришло, что режима MOB нет -- завершим его
 		}
@@ -915,7 +915,8 @@ function realtimeTPVupdate(gpsdData) {
 	}
 	//console.log(mobMarker);
 	// Положение неизвестно
-	if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null)) { 	// 
+	//console.log('Index gpsdData',gpsdData.lon,gpsdData.lat);
+	if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
 		positionCursor.remove(); 	// уберём курсор с карты
 		velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
 		headingDisplay.innerHTML = '&nbsp;';
@@ -933,19 +934,21 @@ function realtimeTPVupdate(gpsdData) {
 	else cursor.setIcon(GpsCursor);
 	
 	// Показ скорости и прочего
+	//console.log('Index gpsdData',gpsdData.speed);
 	var metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
-	if(gpsdData.velocity===null) {
+	if(gpsdData.speed==undefined || gpsdData.speed==null) {
 		velocityDial.innerHTML = '&nbsp;';
 		velocityVector.setIcon(NoCursor);
 	}
 	else {
-		var velocity = Math.round((gpsdData.velocity*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
+		//var velocity = Math.round((gpsdData.speed*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
+		var velocity = Math.round((gpsdData.speed*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
 		//alert("Скорость: "+velocity+"км/ч");
 		velocityDial.innerHTML = velocity;
 		// Установим длину указателя скорости за  минуты
-		var velocityCursorLength = gpsdData.velocity*60*velocityVectorLengthInMn; 	// метров  за  минуты
+		var velocityCursorLength = gpsdData.speed*60*velocityVectorLengthInMn; 	// метров  за  минуты
 		velocityCursorLength = Math.round(velocityCursorLength/metresPerPixel);
-		//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.velocity='+gpsdData.velocity+'\nvelocityCursorLength='+velocityCursorLength);
+		//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.speed='+gpsdData.speed+'\nvelocityCursorLength='+velocityCursorLength);
 		velocityCursor.options.iconSize=[5,velocityCursorLength];
 		velocityCursor.options.iconAnchor=[3,velocityCursorLength];
 		velocityVector.setIcon(velocityCursor); 	// изменить иконку у маркера
@@ -958,8 +961,9 @@ function realtimeTPVupdate(gpsdData) {
 	}
 	
 	// Направление с попыткой его запомнить при прекращении движения
+	//console.log('Index gpsdData',gpsdData.heading);
 	velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
-	if(gpsdData.heading === null) {
+	if(gpsdData.heading === null || gpsdData.heading === undefined) {
 		headingDisplay.innerHTML = '&nbsp;';
 		cursor.setRotationAngle(0); // повернём маркер
 		velocityVector.setRotationAngle(0); // повернём указатель скорости
