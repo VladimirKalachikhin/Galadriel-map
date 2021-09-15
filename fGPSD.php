@@ -156,7 +156,6 @@ $tpv = array();
 switch($dataType) {
 case $SEEN_GPS:
 	krsort($gpsdData); 	// отсортируем по времени к прошлому
-	$lat=0; $lon=0; $heading=0; $speed=0;
 	foreach($gpsdData as $device) {
 		//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
 		if($device['mode'] == 3) { 	// последний по времени 3D fix - других координат не надо, но может быть информация от других устройств
@@ -318,10 +317,11 @@ case $SEEN_GPS:
 		if($position['position']['value']['longitude'] and $position['position']['value']['latitude']) {
 			$TPV['lon'] = $position['position']['value']['longitude']; 	// долгота
 			$TPV['lat'] = $position['position']['value']['latitude']; 	// широта
-			$TPV['heading'] = $position['courseOverGroundTrue']['value']*180/M_PI; 	// курс, исходно -- в радианах
-			$TPV['velocity'] = $position['speedOverGround']['value']; 	// скорость m/sec
-			//echo date(DATE_RFC2822,$timestamp).' '.$position['position']['timestamp'];
 		}
+		if($position['courseOverGroundTrue']['value']) $TPV['track'] = $position['courseOverGroundTrue']['value']*180/M_PI; 	// курс, исходно -- в радианах
+		if($position['speedOverGround']['value']) $TPV['speed'] = $position['speedOverGround']['value']; 	// скорость m/sec
+		if($position['headingTrue']['value']) $TPV['heading'] = $position['headingTrue']['value'];
+		//echo date(DATE_RFC2822,$timestamp).' '.$position['position']['timestamp'];
 		if($vessel['environment']['depth']['belowSurface']) $TPV['depth'] = $vessel['environment']['depth']['belowSurface']['value'];
 		elseif($vessel['environment']['depth']['belowTransducer']) $TPV['depth'] = $vessel['environment']['depth']['belowTransducer']['value'];
 		$spatialInfo[$timestamp] = $TPV;

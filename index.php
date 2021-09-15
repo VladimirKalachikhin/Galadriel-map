@@ -917,6 +917,7 @@ function realtimeTPVupdate(gpsdData) {
 	// Положение неизвестно
 	//console.log('Index gpsdData',gpsdData.lon,gpsdData.lat);
 	if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
+		console.log('Error message insted GPSD data',gpsdData);
 		positionCursor.remove(); 	// уберём курсор с карты
 		velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
 		headingDisplay.innerHTML = '&nbsp;';
@@ -961,15 +962,15 @@ function realtimeTPVupdate(gpsdData) {
 	}
 	
 	// Направление с попыткой его запомнить при прекращении движения
-	//console.log('Index gpsdData',gpsdData.heading);
+	//console.log('Index gpsdData',gpsdData.track);
 	velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
-	if(gpsdData.heading === null || gpsdData.heading === undefined) {
+	if(gpsdData.track == null || gpsdData.track == undefined) {
 		headingDisplay.innerHTML = '&nbsp;';
 		cursor.setRotationAngle(0); // повернём маркер
 		velocityVector.setRotationAngle(0); // повернём указатель скорости
 	}
 	else {
-		heading = gpsdData.heading; // если положение изменилось - возьмём новое направление, иначе - будет старое.
+		heading = gpsdData.track; // если положение изменилось - возьмём новое направление, иначе - будет старое.
 		cursor.setRotationAngle(heading); // повернём маркер
 		velocityVector.setRotationAngle(heading); // повернём указатель скорости
 		headingDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
@@ -1031,7 +1032,7 @@ function realtimeTPVupdate(gpsdData) {
 		azimuthMOBdisplay.innerHTML = Math.round(azimuth);
 		distanceMOBdisplay.innerHTML = Math.round(latlng1.distanceTo(latlng2));
 		locationMOBdisplay.innerHTML = '<?php echo $latTXT?> '+Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+'<br><?php echo $longTXT?> '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000;	
-		if(gpsdData.heading !== null) { 	// если доступен истинный курс, heading есть всегда
+		if(gpsdData.track !== null) { 	// если доступен истинный курс, heading есть всегда
 			let relBearing = azimuth-heading+22.5;	// половина от 45 против часовой стрелки
 			if(relBearing<0) relBearing = 360+relBearing;
 			relBearing = Math.floor(relBearing/45); 	// курсовой угол (relative bearing) / 45 градусов -- номер сектора, против часовой стрелки
