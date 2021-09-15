@@ -149,8 +149,9 @@ If there is an Internet connection you can get the weather forecast from [Thomas
 
 ## Display AIS info
 ![AIS info](screenshots/s9-1.png)<br>
-GaladrielMap displayed AIS data via [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) from [gpsd](https://gpsd.io/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
-Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. As displaying AIS data need gpsdPROXY, you MUST use gpsdPROXY as position data service. Set up $gpsdHost and $gpsdPort variables in _params.php_ to this.
+GaladrielMap displayed AIS data via [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) from [gpsd](https://gpsd.io/) or directly from [Signal K](https://signalk.org/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
+Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. To temporarily disable displaying AIS data use switch in <img src="img/settings1.svg" alt="Settings" width="24px"> menu.  
+As displaying AIS data from gpsd need gpsdPROXY, you MUST use gpsdPROXY as position data service. Set up $gpsdHost and $gpsdPort variables in _params.php_ to this.
 
 ## netAIS support
 ![netAIS](screenshots/s13.png)<br>

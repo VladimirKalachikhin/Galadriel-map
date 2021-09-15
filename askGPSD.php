@@ -40,7 +40,7 @@ if(isset($upData['MOB'])) { 	echo "режим MOB должен быть вклю
 // Соберём данные
 // MOB
 $MOBtime = @filectime($MOBdataFilePath.$MOBdataFileName);
-echo "MOBtime=$MOBtime;<br>\n";
+//echo "MOBtime=$MOBtime;<br>\n";
 if($MOBtime) { 	// режим MOB
 	if($MOBtime > $_SESSION['MOBsending']) { 	// этому клиенту данные ещё не сообщали
 		$outData['MOB'] = json_decode(file_get_contents($MOBdataFilePath.$MOBdataFileName), true);
@@ -52,7 +52,7 @@ session_write_close();
 //echo "<pre>";print_r($outData);echo "</pre>";
 
 // Отправим данные
-$outData = json_encode(array_merge($outData,getPosAndInfo($host,$gpsdPort))); 	// получим ВремяПозициюСкорость от gpsd
+$outData = json_encode(array_merge($outData,getPosAndInfo($host,$gpsdPort))); 	// fGPSD.php получим ВремяПозициюСкорость от gpsd
 
 ob_end_clean(); 			// очистим, если что попало в буфер
 header('Content-Type: application/json;charset=utf-8;');

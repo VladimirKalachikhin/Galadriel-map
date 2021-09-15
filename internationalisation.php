@@ -39,6 +39,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$settingsCursorTXT = 'Follow <br>to cursor';
 	$settingsTrackTXT = 'Current track<br>always visible';
 	$settingsRoutesAlwaysTXT = 'Selected routes <br>always visible';
+	$DisplayAIS_TXT = 'Displaying AIS';
 	
 	$integerTXT = 'Integer';
 	$clearTXT = 'Clear';
@@ -121,6 +122,7 @@ else {
 	$settingsCursorTXT = 'Следование <br>за курсором';
 	$settingsTrackTXT = 'Текущй трек <br>всегда показывается';
 	$settingsRoutesAlwaysTXT = 'Выбранные маршруты <br>всегда показываются';
+	$DisplayAIS_TXT = 'Отображение AIS';
 	
 	$integerTXT = 'Целое число';
 	$clearTXT = 'Очистить';

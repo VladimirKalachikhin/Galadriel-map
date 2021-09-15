@@ -132,7 +132,9 @@ L.TrackSymbol = L.Path.extend({
 		this._shiptype = aisData.shiptype;
 		delete aisData.shiptype;
 		this._setColorsByTypeOfShip();
-		if(aisData.lat && aisData.lon) {
+		//console.log(aisData.lat,aisData.lon)
+		if(((aisData.lat !== undefined) && (aisData.lat !== null)) && ((aisData.lon !== undefined) && (aisData.lon !== null))) {
+		//if(aisData.lat && aisData.lon) {
 		    var oldLatLng = this._latlng;
 			this._latlng = L.latLng(aisData.lat,aisData.lon);
 		    this.fire('move', {oldLatLng: oldLatLng, latlng: this._latlng});
@@ -191,6 +193,13 @@ L.TrackSymbol = L.Path.extend({
 		let statusText;
 		if(!aisData.status_text) statusText = AISstatusTXT[aisData.status];
 		else statusText = aisData.status_text.trim();
+		
+		let dataStamp = '';
+		if(this.options.timestamp){
+			const d = new Date(this.options.timestamp*1000);
+			dataStamp = d.getHours()+':'+(d.getMinutes()<10?'0'+d.getMinutes():d.getMinutes());
+			//dataStamp = d.getHours()+':'+d.getMinutes();
+		}
 
 		let PopupContent = `
 <div>
@@ -209,7 +218,8 @@ L.TrackSymbol = L.Path.extend({
 		<span >${this.options.destination||''}</span><span style='float:right;'>${speedKMH}</span>
 	</div>
 ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>
-<span style='float:right;'>This on <a href='http://www.marinetraffic.com/ais/details/ships/mmsi:${this.options.mmsi}' target='_blank'>MarineTraffic.com</a></span><br>
+<span style='float:right;'>This on <a href='http://www.marinetraffic.com/ais/details/ships/mmsi:${this.options.mmsi}' target='_blank'>MarineTraffic.com</a></span>
+<span>${dataStamp}</span>
 </div>
 		`;
         if(this.getPopup()){

@@ -9,13 +9,13 @@ require('params.php'); 	// пути и параметры
 
 $SEEN_AIS = 0x08;
 
-$AISdata = askGPSD($gpsdHost,$gpsdPort,$SEEN_AIS); 	// исходные данные
+$AISdata = getPosAndInfo($gpsdHost,$gpsdPort,$SEEN_AIS); 	// исходные данные
 //echo "Ответ:<pre>"; print_r($AISdata); echo "</pre>";
 if(is_string($AISdata)) {
-	$AISdata = '{"error":"'.$AISdata.'"}';
+	$AISdata = array("error"=>$AISdata);
 	goto DISPLAY;
 }
-if( $netAISPath) { 	// Объединим данные AIS и netAIS
+if($netAISPath) { 	// Объединим данные AIS и netAIS
 	$netAISJSONfilesDir = getAISdFilesNames($netAISJSONfilesDir); 	// определим имя и создадим каталог для данных netAIS
 	//echo "netAISJSONfilesDir=$netAISJSONfilesDir;<br>\n";
 	$netAISfileNames = preg_grep('~onion~', scandir($netAISJSONfilesDir)); 	// возьмём только файлы onion

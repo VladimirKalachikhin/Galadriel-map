@@ -2,8 +2,9 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.9.0';
+$versionTXT = '1.9.1';
 /* 
+1.9.1 	AIS data from SignalK, in addition to tpv data
 1.9.0 	use gpsdPROXY instead gpsdAISd
 1.8.0 	MOB feature
 1.7.2 	auto-update edited routes
@@ -506,6 +507,17 @@ foreach($jobsInfo as $jobName) { 	//
 					</label>
 				</div>
 				<span style="font-size:120%"><?php echo $settingsRoutesAlwaysTXT;?></span>
+			</div>
+			<br><br>
+			<div style="margin: 1rem 1rem;"> <?php // Показ целей AIS ?>
+				<div class="onoffswitch" style="float:right;margin: 0 auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="DisplayAISswitch" onChange="watchAISswitching();">
+					<label class="onoffswitch-label" for="DisplayAISswitch">
+						<span class="onoffswitch-inner"></span>
+						<span class="onoffswitch-switch"></span>
+					</label>
+				</div>
+				<span style="font-size:120%;verticsl-align:middle;"><?php echo $DisplayAIS_TXT;?></span>
 			</div>
 		</div>
 	</div>
@@ -1034,50 +1046,80 @@ if($aisServerURI) { // если нет источника текущих дан�
 
 // Данные AIS
 // 	Запуск периодических функций
+function warchAISstart() {
+console.log('AIS switched ON');
 //setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},5000);
-setInterval(realtime,5000,aisServerURI,realtimeAISupdate);
+const intervalID = setInterval(realtime,5000,aisServerURI,realtimeAISupdate);
 //realtime(aisServerURI,realtimeAISupdate);
+return intervalID
+} // function warchAISstart
+
+var watchAISworker = warchAISstart(); 	// запускам периодическую функцию смотреть AIS
+DisplayAISswitch.checked = true;
+
+function warchAISstop(intervalID){
+console.log('AIS switched OFF',intervalID);
+clearInterval(intervalID);
+for(const vehicle in vehicles){
+	vehicles[vehicle].remove();
+	vehicles[vehicle] = null;
+	delete vehicles[vehicle];
+}
+} // end function warchAISstop
+
+function watchAISswitching(){
+if(DisplayAISswitch.checked) warchAISstart();
+else warchAISstop(watchAISworker);
+}
 
 function realtimeAISupdate(aisData) {
 //console.log(aisData); 	// массив с данными целей
+//console.log(DisplayAISswitch);
 let vehiclesVisible = [];
-for(const vehicle in aisData){
-	//console.log(aisData[vehicle]);
-	//console.log(aisData[vehicle].lat);	console.log(aisData[vehicle].lon);
-	//console.log(typeof(vehicles[vehicle]));
-	if(!vehicles[vehicle]) { 	// global var, массив layers с целями
-		//console.log(vehicle);
-		//console.log(aisData[vehicle]);
-		var defaultSymbol;
-		var noHeadingSymbol;
-		if(aisData[vehicle].netAIS) { 	// цель получена от netAIS
-			defaultSymbol = [1*0.5,0, 0.25*0.5,0.25*0.5, 0,1*0.5, -0.25*0.5,0.5*0.5, -1*0.5,0.75*0.5, -1*0.5,-0.75*0.5, -0.25*0.5,-0.5*0.5, 0,-1*0.5, 0.25*0.5,-0.25*0.5]; 	// треугольник, расстояния от центра, через которые нарисуют polyline
-			noHeadingSymbol = [1*0.35,0, 0.75*0.35,0.5*0.35, 1*0.35,1*0.35, 0.5*0.35,0.75*0.35, 0,1*0.35, -0.5*0.35,0.75*0.35, -1*0.35,1*0.35, -0.75*0.35,0.5*0.35, -1*0.35,0, -0.75*0.35,-0.5*0.35, -1*0.35,-1*0.35, -0.5*0.35,-0.75*0.35, 0,-1*0.35, 0.5*0.35,-0.75*0.35, 1*0.35,-1*0.35, 0.75*0.35,-0.5*0.35]; 	// ромбик: правый, верхний, левый, нижний ПРотив часовой от правого?
+if(aisData.error){
+		console.log('Error message insted AIS data',aisData);
+}
+else {
+	for(const vehicle in aisData){
+		//console.log(vehicle,aisData[vehicle]);
+		if(vehicle.toLowerCase() == 'error') break;
+		//console.log(aisData[vehicle].lat);	console.log(aisData[vehicle].lon);
+		//console.log(typeof(vehicles[vehicle]));
+		if((aisData[vehicle].lat === null) || (aisData[vehicle].lon === null)) continue;	// не показываем цели без координат
+		if(!vehicles[vehicle]) { 	// global var, массив layers с целями
+			//console.log(vehicle);
 			//console.log(aisData[vehicle]);
+			var defaultSymbol;
+			var noHeadingSymbol;
+			if(aisData[vehicle].netAIS) { 	// цель получена от netAIS
+				defaultSymbol = [1*0.5,0, 0.25*0.5,0.25*0.5, 0,1*0.5, -0.25*0.5,0.5*0.5, -1*0.5,0.75*0.5, -1*0.5,-0.75*0.5, -0.25*0.5,-0.5*0.5, 0,-1*0.5, 0.25*0.5,-0.25*0.5]; 	// треугольник, расстояния от центра, через которые нарисуют polyline
+				noHeadingSymbol = [1*0.35,0, 0.75*0.35,0.5*0.35, 1*0.35,1*0.35, 0.5*0.35,0.75*0.35, 0,1*0.35, -0.5*0.35,0.75*0.35, -1*0.35,1*0.35, -0.75*0.35,0.5*0.35, -1*0.35,0, -0.75*0.35,-0.5*0.35, -1*0.35,-1*0.35, -0.5*0.35,-0.75*0.35, 0,-1*0.35, 0.5*0.35,-0.75*0.35, 1*0.35,-1*0.35, 0.75*0.35,-0.5*0.35]; 	// ромбик: правый, верхний, левый, нижний ПРотив часовой от правого?
+				//console.log(aisData[vehicle]);
+			}
+			else { 	// цель получена от локального приёмника AIS
+				defaultSymbol = [0.8,0, -0.3,0.35, -0.3,-0.35]; 	// треугольник вправо, расстояния от центра, через которые нарисуют polyline
+				noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
+			}
+			vehicles[vehicle] = L.trackSymbol(L.latLng(0,0),{
+				trackId: vehicle,
+				leaderTime: velocityVectorLengthInMn*60,
+				fill: true,
+				fillOpacity: 1.0,
+				stroke: true,
+				opacity: 1.0,
+				weight: 1.0,
+				defaultSymbol: defaultSymbol,
+				noHeadingSymbol: noHeadingSymbol 	// 
+			}).addTo(map);
 		}
-		else { 	// цель получена от локального приёмника AIS
-			defaultSymbol = [0.8,0, -0.3,0.35, -0.3,-0.35]; 	// треугольник вправо, расстояния от центра, через которые нарисуют polyline
-			noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
-		}
-		vehicles[vehicle] = L.trackSymbol(L.latLng(0,0),{
-			trackId: vehicle,
-			leaderTime: velocityVectorLengthInMn*60,
-			fill: true,
-			fillOpacity: 1.0,
-			stroke: true,
-			opacity: 1.0,
-			weight: 1.0,
-			defaultSymbol: defaultSymbol,
-			noHeadingSymbol: noHeadingSymbol 	// 
-		}).addTo(map);
+		//console.log(vehicles[vehicle]);
+		vehicles[vehicle].addData(aisData[vehicle]); 	// обновим данные
+		
+		vehiclesVisible.push(vehicle); 	// запомним, какие есть
 	}
-	//console.log(vehicles[vehicle]);
-	vehicles[vehicle].addData(aisData[vehicle]); 	// обновим данные
-	
-	vehiclesVisible.push(vehicle); 	// запомним, какие есть
 }
 for(const vehicle in vehicles){
-	if(vehiclesVisible.includes(vehicle)) continue;
+	if(vehiclesVisible.includes(vehicle) && DisplayAISswitch.checked) continue; 	// типа, синхронизация... clearInterval -- асинхронная функция, и может не успеть отключить опрос AIS до того, как цели будут убраны с экрана. Тогда они уберутся здесь.
 	vehicles[vehicle].remove();
 	vehicles[vehicle] = null;
 	delete vehicles[vehicle];
