@@ -160,11 +160,13 @@ case $SEEN_GPS:
 		//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
 		if($device['mode'] == 3) { 	// последний по времени 3D fix - других координат не надо, но может быть информация от других устройств
 			foreach($device as $key => $value){
+				if($key == 'track') $key = 'course';
 				$tpv[$key] = $value;
 			}
 		}
 		else { 	// просмотрим остальные устройства
 			foreach($device as $key => $value){
+				if($key == 'track') $key = 'course';
 				if(!isset($tpv[$key])) $tpv[$key] = $value;
 			}
 		} 	// 
@@ -318,7 +320,7 @@ case $SEEN_GPS:
 			$TPV['lon'] = $position['position']['value']['longitude']; 	// долгота
 			$TPV['lat'] = $position['position']['value']['latitude']; 	// широта
 		}
-		if($position['courseOverGroundTrue']['value']) $TPV['track'] = $position['courseOverGroundTrue']['value']*180/M_PI; 	// курс, исходно -- в радианах
+		if($position['courseOverGroundTrue']['value']) $TPV['course'] = $position['courseOverGroundTrue']['value']*180/M_PI; 	// курс, исходно -- в радианах
 		if($position['speedOverGround']['value']) $TPV['speed'] = $position['speedOverGround']['value']; 	// скорость m/sec
 		if($position['headingTrue']['value']) $TPV['heading'] = $position['headingTrue']['value'];
 		//echo date(DATE_RFC2822,$timestamp).' '.$position['position']['timestamp'];

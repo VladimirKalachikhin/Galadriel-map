@@ -962,15 +962,15 @@ function realtimeTPVupdate(gpsdData) {
 	}
 	
 	// Направление с попыткой его запомнить при прекращении движения
-	//console.log('Index gpsdData',gpsdData.track);
+	//console.log('Index gpsdData',gpsdData.course);
 	velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
-	if(gpsdData.track == null || gpsdData.track == undefined) {
+	if(gpsdData.course == null || gpsdData.course == undefined) {
 		headingDisplay.innerHTML = '&nbsp;';
 		cursor.setRotationAngle(0); // повернём маркер
 		velocityVector.setRotationAngle(0); // повернём указатель скорости
 	}
 	else {
-		heading = gpsdData.track; // если положение изменилось - возьмём новое направление, иначе - будет старое.
+		heading = gpsdData.course; // если положение изменилось - возьмём новое направление, иначе - будет старое.
 		cursor.setRotationAngle(heading); // повернём маркер
 		velocityVector.setRotationAngle(heading); // повернём указатель скорости
 		headingDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
@@ -1032,7 +1032,7 @@ function realtimeTPVupdate(gpsdData) {
 		azimuthMOBdisplay.innerHTML = Math.round(azimuth);
 		distanceMOBdisplay.innerHTML = Math.round(latlng1.distanceTo(latlng2));
 		locationMOBdisplay.innerHTML = '<?php echo $latTXT?> '+Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+'<br><?php echo $longTXT?> '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000;	
-		if(gpsdData.track !== null) { 	// если доступен истинный курс, heading есть всегда
+		if(gpsdData.course !== null) { 	// если доступен истинный курс, heading есть всегда
 			let relBearing = azimuth-heading+22.5;	// половина от 45 против часовой стрелки
 			if(relBearing<0) relBearing = 360+relBearing;
 			relBearing = Math.floor(relBearing/45); 	// курсовой угол (relative bearing) / 45 градусов -- номер сектора, против часовой стрелки
