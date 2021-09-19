@@ -160,7 +160,7 @@ case $SEEN_GPS:
 		//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
 		if($device['mode'] == 3) { 	// последний по времени 3D fix - других координат не надо, но может быть информация от других устройств
 			foreach($device as $key => $value){
-				if($key == 'track') $key = 'course';
+				if($key == 'track') $key = 'course'; 	// course -- это "путевой угол", "путь", т.е. track
 				$tpv[$key] = $value;
 			}
 		}
@@ -320,9 +320,9 @@ case $SEEN_GPS:
 			$TPV['lon'] = $position['position']['value']['longitude']; 	// долгота
 			$TPV['lat'] = $position['position']['value']['latitude']; 	// широта
 		}
-		if($position['courseOverGroundTrue']['value']) $TPV['course'] = $position['courseOverGroundTrue']['value']*180/M_PI; 	// курс, исходно -- в радианах
+		if($position['courseOverGroundTrue']['value']) $TPV['course'] = $position['courseOverGroundTrue']['value']*180/M_PI; 	// путевой угол, путь, исходно -- в радианах
 		if($position['speedOverGround']['value']) $TPV['speed'] = $position['speedOverGround']['value']; 	// скорость m/sec
-		if($position['headingTrue']['value']) $TPV['heading'] = $position['headingTrue']['value'];
+		if($position['headingTrue']['value']) $TPV['heading'] = $position['headingTrue']['value']*180/M_PI; 	//  курс, исходно -- в радианах
 		//echo date(DATE_RFC2822,$timestamp).' '.$position['position']['timestamp'];
 		if($vessel['environment']['depth']['belowSurface']) $TPV['depth'] = $vessel['environment']['depth']['belowSurface']['value'];
 		elseif($vessel['environment']['depth']['belowTransducer']) $TPV['depth'] = $vessel['environment']['depth']['belowTransducer']['value'];
@@ -372,7 +372,7 @@ case $SEEN_AIS:
 			if($vessel['navigation']['courseOverGroundTrue']['value']) $TPV[$vesselID]['course'] = $vessel['navigation']['courseOverGroundTrue']['value']*180/M_PI;
 			if($vessel['navigation']['destination']['commonName']['value']) $TPV[$vesselID]['destination'] = $vessel['navigation']['destination']['commonName']['value'];
 			if($vessel['navigation']['destination']['eta']['value']) $TPV[$vesselID]['eta'] = $vessel['navigation']['destination']['eta']['value'];
-			if($vessel['navigation']['headingTrue']['value']) $TPV[$vesselID]['heading'] = $vessel['navigation']['headingTrue']['value'];
+			if($vessel['navigation']['headingTrue']['value']) $TPV[$vesselID]['heading'] = $vessel['navigation']['headingTrue']['value']*180/M_PI;
 			if($vessel['navigation']['position']['value']['longitude']) $TPV[$vesselID]['lon'] = $vessel['navigation']['position']['value']['longitude'];
 			if($vessel['navigation']['position']['value']['latitude']) $TPV[$vesselID]['lat'] = $vessel['navigation']['position']['value']['latitude'];
 			if($vessel['navigation']['maneuver']['value']) $TPV[$vesselID]['maneuver'] = $vessel['navigation']['maneuver']['value'];
@@ -383,6 +383,7 @@ case $SEEN_AIS:
 			if($vessel['design']['draft']['value']['maximum']) $TPV[$vesselID]['draught'] = $vessel['design']['draft']['value']['maximum'];
 			if($vessel['design']['length']['value']['overall']) $TPV[$vesselID]['length'] = $vessel['design']['length']['value']['overall'];
 			if($vessel['design']['beam']['value'])$TPV[$vesselID]['beam'] = $vessel['design']['beam']['value'];
+			if($vessel['communication']['value']['netAIS'])$TPV[$vesselID]['netAIS'] = TRUE;
 			//echo "TPV[$vesselID]<pre>"; print_r($TPV[$vesselID]); echo "</pre><br>\n";
 		}
 	}

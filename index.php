@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.9.1';
+$versionTXT = '1.9.2';
 /* 
 1.9.1 	AIS data from SignalK, in addition to tpv data
 1.9.0 	use gpsdPROXY instead gpsdAISd
@@ -955,7 +955,8 @@ function realtimeTPVupdate(gpsdData) {
 		velocityVector.setIcon(velocityCursor); 	// изменить иконку у маркера
 	}
 	if(gpsdData.depth) {
-		depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+gpsdData.depth+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
+		//console.log('Index gpsdData',gpsdData.depth);
+		depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(gpsdData.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
 	}
 	else {
 		depthDial.innerHTML = '';
