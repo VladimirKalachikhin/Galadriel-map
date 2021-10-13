@@ -169,13 +169,24 @@ To finalize MOB mode tap to the dot left of the "Terminate" button first.
 
 
 ## Dashboard
-_dashboard.php_ - the separate app to display some instruments attached to gpsd, on weak (and/or old) devices, such as E-ink readers, for example. Displayed velocity, depth and true and magnetic heading.  
+_dashboard.php_ - the separate app to display some instruments attached to gpsd, on weak (and/or old) devices, such as e-ink readers, for example.  
 Instruments from Signal K not displayed.  
  ![Dashboard velocity](screenshots/s6.jpg)<br>
  ![Dashboard heading](screenshots/s7.jpg)<br>
  ![Dashboard depth](screenshots/s11.jpg)<br>
- The Dashboard allows you to set a signal for dangerous events, such as shallow or speed. Set up your browser to allow sound signal.  
- ![Dashboard alarm](screenshots/s12.jpg)<br>
+The screen image optimized to different screen resolutions and should look good from little to big screens. Displayed velocity, depth and true and magnetic heading. At the border of the screen is always visible the mark with general direction.  
+The presence of the touch screen is assumed, and mode is switched by a tap to the next data type button on the screen.   You can use two or more devices to display different info.  
+For some devices you may set up some hardware keys to switch mode, magnetic or true course and opening alarm menu. Use <img src="img/settings.png" alt="Settings button" width="24px"> button on bottom of alarm menu to set up it. Default keys is:
+
+* ArrowDown for next mode
+* ArrowUp for previous mode
+* AltRight for alarm menu
+* KeyM for magnetic course switch
+ 
+ The Dashboard allows you to set a visual and sound signal for dangerous events, such as shallow or speed.  
+![Dashboard alarm](screenshots/s12.jpg)<br>
+Set up your browser to allow sound signal.  
+The signal settings are local for every showing device, and it is triggered only if the device work. Be careful! 
 No fanciful javascript, no fanciful css.  
 Highly recommended to use [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) if you want to see data other them velocity.
 

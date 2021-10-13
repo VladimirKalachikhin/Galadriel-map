@@ -6,26 +6,15 @@ W  |   | |   |E
 WSW|   | |   |ESE
 SW |SSW|S|SSE|SE
 */
-$versionTXT = '1.2.4';
+$versionTXT = '1.3.0';
 require_once('fGPSD.php'); // fGPSD.php 
 
 include('params.php'); 	// пути и параметры
-
-// перечень типов данных из различных источников, которые требуется взять от gpsd
-$dataTypes = array(  	// время в секундах после последнего обновления, после которого считается, что данные протухли. Поскольку мы спрашиваем gpsd POLL, легко не увидеть редко передаваемые данные
-'track' => 15, 	// курс
-'speed' => 10,	// скорость
-'magtrack' => 15, 	// магнитный курс
-'magvar' => 3600, 	// магнитное склонение
-'depth' => 10 	// глубина
-);
-//$dataFullOld = 20; 	// период в секундах от даты данных, после которого считается, что данные протухли. Если источников данных много, то от даты самого свежего, так что некоторые данные могут быть очень старыми.
-$dataFullOld = 0; 	// считаем, что данные всегда свежие
 // Интернационализация
 if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
 //if(TRUE) {
-	$dashboardHeadingTXT = 'Heading';
-	$dashboardMagHeadingTXT = 'Magnetic heading';
+	$dashboardHeadingTXT = 'Course';
+	$dashboardMagHeadingTXT = 'Magnetic course';
 	$dashboardMagVarTXT = 'Magnetic variation';
 	$dashboardSpeedTXT = 'Velocity';
 	$dashboardMinSpeedAlarmTXT = 'Speed too high';
@@ -38,9 +27,16 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$dashboardDepthMenuTXT = 'Shallow';
 	$dashboardMinSpeedMenuTXT = 'Min speed';
 	$dashboardMaxSpeedMenuTXT = 'Max speed';
+	$dashboardToHeadingAlarmTXT = 'The course is bad';
+	$dashboardKeysMenuTXT = 'Use keys to switch the screen mode';
+	$dashboardKeySetupTXT = 'Select purpose and press key for:';
+	$dashboardKeyNextTXT = 'Next mode';
+	$dashboardKeyPrevTXT = 'Previous mode';
+	$dashboardKeyMenuTXT = 'Alarm menu';
+	$dashboardKeyMagneticTXT = 'Magnetic course';
 }
 else {
-	$dashboardHeadingTXT = 'Истинный курс';
+	$dashboardHeadingTXT = 'Истинный курс'; 	//  хотя это "путевой угол", "путь"
 	$dashboardMagHeadingTXT = 'Магнитный курс';
 	$dashboardMagVarTXT = 'Склонение';
 	$dashboardSpeedTXT = 'Скорость';
@@ -54,10 +50,44 @@ else {
 	$dashboardDepthMenuTXT = 'Опасная глубина';
 	$dashboardMinSpeedMenuTXT = 'Минимальная скорость';
 	$dashboardMaxSpeedMenuTXT = 'Максимальная скорость';
+	$dashboardToHeadingAlarmTXT = 'Отклонение от курса';
+	$dashboardKeysMenuTXT = 'Используйте клавиши для смены режимов';
+	$dashboardKeySetupTXT = 'Укажите назначение и нажмите клавишу для:';
+	$dashboardKeyNextTXT = 'Следующий режим';
+	$dashboardKeyPrevTXT = 'Предыдущий режим';
+	$dashboardKeyMenuTXT = 'Меню оповещений';
+	$dashboardKeyMagneticTXT = 'Магнитный курс';
 }
+
+// перечень типов данных из различных источников, которые требуется взять от gpsd
+$dataTypes = array(  	// время в секундах после последнего обновления, после которого считается, что данные протухли. Поскольку мы спрашиваем gpsd POLL, легко не увидеть редко передаваемые данные
+'track' => 15, 	// курс
+'speed' => 10,	// скорость
+'magtrack' => 15, 	// магнитный курс
+'magvar' => 3600, 	// магнитное склонение
+'depth' => 10 	// глубина
+);
+// типы данных, которые, собственно, будем показывать 
+$displayData = array(  	// 
+	'track' => array('variants' => [array('track',"$dashboardHeadingTXT"),array('magtrack',"$dashboardMagHeadingTXT")], 	// курс, магнитный курс
+		'precision' => 0,
+		'multiplicator' => 1
+	),
+	'speed' => array('variants' => [array('speed',"$dashboardSpeedTXT, $dashboardSpeedMesTXT")],	// скорость
+		'precision' => 1,
+		'multiplicator' => 60*60/1000
+	),
+	'depth' => array('variants' => [array('depth',"$dashboardDepthTXT, $dashboardDepthMesTXT")], 	// глубина
+		'precision' => 1,
+		'multiplicator' => 1
+	)
+);
+//$dataFullOld = 20; 	// период в секундах от даты данных, после которого считается, что данные протухли. Если источников данных много, то от даты самого свежего, так что некоторые данные могут быть очень старыми.
+$dataFullOld = 0; 	// считаем, что данные всегда свежие
 
 $mode = $_REQUEST['mode'];
 if(!$mode) $mode = $_SESSION['mode'];
+if(!$mode) $mode = 'track';
 $magnetic = $_REQUEST['magnetic'];
 //echo "Is NULL ".is_null($_REQUEST['magnetic'])."<br>\n";
 if($magnetic===NULL) $magnetic = $_SESSION['magnetic'];
@@ -85,6 +115,16 @@ if($_REQUEST['submit']) {
 	if(!$maxSpeedValue) $maxSpeedAlarm = FALSE;
 	$_SESSION['maxSpeedAlarm'] = $maxSpeedAlarm;
 	$_SESSION['maxSpeedValue'] = $maxSpeedValue;
+
+	$toHeadingAlarm = $_REQUEST['toHeadingAlarm'];
+	$toHeadingValue = $_REQUEST['toHeadingValue'];
+	$toHeadingPrecision = $_REQUEST['toHeadingPrecision'];
+	$toHeadingMagnetic = $magnetic;
+	if(!$toHeadingValue) $toHeadingAlarm = FALSE;
+	$_SESSION['toHeadingAlarm'] = $toHeadingAlarm;
+	$_SESSION['toHeadingValue'] = $toHeadingValue;
+	$_SESSION['toHeadingPrecision'] = $toHeadingPrecision;
+	$_SESSION['toHeadingMagnetic'] = $toHeadingMagnetic;
 }
 else {
 	$minDepthValue = $_SESSION['minDepthValue'];
@@ -95,9 +135,15 @@ else {
 
 	$maxSpeedAlarm = $_SESSION['maxSpeedAlarm'];
 	$maxSpeedValue = $_SESSION['maxSpeedValue'];
+
+	$toHeadingAlarm = $_SESSION['toHeadingAlarm'];
+	$toHeadingValue = $_SESSION['toHeadingValue'];
+	$toHeadingPrecision = $_SESSION['toHeadingPrecision'];
+	if(!$toHeadingPrecision) $toHeadingPrecision = 10;
+	$toHeadingMagnetic = $_SESSION['toHeadingMagnetic'];
 }
 //echo "depthAlarm=$depthAlarm; minDepthValue=$minDepthValue; minSpeedAlarm=$minSpeedAlarm; minSpeedValue=$minSpeedValue; maxSpeedAlarm=$maxSpeedAlarm; maxSpeedValue=$maxSpeedValue;<br>\n";
-
+//echo "toHeadingMagnetic=$toHeadingMagnetic;<br>\n";
 $tpv = askGPSD($gpsdHost,$gpsdPort); 	// исходные данные
 //echo "Ответ:<pre>"; print_r($tpv); echo "</pre>";
 if(is_string($tpv)) {
@@ -139,6 +185,16 @@ if($maxSpeedAlarm and ($tpv['speed']!==NULL)) {
 		$alarm = TRUE;
 	}
 }
+if($toHeadingAlarm) {
+	if($toHeadingMagnetic and isset($tpv['magtrack'])) $theHeading = $tpv['magtrack'];
+	else $theHeading = $tpv['track']; 	// тревога прозвучит, даже если был указан магнитный курс, но его нет
+	if($theHeading < ($toHeadingValue - $toHeadingPrecision) or $theHeading > ($toHeadingValue + $toHeadingPrecision)) {
+		$mode = 'track';
+		$header = $dashboardToHeadingAlarmTXT;
+		$alarmJS = 'toHeadingAlarm();';
+		$alarm = true;
+	}
+}
 if($depthAlarm and ($tpv['depth']!==NULL)) {
 	if($tpv['depth'] <= $minDepthValue) {
 		$mode = 'depth';
@@ -149,144 +205,60 @@ if($depthAlarm and ($tpv['depth']!==NULL)) {
 }
 
 // Что будем рисовать
-//echo "mode=$mode; magnetic=$magnetic;";
+//echo "mode=$mode; magnetic=$magnetic;<br>\n";
+//echo "TPV:<pre>"; print_r($tpv); echo "</pre>";
 //echo"tpv['speed']=".$tpv['speed']."<br>\n";
-switch($mode) {
-case 'track':
-	// показываемое
-	if($magnetic and ($tpv['magtrack']!==NULL)) {
-		if(!$header) $header = $dashboardMagHeadingTXT;
-		$symbol = round($tpv['magtrack']);
-	}
-	elseif(($tpv['track']!==NULL)AND(!$magnetic)) {
-		if(!$header) $header = $dashboardHeadingTXT;
-		$symbol = round($tpv['track']); 	// 
+$cnt = count($displayData);
+$enough = false; $prevMode = null; $nextMode = null;
+for($i=0;$i<$cnt;++$i){
+	if($i==0) {
+		$parm = reset($displayData);
 	}
 	else {
-		if(!$header) $header = $dashboardHeadingTXT;
-		$symbol = '';
-		$mode = 'depth';
+		$parm = next($displayData);
 	}
-	// следующее
-	if($tpv['depth']!==NULL) {
-		$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// 
-		$nextMode = 'depth';
+	$type = key($displayData);
+	//echo "i=$i; type=$type; enough=$enough;<br>\n";
+	//echo "parm:<pre>"; print_r($parm); echo "</pre>";
+	//echo "displayData:<pre>"; print_r($displayData[$type]); echo "</pre>";
+	if(!$mode) $mode = $type; 	// что-то не так с типом, сделаем текущий тип указанным
+	if($enough) {
+		$variant = 0;
+		if($type == 'track' and $magnetic) $variant = 1;
+		$variantType = $parm['variants'][$variant][0];
+		if($tpv[$variantType] == NULL) { 	// но такого типа значения нет в полученных данных.
+			if($i == $cnt-1) $i = -1; 	// цикл по кругу
+			continue;
+		}
+		//$nextsymbol = "<span style='font-size:75%;'>".$parm['variants'][$variant][1]."</span> &nbsp; ".round($tpv[$variantType]*$parm['multiplicator'],$parm['precision']);
+		$nextsymbol = $parm['variants'][$variant][1].":&nbsp; ".round($tpv[$variantType]*$parm['multiplicator'],$parm['precision']);
+		$nextMode = $type;
+		break;
 	}
-	elseif($tpv['speed']!==NULL) {
-		$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
-		$nextMode = 'speed';
+	if($type != $mode) {  	// это не указанный тип
+		$prevMode = $type;
+		continue;
 	}
-	else $nextsymbol = '';
-	break;
-case 'depth':
-	// показываемое
-	if(!$header) $header = "$dashboardDepthTXT, $dashboardDepthMesTXT";
-	if($tpv['depth']!==NULL)	$symbol = round($tpv['depth'],1); 	// 
-	else $mode = 'speed';
-	// следующее
-	if($tpv['speed']!==NULL) {
-		$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
-		$nextMode = 'speed';
+	$variant = 0;
+	if($type == 'track' and $magnetic) $variant = 1;
+	$variantType = $parm['variants'][$variant][0];
+	if($tpv[$variantType] == NULL) { 	// но такого типа значения нет в полученных данных.
+		$mode = null; 	// обозначим, что следующий тип должен стать указанным
+		if($i == $cnt-1) $i = -1; 	// цикл по кругу
+		continue;
 	}
-	elseif($tpv['track']!==NULL and (!$magnetic)) {
-		$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
-		$nextMode = 'track';
-	}
-	elseif($magnetic and $tpv['magtrack']!==NULL) {
-		$nextsymbol = "$dashboardMagHeadingTXT ".round($tpv['magtrack']); 	// 
-		$nextMode = 'track';
-	}
-	else $nextsymbol = '';
-	break;
-default:
-	if($tpv['speed']!==NULL) {
-		// показываемое
-		if(!$header) $header = "$dashboardSpeedTXT, $dashboardSpeedMesTXT";
-		$symbol = round($tpv['speed']*60*60/1000,1); 	// скорость от gpsd - в метрах в секунду
-		// следующее
-		if($tpv['track']!==NULL and (!$magnetic)) {
-			$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
-			$nextMode = 'track';
-		}
-		elseif($magnetic and $tpv['magtrack']!==NULL) {
-			$nextsymbol = "$dashboardMagHeadingTXT ".round($tpv['magtrack']); 	// 
-			$nextMode = 'track';
-		}
-		elseif($tpv['depth']!==NULL) {
-			$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
-			$nextMode = 'depth';
-		}
-		else $nextsymbol = '';
-	}
-	elseif($tpv['depth']!==NULL) {
-		// показываемое
-		if(!$header) $header = "$dashboardDepthTXT, $dashboardDepthMesTXT";
-		$symbol = round($tpv['depth'],1); 	// 
-		// следующее
-		if($tpv['speed']!==NULL) {
-			$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
-			$nextMode = 'speed';
-		}
-		elseif($tpv['track']!==NULL and (!$magnetic)) {
-			$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
-			$nextMode = 'track';
-		}
-		elseif($magnetic and $tpv['magtrack']!==NULL) {
-			$nextsymbol = "$dashboardMagHeadingTXT ".round($tpv['magtrack']); 	// 
-			$nextMode = 'track';
-		}
-		else $nextsymbol = '';
-	}
-	elseif($tpv['track']!==NULL) {
-		// показываемое
-		if(!$header) $header = $dashboardHeadingTXT;
-		$symbol = round($tpv['track']); 	// 
-		// следующее
-		if($tpv['depth']!==NULL) {
-			$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
-			$nextMode = 'depth';
-		}
-		elseif($tpv['speed']!==NULL) {
-			$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
-			$nextMode = 'speed';
-		}
-		elseif($magnetic AND $tpv['magtrack']!==NULL) {
-			$nextsymbol = "$dashboardMagHeadingTXT ".round($tpv['magtrack']); 	// 
-			$nextMode = 'track';
-		}
-		else $nextsymbol = '';
-	}
-	elseif($tpv['magtrack']!==NULL) {
-		// показываемое
-		if(!$header) $header = $dashboardMagHeadingTXT;
-		$symbol = round($tpv['magtrack']);
-		$magnetic = TRUE;
-		// следующее
-		if($tpv['depth']!==NULL) {
-			$nextsymbol = "$dashboardDepthTXT ".round($tpv['depth'],1)." $dashboardDepthMesTXT"; 	// скорость от gpsd - в метрах в секунду
-			$nextMode = 'depth';
-		}
-		elseif($tpv['speed']!==NULL) {
-			$nextsymbol = "$dashboardSpeedTXT ".round($tpv['speed']*60*60/1000,1)." $dashboardSpeedMesTXT"; 	// скорость от gpsd - в метрах в секунду
-			$nextMode = 'speed';
-		}
-		elseif($tpv['track']!==NULL AND (!$magnetic)) {
-			$nextsymbol = "$dashboardHeadingTXT ".round($tpv['track']); 	// 
-			$nextMode = 'track';
-		}
-		else $nextsymbol = '';
-	}
-	else {
-		// показываемое
-		//if(!$header) $header = "$dashboardSpeedTXT, $dashboardSpeedMesTXT";
-		$symbol = ''; 	// 
-		// следующее
-		$nextsymbol = '';
-	}
+	$header = $parm['variants'][$variant][1];
+	$symbol = round($tpv[$variantType]*$parm['multiplicator'],$parm['precision']);
+	$enough = true;
+}
+if(!$prevMode){
+	end($displayData);
+	$prevMode = key($displayData);
 }
 $_SESSION['mode'] = $mode;
+//print "prevMode=$prevMode; nextMode=$nextMode;<br>\n";
 
-$rumbNames = array(' N ','NNE',' NE ','ENE',' E ','ESE',' SE ','SSE',' S ','SSW',' SW ','WSW',' W ','WNW',' NW ','NNW');
+$rumbNames = array('&nbsp;&nbsp;N&nbsp;&nbsp;','NNE','&nbsp;&nbsp;NE&nbsp;','ENE','&nbsp;&nbsp;E&nbsp;&nbsp;','ESE','&nbsp;&nbsp;SE&nbsp;','SSE','&nbsp;&nbsp;S&nbsp;&nbsp;','SSW','&nbsp;SW&nbsp;&nbsp;','WSW','&nbsp;&nbsp;W&nbsp;&nbsp;','WNW','&nbsp;NW&nbsp;&nbsp;','NNW');
 if($magnetic AND ($tpv['magtrack']!==NULL)) $rumbNum = round($tpv['magtrack']/22.5);
 elseif($tpv['track']!==NULL) $rumbNum = round($tpv['track']/22.5);
 else $rumbNum = NULL;
@@ -310,7 +282,7 @@ if($fontZ>1) {
 	<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 	<meta http-equiv="Pragma" content="no-cache" />
 	<meta http-equiv="Expires" content="0" />
-	<?php if(!$menu) echo "<meta http-equiv='refresh' content='2; url={$_SERVER['PHP_SELF']}'>";?>
+	<?php if(!$menu) echo "<meta http-equiv='refresh' content='2; url={$_SERVER['PHP_SELF']}'>\n";?>
 	<script src="dashboard.js">	</script>
 	<?php if($alarm) echo "<script>$alarmJS</script>";?>
 	<link rel="stylesheet" href="dashboard.css" type="text/css"> 
@@ -326,12 +298,90 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 </script>
 <?php */ ?>
 
+<script>
+var controlKeys = getCookie('GaladrielMapDashboardControlKeys');
+if(controlKeys) {
+	controlKeys = JSON.parse(controlKeys);
+}
+else {
+	controlKeys = {
+		'upKey': ['ArrowUp',38],
+		'downKey': ['ArrowDown',40],
+		'menuKey': ['AltRight',18,2],
+		'magneticKey': ['KeyM',77]
+	}
+}
+//console.log('controlKeys before',controlKeys);
+
+window.addEventListener("keydown", keySu, true);  
+
+function keySu(event) {
+if (event.defaultPrevented) {
+	return; // Should do nothing if the default action has been cancelled
+}
+
+var handled = false;
+if (event.code !== undefined) {
+	if(controlKeys.upKey.indexOf(event.code) != -1) handled = 'up';
+	else if(controlKeys.downKey.indexOf(event.code) != -1) handled = 'down';
+	else if(controlKeys.menuKey.indexOf(event.code) != -1) handled = 'menu';
+	else if(controlKeys.magneticKey.indexOf(event.code) != -1) handled = 'magnetic';
+}
+else if (event.keyCode !== undefined) { // Handle the event with KeyboardEvent.keyCode and set handled true.
+	if(controlKeys.upKey.indexOf(event.keyCode) != -1) handled = 'up';
+	else if(controlKeys.downKey.indexOf(event.keyCode) != -1) handled = 'down';
+	else if(controlKeys.menuKey.indexOf(event.keyCode) != -1) handled = 'menu';
+	else if(controlKeys.magneticKey.indexOf(event.keyCode) != -1) handled = 'magnetic';
+}
+else if (event.location != 0) { // 
+	if(controlKeys.upKey.indexOf(event.location) != -1) handled = 'up';
+	else if(controlKeys.downKey.indexOf(event.location) != -1) handled = 'down';
+	else if(controlKeys.menuKey.indexOf(event.location) != -1) handled = 'menu';
+	else if(controlKeys.magneticKey.indexOf(event.location) != -1) handled = 'magnetic';
+}
+
+if (handled) {
+	event.preventDefault(); // Suppress "double action" if event handled
+	switch(handled){
+	case 'down':
+		//alert(handled);
+		window.location.href = '<?php echo $_SERVER['PHP_SELF'];?>?mode=<?php echo $nextMode; ?>';
+		break;
+	case 'up':
+		//alert(handled);
+		window.location.href = '<?php echo $_SERVER['PHP_SELF'];?>?mode=<?php echo $prevMode; ?>';
+		break;
+	case 'menu':
+		//alert(handled);
+		window.location.href = '<?php echo $_SERVER['PHP_SELF'];?>?menu=<?php if(!$menu) echo '1';?>';
+		break;
+	case 'magnetic':
+		//alert(handled);
+		window.location.href = '<?php echo $_SERVER['PHP_SELF'];?>?magnetic=<?php echo $magneticTurn;?>';
+		break;
+	}
+}
+} // end function keySu
+
+function getCookie(name) {
+// возвращает cookie с именем name, если есть, если нет, то undefined
+name=name.trim();
+var matches = document.cookie.match(new RegExp(
+	"(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+	)
+);
+//console.log('matches',matches);
+return matches ? decodeURIComponent(matches[1]) : undefined;
+}
+
+</script>
+
 <?php if($menu) { ?>
 <form action='<?php echo $_SERVER['PHP_SELF'];?>' style = '
 	position:fixed;
 	right: 5%;
 	top: 5%;
-	width:53%;
+	width:65%;
 	background-color:lightgrey;
 	padding: 1rem;
 	font-size: xx-large;
@@ -339,15 +389,49 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 '>
 	<table>
 		<tr style='height:3rem;'>
-			<td style='width:3rem;'><input type='checkbox' name='depthAlarm' value='1' <?php if($depthAlarm) echo 'checked';?>></td><td><?php echo $dashboardDepthMenuTXT?></td><td style='width:10%;'><input type='text' name=minDepthValue value='<?php echo $minDepthValue?>' style='width:95%;font-size:x-large;'></td>
+			<td style='width:3rem;'><input type='checkbox' name='depthAlarm' value='1' <?php if($depthAlarm) echo 'checked';?>></td>
+			<td><?php echo "$dashboardDepthMenuTXT, $dashboardDepthMesTXT"?></td>
+			<td style='width:15%;'><input type='text' name=minDepthValue value='<?php echo $minDepthValue?>' style='width:95%;font-size:xx-large;'></td>
 		</tr><tr style='height:3rem;'>
-			<td><input type='checkbox' name='minSpeedAlarm' value='1' <?php if($minSpeedAlarm) echo 'checked';?>></td><td><?php echo $dashboardMinSpeedMenuTXT?></td><td style='width:10%;'><input type='text' name=minSpeedValue value='<?php echo $minSpeedValue?>' style='width:95%;font-size:x-large;'></td>
+			<td><input type='checkbox' name='minSpeedAlarm' value='1' <?php if($minSpeedAlarm) echo 'checked';?>></td>
+			<td><?php echo "$dashboardMinSpeedMenuTXT, $dashboardSpeedMesTXT"?></td>
+			<td style='width:15%;'><input type='text' name=minSpeedValue value='<?php echo $minSpeedValue?>' style='width:95%;font-size:xx-large;'></td>
 		</tr><tr style='height:3rem;'>
-			<td><input type='checkbox' name='maxSpeedAlarm' value='1' <?php if($maxSpeedAlarm) echo 'checked';?>></td><td><?php echo $dashboardMaxSpeedMenuTXT?></td><td style='width:10%;'><input type='text' name=maxSpeedValue value='<?php echo $maxSpeedValue?>' style='width:95%;font-size:x-large;'></td>
+			<td><input type='checkbox' name='maxSpeedAlarm' value='1' <?php if($maxSpeedAlarm) echo 'checked';?>></td>
+			<td><?php echo "$dashboardMaxSpeedMenuTXT, $dashboardSpeedMesTXT"?></td>
+			<td style='width:15%;'><input type='text' name=maxSpeedValue value='<?php echo $maxSpeedValue?>' style='width:95%;font-size:xx-large;'></td>
+		</tr><tr style='height:3rem;'>
+			<td><input type='checkbox' name='toHeadingAlarm' value='1' <?php if($toHeadingAlarm) echo 'checked';?>></td>
+			<td><?php if($magnetic) {
+						if($toHeadingAlarm) {
+							if($toHeadingMagnetic) echo $dashboardMagHeadingTXT;
+							else echo $dashboardHeadingTXT;
+						}
+						else echo $dashboardMagHeadingTXT; 
+					}
+					else {
+						if($toHeadingAlarm) {
+							if($toHeadingMagnetic) echo $dashboardMagHeadingTXT;
+							else echo $dashboardHeadingTXT;
+						}
+						else echo $dashboardHeadingTXT;
+					}?><br> &nbsp; 
+			<input type='radio' name='toHeadingPrecision' value='10' <?php if($toHeadingPrecision == 10) echo 'checked';?>> &plusmn; 10&deg; &nbsp; 
+			<input type='radio' name='toHeadingPrecision' value='20' <?php if($toHeadingPrecision == 20) echo 'checked';?>> &plusmn; 20&deg;
+			<td style='width:15%;'><input type='text' name=toHeadingValue value='<?php if($magnetic){ 
+																							if($toHeadingAlarm) echo $toHeadingValue; 
+																							else echo round($tpv['magtrack']);
+																						}
+																						else { 
+																							if($toHeadingAlarm) echo $toHeadingValue;
+																							else echo round($tpv['track']);
+																						}?>' style='width:95%;font-size:xx-large;'></td>
 		</tr><tr>
-			<td></td><td><a href='<?php echo $_SERVER['PHP_SELF'];?>' style='text-decoration:none;'><input type='button' value='&#x2718;' style='font-size:120%;'></a><input type='submit' name='submit' value='&#x2713;' style='font-size:120%;float:right;'></td><td></td>
+			<td></td><td style='padding-top:2rem;'><a href='<?php echo $_SERVER['PHP_SELF'];?>' style='text-decoration:none;'><input type='button' value='&#x2718;' style='font-size:120%;'></a><input type='submit' name='submit' value='&#x2713;' style='font-size:120%;float:right;'></td><td></td>
 		</tr>
 	</table>
+	<div id='jsKeys'>
+	</div>
 </form>
 <?php } ?>
 
@@ -375,10 +459,12 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 </tr>
 <tr>
 	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[12]; ?></span></td>
+	<td rowspan="3" colspan="3"></td>
 	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[4]; ?></span></td>
 </tr>
 <tr>
 	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[11]; ?></span></td>
+	<td rowspan="3" colspan="3"></td>
 	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[5]; ?></span></td>
 </tr>
 <tr>
@@ -413,27 +499,178 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 		<a href="<?php echo $_SERVER['PHP_SELF'];?>?magnetic=<?php echo $magneticTurn; ?>" style="text-decoration:none;">
 			<button class='mid_symbol' style='width:14%;vertical-align:middle;' <?php if(empty($tpv['magtrack'])) echo 'disabled';?> >
 				<div style="position:relative;<?php if(!$magnetic) echo "opacity:0.5;";?>">
-				<?php if(!empty($tpv['magvar'])) echo "<div  class='small_symbol' style='position:absolute;text-align:center;'>$dashboardMagVarTXT</div><span style='font-size:75%;'>".round(@$tpv['magvar'])."</span>";	
-					else echo "&#x1f9ed;";
+				<?php if(!empty($tpv['magvar'])) echo "\t<div  class='small_symbol' style='position:absolute;text-align:center;'>\n\t\t\t\t\t\t$dashboardMagVarTXT\n\t\t\t\t\t</div>\n\t\t\t\t\t<span style='font-size:75%;'>".round(@$tpv['magvar'])."</span>\n";	
+					else echo "<img src='img/compass.png' alt='magnetic course'>";
 				?>
 				</div>
 			</button>
 		</a>
 		<a href="<?php echo $_SERVER['PHP_SELF'];?>?mode=<?php echo $nextMode; ?>" style="text-decoration:none;">
 			<button class='mid_symbol' style='width:70%;vertical-align:middle;'>
-				<span style=''>
-					<?php echo $nextsymbol;	?>
-				</span>
+					<?php echo "$nextsymbol\n";	?>
 			</button>
 		</a>
 		<a href="<?php echo $_SERVER['PHP_SELF'];?>?menu=<?php if(!$menu) echo '1';?>" style="text-decoration:none;">
 			<button class='mid_symbol' style='width:14%;vertical-align:middle;'>
-					&#9776;
+					<img src='img/menu.png' alt='menu'>
 			</button>
 		</a>
 	</div>
 </div>
+<?php if($menu) { ?>
+<div id='setKeysWin' style="
+display:none;
+position:fixed;
+right: 20%;
+top: 20%;
+width:55%;
+background-color:grey;
+padding: 1rem;
+font-size: xx-large;
+z-index: 20;
+margin-left: auto;
+margin-right: auto;
+font-size:x-large;
+">
+<?php echo $dashboardKeySetupTXT;?><br>
+<div  style="width:90%;margin:0 auto 0 auto;">
+	<table>
+	<tr>
+	<td style="width:60%;"><?php echo $dashboardKeyNextTXT;?></td>
+	<td><input type="radio" name="setKeysSelect" id="downKeyField" onClick="this.value='';downKeyFieldDisplay.innerHTML='';keyCodes.downKey=[];"></td>
+	<td style="width:40%;font-size:120%;background-color:white"><span id='downKeyFieldDisplay'></span></td>
+	</tr><tr>
+	<td style="width:60%;"><?php echo $dashboardKeyPrevTXT;?></td>
+	<td><input type="radio" name="setKeysSelect" id="upKeyField" onClick="this.value='';upKeyFieldDisplay.innerHTML='';keyCodes.upKey=[];" ></td>
+	<td style="width:40%;font-size:120%;background-color:white"><span id='upKeyFieldDisplay'></span></td>
+	</tr><tr>
+	<td style="width:60%;"><?php echo $dashboardKeyMenuTXT;?></td>
+	<td><input type="radio" name="setKeysSelect" id="menuKeyField" onClick="this.value='';menuKeyFieldDisplay.innerHTML='';keyCodes.menuKey=[];""></td>
+	<td style="width:40%;font-size:120%;background-color:white"><span id='menuKeyFieldDisplay'></span></td>
+	</tr><tr>
+	<td style="width:60%;"><?php echo $dashboardKeyMagneticTXT;?></td>
+	<td><input type="radio" name="setKeysSelect" id="magneticKeyField" onClick="this.value='';magneticKeyFieldDisplay.innerHTML='';keyCodes.magneticKey=[];""></td>
+	<td style="width:40%;font-size:120%;background-color:white"><span id='magneticKeyFieldDisplay'></span></td>
+	</tr>
+	</table>
+</div>
+<div style="width:70%;margin:1em auto 1em auto;">
+	<input type='button' value='&#x2718;' style='font-size:120%;' onClick="openSetKeysWin();" ><input type='submit' name='submit' value='&#x2713;' onClick="saveKeys();" style='font-size:120%;float:right;'>
+</div>
+</div>
+<script>
+var keyCodes = {};
+function jsTest() {
+var html = '<div style="width:100%;text-align:right;">';
+html += '<span style="font-size:50%;"><?php echo $dashboardKeysMenuTXT;?> </span>';
+html += ' &nbsp; <a href="#" onClick="openSetKeysWin();" ><img src="img/settings.png" alt="define keys" class="small"></a></div>';
+jsKeys.innerHTML = html;
+} // end function jsTest
 
+function openSetKeysWin() {
+/**/
+//console.log(controlKeys);
+if(setKeysWin.style.display == 'none'){
+	window.removeEventListener("keydown", keySu, true);  
+	if(controlKeys.upKey) {
+		if(controlKeys.upKey.length) {
+			upKeyField.value = controlKeys.upKey[0];
+			upKeyFieldDisplay.innerHTML = controlKeys.upKey[0]?controlKeys.upKey[0]:'some key';
+		}
+		else {
+			upKeyField.value = null;
+			upKeyFieldDisplay.innerHTML = '';
+		}
+	}
+	if(controlKeys.downKey){
+		if(controlKeys.downKey.length) {
+			downKeyField.value = controlKeys.downKey[0];
+			downKeyFieldDisplay.innerHTML = controlKeys.downKey[0]?controlKeys.downKey[0]:'some key';
+		}
+		else {
+			downKeyField.value = null;
+			downKeyFieldDisplay.innerHTML = '';
+		}
+	}
+	if(controlKeys.menuKey){
+		if(controlKeys.menuKey.length) {
+			menuKeyField.value = controlKeys.menuKey[0];
+			menuKeyFieldDisplay.innerHTML = controlKeys.menuKey[0]?controlKeys.menuKey[0]:'some key';
+		}
+		else {
+			menuKeyField.value = null;
+			menuKeyFieldDisplay.innerHTML = '';
+		}
+	}
+	if(controlKeys.magneticKey){
+		if(controlKeys.magneticKey.length) {
+			magneticKeyField.value = controlKeys.magneticKey[0];
+			magneticKeyFieldDisplay.innerHTML = controlKeys.magneticKey[0]?controlKeys.magneticKey[0]:'some key';
+		}
+		else {
+			magneticKeyField.value = null;
+			magneticKeyFieldDisplay.innerHTML = '';
+		}
+	}
+	window.addEventListener("keydown", setKeys, true);  // В читалке Sony можно назначить listener только на window 
+	setKeysWin.style.display = 'initial';
+}
+else {
+	setKeysWin.style.display = 'none';
+	window.addEventListener("keydown", keySu, true);  
+}
+} // end function openSetKeysWin()
+
+function setKeys(event) {
+/*  */
+//console.log(event);
+if(event.code == 'Tab' || event.code == 'Esc' || event.code == 'Home') return;
+//alert(event.code+','+event.keyCode+','+event.key+','+event.charCode+','+event.location)
+event.preventDefault();
+//alert(event.code+','+event.keyCode+','+event.key+','+event.charCode+','+event.location);
+var keyCode;
+if(event.code) keyCode = event.code;
+else keyCode = 'some key';
+//alert(typeof event.target.id);
+if(event.target.id == 'upKeyField') {
+	keyCodes['upKey'] = [event.code,event.keyCode,event.key,event.charCode,event.location]
+	upKeyFieldDisplay.innerHTML = keyCode;
+}
+else if(event.target.id == 'downKeyField') {
+	keyCodes['downKey'] = [event.code,event.keyCode,event.key,event.charCode,event.location]
+	downKeyFieldDisplay.innerHTML = keyCode;
+}
+else if(event.target.id == 'menuKeyField') {
+	keyCodes['menuKey'] = [event.code,event.keyCode,event.key,event.charCode,event.location]
+	menuKeyFieldDisplay.innerHTML = keyCode;
+}
+else if(event.target.id == 'magneticKeyField') {
+	keyCodes['magneticKey'] = [event.code,event.keyCode,event.key,event.charCode,event.location]
+	magneticKeyFieldDisplay.innerHTML = keyCode;
+}
+else if(event.target.id == '') {
+	keyCodes['downKey'] = [event.code,event.keyCode,event.key,event.charCode,event.location]
+	downKeyFieldDisplay.innerHTML = keyCode;
+}
+//console.log('keyCodes',keyCodes);
+} // end function setKeys()
+
+function saveKeys(){
+for(var type in keyCodes){
+	controlKeys[type] = keyCodes[type];
+}
+//console.log(controlKeys);
+keyCodes = JSON.stringify(controlKeys);
+var date = new Date(new Date().getTime()+1000*60*60*24*365).toGMTString();
+//alert(keyCodes);
+//document.cookie = 'GaladrielMapDashboardControlKeys='+encodeURIComponent(keyCodes)+'; expires='+date+';';
+document.cookie = 'GaladrielMapDashboardControlKeys='+keyCodes+'; expires='+date+';';
+setKeysWin.style.display = 'none';
+} // end function saveKeys
+
+jsTest();
+</script>
+<?php }; ?>
 </body>
 </html>
 <?php
