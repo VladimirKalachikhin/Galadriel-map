@@ -46,7 +46,7 @@ else {
 	$dashboardDepthTXT = 'Глубина';
 	$dashboardDepthAlarmTXT = 'Слишком мелко';
 	$dashboardDepthMesTXT = 'м';
-	$dashboardGNSSoldTXT = 'Данные с приборов устарели';
+	$dashboardGNSSoldTXT = 'Данные от приборов устарели';
 	$dashboardDepthMenuTXT = 'Опасная глубина';
 	$dashboardMinSpeedMenuTXT = 'Минимальная скорость';
 	$dashboardMaxSpeedMenuTXT = 'Максимальная скорость';

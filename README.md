@@ -171,12 +171,16 @@ To finalize MOB mode tap to the dot left of the "Terminate" button first.
 ## Dashboard
 _dashboard.php_ - the separate app to display some instruments attached to gpsd, on weak (and/or old) devices, such as e-ink readers, for example.  
 Instruments from Signal K not displayed.  
- ![Dashboard velocity](screenshots/s6.jpg)<br>
- ![Dashboard heading](screenshots/s7.jpg)<br>
- ![Dashboard depth](screenshots/s11.jpg)<br>
+![Dashboard velocity](screenshots/s6.jpg)<br>
+![Dashboard heading](screenshots/s7.jpg)<br>
+![Dashboard depth](screenshots/s11.jpg)<br>
+At the border of the screen is always visible the mark with general direction.  
+
+[Live demo](http://130.61.159.53/map/dashboard.php)
+
 The screen image optimized to different screen resolutions and should look good from little to big screens. Displayed velocity, depth and true and magnetic heading. At the border of the screen is always visible the mark with general direction.  
 The presence of the touch screen is assumed, and mode is switched by a tap to the next data type button on the screen.   You can use two or more devices to display different info.  
-For some devices you may set up some hardware keys to switch mode, magnetic or true course and opening alarm menu. Use <img src="img/settings.png" alt="Settings button" width="24px"> button on bottom of alarm menu to set up it. Default keys is:
+For some devices with JavaScript you may set up some hardware keys to switch mode, magnetic or true course and opening alarm menu. Use <img src="img/settings.png" alt="Settings button" width="24px"> button on bottom of alarm menu to set up it. Default keys is:
 
 * ArrowDown for next mode
 * ArrowUp for previous mode
