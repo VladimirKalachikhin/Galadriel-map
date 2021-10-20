@@ -171,15 +171,22 @@ To finalize MOB mode tap to the dot left of the "Terminate" button first.
 ## Dashboard
 _dashboard.php_ - the separate app to display some instruments attached to gpsd, on weak (and/or old) devices, such as e-ink readers, for example.  
 Instruments from Signal K not displayed.  
-![Dashboard velocity](screenshots/s6.jpg)<br>
-![Dashboard heading](screenshots/s7.jpg)<br>
-![Dashboard depth](screenshots/s11.jpg)<br>
-At the border of the screen is always visible the mark with general direction.  
+![Dashboard velocity](screenshots/s6.jpeg)<br>
+![Dashboard heading](screenshots/s7.jpeg)<br>
 
 [Live demo](http://130.61.159.53/map/dashboard.php)
 
-The screen image optimized to different screen resolutions and should look good from little to big screens. Displayed velocity, depth and true and magnetic heading. At the border of the screen is always visible the mark with general direction.  
-The presence of the touch screen is assumed, and mode is switched by a tap to the next data type button on the screen.   You can use two or more devices to display different info.  
+The screen image optimized to different screen resolutions and should look good from little to big screens. Displayed velocity, depth and true and magnetic heading. You can use two or more devices to display different info. At the border of the screen is always visible the mark with general direction.  
+The Dashboard allows you to set a visual and sound signal for dangerous events, such as shallow or speed.  
+![Set alarm events](screenshots/s12.jpeg)<br>
+Set up your browser to allow sound signal.  
+The signal settings are local for every showing device, and it is triggered only if the device work. Be careful!  
+If the course alarm is set, the set and current direction are displayed at the border of the screen as triangle and dash marks:  
+![Course alarm marks](screenshots/s15.jpeg)<br>
+When deviating from the course the visual and sound alarm fired:
+![Course alarm](screenshots/s16.jpeg)<br>
+
+The presence of the touch screen is assumed, and mode is switched by a tap to the next data type button on the screen.  
 For some devices with JavaScript you may set up some hardware keys to switch mode, magnetic or true course and opening alarm menu. Use <img src="img/settings.png" alt="Settings button" width="24px"> button on bottom of alarm menu to set up it. Default keys is:
 
 * ArrowDown for next mode
@@ -187,10 +194,6 @@ For some devices with JavaScript you may set up some hardware keys to switch mod
 * AltRight for alarm menu
 * KeyM for magnetic course switch
  
- The Dashboard allows you to set a visual and sound signal for dangerous events, such as shallow or speed.  
-![Dashboard alarm](screenshots/s12.jpg)<br>
-Set up your browser to allow sound signal.  
-The signal settings are local for every showing device, and it is triggered only if the device work. Be careful! 
 No fanciful javascript, no fanciful css.  
 Highly recommended to use [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) if you want to see data other them velocity.
 

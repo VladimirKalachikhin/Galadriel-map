@@ -1,12 +1,12 @@
 <?php session_start();
 /*
-NW |NNW|N|NNE|NE
-WNW|   | |   |ENE
-W  |   | |   |E
-WSW|   | |   |ESE
-SW |SSW|S|SSE|SE
+NW  326.25|NNW 348.75|N 11.25 |NNE  33.75|NE 56.25
+WNW 303.75|          |        |          |ENE 78.75
+W   281.25|          |        |          |E 101.25
+WSW 258.75|          |        |          |ESE 123.75
+SW  236.25|SSW 213.75|S 191.25|SSE 168.75|SE 146.25
 */
-$versionTXT = '1.3.0';
+$versionTXT = '1.4.0';
 require_once('fGPSD.php'); // fGPSD.php 
 
 include('params.php'); 	// пути и параметры
@@ -151,7 +151,9 @@ if(is_string($tpv)) {
 	goto DISPLAY;
 }
 $tpv = getData('tpv',$tpv,$dataTypes); 	// требуемые данные в плоском массиве
-
+/////////////////////////////
+//$tpv['track'] = 11;
+/////////////////////////////
 if($tpv['time']) { 	// иначе пусто преобразуется в очень давно
 	$gnssTime = new DateTime($tpv['time'],new DateTimeZone('UTC')); 	// объект, время в указанной TZ, или по грнвичу, если не
 	$gnssTime = $gnssTime->getTimestamp(); 	// число, unix timestamp - он вне часовых поясов
@@ -188,7 +190,12 @@ if($maxSpeedAlarm and ($tpv['speed']!==NULL)) {
 if($toHeadingAlarm) {
 	if($toHeadingMagnetic and isset($tpv['magtrack'])) $theHeading = $tpv['magtrack'];
 	else $theHeading = $tpv['track']; 	// тревога прозвучит, даже если был указан магнитный курс, но его нет
-	if($theHeading < ($toHeadingValue - $toHeadingPrecision) or $theHeading > ($toHeadingValue + $toHeadingPrecision)) {
+	$minHeading = $toHeadingValue - $toHeadingPrecision;
+	if($minHeading<0) $minHeading = $minHeading+360;
+	$maxHeading = $toHeadingValue + $toHeadingPrecision;
+	if($maxHeading>=360) $maxHeading = $maxHeading-360;
+	//echo "$minHeading<$theHeading>$maxHeading";
+	if($theHeading < $minHeading or $theHeading > $maxHeading) {
 		$mode = 'track';
 		$header = $dashboardToHeadingAlarmTXT;
 		$alarmJS = 'toHeadingAlarm();';
@@ -258,14 +265,114 @@ if(!$prevMode){
 $_SESSION['mode'] = $mode;
 //print "prevMode=$prevMode; nextMode=$nextMode;<br>\n";
 
-$rumbNames = array('&nbsp;&nbsp;N&nbsp;&nbsp;','NNE','&nbsp;&nbsp;NE&nbsp;','ENE','&nbsp;&nbsp;E&nbsp;&nbsp;','ESE','&nbsp;&nbsp;SE&nbsp;','SSE','&nbsp;&nbsp;S&nbsp;&nbsp;','SSW','&nbsp;SW&nbsp;&nbsp;','WSW','&nbsp;&nbsp;W&nbsp;&nbsp;','WNW','&nbsp;NW&nbsp;&nbsp;','NNW');
-if($magnetic AND ($tpv['magtrack']!==NULL)) $rumbNum = round($tpv['magtrack']/22.5);
-elseif($tpv['track']!==NULL) $rumbNum = round($tpv['track']/22.5);
+$rumbNames = array('&nbsp;&nbsp;&nbsp;N&nbsp;&nbsp;&nbsp;','NNE','&nbsp;NE&nbsp;','ENE','&nbsp;&nbsp;E&nbsp;&nbsp;','ESE','&nbsp;SE&nbsp;','SSE','&nbsp;&nbsp;&nbsp;S&nbsp;&nbsp;&nbsp;','SSW','&nbsp;SW&nbsp;','WSW','&nbsp;&nbsp;W&nbsp;&nbsp;','WNW','&nbsp;NW&nbsp;','NNW');
+if($toHeadingMagnetic and isset($tpv['magtrack'])) $theHeading = $tpv['magtrack'];
+elseif(isset($tpv['track'])) $theHeading = $tpv['track']; 	// тревога прозвучит, даже если был указан магнитный курс, но его нет
+else $theHeading = NULL;
+if($theHeading !== NULL){
+	$rumbNum = $theHeading;
+	$rumbNum = round($rumbNum/22.5);
+	if($rumbNum==16) $rumbNum = 0;
+}
 else $rumbNum = NULL;
-if($rumbNum==16) $rumbNum = 0;
-//echo "rumbNum=$rumbNum;<br>\n";
+//echo "{$tpv['track']};rumbNum=$rumbNum;{$rumbNames[$rumbNum]}<br>\n";
 $currRumb = array();
 $currRumb[$rumbNum] = $rumbNames[$rumbNum];
+
+if($toHeadingAlarm) {
+
+	//$toHeadingValue =30;
+	// Метка указанного направления
+	if(($toHeadingValue>315)and($toHeadingValue<360)){
+		$percent = 100 - ($toHeadingValue - 315)*100/90;
+		$currDirectMark = "<img src='img/markNNW.png' style='display:block;position:fixed;top:0;right:$percent%;'>";
+	} 
+	elseif($toHeadingValue == 0){
+		$currDirectMark = "<img src='img/markN.png' style='display:block;position:fixed;top:0;left:49.5%;'>";
+	}
+	elseif(($toHeadingValue>0)and($toHeadingValue<45)){
+		$percent = ($toHeadingValue+45)*100/90;
+		$currDirectMark = "<img src='img/markNNE.png' style='display: block;position: fixed;top:0;left:$percent%;'>";
+	}
+	elseif($toHeadingValue == 45){
+		$currDirectMark = "<img src='img/markNE.png' style='display: block;position: fixed;top:0;right:0;'>";
+	}
+	elseif(($toHeadingValue > 45) and ($toHeadingValue < 90)){
+		$percent = 100 - ($toHeadingValue-45)*100/90;
+		$currDirectMark = "<img src='img/markENE.png' style='display: block;position: fixed;right:0;bottom:$percent%;'>";
+	}
+	elseif($toHeadingValue == 90){
+		$currDirectMark = "<img src='img/markE.png' style='display: block;position: fixed;right:0;top:49%;'>";
+	}
+	elseif(($toHeadingValue > 90) and ($toHeadingValue < 135)){
+		$percent = ($toHeadingValue-45)*100/90;
+		$currDirectMark = "<img src='img/markESE.png' style='display: block;position: fixed;right:0;top:$percent%;'>";
+	}
+	elseif($toHeadingValue == 135){
+		$currDirectMark = "<img src='img/markSE.png' style='display: block;position: fixed;bottom:0;right:0;'>";
+	}
+	elseif(($toHeadingValue>135)and($toHeadingValue<180)){
+		$percent = 100 - ($toHeadingValue-135)*100/90;
+		$currDirectMark = "<img src='img/markSSE.png' style='display: block;position: fixed;bottom:0;left:$percent%;'>";
+	}
+	elseif($toHeadingValue == 180){
+		$currDirectMark = "<img src='img/markS.png' style='display: block;position: fixed;bottom:0;left:49.5%;'>";
+	}
+	elseif(($toHeadingValue>180)and($toHeadingValue<225)){
+		$percent = ($toHeadingValue-135)*100/90;
+		$currDirectMark = "<img src='img/markSSW.png' style='display: block;position: fixed;bottom:0;right:$percent%;'>";
+	}
+	elseif($toHeadingValue==225){
+		$currDirectMark = "<img src='img/markSW.png' style='display: block;position: fixed;bottom:0;left:0;'>";
+	}
+	elseif(($toHeadingValue>225)and($toHeadingValue<270)){
+		$percent = 100 - ($toHeadingValue-225)*100/90;
+		$currDirectMark = "<img src='img/markWSW.png' style='display:block;position:fixed;left:0;top:$percent%;'>";
+	}
+	elseif($toHeadingValue == 270){
+		$currDirectMark = "<img src='img/markW.png' style='display: block;position: fixed;left:0;top:49%;'>";
+	}
+	elseif(($toHeadingValue>270)and($toHeadingValue<315)){
+		$percent = ($toHeadingValue-225)*100/90;
+		$currDirectMark = "<img src='img/markWNW.png' style='display:block;position:fixed;left:0;bottom:$percent%;'>";
+	}
+	elseif($toHeadingValue==315){
+		$currDirectMark = "<img src='img/markNW.png' style='display: block;position: absolute;top:0;left:0;'>";
+	}
+	// Метка текущего направления 	$theHeading уже есть
+	if(($theHeading>315)and($theHeading<=360)){
+		$percent = 100 - ($theHeading - 315)*100/90;
+		$currTrackMark = "<img src='img/markCurrN.png' style='display:block;position:fixed;top:0;right:$percent%;' class='vert'>";
+	} 
+	elseif(($theHeading>=0)and($theHeading<45)){
+		$percent = ($theHeading+45)*100/90;
+		$currTrackMark = "<img src='img/markCurrN.png' style='display: block;position: fixed;top:0;left:$percent%;' class='vert'>";
+	}
+	elseif($theHeading == 45){
+		$currTrackMark = "<img src='img/markCurrSE.png' style='display: block;position: fixed;top:0;right:0;' class='vert'>";
+	}
+	elseif(($theHeading > 45) and ($theHeading < 135)){
+		$percent = 100 - ($theHeading-45)*100/90;
+		$currTrackMark = "<img src='img/markCurrE.png' style='display: block;position: fixed;right:0;bottom:$percent%;' class='hor'>";
+	}
+	elseif($theHeading == 135){
+		$currTrackMark = "<img src='img/markCurrNE.png' style='display: block;position: fixed;bottom:0;right:0;' class='vert'>";
+	}
+	elseif(($theHeading>135)and($theHeading<225)){
+		$percent = 100 - ($theHeading-135)*100/90;
+		$currTrackMark = "<img src='img/markCurrN.png' style='display: block;position: fixed;bottom:0;left:$percent%;' class='vert'>";
+	}
+	elseif($theHeading==225){
+		$currTrackMark = "<img src='img/markCurrNE.png' style='display: block;position: fixed;bottom:0;left:0;' class='vert'>";
+	}
+	elseif(($theHeading>225)and($theHeading<315)){
+		$percent = 100 - ($theHeading-225)*100/90;
+		$currTrackMark = "<img src='img/markCurrE.png' style='display:block;position:fixed;left:0;top:$percent%;' class='hor'>";
+	}
+	elseif($theHeading==315){
+		$currTrackMark = "<img src='img/markCurrNE.png' style='display: block;position: absolute;top:0;left:0;' class='vert'>";
+	}
+}
 
 DISPLAY:
 $fontZ = intdiv(mb_strlen($symbol),3); 	// считая, что штатный размер шрифта позволяет разместить 4 символа на экране
@@ -297,6 +404,7 @@ if($fontZ>1) {
 infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 </script>
 <?php */ ?>
+<?php echo "$currTrackMark $currDirectMark"; // указателb заданного и текущего курса ?>
 
 <script>
 var controlKeys = getCookie('GaladrielMapDashboardControlKeys');
@@ -434,45 +542,40 @@ return matches ? decodeURIComponent(matches[1]) : undefined;
 	</div>
 </form>
 <?php } ?>
-
-<table style='
-	border:1px solid; 
-	position:fixed; 
+<table  style='
 	width:100%; 
 	height:100%; 
+	position:fixed; 
 	margin:0; padding:0;
 	text-align:center;
-	opacity: 0.25;
 	z-index: -1;
 '>
 <tr>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[14]; ?></span></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[15]; ?></span></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[0]; ?></span></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[1]; ?></span></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[2]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[14]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[15]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[0]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[1]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[2]; ?></span></td>
 </tr>
 <tr>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[13]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[13]; ?></span></td>
 	<td rowspan="3" colspan="3"></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[3]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[3]; ?></span></td>
 </tr>
 <tr>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[12]; ?></span></td>
-	<td rowspan="3" colspan="3"></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[4]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[12]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[4]; ?></span></td>
 </tr>
 <tr>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[11]; ?></span></td>
-	<td rowspan="3" colspan="3"></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[5]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[11]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[5]; ?></span></td>
 </tr>
 <tr>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[10]; ?></span></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[9]; ?></span></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[8]; ?></span></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[7]; ?></span></td>
-	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb'><?php echo $currRumb[6]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[10]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[9]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[8]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[7]; ?></span></td>
+	<td style="width:20%;height:20%;"><span class='big_mid_symbol wb' style="opacity: 0.3;"><?php echo $currRumb[6]; ?></span></td>
 </tr>
 </table>
 
