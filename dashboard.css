@@ -23,12 +23,20 @@ img {
 		height: auto;
 		vertical-align: middle;
 	}
-	img.vert {
+	img.markHor {
+		width: 20px;
+		height: auto;
+	}
+	img.markVert {
 		width: auto;
 		height: 20px;
 	}
+	img.vert {
+		width: auto;
+		height: 30px;
+	}
 	img.hor {
-		width: 20px;
+		width: 30px;
 		height: auto;
 	}
 }
@@ -54,12 +62,20 @@ img {
 		height: auto;
 		vertical-align: middle;
 	}
-	img.vert {
+	img.markHor {
+		width: 30px;
+		height: auto;
+	}
+	img.markVert {
 		width: auto;
 		height: 30px;
 	}
+	img.vert {
+		width: auto;
+		height: 45px;
+	}
 	img.hor {
-		width: 30px;
+		width: 45px;
 		height: auto;
 	}
 }
@@ -85,12 +101,20 @@ img {
 		height: auto;
 		vertical-align: middle;
 	}
-	img.vert {
+	img.markHor {
+		width: 40px;
+		height: auto;
+	}
+	img.markVert {
+		width: auto;
 		height: 40px;
+	}
+	img.vert {
+		height: 60px;
 		width: auto;
 	}
 	img.hor {
-		width: 40px;
+		width: 60px;
 		height: auto;
 	}
 }
@@ -116,12 +140,20 @@ img {
 		height: auto;
 		vertical-align: middle;
 	}
-	img.vert {
+	img.markHor {
+		width: 60px;
+		height: auto;
+	}
+	img.markVert {
+		width: auto;
 		height: 60px;
+	}
+	img.vert {
+		height: 90px;
 		width: auto;
 	}
 	img.hor {
-		width: 60px;
+		width: 90px;
 		height: auto;
 	}
 }
@@ -147,12 +179,20 @@ img {
 		height: auto;
 		vertical-align: middle;
 	}
-	img.vert {
+	img.markHor {
+		width: 80px;
+		height: auto;
+	}
+	img.markVert {
 		width: auto;
 		height: 80px;
 	}
+	img.vert {
+		width: auto;
+		height: 120px;
+	}
 	img.hor {
-		width: 80px;
+		width: 120px;
 		height: auto;
 	}
 }
@@ -178,12 +218,20 @@ img {
 		height: auto;
 		vertical-align: middle;
 	}
+	img.markHor {
+		width: 100px;
+		height: auto;
+	}
+	img.markVert {
+		width: auto;
+		height: 100px;
+	}
 	img.vert {
 		width: auto;
-		height: 50px;
+		height: 150px;
 	}
 	img.hor {
-		width: 50px;
+		width: 150px;
 		height: auto;
 	}
 }

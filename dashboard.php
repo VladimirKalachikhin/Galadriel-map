@@ -285,59 +285,59 @@ if($toHeadingAlarm) {
 	// Метка указанного направления
 	if(($toHeadingValue>315)and($toHeadingValue<360)){
 		$percent = 100 - ($toHeadingValue - 315)*100/90;
-		$currDirectMark = "<img src='img/markNNW.png' style='display:block;position:fixed;top:0;right:$percent%;'>";
+		$currDirectMark = "<img src='img/markNNW.png' style='display:block;position:fixed;top:0;right:$percent%;' class='markVert'>";
 	} 
 	elseif($toHeadingValue == 0){
-		$currDirectMark = "<img src='img/markN.png' style='display:block;position:fixed;top:0;left:49.5%;'>";
+		$currDirectMark = "<img src='img/markN.png' style='display:block;position:fixed;top:0;left:49.5%;' class='markVert'>";
 	}
 	elseif(($toHeadingValue>0)and($toHeadingValue<45)){
 		$percent = ($toHeadingValue+45)*100/90;
-		$currDirectMark = "<img src='img/markNNE.png' style='display: block;position: fixed;top:0;left:$percent%;'>";
+		$currDirectMark = "<img src='img/markNNE.png' style='display: block;position: fixed;top:0;left:$percent%;' class='markVert'>";
 	}
 	elseif($toHeadingValue == 45){
-		$currDirectMark = "<img src='img/markNE.png' style='display: block;position: fixed;top:0;right:0;'>";
+		$currDirectMark = "<img src='img/markNE.png' style='display: block;position: fixed;top:0;right:0;' class='markVert'>";
 	}
 	elseif(($toHeadingValue > 45) and ($toHeadingValue < 90)){
 		$percent = 100 - ($toHeadingValue-45)*100/90;
-		$currDirectMark = "<img src='img/markENE.png' style='display: block;position: fixed;right:0;bottom:$percent%;'>";
+		$currDirectMark = "<img src='img/markENE.png' style='display: block;position: fixed;right:0;bottom:$percent%;' class='markHor'>";
 	}
 	elseif($toHeadingValue == 90){
-		$currDirectMark = "<img src='img/markE.png' style='display: block;position: fixed;right:0;top:49%;'>";
+		$currDirectMark = "<img src='img/markE.png' style='display: block;position: fixed;right:0;top:49%;' class='markHor'>";
 	}
 	elseif(($toHeadingValue > 90) and ($toHeadingValue < 135)){
 		$percent = ($toHeadingValue-45)*100/90;
-		$currDirectMark = "<img src='img/markESE.png' style='display: block;position: fixed;right:0;top:$percent%;'>";
+		$currDirectMark = "<img src='img/markESE.png' style='display: block;position: fixed;right:0;top:$percent%;' class='markHor'>";
 	}
 	elseif($toHeadingValue == 135){
-		$currDirectMark = "<img src='img/markSE.png' style='display: block;position: fixed;bottom:0;right:0;'>";
+		$currDirectMark = "<img src='img/markSE.png' style='display: block;position: fixed;bottom:0;right:0;' class='markHor'>";
 	}
 	elseif(($toHeadingValue>135)and($toHeadingValue<180)){
 		$percent = 100 - ($toHeadingValue-135)*100/90;
-		$currDirectMark = "<img src='img/markSSE.png' style='display: block;position: fixed;bottom:0;left:$percent%;'>";
+		$currDirectMark = "<img src='img/markSSE.png' style='display: block;position: fixed;bottom:0;left:$percent%;' class='markVert'>";
 	}
 	elseif($toHeadingValue == 180){
-		$currDirectMark = "<img src='img/markS.png' style='display: block;position: fixed;bottom:0;left:49.5%;'>";
+		$currDirectMark = "<img src='img/markS.png' style='display: block;position: fixed;bottom:0;left:49.5%;' class='markVert'>";
 	}
 	elseif(($toHeadingValue>180)and($toHeadingValue<225)){
 		$percent = ($toHeadingValue-135)*100/90;
-		$currDirectMark = "<img src='img/markSSW.png' style='display: block;position: fixed;bottom:0;right:$percent%;'>";
+		$currDirectMark = "<img src='img/markSSW.png' style='display: block;position: fixed;bottom:0;right:$percent%;' class='markVert'>";
 	}
 	elseif($toHeadingValue==225){
-		$currDirectMark = "<img src='img/markSW.png' style='display: block;position: fixed;bottom:0;left:0;'>";
+		$currDirectMark = "<img src='img/markSW.png' style='display: block;position: fixed;bottom:0;left:0;' class='markHor'>";
 	}
 	elseif(($toHeadingValue>225)and($toHeadingValue<270)){
 		$percent = 100 - ($toHeadingValue-225)*100/90;
-		$currDirectMark = "<img src='img/markWSW.png' style='display:block;position:fixed;left:0;top:$percent%;'>";
+		$currDirectMark = "<img src='img/markWSW.png' style='display:block;position:fixed;left:0;top:$percent%;' class='markHor'>";
 	}
 	elseif($toHeadingValue == 270){
-		$currDirectMark = "<img src='img/markW.png' style='display: block;position: fixed;left:0;top:49%;'>";
+		$currDirectMark = "<img src='img/markW.png' style='display: block;position: fixed;left:0;top:49%;' class='markHor'>";
 	}
 	elseif(($toHeadingValue>270)and($toHeadingValue<315)){
 		$percent = ($toHeadingValue-225)*100/90;
-		$currDirectMark = "<img src='img/markWNW.png' style='display:block;position:fixed;left:0;bottom:$percent%;'>";
+		$currDirectMark = "<img src='img/markWNW.png' style='display:block;position:fixed;left:0;bottom:$percent%;' class='markHor'>";
 	}
 	elseif($toHeadingValue==315){
-		$currDirectMark = "<img src='img/markNW.png' style='display: block;position: absolute;top:0;left:0;'>";
+		$currDirectMark = "<img src='img/markNW.png' style='display: block;position: absolute;top:0;left:0;' class='markHor'>";
 	}
 	// Метка текущего направления 	$theHeading уже есть
 	if(($theHeading>315)and($theHeading<=360)){
@@ -489,27 +489,27 @@ return matches ? decodeURIComponent(matches[1]) : undefined;
 	position:fixed;
 	right: 5%;
 	top: 5%;
-	width:65%;
+	width:75%;
 	background-color:lightgrey;
-	padding: 1rem;
+	padding: 1em;
 	font-size: xx-large;
 	z-index: 10;
 '>
 	<table>
-		<tr style='height:3rem;'>
-			<td style='width:3rem;'><input type='checkbox' name='depthAlarm' value='1' <?php if($depthAlarm) echo 'checked';?>></td>
+		<tr style='height:2em;'>
+			<td ><input type='checkbox' name='depthAlarm' value='1' <?php if($depthAlarm) echo 'checked';?> style='height:3em;width:3em;'></td>
 			<td><?php echo "$dashboardDepthMenuTXT, $dashboardDepthMesTXT"?></td>
 			<td style='width:15%;'><input type='text' name=minDepthValue value='<?php echo $minDepthValue?>' style='width:95%;font-size:xx-large;'></td>
-		</tr><tr style='height:3rem;'>
-			<td><input type='checkbox' name='minSpeedAlarm' value='1' <?php if($minSpeedAlarm) echo 'checked';?>></td>
+		</tr><tr style='height:2em;'>
+			<td><input type='checkbox' name='minSpeedAlarm' value='1' <?php if($minSpeedAlarm) echo 'checked';?> style='height:3em;width:3em;'></td>
 			<td><?php echo "$dashboardMinSpeedMenuTXT, $dashboardSpeedMesTXT"?></td>
 			<td style='width:15%;'><input type='text' name=minSpeedValue value='<?php echo $minSpeedValue?>' style='width:95%;font-size:xx-large;'></td>
-		</tr><tr style='height:3rem;'>
-			<td><input type='checkbox' name='maxSpeedAlarm' value='1' <?php if($maxSpeedAlarm) echo 'checked';?>></td>
+		</tr><tr style='height:2em;'>
+			<td><input type='checkbox' name='maxSpeedAlarm' value='1' <?php if($maxSpeedAlarm) echo 'checked';?> style='height:3em;width:3em;'></td>
 			<td><?php echo "$dashboardMaxSpeedMenuTXT, $dashboardSpeedMesTXT"?></td>
 			<td style='width:15%;'><input type='text' name=maxSpeedValue value='<?php echo $maxSpeedValue?>' style='width:95%;font-size:xx-large;'></td>
-		</tr><tr style='height:3rem;'>
-			<td><input type='checkbox' name='toHeadingAlarm' value='1' <?php if($toHeadingAlarm) echo 'checked';?>></td>
+		</tr><tr style='height:2em;'>
+			<td><input type='checkbox' name='toHeadingAlarm' value='1' <?php if($toHeadingAlarm) echo 'checked';?> style='height:3em;width:3em;'></td>
 			<td><?php if($magnetic) {
 						if($toHeadingAlarm) {
 							if($toHeadingMagnetic) echo $dashboardMagHeadingTXT;
@@ -524,8 +524,8 @@ return matches ? decodeURIComponent(matches[1]) : undefined;
 						}
 						else echo $dashboardHeadingTXT;
 					}?><br> &nbsp; 
-			<input type='radio' name='toHeadingPrecision' value='10' <?php if($toHeadingPrecision == 10) echo 'checked';?>> &plusmn; 10&deg; &nbsp; 
-			<input type='radio' name='toHeadingPrecision' value='20' <?php if($toHeadingPrecision == 20) echo 'checked';?>> &plusmn; 20&deg;
+			<input type='radio' name='toHeadingPrecision' value='10' <?php if($toHeadingPrecision == 10) echo 'checked';?> style='height:2em;width:2em;'> &plusmn; 10&deg; &nbsp; 
+			<input type='radio' name='toHeadingPrecision' value='20' <?php if($toHeadingPrecision == 20) echo 'checked';?> style='height:2em;width:2em;'> &plusmn; 20&deg;
 			<td style='width:15%;'><input type='text' name=toHeadingValue value='<?php if($magnetic){ 
 																							if($toHeadingAlarm) echo $toHeadingValue; 
 																							else echo round($tpv['magtrack']);
@@ -535,7 +535,7 @@ return matches ? decodeURIComponent(matches[1]) : undefined;
 																							else echo round($tpv['track']);
 																						}?>' style='width:95%;font-size:xx-large;'></td>
 		</tr><tr>
-			<td></td><td style='padding-top:2rem;'><a href='<?php echo $_SERVER['PHP_SELF'];?>' style='text-decoration:none;'><input type='button' value='&#x2718;' style='font-size:120%;'></a><input type='submit' name='submit' value='&#x2713;' style='font-size:120%;float:right;'></td><td></td>
+			<td></td><td style='padding-top:1em;'><a href='<?php echo $_SERVER['PHP_SELF'];?>' style='text-decoration:none;'><input type='button' value='&nbsp;&nbsp;&#x2718;&nbsp;&nbsp;' style='font-size:130%;'></a><input type='submit' name='submit' value='&nbsp;&nbsp;&#x2713;&nbsp;&nbsp;' style='font-size:130%;float:right;'></td><td></td>
 		</tr>
 	</table>
 	<div id='jsKeys'>
@@ -628,7 +628,7 @@ right: 20%;
 top: 20%;
 width:55%;
 background-color:grey;
-padding: 1rem;
+padding: 1em;
 font-size: xx-large;
 z-index: 20;
 margin-left: auto;
