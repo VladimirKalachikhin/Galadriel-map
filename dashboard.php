@@ -499,15 +499,15 @@ return matches ? decodeURIComponent(matches[1]) : undefined;
 		<tr style='height:2em;'>
 			<td ><input type='checkbox' name='depthAlarm' value='1' <?php if($depthAlarm) echo 'checked';?> style='height:3em;width:3em;'></td>
 			<td><?php echo "$dashboardDepthMenuTXT, $dashboardDepthMesTXT"?></td>
-			<td style='width:15%;'><input type='text' name=minDepthValue value='<?php echo $minDepthValue?>' style='width:95%;font-size:xx-large;'></td>
+			<td style='width:15%;'><input type='text' name=minDepthValue value='<?php echo $minDepthValue?>' style='width:95%;font-size:inherit;'></td>
 		</tr><tr style='height:2em;'>
 			<td><input type='checkbox' name='minSpeedAlarm' value='1' <?php if($minSpeedAlarm) echo 'checked';?> style='height:3em;width:3em;'></td>
 			<td><?php echo "$dashboardMinSpeedMenuTXT, $dashboardSpeedMesTXT"?></td>
-			<td style='width:15%;'><input type='text' name=minSpeedValue value='<?php echo $minSpeedValue?>' style='width:95%;font-size:xx-large;'></td>
+			<td style='width:15%;'><input type='text' name=minSpeedValue value='<?php echo $minSpeedValue?>' style='width:95%;font-size:inherit;'></td>
 		</tr><tr style='height:2em;'>
 			<td><input type='checkbox' name='maxSpeedAlarm' value='1' <?php if($maxSpeedAlarm) echo 'checked';?> style='height:3em;width:3em;'></td>
 			<td><?php echo "$dashboardMaxSpeedMenuTXT, $dashboardSpeedMesTXT"?></td>
-			<td style='width:15%;'><input type='text' name=maxSpeedValue value='<?php echo $maxSpeedValue?>' style='width:95%;font-size:xx-large;'></td>
+			<td style='width:15%;'><input type='text' name=maxSpeedValue value='<?php echo $maxSpeedValue?>' style='width:95%;font-size:inherit;'></td>
 		</tr><tr style='height:2em;'>
 			<td><input type='checkbox' name='toHeadingAlarm' value='1' <?php if($toHeadingAlarm) echo 'checked';?> style='height:3em;width:3em;'></td>
 			<td><?php if($magnetic) {
@@ -533,7 +533,7 @@ return matches ? decodeURIComponent(matches[1]) : undefined;
 																						else { 
 																							if($toHeadingAlarm) echo $toHeadingValue;
 																							else echo round($tpv['track']);
-																						}?>' style='width:95%;font-size:xx-large;'></td>
+																						}?>' style='width:95%;font-size:inherit;'></td>
 		</tr><tr>
 			<td></td><td style='padding-top:1em;'><a href='<?php echo $_SERVER['PHP_SELF'];?>' style='text-decoration:none;'><input type='button' value='&nbsp;&nbsp;&#x2718;&nbsp;&nbsp;' style='font-size:130%;'></a><input type='submit' name='submit' value='&nbsp;&nbsp;&#x2713;&nbsp;&nbsp;' style='font-size:130%;float:right;'></td><td></td>
 		</tr>
