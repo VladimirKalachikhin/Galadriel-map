@@ -2,7 +2,7 @@
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 
-$versionTXT = '1.9.2';
+$versionTXT = '1.9.3';
 /* 
 1.9.1 	AIS data from SignalK, in addition to tpv data
 1.9.0 	use gpsdPROXY instead gpsdAISd
@@ -271,7 +271,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 <?php
 foreach($trackInfo as $trackName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
 ?>
-					<li onClick='{selectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack)}' <?php echo " id='$trackName' "; if($trackName == $currentTrackName) echo "title='Current Track' class='currentTrackName' title='Current track'"; echo ">$trackName";?></li>
+					<li onClick='{selectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack)}' <?php echo " id='$trackName' "; if($trackName == $currentTrackName) echo "title='Current track' class='currentTrackName'"; echo ">$trackName";?></li>
 <?php
 }
 ?>
@@ -994,12 +994,19 @@ function realtimeTPVupdate(gpsdData) {
 		userMoveMap = true;
 	}
 
-<?php 	if($currentTrackServerURI) { ?>
 	// Текущий трек
-	if(currentTrackName && currTrackSwitch.checked) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек
+	// Должен обновляться, даже если обновлялка не описана в конфиге. Т.е. в худшем случае -- мы не знаем, обновляется ли currentTrack, или нет
+	//console.log('currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
+	//console.log(trackDisplayed.querySelector('li[title="Current track"]'));
+	if((currentTrackName && currTrackSwitch.checked)||trackDisplayed.querySelector('li[title="Current track"]')) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек, или текущий трек в списке показываемых
 		if(currentTrackShowedFlag !== false) { 	// Текущий трек некогда был загружен или сейчас загружается
 			if(map.hasLayer(savedLayers[currentTrackName])) { 	// если он реально есть
-				updateCurrTrack(); 	//  - обновим  galadrielmap.js
+				if(typeof loggingSwitch === 'undefined'){ 	// обновлялка не сконфигурирована
+					updateCurrTrack(); 	//  - обновим  galadrielmap.js
+				}
+				else {
+					if(loggingSwitch) updateCurrTrack(); 	//  - обновим  galadrielmap.js
+				}
 				currentTrackShowedFlag = true;
 			}
 			else { 
@@ -1009,11 +1016,10 @@ function realtimeTPVupdate(gpsdData) {
 		else { 	// текущий трек ещё не был загружен
 			//console.log(document.getElementById(currentTrackName));
 			//console.log(tracks.querySelector('li[title="Current Track"]'));
-			selectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно. galadrielmap.js
 			currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
+			selectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно. galadrielmap.js
 		}
 	}
-<?php } ?>
 
 	// координаты курсора с точностью знаков
 	lat = Math.round(cursor.getLatLng().lat*10000)/10000; 	 	// широта
@@ -1053,7 +1059,7 @@ if($aisServerURI) { // если нет источника текущих дан�
 // Данные AIS
 // 	Запуск периодических функций
 function warchAISstart() {
-console.log('AIS switched ON');
+//console.log('AIS switched ON');
 //setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},5000);
 const intervalID = setInterval(realtime,5000,aisServerURI,realtimeAISupdate);
 //realtime(aisServerURI,realtimeAISupdate);

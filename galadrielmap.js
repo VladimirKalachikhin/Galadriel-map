@@ -235,11 +235,13 @@ node - объект li, элемент списка имеющихся, кото
 trackList - объект ul, список имеющихся
 trackDisplayed - объект ul, список выбранных
 displayTrack - функция показывания того, что соответствует выбранному элементу
-global deSelectTrack()
+global deSelectTrack() currentTrackShowedFlag
 */
 //console.log(trackDisplayed.firstChild);
 trackDisplayed.insertBefore(node,trackDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.onclick = function(event){deSelectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
+if(node.title.toLowerCase().indexOf("current")!= -1) currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
+//console.log('node.title=',node.title,currentTrackShowedFlag);
 displayTrack(node); 	// создадим трек
 } // end function selectTrack
 
@@ -261,6 +263,7 @@ for (var i = 0; i < trackList.children.length; i++) { 	// для каждого 
 	li = null;
 }
 trackList.insertBefore(node,li); 	// перенесём перед тем, на котором обломался цикл, или перед концом
+//console.log(node);
 node.onclick = function(event){selectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
 removeMap(node.innerHTML);
 }

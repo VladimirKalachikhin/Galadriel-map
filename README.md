@@ -106,11 +106,11 @@ Map **always** sets to current position. This behavior can be temporarily disabl
 
 
 ## Tracking
-GaladrielMap use `gpxlogger` app from gpsd-clients packet to logging track on your server. Control `gpxlogger` are in <img src="img/track.svg" alt="Handle tracks" width="24px"> tab.  
-GaladrielMap displaying current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
+GaladrielMap uses `gpxlogger` app from the gpsd-clients packet to log track on your server. Control `gpxlogger` are in <img src="img/track.svg" alt="Handle tracks" width="24px"> tab.  
+GaladrielMap displays the current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
 Run _chkGPXfiles.php_ in cli to repair non-well-formed gpx files for other applications.  
 Tracks placed in _tracks_ directory on the server as it described in _params.php_.  
-Installation and configuring the `gpxlogger` described in  [gpsd](https://gpsd.io/) documentation. You may use any other server-side logger for tracking in gpx format, set up it in _params.php_.
+Installation and configuring the `gpxlogger` describe in  [gpsd](https://gpsd.io/) documentation. You may use any other server-side logger for tracking in gpx format, set up it in _params.php_. If not - the logged track will still be updated if its name will be recognized as "current track" (see _params.php_).
 
 
 ## Routes and POIs
