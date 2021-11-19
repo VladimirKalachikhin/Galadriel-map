@@ -10,13 +10,10 @@ Work with any logger, not obligatory gpxlogger
 */
 
 ob_start(); 	// попробуем перехватить любой вывод скрипта
-$path_parts = pathinfo($_SERVER['SCRIPT_FILENAME']); // определяем каталог скрипта
-$selfPath = $path_parts['dirname'];
-//chdir($path_parts['dirname']); // сменим каталог выполнение скрипта
 require_once('fcommon.php');
 require('params.php'); 	// пути и параметры
 
-if($trackDir[0]!='/') $trackDir = "$selfPath/$trackDir";	// если путь относительный - будет абсолютный
+if($trackDir[0]!='/') $trackDir = __DIR__."/$trackDir";	// если путь относительный - будет абсолютный
 
 $currTrackFileName = $_REQUEST['currTrackName'];
 //$currTrackFileName = "2020-12-18_141744";

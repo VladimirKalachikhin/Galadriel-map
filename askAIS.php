@@ -2,8 +2,7 @@
 /* 
 */
 ob_start(); 	// попробуем перехватить любой вывод скрипта
-$path_parts = pathinfo(__FILE__); // определяем каталог скрипта
-chdir($path_parts['dirname']); // задаем директорию выполнение скрипта
+chdir(__DIR__); // задаем директорию выполнение скрипта
 require_once('fGPSD.php'); // fGPSD.php
 require('params.php'); 	// пути и параметры
 

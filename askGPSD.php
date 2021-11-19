@@ -4,7 +4,7 @@
 */
 session_start();
 ob_start(); 	// попробуем перехватить любой вывод скрипта
-chdir(pathinfo(__FILE__, PATHINFO_DIRNAME)); // задаем директорию выполнение скрипта
+chdir(__DIR__); // задаем директорию выполнение скрипта
 require_once('params.php'); 	// пути и параметры
 if($gpsdHost) $host = $gpsdHost;
 else $host = $signalKhost;

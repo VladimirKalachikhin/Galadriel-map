@@ -46,6 +46,7 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 	$jobsInfo = preg_grep('~.[0-9]$~', scandir($jobsDir)); 	// возьмём только файлы с цифровым расшрением
 	foreach($jobsInfo as $i => $jobName) {
 		$jobSize = filesize("$jobsDir/$jobName");
+		if(!$jobSize) continue;	// внезапно может оказаться файл нулевой длины
 		$jobComleteSize =  @filesize("$jobsInWorkDir/$jobName"); 	// файла в этот момент может уже и не оказаться
 		//echo "jobSize=$jobSize; jobComleteSize=$jobComleteSize; <br>\n";
 		if($jobComleteSize==0) $jobComleteSize = $jobSize;

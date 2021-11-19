@@ -11,15 +11,13 @@ cd /www-data/www/GaladrielMap/
 /usr/bin/php-cli chkGPXfiles.php all
 
 */
-$path_parts = pathinfo($_SERVER['SCRIPT_FILENAME']); // определяем каталог скрипта
-$selfPath = $path_parts['dirname'];
-chdir( $selfPath ); // сменим каталог выполнение скрипта
+chdir(__DIR__); // задаем директорию выполнение скрипта
 
 require_once('fcommon.php');
 require('params.php'); 	// пути и параметры
 //echo "trackDir=$trackDir; \n";
 
-if($trackDir[0]!='/') $trackDir = "$selfPath/$trackDir";	// если путь относительный - будет абсолютный
+if($trackDir[0]!='/') $trackDir = __DIR__."/$trackDir";	// если путь относительный - будет абсолютный
 //$trackDir = '/home/storage/Общедоступные/Туризм/Suomi_2018/gpx_srv';
 
 // Параметры
