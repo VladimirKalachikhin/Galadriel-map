@@ -272,12 +272,12 @@ ul { /* нужно, чтобы стили работали */
 .routeControls > input[type="radio"].L + label {
     /*border-right: none;*/
     border-radius: 5px 0px 0px 5px;
-    width:6rem;
+    width:7rem;
 }
 .routeControls > input[type="radio"].R + label {
     /*border-left: none;*/
     border-radius: 0px 5px 5px 0px;
-    width:6rem;
+    width:7rem;
 }
 .routeControls > input[type="radio"]:checked + label {
 	background-color: rgb(233, 233, 233);

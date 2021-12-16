@@ -12,28 +12,38 @@ $SEEN_GPS = 0x01; $SEEN_AIS = 0x08;
 global $spatialProvider;	// результат попытки обнаружения поставщика координат. Строка из приветствия gpsd, netAIS или строка signalk-server
 //echo "\n\nНачали. dataType=$dataType;host:$host:$port<br>\n";
 $gpsd  = @stream_socket_client('tcp://'.$host.':'.$port,$errno,$errstr); // открыть сокет 
-if(!$gpsd) return 'no GPSD';
+$res = @fwrite($gpsd, "\n\n"); 	// если там gpsdPROXY, он не пришлёт VERSION при открытии соединения
+//echo "res=$res; ";var_dump($gpsd);echo "<br>\n";
+if(($res === FALSE) or !$gpsd) return "no GPSD: $errstr";
 //stream_set_blocking($gpsd,FALSE); 	// установим неблокирующий режим чтения Что-то с ним не так...
-//echo "Socket opened, handshaking\n";
+//echo "Socket to gpsd opened, handshaking<br>\n";
+
 $controlClasses = array('VERSION','DEVICES','DEVICE','WATCH');
 $WATCHsend = FALSE; $POLLsend = FALSE;
 do { 	// при каскадном соединении нескольких gpsd заголовков может быть много
 	$buf = fgets($gpsd); 
-	//echo "<br>buf: ";echo "<pre>"; print_r($buf); echo "</pre>\n";
+	//echo "<br>buf:<br>|".strtr($buf,"\r\n",'?!')."|<br>\n";
 	if($buf === FALSE) { 	// gpsd умер
 	    @socket_close($gpsd);
-		$msg = "Failed to read data from gpsd: $errstr";
+		$msg = "Failed to read data from gpsd";
 		echo "$msg<br>\n"; 
 		return $msg;
 	}
-	if (!$buf = trim($buf)) {
+	if (!$buf = trim($buf)) {	// пусто -- это второй \r\n в конце строки. Но пустая строка -- как бы принятое в http завершение сообщения?
 		continue;
 	}
 	$buf = json_decode($buf,TRUE);
+	if($buf === null) { 	// прислали странное, это не gpsd?
+	    @socket_close($gpsd);
+		$msg = "Recieved not JSON. Is this gpsd?";
+		echo "$msg<br>\n"; 
+		return $msg;
+	}
+	//echo "<br>buf: ";echo "<pre>"; print_r($buf); echo "</pre>\n";
 	switch($buf['class']){
 	case 'VERSION': 	// можно получить от slave gpsd посде WATCH
 		if(!$WATCHsend) { 	// команды WATCH ещё не посылали
-			$res = fwrite($gpsd, '?WATCH={"enable":true};'."\n"); 	// велим демону включить устройства
+			$res = fwrite($gpsd, '?WATCH={"enable":true};'."\n\n"); 	// велим демону включить устройства
 			if($res === FALSE) { 	// gpsd умер
 				socket_close($gpsd);
 				$msg =  "Failed to send WATCH to gpsd: $errstr";
@@ -42,11 +52,11 @@ do { 	// при каскадном соединении нескольких gps
 			}
 			$WATCHsend = TRUE;
 			$spatialProvider = $buf['release'];
-			//echo "Sending TURN ON\n";
+			//echo "Send TURN ON<br>\n";
 		}
 		break;
 	case 'DEVICES': 	// соберём подключенные устройства со всех gpsd, включая slave
-		//echo "Received DEVICES\n"; //
+		//echo "Received DEVICES<br>\n"; //
 		$devicePresent = array();
 		foreach($buf["devices"] as $device) {
 			if($device['flags']&$dataType) $devicePresent[] = $device['path']; 	// список требуемых среди обнаруженных и понятых устройств.
@@ -59,8 +69,8 @@ do { 	// при каскадном соединении нескольких gps
 		//echo "Received WATCH<br>\n"; //
 		//print_r($gpsdWATCH); //
 		if(!$POLLsend) { 	// к slave gpsd POLL не отсылают? Тогда шлём POLL после первого WATCH
-			//echo "<br>Отправлено ДАЙ!<br>\n";
-			$res = fwrite($gpsd, '?POLL;'."\n"); 	// запросим данные
+			//echo "Sending POLL<br>\n";
+			$res = fwrite($gpsd, '?POLL;'."\n\n"); 	// запросим данные
 			if($res === FALSE) { 	// gpsd умер
 				socket_close($gpsd);
 				$msg =  "Failed to send POLL to gpsd: $errstr";
@@ -72,7 +82,7 @@ do { 	// при каскадном соединении нескольких gps
 		break;
 	}
 	
-}while(in_array($buf['class'],$controlClasses));
+}while(!$buf or in_array($buf['class'],$controlClasses));
 //echo "buf: ";echo "<pre>"; print_r($buf); echo "</pre>\n";
 
 if(!$devicePresent) return 'no required devices present';
@@ -275,7 +285,7 @@ if(!$findServers) {
 			}
 		}
 		else {
-			$self = json_decode(file_get_contents("http://localhost:3000/signalk/v1/api/self"),TRUE);
+			$self = json_decode(@file_get_contents("http://localhost:3000/signalk/v1/api/self"),TRUE);
 			if(substr($self,0,8)=='vessels.') {
 				$self = substr($self,9);
 				$findServers = array();

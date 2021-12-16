@@ -331,7 +331,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 					<button onClick='goToPositionField.value += "″";goToPositionField.focus();' style="width:2rem;height:1.5rem;margin:0 0rem 0 0;"><span style="font-weight: bold; font-size:150%;">″</span></button><br>
 				</div>
 				<span style=""><?php echo $dashboardPosAltTXT;?></span><br>
-				<input id = 'goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:8.5rem;font-size:150%;'>			
+				<input id = 'goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:11rem;font-size:150%;'>			
 				<button id = 'goToPositionButton' onClick='flyByString(this.value);' style="width:3rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
 			</div>
 			<div  style='width:98%;height:12rem;overflow:auto;margin:0.3rem 0;'>
