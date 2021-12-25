@@ -145,7 +145,7 @@ L.TrackSymbol = L.Path.extend({
 		//console.log(this.options.mmsi);
 		//console.log(this._shiptype);
 
-       	//console.log(this.options);
+       	//if(this.options.mmsi==211524940) console.log(this.options);
        	let speedKMH='';
        	if(this._speed) speedKMH = Math.round((this._speed*60*60/1000)*10)/10+' Km/h';
       

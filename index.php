@@ -152,10 +152,6 @@ $gpxloggerRun = gpxloggerRun();
 
 	<script src="leaflet-tracksymbolPATCHED/leaflet-tracksymbol.js"></script>
 	
-<!--    <script src="JSON-js/cycle.js"></script>--> <!-- костыль для JSON.stringify , которая используется для отладки -->
-<!--    <script src="fetch/fetch.js"></script>--> <!-- полифил для старых браузеров -->
-<!--    <script src="promise-polyfill/promise.js"></script>--> <!-- полифил для старых браузеров -->
-
 	<link rel="stylesheet" href="galadrielmap.css" type="text/css"> <!-- замена стилей -->
 	<script src="galadrielmap.js"></script>
    <title>GaladrielMap <?php echo $versionTXT;?></title>
@@ -220,16 +216,16 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 		<!-- Приборы -->
 		<div class="leaflet-sidebar-pane" id="dashboard" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $dashboardHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div class="big_symbol" onClick="if(! noFollowToCursor) map.setView(cursor.getLatLng());"> <?php // передвинуть карту на место курсора ?>
+			<div class="big_symbol"> <?php // передвинуть карту на место курсора ?>
 				<div>
-					<div style="line-height:0.4;">				
+					<div style="line-height:0.4;" onClick="map.setView(cursor.getLatLng());">				
 						<div style="font-size:50%;"><?php echo $dashboardSpeedTXT;?></div><br>
 						<div id='velocityDial'></div><br>
 						<div style="font-size:50%;"><?php echo $dashboardSpeedMesTXT;?></div>
 					</div>
-					<div id='depthDial' style="line-height:0.4;">				
+					<div id='depthDial' style="line-height:0.4;" onClick="map.setView(cursor.getLatLng());">				
 					</div>
-					<div style="font-size:50%;line-height:0.4;">
+					<div style="font-size:60%;line-height:0.4;" onClick="map.setView(cursor.getLatLng());">
 						<br><br><span style="font-size:50%;"><?php echo $dashboardHeadingTXT;?></span>
 						<span style="font-size:30%; "><br><?php echo $dashboardHeadingAltTXT;?></span>
 					</div>
@@ -240,7 +236,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 						<br><span style="font-size:50%;"><?php echo $dashboardPosTXT;?></span><br>
 						<span style="font-size:30%; "><?php echo $dashboardPosAltTXT;?></span>
 					</div>
-					<div style="font-size:50%;">
+					<div style="font-size:50%;" onClick="doCopyToClipboard(lat+' '+lng);">
 						<span id='locationDisplay'></span>
 					</div>
 				</div>
@@ -540,13 +536,14 @@ if(! startZoom) startZoom = 12; 	// начальный масштаб
 var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
 // ГПС
 var gpsanddataServerURI = '<?php echo $gpsanddataServerURI;?>'; 	// адрес для подключения к сервису координат и приборов
+var minWATCHinterval=0;	// Минимальный интервал, сек., с которым будут приходить данные от gpsdPROXY. Если 0 -- то по мере их получения от датчиков
 var heading = 0; 	// начальное направление
 var PosFreshBefore = <?php echo $PosFreshBefore * 1000;?>; 	// время в милисекундах, через которое положение считается протухшим
 var followToCursor = true; 	// карта следует за курсором Обеспечивает только паузу следования при перемещениях и масштабировании карты руками
 var noFollowToCursor = false; 	// карта никогда не следует за курсором Глобальное отключение следования. Само не восстанавливается.
 var CurrnoFollowToCursor = 1; 	// глобальная переменная для сохранения состояния
 var followPause = 10 * 1000; 	// пауза следования карты за курсором, когда карту подвинули руками, микросекунд
-var savePositionEvery = 30 * 1000; 	// будем сохранять положение каждые микросекунд. В настоящее время только кладётся кука
+var savePositionEvery = 20 * 1000; 	// будем сохранять положение каждые микросекунд локально в куку
 var followPaused; 	// объект таймера, который восстанавливает следование курсору
 var velocityVectorLengthInMn = 10; 	// длинной в сколько минут пути рисуется линия скорости
 // AIS
@@ -804,7 +801,7 @@ var velocityCursor = L.icon({
 // курсор
 let NoCursor = L.icon({
 	iconUrl: './img/1x1.png',
-	iconSize:     [0, 0], // size of the icon
+	iconSize: [0, 0], // size of the icon
 });
 let cursor = L.marker(startCenter, {
 	'icon': GpsCursor,
@@ -845,7 +842,7 @@ var toMOBline = L.polyline([], {
 	weight: 10,
 	opacity:0.3,
 })
-/*
+
 // восстановим маркеры
 var mobMarker = getCookie('GaladrielMapMOB'); 	// getCookie from galadrielmap.js
 if(mobMarker) {
@@ -862,237 +859,340 @@ if(mobMarker) {
 	mobMarker.addTo(map);
 }
 else mobMarker = L.layerGroup().addLayer(toMOBline);
-*/
-var mobMarker = L.layerGroup().addLayer(toMOBline);
+
+//var mobMarker = L.layerGroup().addLayer(toMOBline);
 
 // Позиционирование
-// 	Запуск периодических функций
-//setInterval(function(){realtime(gpsanddataServerURI,realtimeTPVupdate,lat);},1000); 	// данные позиционирования. Однако, function(){} компилячится каждый оборот, что как бы неправильно.
-setInterval(realtime,1000,gpsanddataServerURI,realtimeTPVupdate,upData); 	// данные позиционирования. Здесь компилячится при загрузке, и параметры передаются в realtime один раз. Что исключает динамические параметры. А как же передача по ссылке?
-
 // Realtime периодическое обновление
-function realtimeTPVupdate(gpsdData) {
-	//console.log('Index gpsdData',gpsdData);
-	//console.log('Index gpsdData.MOB',gpsdData.MOB);
-	// pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
-	if(gpsdData.MOB == undefined || gpsdData.MOB == null) { 	// режима MOB нет
-		if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
-			MOBclose(); 	// пришло, что режима MOB нет -- завершим его
+<?php
+if($gpsdHost=='localhost' or $gpsdHost=='127.0.0.1') $gpsdHost = $_SERVER['SERVER_ADDR'];
+?>
+function spatialWebSocketStart(){
+	spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdHost:$gpsdPort"?>"); 	// должен быть глобальным, ибо к нему отовсюду обращаются
+	spatialWebSocket.onopen = function(e) {
+		console.log("[spatialWebSocket open] Соединение установлено");
+	}; // end spatialWebSocket.onopen
+
+	spatialWebSocket.onmessage = function(event) {
+		//console.log(event);
+		//console.log(`[message] Данные получены с сервера: ${event.data}`);
+		let data;
+		try{
+			data = JSON.parse(event.data);
 		}
-	}
-	else if(gpsdData.MOB===true){ 	//console.log('режим MOB есть, но новых данных нет');
-		if(! map.hasLayer(mobMarker)){ 	//console.log('не показывается мультислой с маркерами MOB'); 
-			upData.MOB = 0; 	// передадим на сервер, что хотим данные MOB 
+		catch(error){
+			console.log('spatialWebSocket: Parsing inbound data',error.message);
+			return;
 		}
-	}
-	else { 	//console.log('режим MOB есть, пришли новые данные');
-		// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
-		//console.log('Index gpsdData.MOB',gpsdData.MOB);
-		mobMarker.remove(); 	// убрать мультислой-маркер с карты
-		mobMarker = null; 	// реально удалим объект
-		mobMarker = L.geoJSON(gpsdData.MOB); 	// создадим новый объект
-		mobMarker.eachLayer(function (layer) {
-			if(layer instanceof L.Marker)	{
-				layer.setIcon(mobIcon);
-				layer.on('click', function(ev){
-					currentMOBmarker = ev.target;
-					clearCurrentStatus(); 	// удалим признак current у всех маркеров
-					currentMOBmarker.feature.properties.current = true;
-					sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
-				}); 	// текущим будет маркер, по которому кликнули
-				//console.log(layer);
-				if(layer.feature.properties.current) currentMOBmarker = layer; 	// текущим станет указанный в переданных данных
+		switch(data.class){
+		case 'VERSION':
+			console.log('spatialWebSocket: Handshaiking with gpsd begin: VERSION recieved. Sending WATCH');
+			spatialWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"TPV","minPeriod":"'+minWATCHinterval+'"};');
+			break;
+		case 'DEVICES':
+			console.log('spatialWebSocket: Handshaiking with gpsd proceed: DEVICES recieved');
+			break;
+		case 'WATCH':
+			console.log('spatialWebSocket: Handshaiking with gpsd complit: WATCH recieved.');
+			break;
+		case 'POLL':
+			break;
+		case 'TPV':
+			realtimeTPVupdate(data);
+			break;
+		case 'AIS':
+			break;
+		case 'MOB':
+			//console.log(data);
+			// pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
+			if(data.status === false) { 	// режим MOB надо выключить
+				if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
+					MOBclose(); 	// пришло, что режима MOB нет -- завершим его
+				}
 			}
-			else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
-		});
-		mobMarker.addLayer(toMOBline);
-		mobMarker.addTo(map); 	// покажем мультислой с маркерами MOB
-		mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable
-			if(layer instanceof L.Marker)	{	
-				layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
-				layer.on('dragend', sendMOBtoServer); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось
+			else { 	//console.log('режим MOB есть, пришли новые данные');
+				//console.log('Index data',data);
+				// создадим GeoJSON
+				let mobMarkerJSON = {"type":"FeatureCollection",
+									"features":[]
+									};
+				for(let point of data.points){
+					let feature = 	{	
+										"type":"Feature",
+										"properties":{
+											"current": point.current
+										},
+										"geometry":{
+											"type":"Point",
+											"coordinates": point.coordinates
+										}
+									};
+					mobMarkerJSON.features.push(feature);
+				}
+				// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
+				mobMarker.remove(); 	// убрать мультислой-маркер с карты
+				mobMarker = null; 	// реально удалим объект
+				mobMarker = L.geoJSON(mobMarkerJSON); 	// создадим новый объект
+				mobMarker.eachLayer(function (layer) {
+					if(layer instanceof L.Marker)	{
+						layer.setIcon(mobIcon);
+						layer.on('click', function(ev){
+							currentMOBmarker = ev.target;
+							clearCurrentStatus(); 	// удалим признак current у всех маркеров
+							currentMOBmarker.feature.properties.current = true;
+							sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
+						}); 	// текущим будет маркер, по которому кликнули
+						//console.log(layer);
+						if(layer.feature.properties.current) currentMOBmarker = layer; 	// текущим станет указанный в переданных данных
+					}
+					else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
+				});
+				mobMarker.addLayer(toMOBline);
+				mobMarker.addTo(map); 	// покажем мультислой с маркерами MOB
+				mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable
+					if(layer instanceof L.Marker)	{	
+						layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
+						layer.on('dragend', sendMOBtoServer); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось
+					}
+				});
 			}
-		});
-	}
-	//console.log(mobMarker);
-	// Положение неизвестно
-	//console.log('Index gpsdData',gpsdData.lon,gpsdData.lat);
-	if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
-		console.log('Error message insted GPSD data',gpsdData);
+			//console.log(mobMarker);
+			break;
+		}
+	}; // end spatialWebSocket.onmessage
+
+	spatialWebSocket.onclose = function(event) {
+		if (event.wasClean) {
+		console.log(`[spatialWebSocket close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+		} 
+		else {
+			// например, сервер убил процесс или сеть недоступна
+			// обычно в этом случае event.code 1006 - соединение было потеряно
+			console.log(`spatialWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
+			window.setTimeout(spatialWebSocketStart, 3000); 	// перезапустим сокет через  секунд
+		}
 		positionCursor.remove(); 	// уберём курсор с карты
 		velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
 		headingDisplay.innerHTML = '&nbsp;';
 		locationDisplay.innerHTML = '&nbsp;';
 		depthDial.innerHTML = '';
 		//MOBtab.className='disabled'; 	// если нет курсора (координат) -- невозможно включить режим MOB. Это плохая идея.
-		return;
-	}
-	// Свежее ли положение известно
-	//MOBtab.className=''; 	// координаты появились -- можно включить режим MOB
-	cursor.setLatLng(L.latLng(gpsdData.lat,gpsdData.lon));
-	var positionTime = new Date(gpsdData.time);
-	var now = new Date();
-	if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
-	else cursor.setIcon(GpsCursor);
-	
-	// Показ скорости и прочего
-	//console.log('Index gpsdData',gpsdData.speed);
-	var metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
-	if(gpsdData.speed==undefined || gpsdData.speed==null) {
-		velocityDial.innerHTML = '&nbsp;';
-		velocityVector.setIcon(NoCursor);
-	}
-	else {
-		//var velocity = Math.round((gpsdData.speed*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
-		var velocity = Math.round((gpsdData.speed*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
-		//alert("Скорость: "+velocity+"км/ч");
-		velocityDial.innerHTML = velocity;
-		// Установим длину указателя скорости за  минуты
-		var velocityCursorLength = gpsdData.speed*60*velocityVectorLengthInMn; 	// метров  за  минуты
-		velocityCursorLength = Math.round(velocityCursorLength/metresPerPixel);
-		//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.speed='+gpsdData.speed+'\nvelocityCursorLength='+velocityCursorLength);
-		velocityCursor.options.iconSize=[5,velocityCursorLength];
-		velocityCursor.options.iconAnchor=[3,velocityCursorLength];
-		velocityVector.setIcon(velocityCursor); 	// изменить иконку у маркера
-	}
-	if(gpsdData.depth) {
-		//console.log('Index gpsdData',gpsdData.depth);
-		depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(gpsdData.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
-	}
-	else {
-		depthDial.innerHTML = '';
-	}
-	
-	// Направление с попыткой его запомнить при прекращении движения
-	//console.log('Index gpsdData',gpsdData.course);
-	velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
-	if(gpsdData.course == null || gpsdData.course == undefined) {
-		headingDisplay.innerHTML = '&nbsp;';
-		cursor.setRotationAngle(0); // повернём маркер
-		velocityVector.setRotationAngle(0); // повернём указатель скорости
-	}
-	else {
-		heading = gpsdData.course; // если положение изменилось - возьмём новое направление, иначе - будет старое.
-		cursor.setRotationAngle(heading); // повернём маркер
-		velocityVector.setRotationAngle(heading); // повернём указатель скорости
-		headingDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
-	}
-	positionCursor.addTo(map); 	// добавить курсор на карту
+	}; // end spatialWebSocket.onclose
 
-	// Окружность точност ГПС
-	var errGNSS = (+gpsdData.errX+gpsdData.errY)/2;
-	if(!errGNSS) errGNSS = 10; // метров
-	if(errGNSS/metresPerPixel > 15) GNSScircle.setRadius(errGNSS); 	// кружок точности больше кружка курсора
-	else GNSScircle.setRadius(0);
-	GNSScircle.setLatLng(cursor.getLatLng());
+	spatialWebSocket.onerror = function(error) {
+	  console.log(`[spatialWebSocket error] ${error.message}`);
+	}; // end spatialWebSocket.onerror
 
-	// Карту в положение
-	//console.log("followToCursor", followToCursor);
-	if(followToCursor && (! noFollowToCursor)) { 	// если сказано следовать курсору, и это разрешено глобально
-		userMoveMap = false;
-		//map.fitBounds(realtime.getBounds(), {maxZoom: map.getZoom()});
-		map.setView(cursor.getLatLng()); // подвинем карту на позицию маркера
-		userMoveMap = true;
-	}
+	function realtimeTPVupdate(gpsdData) {
+		//console.log('Index gpsdData',gpsdData);
+		//console.log('Index gpsdData.MOB',gpsdData.MOB);
+		// Положение неизвестно
+		//console.log('Index gpsdData',gpsdData.lon,gpsdData.lat);
+		if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
+			console.log('Error message insted GPSD data',gpsdData);
+			positionCursor.remove(); 	// уберём курсор с карты
+			velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
+			headingDisplay.innerHTML = '&nbsp;';
+			locationDisplay.innerHTML = '&nbsp;';
+			depthDial.innerHTML = '';
+			//MOBtab.className='disabled'; 	// если нет курсора (координат) -- невозможно включить режим MOB. Это плохая идея.
+			return;
+		}
+		// Свежее ли положение известно
+		//MOBtab.className=''; 	// координаты появились -- можно включить режим MOB
+		cursor.setLatLng(L.latLng(gpsdData.lat,gpsdData.lon));
+		var positionTime = new Date(gpsdData.time);
+		var now = new Date();
+		if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
+		else cursor.setIcon(GpsCursor);
+		
+		// Показ скорости и прочего
+		//console.log('Index gpsdData',gpsdData.speed);
+		var metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
+		if(gpsdData.speed==undefined || gpsdData.speed==null) {
+			velocityDial.innerHTML = '&nbsp;';
+			velocityVector.setIcon(NoCursor);
+		}
+		else {
+			//var velocity = Math.round((gpsdData.speed*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
+			var velocity = Math.round((gpsdData.speed*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
+			//alert("Скорость: "+velocity+"км/ч");
+			velocityDial.innerHTML = velocity;
+			// Установим длину указателя скорости за  минуты
+			var velocityCursorLength = gpsdData.speed*60*velocityVectorLengthInMn; 	// метров  за  минуты
+			velocityCursorLength = Math.round(velocityCursorLength/metresPerPixel);
+			//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.speed='+gpsdData.speed+'\nvelocityCursorLength='+velocityCursorLength);
+			velocityCursor.options.iconSize=[5,velocityCursorLength];
+			velocityCursor.options.iconAnchor=[3,velocityCursorLength];
+			velocityVector.setIcon(velocityCursor); 	// изменить иконку у маркера
+		}
+		if(gpsdData.depth) {
+			//console.log('Index gpsdData',gpsdData.depth);
+			depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(gpsdData.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
+		}
+		else {
+			depthDial.innerHTML = '';
+		}
+		
+		// Направление с попыткой его запомнить при прекращении движения
+		//console.log('Index gpsdData',gpsdData.track);
+		velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
+		if(gpsdData.track == null || gpsdData.track == undefined) {
+			headingDisplay.innerHTML = '&nbsp;';
+			cursor.setRotationAngle(0); // повернём маркер
+			velocityVector.setRotationAngle(0); // повернём указатель скорости
+		}
+		else {
+			heading = gpsdData.track; // если положение изменилось - возьмём новое направление, иначе - будет старое.
+			cursor.setRotationAngle(heading); // повернём маркер
+			velocityVector.setRotationAngle(heading); // повернём указатель скорости
+			headingDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
+		}
+		positionCursor.addTo(map); 	// добавить курсор на карту
 
-	// Текущий трек
-	// Должен обновляться, даже если обновлялка не описана в конфиге. Т.е. в худшем случае -- мы не знаем, обновляется ли currentTrack, или нет
-	//console.log('currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
-	//console.log(trackDisplayed.querySelector('li[title="Current track"]'));
-	if((currentTrackName && currTrackSwitch.checked)||trackDisplayed.querySelector('li[title="Current track"]')) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек, или текущий трек в списке показываемых
-		if(currentTrackShowedFlag !== false) { 	// Текущий трек некогда был загружен или сейчас загружается
-			if(map.hasLayer(savedLayers[currentTrackName])) { 	// если он реально есть
-				if(typeof loggingSwitch === 'undefined'){ 	// обновлялка не сконфигурирована
-					updateCurrTrack(); 	//  - обновим  galadrielmap.js
+		// Окружность точност ГПС
+		var errGNSS = (+gpsdData.errX+gpsdData.errY)/2;
+		if(!errGNSS) errGNSS = 10; // метров
+		if(errGNSS/metresPerPixel > 15) GNSScircle.setRadius(errGNSS); 	// кружок точности больше кружка курсора
+		else GNSScircle.setRadius(0);
+		GNSScircle.setLatLng(cursor.getLatLng());
+
+		// Карту в положение
+		//console.log("followToCursor", followToCursor);
+		if(followToCursor && (! noFollowToCursor)) { 	// если сказано следовать курсору, и это разрешено глобально
+			userMoveMap = false;
+			//map.fitBounds(realtime.getBounds(), {maxZoom: map.getZoom()});
+			map.setView(cursor.getLatLng()); // подвинем карту на позицию маркера
+			userMoveMap = true;
+		}
+
+		// Текущий трек
+		// Должен обновляться, даже если обновлялка не описана в конфиге. Т.е. в худшем случае -- мы не знаем, обновляется ли currentTrack, или нет
+		//console.log('currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
+		//console.log(trackDisplayed.querySelector('li[title="Current track"]'));
+		if((currentTrackName && currTrackSwitch.checked)||trackDisplayed.querySelector('li[title="Current track"]')) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек, или текущий трек в списке показываемых
+			if(currentTrackShowedFlag !== false) { 	// Текущий трек некогда был загружен или сейчас загружается
+				if(map.hasLayer(savedLayers[currentTrackName])) { 	// если он реально есть
+					if(typeof loggingSwitch === 'undefined'){ 	// обновлялка не сконфигурирована
+						updateCurrTrack(); 	//  - обновим  galadrielmap.js
+					}
+					else {
+						if(loggingSwitch) updateCurrTrack(); 	//  - обновим  galadrielmap.js
+					}
+					currentTrackShowedFlag = true;
 				}
-				else {
-					if(loggingSwitch) updateCurrTrack(); 	//  - обновим  galadrielmap.js
+				else { 
+					if(currentTrackShowedFlag != 'loading') currentTrackShowedFlag = false;
 				}
-				currentTrackShowedFlag = true;
 			}
-			else { 
-				if(currentTrackShowedFlag != 'loading') currentTrackShowedFlag = false;
+			else { 	// текущий трек ещё не был загружен
+				//console.log(document.getElementById(currentTrackName));
+				//console.log(tracks.querySelector('li[title="Current Track"]'));
+				currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
+				selectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно. galadrielmap.js
 			}
 		}
-		else { 	// текущий трек ещё не был загружен
-			//console.log(document.getElementById(currentTrackName));
-			//console.log(tracks.querySelector('li[title="Current Track"]'));
-			currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
-			selectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно. galadrielmap.js
-		}
-	}
 
-	// координаты курсора с точностью знаков
-	lat = Math.round(cursor.getLatLng().lat*10000)/10000; 	 	// широта
-	lng = Math.round(cursor.getLatLng().lng*10000)/10000; 	 	// долгота
-	//alert(cursor.getLatLng()+'\n'+lat+' '+lng);
-	locationDisplay.innerHTML = '<?php echo $latTXT?> '+lat+'<br><?php echo $longTXT?> '+lng;	
-	followSwitch.checked = !noFollowToCursor; 	// выставим переключатель на панели Настроек в текущее положение	
-	
-	// MOB
-	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB 
-		//console.log(mobMarker.getLayers());
-		let latlng1 = cursor.getLatLng();
-		let latlng2 = currentMOBmarker.getLatLng();
-		toMOBline.setLatLngs([latlng1,latlng2]); 	// обновим линию к текущему маркеру MOB
-		// информация о MOB на панели
-		const azimuth = bearing(latlng1, latlng2);
-		azimuthMOBdisplay.innerHTML = Math.round(azimuth);
-		distanceMOBdisplay.innerHTML = Math.round(latlng1.distanceTo(latlng2));
-		locationMOBdisplay.innerHTML = '<?php echo $latTXT?> '+Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+'<br><?php echo $longTXT?> '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000;	
-		if(gpsdData.course !== null) { 	// если доступен истинный курс, heading есть всегда
-			let relBearing = azimuth-heading+22.5;	// половина от 45 против часовой стрелки
-			if(relBearing<0) relBearing = 360+relBearing;
-			relBearing = Math.floor(relBearing/45); 	// курсовой угол (relative bearing) / 45 градусов -- номер сектора, против часовой стрелки
-			if(relBearing>7) relBearing = 0;
-			directionMOBdisplay.innerHTML = relBearingTXT[relBearing];
+		// координаты курсора с точностью знаков
+		lat = Math.round(cursor.getLatLng().lat*10000)/10000; 	 	// широта
+		lng = Math.round(cursor.getLatLng().lng*10000)/10000; 	 	// долгота
+		//alert(cursor.getLatLng()+'\n'+lat+' '+lng);
+		locationDisplay.innerHTML = '<?php echo $latTXT?> '+lat+'<br><?php echo $longTXT?> '+lng;	
+		followSwitch.checked = !noFollowToCursor; 	// выставим переключатель на панели Настроек в текущее положение	
+		
+		// MOB
+		if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB 
+			//console.log(mobMarker.getLayers());
+			let latlng1 = cursor.getLatLng();
+			let latlng2 = currentMOBmarker.getLatLng();
+			toMOBline.setLatLngs([latlng1,latlng2]); 	// обновим линию к текущему маркеру MOB
+			// информация о MOB на панели
+			const azimuth = bearing(latlng1, latlng2);
+			azimuthMOBdisplay.innerHTML = Math.round(azimuth);
+			distanceMOBdisplay.innerHTML = Math.round(latlng1.distanceTo(latlng2));
+			locationMOBdisplay.innerHTML = '<?php echo $latTXT?> '+Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+'<br><?php echo $longTXT?> '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000;	
+			if(gpsdData.track !== null) { 	// если доступен истинный курс, heading есть всегда
+				let relBearing = azimuth-heading+22.5;	// половина от 45 против часовой стрелки
+				if(relBearing<0) relBearing = 360+relBearing;
+				relBearing = Math.floor(relBearing/45); 	// курсовой угол (relative bearing) / 45 градусов -- номер сектора, против часовой стрелки
+				if(relBearing>7) relBearing = 0;
+				directionMOBdisplay.innerHTML = relBearingTXT[relBearing];
+			}
 		}
-	}
-	
-};
-
-<?php 
-} 
-if($aisServerURI) { // если нет источника текущих данных - не нужны и обработчики 
-?>
+	}; // end function realtimeTPVupdate
+return spatialWebSocket;	
+}; // end function spatialWebSocketStart
+var spatialWebSocket; // будет глобальным сокетом
+spatialWebSocketStart(); 	// запускам периодическую функцию получать TPV
 
 
 // Данные AIS
 // 	Запуск периодических функций
+
 function warchAISstart() {
-//console.log('AIS switched ON');
-//setInterval(function(){realtime(aisServerURI,realtimeAISupdate);},5000);
-const intervalID = setInterval(realtime,5000,aisServerURI,realtimeAISupdate);
-//realtime(aisServerURI,realtimeAISupdate);
-return intervalID
-} // function warchAISstart
+	//console.log('AIS switched ON');
+	var aisWebSocket = new WebSocket("ws://<?php echo "$gpsdHost:$gpsdPort"?>");	// этот сокет не глобальный!!!!
+	aisWebSocket.onopen = function(e) {
+		console.log("[aisWebSocket open] Соединение установлено");
+	}; // end aisWebSocket.onopen
 
-var watchAISworker = warchAISstart(); 	// запускам периодическую функцию смотреть AIS
-DisplayAISswitch.checked = true;
+	aisWebSocket.onmessage = function(event) {
+		//console.log(`[aisWebSocket message] Данные получены с сервера: ${event.data}`);
+		let data;
+		try{
+			data = JSON.parse(event.data);
+		}
+		catch(error){
+			console.log('aisWebSocket: Parsing inbound data',error.message);
+			return;
+		}
+		switch(data.class){
+		case 'VERSION':
+			console.log('aisWebSocket: Handshaiking with gpsd begin: VERSION recieved. Sending WATCH');
+			aisWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"AIS","minPeriod":"'+minWATCHinterval+'"};');
+			break;
+		case 'DEVICES':
+			console.log('aisWebSocket: Handshaiking with gpsd proceed: DEVICES recieved');
+			break;
+		case 'WATCH':
+			console.log('aisWebSocket: Handshaiking with gpsd complit: WATCH recieved.');
+			break;
+		case 'POLL':
+			break;
+		case 'TPV':
+			break;
+		case 'AIS':
+			realtimeAISupdate(data);
+			break;
+		}
+	}; // end aisWebSocket.onmessage
 
-function warchAISstop(intervalID){
-console.log('AIS switched OFF',intervalID);
-clearInterval(intervalID);
-for(const vehicle in vehicles){
-	vehicles[vehicle].remove();
-	vehicles[vehicle] = null;
-	delete vehicles[vehicle];
-}
-} // end function warchAISstop
+	aisWebSocket.onclose = function(event) {
+		if (event.wasClean) {
+		console.log(`[aisWebSocket close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
+		} 
+		else {
+			// например, сервер убил процесс или сеть недоступна
+			// обычно в этом случае event.code 1006 - соединение было потеряно
+			console.log(`aisWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
+			window.setTimeout(warchAISstart, 5000); 	// перезапустим сокет через 5 секунд
+		}
+		for(const vehicle in vehicles){
+			vehicles[vehicle].remove();
+			vehicles[vehicle] = null;
+			delete vehicles[vehicle];
+		}
+	}; // end aisWebSocket.onclose
 
-function watchAISswitching(){
-if(DisplayAISswitch.checked) warchAISstart();
-else warchAISstop(watchAISworker);
-}
+	aisWebSocket.onerror = function(error) {
+	  console.log(`[aisWebSocket error] ${error.message}`);
+	}; 	//end aisWebSocket.onerror
 
-function realtimeAISupdate(aisData) {
-//console.log(aisData); 	// массив с данными целей
-//console.log(DisplayAISswitch);
-let vehiclesVisible = [];
-if(aisData.error){
-		console.log('Error message insted AIS data',aisData);
-}
-else {
+	function realtimeAISupdate(aisClass) {
+	let aisData = aisClass.ais;
+	//console.log(aisData); 	// массив с данными целей
+	//console.log(DisplayAISswitch);
+	let vehiclesVisible = [];
 	for(const vehicle in aisData){
 		//console.log(vehicle,aisData[vehicle]);
 		if(vehicle.toLowerCase() == 'error') break;
@@ -1130,20 +1230,43 @@ else {
 		
 		vehiclesVisible.push(vehicle); 	// запомним, какие есть
 	}
-}
+	for(const vehicle in vehicles){
+		if(vehiclesVisible.includes(vehicle) && DisplayAISswitch.checked) continue; 	// типа, синхронизация... clearInterval -- асинхронная функция, и может не успеть отключить опрос AIS до того, как цели будут убраны с экрана. Тогда они уберутся здесь.
+		vehicles[vehicle].remove();
+		vehicles[vehicle] = null;
+		delete vehicles[vehicle];
+	}
+	} // end function realtimeAISupdate
+
+	return aisWebSocket
+} // end function warchAISstart
+
+var aisWebSocket = warchAISstart(); 	// запускам периодическую функцию смотреть AIS
+DisplayAISswitch.checked = true;
+
+function warchAISstop(webSocket,message=''){
+console.log('AIS switched OFF');
+webSocket.close(1000,message);
 for(const vehicle in vehicles){
-	if(vehiclesVisible.includes(vehicle) && DisplayAISswitch.checked) continue; 	// типа, синхронизация... clearInterval -- асинхронная функция, и может не успеть отключить опрос AIS до того, как цели будут убраны с экрана. Тогда они уберутся здесь.
 	vehicles[vehicle].remove();
 	vehicles[vehicle] = null;
 	delete vehicles[vehicle];
 }
-} // end function realtimeAISupdate
+} // end function warchAISstop
+
+function watchAISswitching(){
+if(DisplayAISswitch.checked) warchAISstart();
+else warchAISstop(aisWebSocket,'Dispalying AIS stopped');
+}; // end function watchAISswitching
+
 
 <?php
 }
-
 if($updateRouteServerURI) { // если нет сервиса обновления маршрута - не нужны и обработчики 
 ?>
+// 	Запуск периодических функций
+//setInterval(function(){realtime(gpsanddataServerURI,realtimeTPVupdate,lat);},1000); 	// данные позиционирования. Однако, function(){} компилячится каждый оборот, что как бы неправильно.
+//setInterval(realtime,1000,gpsanddataServerURI,realtimeTPVupdate,upData); 	// данные позиционирования. Здесь компилячится при загрузке, и параметры передаются в realtime один раз. Что исключает динамические параметры. А как же передача по ссылке?
 
 // Динамическое обновление показываемых маршрутов
 // 	Запуск периодических функций
@@ -1178,7 +1301,7 @@ for(const name of changedRouteNames){
 } // end  function routeUpdate
 
 <?php
-}
+} // сервис обновления маршрута
 ?>
 var savePositionProcess = setInterval(doSavePosition,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery
 document.getElementById("followSwitch").checked = true; 	// выставим переключатель на панели Настроек в правильное положение
