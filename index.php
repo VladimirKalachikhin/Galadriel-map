@@ -1,25 +1,26 @@
 <?php
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
+require_once($gpsdPROXYpath.'/params.php'); 	// 
+//url службы записи пути. Если не установлена -- записи пути не происходит
+$currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service, if present. If not -- not logging activity
+// 	Динамическое обновление маршрутов  Route updater
+// 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
+$updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '1.9.3';
+$versionTXT = '2.0.0';
 /* 
-1.9.1 	AIS data from SignalK, in addition to tpv data
-1.9.0 	use gpsdPROXY instead gpsdAISd
-1.8.0 	MOB feature
-1.7.2 	auto-update edited routes
-1.7.0 	geocoding feature
-1.6		support of GaladrielCache cobering feature
-1.5.0	with track logging control. Fixed crazy Firefox XMLHttpRequest mime-type defaults.
-1.4.3	upd to stacked gpsd's
 */
 // start gpsdPROXY
-if($gpsdPROXYname){
-	exec("$phpCLIexec $gpsdPROXYname > /dev/null 2>&1 &");
-}
+exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
 
 // Интернационализация
-require_once('internationalisation.php');
+if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
+	require_once('internationalisation/en.php');
+}
+else {
+	require_once('internationalisation/ru.php');
+}
 
 if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 // Получаем список имён карт
@@ -134,9 +135,7 @@ $gpxloggerRun = gpxloggerRun();
 
     <script src="L.TileLayer.Mercator/src/L.TileLayer.Mercator.js"></script>
 
-<?php if($gpsanddataServerURI) {?>
     <script src="Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
-<?php }?>
 <?php if($trackDir OR $routeDir) {?>
 	<script src='supercluster/supercluster.js'></script>
 	<link rel="stylesheet" href="leaflet-omnivorePATCHED/leaflet-omnivore.css" />
@@ -176,7 +175,7 @@ html, body, #mapid {
 	<div class="leaflet-sidebar-tabs">
 		<ul role="tablist" id="featuresList">
 			<li id="homeTab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
-			<li id="dashboardTab" <?php if(!$gpsanddataServerURI) echo 'class="disabled"';?>><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
+			<li id="dashboardTab"><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
 			<li id="tracksTab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%" OnClick='loggingCheck();'></a></li>
 			<li id="measureTab" ><a href="#measure" role="tab"><img src="img/route.svg" alt="Create route" width="70%"></a></li>
 			<li id="routesTab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
@@ -516,6 +515,20 @@ foreach($jobsInfo as $jobName) { 	//
 				</div>
 				<span style="font-size:120%;verticsl-align:middle;"><?php echo $DisplayAIS_TXT;?></span>
 			</div>
+			<br><br>
+			<div style="margin: 1rem 1rem;"> <?php // максимальная скорость обновления ?>
+				<div style="float:right;margin: 1rem auto;">
+					<input id='minWATCHintervalInput' type="text" pattern="[0-9]*" title="<?php echo $realTXT;?>" size='4' style='width:3rem;font-size:175%;'
+					 onChange="minWATCHinterval=parseFloat(this.value);
+					 spatialWebSocketStop(spatialWebSocket,'Change WATCH interval');
+					 warchAISstop(aisWebSocket,'Change WATCH interval');
+					 aisWebSocket = warchAISstart(); 
+					 spatialWebSocket = spatialWebSocketStart(); 
+					"
+					>
+				</div>
+				<span style="font-size:120%;verticsl-align:middle;"><?php echo $minWATCHintervalTXT;?></span>
+			</div>
 		</div>
 	</div>
 </div>
@@ -535,19 +548,19 @@ var startZoom = JSON.parse(getCookie('GaladrielMapZoom')); 	// getCookie from ga
 if(! startZoom) startZoom = 12; 	// начальный масштаб
 var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
 // ГПС
-var gpsanddataServerURI = '<?php echo $gpsanddataServerURI;?>'; 	// адрес для подключения к сервису координат и приборов
-var minWATCHinterval=0;	// Минимальный интервал, сек., с которым будут приходить данные от gpsdPROXY. Если 0 -- то по мере их получения от датчиков
+var minWATCHinterval=JSON.parse(getCookie('GaladrielminWATCHinterval'));	// Минимальный интервал, сек., с которым будут приходить данные от gpsdPROXY. Если 0 -- то по мере их получения от датчиков
+if(!minWATCHinterval) minWATCHinterval = 0;
+minWATCHintervalInput.value = minWATCHinterval;
 var heading = 0; 	// начальное направление
 var PosFreshBefore = <?php echo $PosFreshBefore * 1000;?>; 	// время в милисекундах, через которое положение считается протухшим
 var followToCursor = true; 	// карта следует за курсором Обеспечивает только паузу следования при перемещениях и масштабировании карты руками
 var noFollowToCursor = false; 	// карта никогда не следует за курсором Глобальное отключение следования. Само не восстанавливается.
 var CurrnoFollowToCursor = 1; 	// глобальная переменная для сохранения состояния
 var followPause = 10 * 1000; 	// пауза следования карты за курсором, когда карту подвинули руками, микросекунд
-var savePositionEvery = 20 * 1000; 	// будем сохранять положение каждые микросекунд локально в куку
+var savePositionEvery = 15 * 1000; 	// будем сохранять положение каждые микросекунд локально в куку
 var followPaused; 	// объект таймера, который восстанавливает следование курсору
 var velocityVectorLengthInMn = 10; 	// длинной в сколько минут пути рисуется линия скорости
 // AIS
-var aisServerURI = '<?php echo $aisServerURI;?>'; 	// адрес для подключения к сервису AIS
 var vehicles = []; 	// list of visible by AIS data vehicle objects 
 var AISstatusTXT = {
 <?php foreach($AISstatusTXT as $k => $v) echo "$k: '$v',\n";?>
@@ -666,7 +679,6 @@ map.on('movestart zoomstart', function(event) { 	// карту начали дв
 });
 map.on('zoomend', function(event) {
 	let zoom = event.target.getZoom();
-	//alert(zoom);
 	if(!downJob) current_zoom.innerHTML = zoom;
 	cover_zoom.innerHTML = zoom+8;
 	
@@ -775,7 +787,6 @@ var centerMark = L.marker(map.getBounds().getCenter(), {
 	})
 });
 
-<?php if($gpsanddataServerURI) { // если нет источника текущих данных - не нужны и обработчики ?>
 // Местоположение
 // маркеры
 var GpsCursor = L.icon({
@@ -865,10 +876,10 @@ else mobMarker = L.layerGroup().addLayer(toMOBline);
 // Позиционирование
 // Realtime периодическое обновление
 <?php
-if($gpsdHost=='localhost' or $gpsdHost=='127.0.0.1') $gpsdHost = $_SERVER['SERVER_ADDR'];
+if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') $gpsdProxyHost = $_SERVER['HTTP_HOST'];
 ?>
 function spatialWebSocketStart(){
-	spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdHost:$gpsdPort"?>"); 	// должен быть глобальным, ибо к нему отовсюду обращаются
+	let spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>"); 	// должен быть глобальным, ибо к нему отовсюду обращаются
 	spatialWebSocket.onopen = function(e) {
 		console.log("[spatialWebSocket open] Соединение установлено");
 	}; // end spatialWebSocket.onopen
@@ -1122,8 +1133,13 @@ function spatialWebSocketStart(){
 	}; // end function realtimeTPVupdate
 return spatialWebSocket;	
 }; // end function spatialWebSocketStart
-var spatialWebSocket; // будет глобальным сокетом
-spatialWebSocketStart(); 	// запускам периодическую функцию получать TPV
+ // будет глобальным сокетом
+var spatialWebSocket = spatialWebSocketStart(); 	// запускам периодическую функцию получать TPV
+
+function spatialWebSocketStop(webSocket,message=''){
+	console.log('Stop recieve TPV');
+	webSocket.close(1000,message);
+} // end function spatialWebSocketStop
 
 
 // Данные AIS
@@ -1131,7 +1147,7 @@ spatialWebSocketStart(); 	// запускам периодическую фун�
 
 function warchAISstart() {
 	//console.log('AIS switched ON');
-	var aisWebSocket = new WebSocket("ws://<?php echo "$gpsdHost:$gpsdPort"?>");	// этот сокет не глобальный!!!!
+	var aisWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>");	// этот сокет не глобальный!!!!
 	aisWebSocket.onopen = function(e) {
 		console.log("[aisWebSocket open] Соединение установлено");
 	}; // end aisWebSocket.onopen
@@ -1238,7 +1254,7 @@ function warchAISstart() {
 	}
 	} // end function realtimeAISupdate
 
-	return aisWebSocket
+return aisWebSocket
 } // end function warchAISstart
 
 var aisWebSocket = warchAISstart(); 	// запускам периодическую функцию смотреть AIS
@@ -1260,10 +1276,6 @@ else warchAISstop(aisWebSocket,'Dispalying AIS stopped');
 }; // end function watchAISswitching
 
 
-<?php
-}
-if($updateRouteServerURI) { // если нет сервиса обновления маршрута - не нужны и обработчики 
-?>
 // 	Запуск периодических функций
 //setInterval(function(){realtime(gpsanddataServerURI,realtimeTPVupdate,lat);},1000); 	// данные позиционирования. Однако, function(){} компилячится каждый оборот, что как бы неправильно.
 //setInterval(realtime,1000,gpsanddataServerURI,realtimeTPVupdate,upData); 	// данные позиционирования. Здесь компилячится при загрузке, и параметры передаются в realtime один раз. Что исключает динамические параметры. А как же передача по ссылке?
@@ -1300,9 +1312,6 @@ for(const name of changedRouteNames){
 }
 } // end  function routeUpdate
 
-<?php
-} // сервис обновления маршрута
-?>
 var savePositionProcess = setInterval(doSavePosition,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery
 document.getElementById("followSwitch").checked = true; 	// выставим переключатель на панели Настроек в правильное положение
 </script>

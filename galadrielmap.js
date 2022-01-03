@@ -102,9 +102,10 @@ for (let i = 0; i < routeDisplayed.children.length; i++) { 	// для каждо
 }
 openedNames = JSON.stringify(openedNames);
 document.cookie = "GaladrielRoutes="+openedNames+"; expires="+expires+"; path=/; samesite=Lax";
-// Сохранение переключателей
+// Сохранение переключателей и параметров
 document.cookie = "GaladrielcurrTrackSwitch="+Number(currTrackSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель currTrackSwitch
 document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель SelectedRoutesSwitch
+document.cookie = "GaladrielminWATCHinterval="+minWATCHinterval+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 }
 
 // Функции выбора - удаления карт
@@ -170,8 +171,8 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 		let mapnameThis = mapname+addPath; 	// 
 		let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
 		if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
-		//alert(tileCacheURIthis);
-		//alert('mapname='+mapname+'\n'+savedLayers[mapname]);
+		//console.log(tileCacheURIthis);
+		//console.log('mapname=',mapname,savedLayers[mapname]);
 		if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
 			//alert('on Ellipsoide')
 			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {}));

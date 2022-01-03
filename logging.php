@@ -2,7 +2,7 @@
 /* Включает/выключает запись трека посредством gpxlogger */
 ob_start(); 	// попробуем перехватить любой вывод скрипта
 $path_parts = pathinfo(__FILE__); // определяем каталог скрипта
-chdir($path_parts['dirname']); // задаем директорию выполнение скрипта
+chdir(__DIR__); // задаем директорию выполнение скрипта
 require('fcommon.php'); 	// 
 require('params.php'); 	// пути и параметры
 
@@ -34,7 +34,7 @@ else {
 	if($_REQUEST['startLogging']) { 	
 		$outpuFileName = date('Y-m-d_His').'.gpx'; 	
 		$fullOutpuFileName = $trackDir.'/'.$outpuFileName; 	
-		$gpxlogger = str_replace('-f&',"-f $fullOutpuFileName",$gpxlogger);
+		$gpxlogger = str_replace(array('&logfile','&host'),array($fullOutpuFileName,$_SERVER['HTTP_HOST']),$gpxlogger);
 		$LoggerPid = exec("$gpxlogger > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
 		$status=(int)gpxloggerRun(); 	// оно могло и не запуститься
 		if($status) echo "Started logging track to $outpuFile\n";
