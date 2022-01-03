@@ -48,7 +48,10 @@ loggingCheck(logging='logging.php')
 coverage()
 
 MOBalarm()
+clearCurrentStatus()
 MOBclose()
+delMOBmarker()
+sendMOBtoServer()
 
 bearing(latlng1, latlng2)
 
@@ -99,9 +102,10 @@ for (let i = 0; i < routeDisplayed.children.length; i++) { 	// для каждо
 }
 openedNames = JSON.stringify(openedNames);
 document.cookie = "GaladrielRoutes="+openedNames+"; expires="+expires+"; path=/; samesite=Lax";
-// Сохранение переключателей
+// Сохранение переключателей и параметров
 document.cookie = "GaladrielcurrTrackSwitch="+Number(currTrackSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель currTrackSwitch
 document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель SelectedRoutesSwitch
+document.cookie = "GaladrielminWATCHinterval="+minWATCHinterval+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 }
 
 // Функции выбора - удаления карт
@@ -167,8 +171,8 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 		let mapnameThis = mapname+addPath; 	// 
 		let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
 		if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
-		//alert(tileCacheURIthis);
-		//alert('mapname='+mapname+'\n'+savedLayers[mapname]);
+		//console.log(tileCacheURIthis);
+		//console.log('mapname=',mapname,savedLayers[mapname]);
 		if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
 			//alert('on Ellipsoide')
 			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {}));
@@ -1046,7 +1050,7 @@ currentMOBmarker.on('click', function(ev){
 	currentMOBmarker.feature.properties.current = true;
 	sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
 }); 	// текущим будет маркер, по которому кликнули
-currentMOBmarker.on('dragend', sendMOBtoServer); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось
+currentMOBmarker.on('dragend', function(event){sendMOBtoServer()}); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Иначе -- в sendMOBtoServer передаётся event
 clearCurrentStatus(); 	// удалим признак current у всех маркеров
 currentMOBmarker.feature = { 	// укажем признак "текущий маркер" как GeoJson свойство
 	type: 'Feature',
@@ -1062,12 +1066,12 @@ if(loggingIndicator !== undefined && !loggingSwitch.checked) {
 if(mobMarker.getLayers().length > 2) delMOBmarkerButton.disabled = false;
 
 sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
-/*
+// Посадим куку, ибо информация с сервера поступит, только когда изменится, а кто её изменит?
 const toSave = JSON.stringify(mobMarker.toGeoJSON());
 const expires =  new Date();
 expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
 document.cookie = "GaladrielMapMOB="+toSave+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
-*/
+
 return true;
 } // end function MOBalarm
 
@@ -1086,13 +1090,14 @@ function MOBclose() {
 mobMarker.remove(); 	// убрать мультислой-маркер с карты
 mobMarker.clearLayers(); 	// очистить мультислой от маркеров
 mobMarker.addLayer(toMOBline); 	// вернём туда линию
-upData.MOB = 'close'; 	// передадим на сервер, что режим MOB прекращён
-//document.cookie = "GaladrielMapMOB=; expires=0; path=/; samesite=Lax"; 	// удалим куку
+sendMOBtoServer(false); 	// передадим на сервер, что режим MOB прекращён
+document.cookie = "GaladrielMapMOB=; expires=0; path=/; samesite=Lax"; 	// удалим куку
 azimuthMOBdisplay.innerHTML = '&nbsp;';
 distanceMOBdisplay.innerHTML = '&nbsp;';
 directionMOBdisplay.innerHTML = '&nbsp;';
 locationMOBdisplay.innerHTML = '&nbsp;';
 delMOBmarkerButton.disabled = true;
+sidebar.close();	// закрыть панель
 } // end function MOBclose
 
 
@@ -1118,10 +1123,30 @@ sendMOBtoServer(); 	// отдадим данные MOB для передачи �
 } // end function delMOBmarker
 
 
-function sendMOBtoServer(){
+function sendMOBtoServer(status=true){
 /* Кладёт данные MOB в массив, который передаётся на сервер 
-каждый оборот главной функции realtime */
-upData.MOB = mobMarker.toGeoJSON(); 	// отдадим данные MOB для передачи на сервер
+mobMarker -- это Leaflet LayerGroup, т.е. там исчерпывающая информация
+*/
+upData.MOB = {};
+upData.MOB.class = 'MOB';
+upData.MOB.status = status; 	// 
+upData.MOB.points = [];
+//upData.MOB.LineString = {};
+const mobMarkerJSON = mobMarker.toGeoJSON(); 	//
+for(let feature of mobMarkerJSON.features){
+	switch(feature.geometry.type){
+	case "Point":
+		upData.MOB.points.push({'coordinates':feature.geometry.coordinates,'current':feature.properties.current});
+		break;
+	case "LineString":
+		//upData.MOB.LineString.coordinates = feature.geometry.coordinates;	// линия только одна
+		break;
+	}
+}
+//console.log('upData',upData.MOB);
+//console.log('upData',JSON.stringify(upData.MOB));
+//console.log(spatialWebSocket);
+spatialWebSocket.send('?UPDATE={"updates":['+JSON.stringify(upData.MOB)+']};'); 	// отдадим данные MOB для передачи на сервер через глобальный сокет для передачи координат. Он есть, иначе -- нет координат и нет проблем.
 } // end function sendMOBtoServer
 
 

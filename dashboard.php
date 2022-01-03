@@ -6,10 +6,9 @@ W   281.25|          |        |          |E 101.25
 WSW 258.75|          |        |          |ESE 123.75
 SW  236.25|SSW 213.75|S 191.25|SSE 168.75|SE 146.25
 */
-$versionTXT = '1.4.0';
-require_once('fGPSD.php'); // fGPSD.php 
+$versionTXT = '2.0.0';
 
-include('params.php'); 	// пути и параметры
+require('params.php'); 	// пути и параметры
 // Интернационализация
 if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
 //if(TRUE) {
@@ -60,12 +59,12 @@ else {
 }
 
 // перечень типов данных из различных источников, которые требуется взять от gpsd
-$dataTypes = array(  	// время в секундах после последнего обновления, после которого считается, что данные протухли. Поскольку мы спрашиваем gpsd POLL, легко не увидеть редко передаваемые данные
-'track' => 15, 	// курс
-'speed' => 10,	// скорость
-'magtrack' => 15, 	// магнитный курс
-'magvar' => 3600, 	// магнитное склонение
-'depth' => 10 	// глубина
+$dataTypes = array(  	//
+'track', 	// курс
+'speed',	// скорость
+'magtrack', 	// магнитный курс
+'magvar', 	// магнитное склонение
+'depth' 	// глубина
 );
 // типы данных, которые, собственно, будем показывать 
 $displayData = array(  	// 
@@ -82,8 +81,6 @@ $displayData = array(  	//
 		'multiplicator' => 1
 	)
 );
-//$dataFullOld = 20; 	// период в секундах от даты данных, после которого считается, что данные протухли. Если источников данных много, то от даты самого свежего, так что некоторые данные могут быть очень старыми.
-$dataFullOld = 0; 	// считаем, что данные всегда свежие
 
 $mode = $_REQUEST['mode'];
 if(!$mode) $mode = $_SESSION['mode'];
@@ -144,29 +141,14 @@ else {
 }
 //echo "depthAlarm=$depthAlarm; minDepthValue=$minDepthValue; minSpeedAlarm=$minSpeedAlarm; minSpeedValue=$minSpeedValue; maxSpeedAlarm=$maxSpeedAlarm; maxSpeedValue=$maxSpeedValue;<br>\n";
 //echo "toHeadingMagnetic=$toHeadingMagnetic;<br>\n";
-$tpv = askGPSD($gpsdHost,$gpsdPort); 	// исходные данные
+
+$tpv = askGPSDproxy($gpsdHost,$gpsdPort); 	// требуемые данные в плоском массиве
 //echo "Ответ:<pre>"; print_r($tpv); echo "</pre>";
+
 if(is_string($tpv)) {
 	$symbol = $tpv;
 	goto DISPLAY;
 }
-$tpv = getData('tpv',$tpv,$dataTypes); 	// требуемые данные в плоском массиве
-/////////////////////////////
-//$tpv['track'] = 11;
-/////////////////////////////
-if($tpv['time']) { 	// иначе пусто преобразуется в очень давно
-	$gnssTime = new DateTime($tpv['time'],new DateTimeZone('UTC')); 	// объект, время в указанной TZ, или по грнвичу, если не
-	$gnssTime = $gnssTime->getTimestamp(); 	// число, unix timestamp - он вне часовых поясов
-
-	if($dataFullOld and ((time()-$gnssTime)>$dataFullOld)) {
-		$symbol = $dashboardGNSSoldTXT;	// данные устарели более, чем на секунд 
-		goto DISPLAY;
-	}
-}
-//else {
-//	$symbol = $dashboardGNSSoldTXT;	// данные ГПС устарели
-//	goto DISPLAY;
-//}
 
 $header = '';
 // Оповещения в порядке возрастания опасности, реально сработает последнее
@@ -215,52 +197,61 @@ if($depthAlarm and ($tpv['depth']!==NULL)) {
 //echo "mode=$mode; magnetic=$magnetic;<br>\n";
 //echo "TPV:<pre>"; print_r($tpv); echo "</pre>";
 //echo"tpv['speed']=".$tpv['speed']."<br>\n";
-$cnt = count($displayData);
-$enough = false; $prevMode = null; $nextMode = null;
+$parms = array_keys($displayData);
+$cnt = count($parms);
+$cycle = null; $enough = false; $nextMode = null;
+$prevMode = null; 
+
 for($i=0;$i<$cnt;++$i){
-	if($i==0) {
-		$parm = reset($displayData);
-	}
-	else {
-		$parm = next($displayData);
-	}
-	$type = key($displayData);
+	$type = $parms[$i];	// что показывать
+	$parm = $displayData[$type];	// как показывать
+	if(!$mode) $mode = $type; 	// что-то не так с типом, сделаем текущий тип указанным
 	//echo "i=$i; type=$type; enough=$enough;<br>\n";
 	//echo "parm:<pre>"; print_r($parm); echo "</pre>";
 	//echo "displayData:<pre>"; print_r($displayData[$type]); echo "</pre>";
-	if(!$mode) $mode = $type; 	// что-то не так с типом, сделаем текущий тип указанным
 	if($enough) {
 		$variant = 0;
 		if($type == 'track' and $magnetic) $variant = 1;
 		$variantType = $parm['variants'][$variant][0];
-		if($tpv[$variantType] == NULL) { 	// но такого типа значения нет в полученных данных.
+		if(! isset($tpv[$variantType])) { 	// но такого типа значения нет в полученных данных.
 			if($i == $cnt-1) $i = -1; 	// цикл по кругу
 			continue;
+		}
+		if($cycle === $variantType){ 	// прокрутили до ранее выбранного типа, но нечего показывать
+			$nextsymbol = '';
+			break;
 		}
 		//$nextsymbol = "<span style='font-size:75%;'>".$parm['variants'][$variant][1]."</span> &nbsp; ".round($tpv[$variantType]*$parm['multiplicator'],$parm['precision']);
 		$nextsymbol = $parm['variants'][$variant][1].":&nbsp; ".round($tpv[$variantType]*$parm['multiplicator'],$parm['precision']);
 		$nextMode = $type;
 		break;
 	}
-	if($type != $mode) {  	// это не указанный тип
-		$prevMode = $type;
+	if($type != $mode) {  	// это не указанный тип 	текущее что показывать не то, что показывается на главном экране
+		$prevMode = $type;	// запомним это как предыдущее что показывать, для управления клавишами
 		continue;
 	}
+	// этот тип тот же, что и на экране, его надо показать
 	$variant = 0;
 	if($type == 'track' and $magnetic) $variant = 1;
 	$variantType = $parm['variants'][$variant][0];
-	if($tpv[$variantType] == NULL) { 	// но такого типа значения нет в полученных данных.
+	if(! isset($tpv[$variantType])) { 	// но такого типа значения нет в полученных данных.
 		$mode = null; 	// обозначим, что следующий тип должен стать указанным
+		if($cycle === $variantType){ 	// прокрутили все типы, но нечего показывать
+			$symbol = 'No data';	
+			break;
+		}
+		if(!$cycle) $cycle = $variantType;	// запомним этот тип того, что нужно показывать для проверки зацикливания, если ничего не осталось показывать
 		if($i == $cnt-1) $i = -1; 	// цикл по кругу
 		continue;
 	}
 	$header = $parm['variants'][$variant][1];
 	$symbol = round($tpv[$variantType]*$parm['multiplicator'],$parm['precision']);
 	$enough = true;
+	$cycle = $variantType;	// сдедующий тип будем искать по кругу до выбранного
+	if($i == $cnt-1) $i = -1; 	// цикл по кругу
 }
 if(!$prevMode){
-	end($displayData);
-	$prevMode = key($displayData);
+	$prevMode = $parms[$cnt-1];
 }
 $_SESSION['mode'] = $mode;
 //print "prevMode=$prevMode; nextMode=$nextMode;<br>\n";
@@ -778,50 +769,105 @@ jsTest();
 </html>
 <?php
 
-function getData($dataName,$gpsdData,$dataTypes) {
-/* Аккумулирующий фильтр данных $gpsdData, полученных от функции askGPSD
-Данные аккумулируются в сессии с именем $dataName
-Какие данные нужно взять из $gpsdData и сколько хранить - указано в массиве $dataTypes
-Возвращает массив данных
-
-В настоящее время предполагается, что используется gpsdPROXY, и смысла в аккумулировании нет:
-оно выполняется gpsdPROXY. Однако $dataTypes содержит список типов данных, которые надо извлечь
-и которые dashboard может показать.
-Но, однако, источником может быть не только gpsdPROXY, поэтому попытка аккумуляции оставлена
-
+function askGPSDproxy($host='localhost',$port=3838){
+/*
 В $gpsdData данные по устройствам, в результирующем массиве - без конкретного устройства
 */
-//echo "Получено от gpsd:<pre>"; print_r($gpsdData); echo "</pre>";
+global $dataTypes;
 
-$tpv = $_SESSION[$dataName]; $tpvTime = $_SESSION[$dataName.'tpvTime']; $currTime = time();
+$gpsd  = @stream_socket_client('tcp://'.$host.':'.$port,$errno,$errstr); // открыть сокет 
+$res = @fwrite($gpsd, "\n\n"); 	// gpsdPROXY не пришлёт VERSION при открытии соединения
+//echo "res=$res; ";var_dump($gpsd);echo "<br>\n";
+if(($res === FALSE) or !$gpsd) return "no GPSD: $errstr";
+//echo "Socket to gpsd opened, handshaking<br>\n";
+$controlClasses = array('VERSION','DEVICES','DEVICE','WATCH');
+do { 	//
+	$buf = fgets($gpsd); 
+	//echo "<br>buf:<br>|".strtr($buf,"\r\n",'?!')."|<br>\n";
+	if($buf === FALSE) { 	// gpsd умер
+		@socket_close($gpsd);
+		$msg = "Failed to read data from gpsdPROXY";
+		echo "$msg<br>\n"; 
+		return $msg;
+	}
+	if (!$buf = trim($buf)) {	// пусто -- это второй \r\n в конце строки. Но пустая строка -- как бы принятое в http завершение сообщения?
+		continue;
+	}
+	$buf = json_decode($buf,TRUE);
+	if($buf === null) { 	// прислали странное, это не gpsd?
+		@socket_close($gpsd);
+		$msg = "Recieved not JSON. Is this cgpsdPROXY?";
+		echo "$msg<br>\n"; 
+		return $msg;
+	}
+	//echo "<br>buf: ";echo "<pre>"; print_r($buf); echo "</pre>\n";
+	switch($buf['class']){
+	case 'VERSION': 	// 
+		$res = fwrite($gpsd, '?WATCH={"enable":true};'."\n\n"); 	// велим демону включить устройства
+		if($res === FALSE) { 	// gpsd умер
+			socket_close($gpsd);
+			$msg =  "Failed to send WATCH to gpsdPROXY: $errstr";
+			echo "$msg<br>\n"; 
+			return $msg;
+		}
+		//echo "Send TURN ON<br>\n";
+		break;
+	case 'DEVICES': 	// соберём подключенные устройства со всех gpsd, включая slave
+		//echo "Received DEVICES<br>\n"; //
+		$devicePresent = array();
+		foreach($buf["devices"] as $device) {
+			if($device['flags']&$dataType) $devicePresent[] = $device['path']; 	// список требуемых среди обнаруженных и понятых устройств.
+		}
+		break;
+	case 'DEVICE': 	// здесь информация о подключенных slave gpsd, т.е., общая часть path в имени устройства. Полезно для опроса конкретного устройства, но нам не надо. 
+		//echo "Received about slave DEVICE<br>\n"; //
+		break;
+	case 'WATCH': 	// 
+		//echo "Received WATCH<br>\n"; //
+		//print_r($gpsdWATCH); //
+		//echo "Sending POLL<br>\n";
+		$res = fwrite($gpsd, '?POLL={"subscribe":""TPV""};'."\n\n"); 	// запросим данные
+		if($res === FALSE) { 	// gpsd умер
+			socket_close($gpsd);
+			$msg =  "Failed to send POLL to gpsdPROXY: $errstr";
+			echo "$msg<br>\n"; 
+			return $msg;
+		}
+		break;
+	}
+}while(!$buf or in_array($buf['class'],$controlClasses));
+@fwrite($gpsd, '?WATCH={"enable":false};'."\n\n"); 	// велим демону выключить устройства
+fclose($gpsd);
+//echo "Закрыт сокет\n";
+$gpsdData = array();
+foreach($buf['tpv'] as $device) {
+	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
+	if($device['time'])	$tpv[$device['time']] = $device; 	// с ключём - время
+	else {
+		$gpsdData[] = $device; 	// с ключём  - целым.
+	}
+	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
+}
+//echo "Данные askGPSD <pre>"; print_r($gpsdData); echo "</pre>\n";
+
+$tpv = array();
 krsort($gpsdData); 	// отсортируем устройства по времени к прошлому
 foreach($gpsdData as $device) {
-	$tpv['time'] = $device['time'];
-	foreach($dataTypes as $data => $timeout) {
-		// а вдруг у нас не gpadPROXY, а что-то, что не контролирует время жизни?
-		if(($currTime-$tpvTime[$data])>$timeout) $tpv[$data] = NULL; 	// обнулим, если эти данные появлялись давно. Вне зависимости от возраста самих данных, которого может и не быть
-		if($device[$data]!==NULL) {
-			$tpv[$data] = (float)$device[$data];
-			$tpvTime[$data] = $currTime;
-		}
+	foreach($dataTypes as $data) {	// выберем то, что указано в $dataTypes
+		if($device[$data]!==NULL) $tpv[$data] = (float)$device[$data];
 	}
 	if($device['mode'] == 3) { 	// последний по времени 3D fix 
 		// считаем, что это более достоверно
 		$tpv['track'] = $device['track']; 	// курс, без явного преобразования типов, чтобы остался NULL
 		$tpv['speed'] = $device['speed']; 	// скорость
 	}
-
 	$enough = TRUE;
-	foreach($dataTypes as $data) {
-		if(!($enough = ($enough AND $tpv[$data]))) break;
+	foreach($dataTypes as $data) {	// проверяем, всё ли типы данных, что указаны в $dataTypes, есть в $tpv
+		if(!($enough = ($enough and $tpv[$data]))) break;	// если все $dataTypes есть, цикл прокрутится, и $enough останется TRUE. Иначе цикл одлмится с $enough FALSE, и устройства будут просматириваться дальше
 	}
 	if($enough) break; 	// прекратим просмотр устройств, если собрали все данные
 }
-$_SESSION[$dataName] = $tpv; 	// собираем не только последние значения, но аккумулируем все. Позволяет собрать из нескольких источников, но какие-то величины могут быть сильно старыми.
-$_SESSION[$dataName.'tpvTime'] = $tpvTime;
-
-//echo "Собрано:<pre>"; print_r($tpv); echo "</pre>";
+unset($gpsdData);
 return $tpv;
-} // end function getData
-
+}
 ?>

@@ -198,7 +198,7 @@ ul { /* нужно, чтобы стили работали */
 	background-color:  rgba(227, 231, 251, 0.5); /* бледно-голубой */
 }
 .big_symbol {
-	height:95%;
+	height:90%;
 	width: 100%;	
 	display: flex;
     justify-content: center; /*Центрирование по горизонтали*/

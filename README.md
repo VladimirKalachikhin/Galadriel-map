@@ -2,7 +2,7 @@
 This a server-based chart plotter navigation software for pleasure crafts and off-road cars. The application can be placed on a weak server such as RaspberryPi, NAS or router and used on full clients such as tablets and smartphones. Only browser need.
 
 
-## v. 1.9
+## v. 2.0
 ![screen](screenshots/s10.png)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 **The author is not responsible for the consequences of using the GaladrielMap for navigation.**
@@ -12,7 +12,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 
 ## Features
 1. [Online or offline user-defined maps](#maps)
-2. [Positioning](#positioning) via [gpsd](https://gpsd.io/) or [Signal K](https://signalk.org/)
+2. [Positioning](#positioning) via [gpsd](https://gpsd.io/)
 3. [Tracking](#tracking)
 4. [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
 5. [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
@@ -29,10 +29,6 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 ## Compatibility
 Linux. Modern browsers include mobile.
 
-## Limitations
-You may want to use some tcp streams as a data source in GaladrielMap. It's may be a stream from hardware instruments multiplexor or software multiplexor such as [Signal K](https://signalk.org/). Due to [gpsd](https://gpsd.io/) and [Signal K](https://signalk.org/) limitations data from tcp streams and instruments can be shown with some delay, and be not quite relevant. This does not apply to coordinates, velocity and heading. This data is always correct.  
-
-Usage [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) as data service (not by default) removes these restrictions.
 
 ## Demo
 Full feature [live demo](http://130.61.159.53/map/). Sometimes there floating a virtual sailboat.
@@ -48,7 +44,7 @@ Paths and other are set and describe in _params.php_
 
 
 ## Emergency kit
-All you need to install, including dependences, are in _emergencykit/_.  
+All you need to install, including dependences, are in _emergencykit/_.  See README.txt how to install.
 You may download full pack -- more 4MB, or without vector tiles support pack -- less them 1MB.
 
 
@@ -69,7 +65,7 @@ Create a local copy of dependences and/or edit _index.php_
 
 
 ## More thanks
-* [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to show markers and non well-formed gpx files.
+* [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to show markers, non well-formed gpx files and more.
 * [Metrize Icons by Alessio Atzeni](https://icon-icons.com/pack/Metrize-Icons/1130) for icons.
 * [Typicons by Stephen Hutchings](https://icon-icons.com/pack/Typicons/1144) for icons.
 * [Map Icons Collection](https://mapicons.mapsmarker.com/) for icons.
@@ -97,10 +93,7 @@ GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox sty
 ## Positioning
  ![Positioning](screenshots/s2.png)<br>
  GaladrielMap gets realtime spatial data and other info via [gpsd](https://gpsd.io/). Usually enough plug a GNSS receiver to the server.  
-How to install and configure gpsd see [gpsd pages](https://gpsd.io/).
-
-Another way is to use [Signal K](https://signalk.org/) infrastructure. If no spatial info sources sets in _params.php_, GaladrielMap  will try found the Signal K service on your local network, and get a position from it.  
-However, it is better to set the Signal K server address in _params.php_ if you are going to use Signal K.
+How to install and configure gpsd see [gpsd pages](https://gpsd.io/).  
 
 Map **always** sets to current position. This behavior can be temporarily disabled on the <img src="img/settings1.svg" alt="Settings" width="24px"> menu. Following the cursor is disabled if <img src="img/route.svg" alt="Route" width="24px"> or <img src="img/download1.svg" alt="Loader" width="24px"> menu are open.
 
