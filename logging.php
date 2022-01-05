@@ -37,7 +37,7 @@ else {
 		$gpxlogger = str_replace(array('&logfile','&host'),array($fullOutpuFileName,$_SERVER['HTTP_HOST']),$gpxlogger);
 		$LoggerPid = exec("$gpxlogger > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
 		$status=(int)gpxloggerRun(); 	// оно могло и не запуститься
-		if($status) echo "Started logging track to $outpuFile\n";
+		if($status) echo "Started logging track to $outpuFileName\n";
 		else echo "Unable to start logging\n";
 	}
 }
