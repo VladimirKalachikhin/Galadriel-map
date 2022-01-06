@@ -6,7 +6,7 @@ W   281.25|          |        |          |E 101.25
 WSW 258.75|          |        |          |ESE 123.75
 SW  236.25|SSW 213.75|S 191.25|SSE 168.75|SE 146.25
 */
-$versionTXT = '2.0.0';
+$versionTXT = '2.0.1';
 
 require('params.php'); 	// пути и параметры
 // Интернационализация
@@ -142,7 +142,9 @@ else {
 //echo "depthAlarm=$depthAlarm; minDepthValue=$minDepthValue; minSpeedAlarm=$minSpeedAlarm; minSpeedValue=$minSpeedValue; maxSpeedAlarm=$maxSpeedAlarm; maxSpeedValue=$maxSpeedValue;<br>\n";
 //echo "toHeadingMagnetic=$toHeadingMagnetic;<br>\n";
 
-$tpv = askGPSDproxy($gpsdHost,$gpsdPort); 	// требуемые данные в плоском массиве
+if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') $gpsdProxyHost = $_SERVER['HTTP_HOST'];
+//echo "$gpsdProxyHost:$gpsdProxyPort<br>\n";
+$tpv = askGPSDproxy($gpsdProxyHost,$gpsdProxyPort); 	// требуемые данные в плоском массиве
 //echo "Ответ:<pre>"; print_r($tpv); echo "</pre>";
 
 if(is_string($tpv)) {
@@ -842,7 +844,7 @@ fclose($gpsd);
 $gpsdData = array();
 foreach($buf['tpv'] as $device) {
 	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
-	if($device['time'])	$tpv[$device['time']] = $device; 	// с ключём - время
+	if($device['time'])	$gpsdData[$device['time']] = $device; 	// с ключём - время
 	else {
 		$gpsdData[] = $device; 	// с ключём  - целым.
 	}
@@ -856,6 +858,7 @@ foreach($gpsdData as $device) {
 	foreach($dataTypes as $data) {	// выберем то, что указано в $dataTypes
 		if($device[$data]!==NULL) $tpv[$data] = (float)$device[$data];
 	}
+	//echo "<br>tpv=<pre>"; print_r($tpv); echo "</pre>\n";
 	if($device['mode'] == 3) { 	// последний по времени 3D fix 
 		// считаем, что это более достоверно
 		$tpv['track'] = $device['track']; 	// курс, без явного преобразования типов, чтобы остался NULL

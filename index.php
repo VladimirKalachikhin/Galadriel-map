@@ -1,7 +1,6 @@
 <?php
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
-require_once($gpsdPROXYpath.'/params.php'); 	// 
 //url службы записи пути. Если не установлена -- записи пути не происходит
 $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service, if present. If not -- not logging activity
 // 	Динамическое обновление маршрутов  Route updater
