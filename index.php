@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.0.1';
+$versionTXT = '2.0.2';
 /* 
 */
 // start gpsdPROXY
@@ -519,10 +519,10 @@ foreach($jobsInfo as $jobName) { 	//
 				<div style="float:right;margin: 1rem auto;">
 					<input id='minWATCHintervalInput' type="text" pattern="[0-9]*" title="<?php echo $realTXT;?>" size='4' style='width:3rem;font-size:175%;'
 					 onChange="minWATCHinterval=parseFloat(this.value);
-					 spatialWebSocketStop(spatialWebSocket,'Change WATCH interval');
-					 warchAISstop(aisWebSocket,'Change WATCH interval');
-					 aisWebSocket = warchAISstart(); 
-					 spatialWebSocket = spatialWebSocketStart(); 
+					 if(isNaN(minWATCHinterval)) minWATCHinterval=0;
+					 //console.log('Изменение, minWATCHinterval',minWATCHinterval);
+					 spatialWebSocketStop('Close socket to change WATCH interval');
+					 warchAISstop('Close socket to change WATCH interval');
 					"
 					>
 				</div>
@@ -877,8 +877,9 @@ else mobMarker = L.layerGroup().addLayer(toMOBline);
 <?php
 if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') $gpsdProxyHost = $_SERVER['HTTP_HOST'];
 ?>
+var spatialWebSocket; // будет глобальным сокетом
 function spatialWebSocketStart(){
-	let spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>"); 	// должен быть глобальным, ибо к нему отовсюду обращаются
+	spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>"); 	// должен быть глобальным, ибо к нему отовсюду обращаются
 	spatialWebSocket.onopen = function(e) {
 		console.log("[spatialWebSocket open] Соединение установлено");
 	}; // end spatialWebSocket.onopen
@@ -897,7 +898,8 @@ function spatialWebSocketStart(){
 		switch(data.class){
 		case 'VERSION':
 			console.log('spatialWebSocket: Handshaiking with gpsd begin: VERSION recieved. Sending WATCH');
-			spatialWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"TPV","minPeriod":"'+minWATCHinterval+'"};');
+			//spatialWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"TPV","minPeriod":"'+minWATCHinterval+'"};');
+			this.send('?WATCH={"enable":true,"json":true,"subscribe":"TPV","minPeriod":"'+minWATCHinterval+'"};');
 			break;
 		case 'DEVICES':
 			console.log('spatialWebSocket: Handshaiking with gpsd proceed: DEVICES recieved');
@@ -972,15 +974,8 @@ function spatialWebSocketStart(){
 	}; // end spatialWebSocket.onmessage
 
 	spatialWebSocket.onclose = function(event) {
-		if (event.wasClean) {
-		console.log(`[spatialWebSocket close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
-		} 
-		else {
-			// например, сервер убил процесс или сеть недоступна
-			// обычно в этом случае event.code 1006 - соединение было потеряно
-			console.log(`spatialWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
-			window.setTimeout(spatialWebSocketStart, 3000); 	// перезапустим сокет через  секунд
-		}
+		console.log(`spatialWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
+		window.setTimeout(spatialWebSocketStart, 3000); 	// перезапустим сокет через  секунд. В каком контексте здесь вызывается callback -- мне осталось непонятным, поэтому сокет ваще глобален
 		positionCursor.remove(); 	// уберём курсор с карты
 		velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
 		headingDisplay.innerHTML = '&nbsp;';
@@ -1130,23 +1125,23 @@ function spatialWebSocketStart(){
 			}
 		}
 	}; // end function realtimeTPVupdate
-return spatialWebSocket;	
+//return spatialWebSocket;	
 }; // end function spatialWebSocketStart
- // будет глобальным сокетом
-var spatialWebSocket = spatialWebSocketStart(); 	// запускам периодическую функцию получать TPV
 
-function spatialWebSocketStop(webSocket,message=''){
-	console.log('Stop recieve TPV');
-	webSocket.close(1000,message);
+spatialWebSocketStart(); 	// запускам периодическую функцию получать TPV
+
+function spatialWebSocketStop(message=''){
+	console.log('Stop recieve TPV',);
+	spatialWebSocket.close(1000,message);
 } // end function spatialWebSocketStop
 
 
 // Данные AIS
 // 	Запуск периодических функций
-
+var aisWebSocket;	// будет глобальный сокет для AIS
 function warchAISstart() {
 	//console.log('AIS switched ON');
-	var aisWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>");	// этот сокет не глобальный!!!!
+	aisWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>");	// этот сокет не глобальный!!!!
 	aisWebSocket.onopen = function(e) {
 		console.log("[aisWebSocket open] Соединение установлено");
 	}; // end aisWebSocket.onopen
@@ -1183,15 +1178,8 @@ function warchAISstart() {
 	}; // end aisWebSocket.onmessage
 
 	aisWebSocket.onclose = function(event) {
-		if (event.wasClean) {
-		console.log(`[aisWebSocket close] Соединение закрыто чисто, код=${event.code} причина=${event.reason}`);
-		} 
-		else {
-			// например, сервер убил процесс или сеть недоступна
-			// обычно в этом случае event.code 1006 - соединение было потеряно
-			console.log(`aisWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
-			window.setTimeout(warchAISstart, 5000); 	// перезапустим сокет через 5 секунд
-		}
+		console.log(`aisWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
+		window.setTimeout(warchAISstart, 3000); 	// перезапустим сокет через  секунд
 		for(const vehicle in vehicles){
 			vehicles[vehicle].remove();
 			vehicles[vehicle] = null;
@@ -1256,12 +1244,12 @@ function warchAISstart() {
 return aisWebSocket
 } // end function warchAISstart
 
-var aisWebSocket = warchAISstart(); 	// запускам периодическую функцию смотреть AIS
+warchAISstart(); 	// запускам периодическую функцию смотреть AIS
 DisplayAISswitch.checked = true;
 
-function warchAISstop(webSocket,message=''){
+function warchAISstop(message=''){
 console.log('AIS switched OFF');
-webSocket.close(1000,message);
+aisWebSocket.close(1000,message);
 for(const vehicle in vehicles){
 	vehicles[vehicle].remove();
 	vehicles[vehicle] = null;
@@ -1271,7 +1259,7 @@ for(const vehicle in vehicles){
 
 function watchAISswitching(){
 if(DisplayAISswitch.checked) warchAISstart();
-else warchAISstop(aisWebSocket,'Dispalying AIS stopped');
+else warchAISstop('Dispalying AIS stopped');
 }; // end function watchAISswitching
 
 
