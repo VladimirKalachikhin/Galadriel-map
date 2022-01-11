@@ -6,7 +6,10 @@ W   281.25|          |        |          |E 101.25
 WSW 258.75|          |        |          |ESE 123.75
 SW  236.25|SSW 213.75|S 191.25|SSE 168.75|SE 146.25
 */
-$versionTXT = '2.0.1';
+$versionTXT = '2.0.2';
+/*
+2.0.2 -- MOB info support
+*/
 
 require('params.php'); 	// пути и параметры
 // Интернационализация
@@ -144,8 +147,8 @@ else {
 
 if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') $gpsdProxyHost = $_SERVER['HTTP_HOST'];
 //echo "$gpsdProxyHost:$gpsdProxyPort<br>\n";
-$tpv = askGPSDproxy($gpsdProxyHost,$gpsdProxyPort); 	// требуемые данные в плоском массиве
-//echo "Ответ:<pre>"; print_r($tpv); echo "</pre>";
+list($tpv,$mob) = askGPSDproxy($gpsdProxyHost,$gpsdProxyPort); 	// требуемые данные в плоском массиве, MOB - своё положение, точка MOB; 
+//echo "Ответ:<pre>"; print_r($tpv); print_r($mob); echo "</pre>";
 
 if(is_string($tpv)) {
 	$symbol = $tpv;
@@ -171,7 +174,7 @@ if($maxSpeedAlarm and ($tpv['speed']!==NULL)) {
 		$alarm = TRUE;
 	}
 }
-if($toHeadingAlarm) {
+if($toHeadingAlarm and !$mob) {
 	if($toHeadingMagnetic and isset($tpv['magtrack'])) $theHeading = $tpv['magtrack'];
 	else $theHeading = $tpv['track']; 	// тревога прозвучит, даже если был указан магнитный курс, но его нет
 	$minHeading = $toHeadingValue - $toHeadingPrecision;
@@ -272,65 +275,73 @@ else $rumbNum = NULL;
 $currRumb = array();
 $currRumb[$rumbNum] = $rumbNames[$rumbNum];
 
+$MOBtxt = '';
+if($mob) {
+	$toHeadingAlarm = TRUE;
+	$toHeadingValue = bearing($mob);
+	//echo "Азимут на MOB $toHeadingValue<br>\n";
+	$MOBtxt = '<div style="position:absolute;left:25%;right:auto;top:30%;"><span class="big_mid_symbol wb" style="opacity: 0.5;">&nbsp;&nbsp; MOB &nbsp;&nbsp;</span></div>';
+}
+
 if($toHeadingAlarm) {
 
 	//$toHeadingValue =30;
 	// Метка указанного направления
 	if(($toHeadingValue>315)and($toHeadingValue<360)){
-		$percent = 100 - ($toHeadingValue - 315)*100/90;
-		$currDirectMark = "<img src='img/markNNW.png' style='display:block;position:fixed;top:0;right:$percent%;' class='markVert'>";
+		$percent = 100 - ($toHeadingValue - 313)*100/90;
+		$currDirectMark = "<div style='display:block;position:fixed;top:0;right:$percent%;'><img src='img/markNNW.png' class='markVert'></div>";
 	} 
 	elseif($toHeadingValue == 0){
-		$currDirectMark = "<img src='img/markN.png' style='display:block;position:fixed;top:0;left:49.5%;' class='markVert'>";
+		$currDirectMark = "<div style='display:block;position:fixed;top:0;left:49.5%;'><img src='img/markN.png' class='markVert'></div>";
 	}
 	elseif(($toHeadingValue>0)and($toHeadingValue<45)){
-		$percent = ($toHeadingValue+45)*100/90;
-		$currDirectMark = "<img src='img/markNNE.png' style='display: block;position: fixed;top:0;left:$percent%;' class='markVert'>";
+		$percent = ($toHeadingValue+43)*100/90;
+		$currDirectMark = "<div style='display: block;position: fixed;top:0;left:$percent%;width:3rem;height:3rem'><img src='img/markNNE.png' class='markVert'></div>";
 	}
 	elseif($toHeadingValue == 45){
-		$currDirectMark = "<img src='img/markNE.png' style='display: block;position: fixed;top:0;right:0;' class='markVert'>";
+		$currDirectMark = "<div style='display: block;position: fixed;top:0;right:0;'><img src='img/markNE.png' class='markVert'></div>";
 	}
 	elseif(($toHeadingValue > 45) and ($toHeadingValue < 90)){
-		$percent = 100 - ($toHeadingValue-45)*100/90;
-		$currDirectMark = "<img src='img/markENE.png' style='display: block;position: fixed;right:0;bottom:$percent%;' class='markHor'>";
+		$percent = 100 - ($toHeadingValue-43)*100/90;
+		$currDirectMark = "<div style='display: block;position: fixed;right:0;bottom:$percent%;'><img src='img/markENE.png' class='markHor'></div>";
 	}
 	elseif($toHeadingValue == 90){
-		$currDirectMark = "<img src='img/markE.png' style='display: block;position: fixed;right:0;top:49%;' class='markHor'>";
+		$currDirectMark = "<div style='display: block;position: fixed;right:0;top:49%;'><img src='img/markE.png' class='markHor'></div>";
 	}
 	elseif(($toHeadingValue > 90) and ($toHeadingValue < 135)){
-		$percent = ($toHeadingValue-45)*100/90;
-		$currDirectMark = "<img src='img/markESE.png' style='display: block;position: fixed;right:0;top:$percent%;' class='markHor'>";
+		$percent = ($toHeadingValue-47)*100/90;
+		$currDirectMark = "<div style='display: block;position: fixed;right:0;top:$percent%;'><img src='img/markESE.png' class='markHor'></div>";
 	}
 	elseif($toHeadingValue == 135){
-		$currDirectMark = "<img src='img/markSE.png' style='display: block;position: fixed;bottom:0;right:0;' class='markHor'>";
+		$currDirectMark = "<div style='display: block;position: fixed;bottom:0;right:0;'><img src='img/markSE.png' class='markHor'></div>";
 	}
 	elseif(($toHeadingValue>135)and($toHeadingValue<180)){
-		$percent = 100 - ($toHeadingValue-135)*100/90;
-		$currDirectMark = "<img src='img/markSSE.png' style='display: block;position: fixed;bottom:0;left:$percent%;' class='markVert'>";
+		$percent = 100 - ($toHeadingValue-133)*100/90;
+		$currDirectMark = "<div style='display: block;position: fixed;bottom:0;left:$percent%;'><img src='img/markSSE.png' class='markVert'></div>";
 	}
 	elseif($toHeadingValue == 180){
-		$currDirectMark = "<img src='img/markS.png' style='display: block;position: fixed;bottom:0;left:49.5%;' class='markVert'>";
+		$currDirectMark = "<div style='display: block;position: fixed;bottom:0;left:49.5%;'><img src='img/markS.png' class='markVert'></div>";
 	}
 	elseif(($toHeadingValue>180)and($toHeadingValue<225)){
-		$percent = ($toHeadingValue-135)*100/90;
-		$currDirectMark = "<img src='img/markSSW.png' style='display: block;position: fixed;bottom:0;right:$percent%;' class='markVert'>";
+		$percent = ($toHeadingValue-137)*100/90;
+		$currDirectMark = "<div style='display: block;position: fixed;bottom:0;right:$percent%;'><img src='img/markSSW.png' class='markVert'></div>";
 	}
 	elseif($toHeadingValue==225){
-		$currDirectMark = "<img src='img/markSW.png' style='display: block;position: fixed;bottom:0;left:0;' class='markHor'>";
+		$currDirectMark = "<div style='display: block;position: fixed;bottom:0;left:0;'><img src='img/markSW.png' class='markHor'></div>";
 	}
 	elseif(($toHeadingValue>225)and($toHeadingValue<270)){
-		$percent = 100 - ($toHeadingValue-225)*100/90;
-		$currDirectMark = "<img src='img/markWSW.png' style='display:block;position:fixed;left:0;top:$percent%;' class='markHor'>";
+		$percent = 100 - ($toHeadingValue-223)*100/90;
+		$currDirectMark = "<div style='display:block;position:fixed;left:0;top:$percent%;'><img src='img/markWSW.png' class='markHor'></div>";
 	}
 	elseif($toHeadingValue == 270){
-		$currDirectMark = "<img src='img/markW.png' style='display: block;position: fixed;left:0;top:49%;' class='markHor'>";
+		$currDirectMark = "<div style='display: block;position: fixed;left:0;top:49%;'><img src='img/markW.png' class='markHor'></div>";
 	}
 	elseif(($toHeadingValue>270)and($toHeadingValue<315)){
-		$percent = ($toHeadingValue-225)*100/90;
-		$currDirectMark = "<img src='img/markWNW.png' style='display:block;position:fixed;left:0;bottom:$percent%;' class='markHor'>";
+		$percent = ($toHeadingValue-227)*100/90;
+		$currDirectMark = "<div style='display:block;position:fixed;left:0;bottom:$percent%;'><img src='img/markWNW.png' class='markHor'></div>";
 	}
 	elseif($toHeadingValue==315){
-		$currDirectMark = "<img src='img/markNW.png' style='display: block;position: absolute;top:0;left:0;' class='markHor'>";
+		$currDirectMark = "<div style='display: block;position: absolute;top:0;left:0;'><img src='img/markNW.png' class='markHor'></div>";
 	}
 	// Метка текущего направления 	$theHeading уже есть
 	if(($theHeading>315)and($theHeading<=360)){
@@ -585,6 +596,7 @@ return matches ? decodeURIComponent(matches[1]) : undefined;
 		<span class='mid_symbol' style='vertical-align:middle; padding: 0; margin: 0;'>
 			<?php echo $header;	?>
 		</span>
+		<?php echo $MOBtxt; ?>
 	</div>
 	<div id='dashboard' class='<?php if($alarm) echo "wb alarm";?>' style='text-align:center; padding: 0; margin: 0;'>
 		<span class='big_symbol' style='vertical-align:middle;'>
@@ -841,6 +853,7 @@ do { 	//
 @fwrite($gpsd, '?WATCH={"enable":false};'."\n\n"); 	// велим демону выключить устройства
 fclose($gpsd);
 //echo "Закрыт сокет\n";
+//echo "Все полученные от gpsdPROXY данные:<pre>"; print_r($buf); echo "</pre>";
 $gpsdData = array();
 foreach($buf['tpv'] as $device) {
 	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";
@@ -853,8 +866,10 @@ foreach($buf['tpv'] as $device) {
 //echo "Данные askGPSD <pre>"; print_r($gpsdData); echo "</pre>\n";
 
 $tpv = array();
+$selfLonLat = array();	// будет использоваться для MOB и на всякий случай
 krsort($gpsdData); 	// отсортируем устройства по времени к прошлому
 foreach($gpsdData as $device) {
+	if(is_numeric($device['lon']) and is_numeric($device['lat']))	$selfLonLat = array($device['lon'],$device['lat']);
 	foreach($dataTypes as $data) {	// выберем то, что указано в $dataTypes
 		if($device[$data]!==NULL) $tpv[$data] = (float)$device[$data];
 	}
@@ -866,11 +881,48 @@ foreach($gpsdData as $device) {
 	}
 	$enough = TRUE;
 	foreach($dataTypes as $data) {	// проверяем, всё ли типы данных, что указаны в $dataTypes, есть в $tpv
-		if(!($enough = ($enough and $tpv[$data]))) break;	// если все $dataTypes есть, цикл прокрутится, и $enough останется TRUE. Иначе цикл одлмится с $enough FALSE, и устройства будут просматириваться дальше
+		if(!($enough = ($enough and $tpv[$data]))) break;	// если все $dataTypes есть, цикл прокрутится, и $enough останется TRUE. Иначе цикл обломится с $enough FALSE, и устройства будут просматириваться дальше
 	}
 	if($enough) break; 	// прекратим просмотр устройств, если собрали все данные
 }
-unset($gpsdData);
-return $tpv;
+
+// MOB
+$mob = array();
+if($buf['mob']['status']){
+	foreach($buf['mob']['points'] as $point){
+		//echo "<pre>"; print_r($point); echo "</pre>";
+		if($point['current']){
+			$mob = array($selfLonLat,$point['coordinates']);	// своё положение, точка MOB; долгота широта, lon lat
+			break;
+		}
+	}
 }
+
+unset($gpsdData);
+return array($tpv,$mob);
+}
+
+function bearing($pair) {
+/* Азимут между точками
+$pair = array(array($lon,$lat),array($lon,$lat))
+*/
+//echo "<pre>"; print_r($pair); echo "</pre>";
+$lat1 = deg2rad($pair[0][1]);
+$lat2 = deg2rad($pair[1][1]);
+$lon1 = deg2rad($pair[0][0]);
+$lon2 = deg2rad($pair[1][0]);
+//echo "lat1=$lat1; lat2=$lat2; lon1=$lon1; lon2=$lon2;<br>\n";
+
+$y = sin($lon2 - $lon1) * cos($lat2);
+$x = cos($lat1) * sin($lat2) - sin($lat1) * cos($lat2) * cos($lon2 - $lon1);
+//echo "x=$x; y=$y;<br>\n";
+
+$bearing = rad2deg(atan2($y, $x));
+//echo "$bearing<br>";
+if($bearing >= 360) $bearing = $bearing-360;
+elseif($bearing < 0) $bearing = $bearing+360;
+
+return $bearing;
+} // end function bearing
+
 ?>

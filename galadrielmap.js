@@ -1152,14 +1152,17 @@ spatialWebSocket.send('?UPDATE={"updates":['+JSON.stringify(upData.MOB)+']};'); 
 
 function bearing(latlng1, latlng2) {
 /**/
+console.log(latlng1,latlng2)
 const rad = Math.PI/180;
 let lat1 = latlng1.lat * rad,
 lat2 = latlng2.lat * rad,
 lon1 = latlng1.lng * rad,
 lon2 = latlng2.lng * rad;
+//console.log('lat1=',lat1,'lat2=',lat2,'lon1=',lon1,'lon2=',lon2)
 
 let y = Math.sin(lon2 - lon1) * Math.cos(lat2);
 let x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+//console.log('x',x,'y',y)
 
 let bearing = ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
 if(bearing >= 360) bearing = bearing-360;

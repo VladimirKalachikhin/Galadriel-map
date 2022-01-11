@@ -994,7 +994,7 @@ function spatialWebSocketStart(){
 		// Положение неизвестно
 		//console.log('Index gpsdData',gpsdData.lon,gpsdData.lat);
 		if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
-			console.log('Error message insted GPSD data',gpsdData);
+			console.log('No spatial info in GPSD data',gpsdData);
 			positionCursor.remove(); 	// уберём курсор с карты
 			velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
 			headingDisplay.innerHTML = '&nbsp;';
