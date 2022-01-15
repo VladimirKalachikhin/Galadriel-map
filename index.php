@@ -881,7 +881,7 @@ var spatialWebSocket; // будет глобальным сокетом
 function spatialWebSocketStart(){
 	spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>"); 	// должен быть глобальным, ибо к нему отовсюду обращаются
 	spatialWebSocket.onopen = function(e) {
-		console.log("[spatialWebSocket open] Соединение установлено");
+		console.log("[spatialWebSocket open] Connection established");
 	}; // end spatialWebSocket.onopen
 
 	spatialWebSocket.onmessage = function(event) {
@@ -915,7 +915,7 @@ function spatialWebSocketStart(){
 		case 'AIS':
 			break;
 		case 'MOB':
-			//console.log(data);
+			console.log('spatial MOB',data);
 			// pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
 			if(data.status === false) { 	// режим MOB надо выключить
 				if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB

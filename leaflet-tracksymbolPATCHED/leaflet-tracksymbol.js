@@ -132,7 +132,7 @@ L.TrackSymbol = L.Path.extend({
 		this._shiptype = aisData.shiptype;
 		delete aisData.shiptype;
 		this._setColorsByTypeOfShip();
-		//console.log(aisData.lat,aisData.lon)
+		//if(this.options.mmsi==244770791) console.log(aisData.lat,aisData.lon);
 		if(((aisData.lat !== undefined) && (aisData.lat !== null)) && ((aisData.lon !== undefined) && (aisData.lon !== null))) {
 		//if(aisData.lat && aisData.lon) {
 		    var oldLatLng = this._latlng;
@@ -145,7 +145,7 @@ L.TrackSymbol = L.Path.extend({
 		//console.log(this.options.mmsi);
 		//console.log(this._shiptype);
 
-       	//if(this.options.mmsi==211524940) console.log(this.options);
+       	//if(this.options.mmsi==244770791) console.log(this.options);
        	let speedKMH='';
        	if(this._speed) speedKMH = Math.round((this._speed*60*60/1000)*10)/10+' Km/h';
       
@@ -189,7 +189,7 @@ L.TrackSymbol = L.Path.extend({
 			break;
 		}
 		//console.log(thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName);
-		if(iconName) iconName = '<img width="24px" style="float:right;" src="'+(thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName)+'">';
+		if(iconName) iconName = '<img width="24px" style="float:right;margin:0.1rem;" src="'+(thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName)+'">';
 		let statusText;
 		if(!aisData.status_text) statusText = AISstatusTXT[aisData.status];
 		else statusText = aisData.status_text.trim();
@@ -203,11 +203,11 @@ L.TrackSymbol = L.Path.extend({
 
 		let PopupContent = `
 <div>
-<span style='font-size:120%';'>${this.options.shipname||''}</span><br>
 	${iconName}
+	<span style='font-size:120%';'>${this.options.shipname||''}</span><br>
 	<div style='width:100%;'>
-	${this.options.mmsi} <span style='float:right;'>${this.options.callSign||''}</span>
-	<div>
+	${this.options.mmsi} <span style='float:right;'>${this.options.callsign||''}</span>
+	</div>
 	<div style="text-align: left;">
 		${this.options.shiptype_text||''}
 	</div>
