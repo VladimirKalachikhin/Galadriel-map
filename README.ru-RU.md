@@ -1,7 +1,7 @@
 # GaladrielMap [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 Простой картплоттер (навигационно-картографическая система), ориентированный на любительское использование на маломерных судах.  
 Приложение может быть размещено на слабом сервере типа  RaspberryPi, NAS или сетевом маршрутизаторе и предполагает использование на достаточно производительных клиентских устройствах, преимущественно мобильных. Желательно применять планшет с большим экраном, однако пользоваться с телефона тоже вполне возможно. На клиентском устройстве требуется только наличие браузера -- никаких приложений устанавливать не нужно.
-<div style='float:right;'>[Форум](https://github.com/VladimirKalachikhin/Galadriel-map/discussions)
+<div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Форум</a>
 </div>
 
 ## v. 2.0
