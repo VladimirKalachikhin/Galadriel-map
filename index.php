@@ -915,7 +915,7 @@ function spatialWebSocketStart(){
 		case 'AIS':
 			break;
 		case 'MOB':
-			console.log('spatial MOB',data);
+			//console.log('spatial MOB',data);
 			// pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
 			if(data.status === false) { 	// режим MOB надо выключить
 				if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
@@ -1008,6 +1008,7 @@ function spatialWebSocketStart(){
 		cursor.setLatLng(L.latLng(gpsdData.lat,gpsdData.lon));
 		var positionTime = new Date(gpsdData.time);
 		var now = new Date();
+		//console.log('gpsdData.time:',gpsdData.time,'now-positionTime',now-positionTime);
 		if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
 		else cursor.setIcon(GpsCursor);
 		

@@ -1,8 +1,10 @@
+
 # GaladrielMap [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 This a server-based chart plotter navigation software for pleasure crafts and off-road cars. The application can be placed on a weak server such as RaspberryPi, NAS or router and used on full clients such as tablets and smartphones. Only browser need.
+<div style='float:right;'>[Forum](https://github.com/VladimirKalachikhin/Galadriel-map/discussions)
+</div>
 
-
-## v. 2.0
+## v. 2.0 
 ![screen](screenshots/s10.png)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 **The author is not responsible for the consequences of using the GaladrielMap for navigation.**
@@ -12,7 +14,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 
 ## Features
 1. [Online or offline user-defined maps](#maps)
-2. [Positioning](#positioning) via [gpsd](https://gpsd.io/)
+2. [Positioning](#positioning) with GNSS receivers
 3. [Tracking](#tracking)
 4. [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
 5. [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
@@ -26,8 +28,14 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 13. English or Russian interface, dependent of browser language settings
 
 
+* [Work on OpenWRT](#work-on-openwrt)
+* [Work on VenusOS](#work-on-venusos)
+
+* [Support](#support)
+
+
 ## Compatibility
-Linux. Modern browsers include mobile.
+Linux, OpenWRT, VenusOS. Modern browsers include mobile.
 
 
 ## Demo
@@ -39,13 +47,14 @@ Full feature [live demo](http://130.61.159.53/map/). Sometimes there floating a 
 
 
 ## Install&configure:
-You must have a web server under Linux with php support. Just copy app, dependences and set paths.  
-Paths and other are set and describe in _params.php_
+You must have a web server under Linux with web server and php support. Just copy app, dependences and set paths.  
+Paths and other are set and describe in _params.php_  
+More detailed instructions are available in _emergencykit/_ directory.
 
 
 ## Emergency kit
 All you need to install, including dependences, are in _emergencykit/_.  See README.txt how to install.
-You may download full pack -- more 4MB, or without vector tiles support pack -- less them 1MB.
+You may download full pack -- more 20MB, or without vector tiles support pack -- less them 20MB.
 
 
 ## Dependences and thanks
@@ -94,6 +103,7 @@ GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox sty
  ![Positioning](screenshots/s2.png)<br>
  GaladrielMap gets realtime spatial data and other info via [gpsd](https://gpsd.io/). Usually enough plug a GNSS receiver to the server.  
 How to install and configure gpsd see [gpsd pages](https://gpsd.io/).  
+Also GaladrielMap can get data from VenusOS - localy or via LAN. If GaladrielMap don't find **gpsd**, it try to discovery VenusOS on LAN and takes the data from there.
 
 Map **always** sets to current position. This behavior can be temporarily disabled on the <img src="img/settings1.svg" alt="Settings" width="24px"> menu. Following the cursor is disabled if <img src="img/route.svg" alt="Route" width="24px"> or <img src="img/download1.svg" alt="Loader" width="24px"> menu are open.
 
@@ -195,10 +205,39 @@ Highly recommended to use [gpsdPROXY](https://github.com/VladimirKalachikhin/gps
  ![Control Loader](screenshots/s4.png)<br>
 Sets region, start loader, watch the progress. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
 For see of loaded tiles use coverage switch.
- 
+
+## Work on OpenWRT
+On powerful computers (Raspbery Pi, yes) on OpenWRT installation and startup of GaladrielMap are performed in the same way as on common Linux.  
+On routers usually need custom firmware if the capacity of the built-in drive is insufficient. For example, [MT7620A based router OpenWRT firmware ](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) for run GaladrielMap.
+
+## Work on VenusOS
+The GaladrielMap mostly can work in VenusOS v2.80~38 or above. Or get data from it in LAN. To do this, you need:
+
+* install php-cli. Run in ssh console:  
+
+```
+opkg update  
+opkg install php-cli  
+```
+
+* enable "MQTT on LAN" feature. On VenusOS web remote console go Settings -> Services -> MQTT on LAN (SSL) and Enable.
+* Have enough space on SD card for tiles.
+
+### limitations
+* VenusOS does not provide depth and AIS services.
+* VenusOS does not provide track log service.
+* VenusOS does not provide Tor service, so to avoid the tile loader ban and for netAIS raise the Tor on other computer.
+* The data provided by VenusOS are not reliable enough, so be careful.
+
 
 ## Support
 
 [Discussions](https://github.com/VladimirKalachikhin/Galadriel-map/discussions)
 
 You can get support for GaladrielMap and GaladrielCahe for a beer [via PayPal](https://paypal.me/VladimirKalachikhin) or [YandexMoney](https://yasobe.ru/na/galadrielmap) at [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  
+
+### On paid
+On paid available Raspberry Pi bootable image with Raspbian, OpenWRT or VenusOS. Image include GaladrielMap with GaladrielCache and netAIS (except VenusOS, this not have workable netAIS) and ready to use. You can also order burn image to SD card the capacity you need. Contact  [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com) 
+
+It is possible to order WiFi router/internet access point with OpenWRT (such as [MT7620A based router](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) or other) with fully configured and ready to use GaladrielMap. Contact  [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com) 
+
