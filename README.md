@@ -103,7 +103,7 @@ GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox sty
  ![Positioning](screenshots/s2.png)<br>
  GaladrielMap gets realtime spatial data and other info via [gpsd](https://gpsd.io/). Usually enough plug a GNSS receiver to the server.  
 How to install and configure gpsd see [gpsd pages](https://gpsd.io/).  
-Also GaladrielMap can get data from VenusOS - localy or via LAN. If GaladrielMap don't find **gpsd**, it try to discovery VenusOS on LAN and takes the data from there.
+Also, GaladrielMap can get data from VenusOS or Signal K - localy or via LAN. If GaladrielMap don't find **gpsd**, it it tries to discover Signal K and then VenusOS on LAN and takes the data from there.
 
 Map **always** sets to current position. This behavior can be temporarily disabled on the <img src="img/settings1.svg" alt="Settings" width="24px"> menu. Following the cursor is disabled if <img src="img/route.svg" alt="Route" width="24px"> or <img src="img/download1.svg" alt="Loader" width="24px"> menu are open.
 

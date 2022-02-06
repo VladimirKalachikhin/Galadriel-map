@@ -898,8 +898,7 @@ function spatialWebSocketStart(){
 		switch(data.class){
 		case 'VERSION':
 			console.log('spatialWebSocket: Handshaiking with gpsd begin: VERSION recieved. Sending WATCH');
-			//spatialWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"TPV","minPeriod":"'+minWATCHinterval+'"};');
-			this.send('?WATCH={"enable":true,"json":true,"subscribe":"TPV","minPeriod":"'+minWATCHinterval+'"};');
+			spatialWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"TPV","minPeriod":"'+minWATCHinterval+'"};');
 			break;
 		case 'DEVICES':
 			console.log('spatialWebSocket: Handshaiking with gpsd proceed: DEVICES recieved');
