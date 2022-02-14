@@ -1021,7 +1021,7 @@ function spatialWebSocketStart(){
 		else {
 			//var velocity = Math.round((gpsdData.speed*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
 			var velocity = Math.round((gpsdData.speed*60*60/1000)*10)/10; 	// скорость от gpsd - в метрах в секунду
-			//alert("Скорость: "+velocity+"км/ч");
+
 			velocityDial.innerHTML = velocity;
 			// Установим длину указателя скорости за  минуты
 			var velocityCursorLength = gpsdData.speed*60*velocityVectorLengthInMn; 	// метров  за  минуты

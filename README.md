@@ -221,7 +221,7 @@ opkg install php-cli
 ```
 
 * enable "MQTT on LAN" feature. On VenusOS web remote console go Settings -> Services -> MQTT on LAN (SSL) and Enable.
-* Have enough space on SD card for tiles.
+* Have enough i-nodes on SD card for tiles.
 
 ### limitations
 * VenusOS does not provide depth and AIS services.
