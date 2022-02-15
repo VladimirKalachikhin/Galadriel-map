@@ -5,7 +5,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 </div>
 
 ## v. 2.0 
-![screen](screenshots/s10.png)<br>
+![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 **The author is not responsible for the consequences of using the GaladrielMap for navigation.**
 
@@ -54,7 +54,7 @@ More detailed instructions are available in _emergencykit/_ directory.
 
 ## Emergency kit
 All you need to install, including dependences, are in _emergencykit/_.  See README.txt how to install.
-You may download full pack -- more 20MB, or without vector tiles support pack -- less them 20MB.
+You may download full pack -- more 10MB, or without vector tiles support and screenshots pack -- less them 3MB.
 
 
 ## Dependences and thanks
@@ -88,7 +88,7 @@ Create a local copy of dependences and/or edit _index.php_
 
 ## Maps
 The GaladrielMap applies [OSM-style tiles map](https://wiki.openstreetmap.org/wiki/Tiles), both raster and vector. It can be one OSM- or mapbox-like on-line map or with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) any number of stacked maps, online and offline.  
-![stacked maps](screenshots/s1.png)<br>
+![stacked maps](screenshots/s1.jpeg)<br>
 The map source is set in the  _params.php_, and if it is [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) (default), you have available any number of user-defined map sources. How to define a new map -- described in [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) project.  
 At least, it include  
 [Open Sea Map](http://www.openseamap.org/)  
@@ -100,7 +100,7 @@ GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox sty
 
 
 ## Positioning
- ![Positioning](screenshots/s2.png)<br>
+ ![Positioning](screenshots/s2.jpeg)<br>
  GaladrielMap gets realtime spatial data and other info via [gpsd](https://gpsd.io/). Usually enough plug a GNSS receiver to the server.  
 How to install and configure gpsd see [gpsd pages](https://gpsd.io/).  
 Also, GaladrielMap can get data from VenusOS or Signal K - localy or via LAN. If GaladrielMap don't find **gpsd**, it it tries to discover Signal K and then VenusOS on LAN and takes the data from there.
@@ -117,7 +117,7 @@ Installation and configuring the `gpxlogger` describe in  [gpsd](https://gpsd.io
 
 
 ## Routes and POIs
- ![Display routes and POIs](screenshots/s5.png)<br>
+ ![Display routes and POIs](screenshots/s5.jpeg)<br>
  GaladrielMap display routes and PointOfInterest on gpx, kml and csv formats. Place you routes and POIs files to _route_ directory on the server as it directory described in _params.php_. Open <img src="img/poi.svg" alt="POI" width="24px"> tab.
 ### CSV
 Comma-Separated Values text file - the simplest way of cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.  
@@ -128,7 +128,7 @@ Place your CSV to _route_ directory on the server as it directory described in _
 
 
 ## Creating and edit a route
- ![Creating a route](screenshots/s3.png)<br>
+ ![Creating a route](screenshots/s3.jpeg)<br>
 Open <img src="img/route.svg" alt="Handle route" width="24px"> tab to navigational plotting feature. You can create and edit a route on the local device, and/or save it to server to _route_ directory.  
  This feature includes a base gpx route editing tool. You can edit any gpx route from the server in the same way as local route, and save it under the same or new name. Displaying edited routes update automatically on all connected devices.  
  Good case for use -- navigational plotting by the navigator in a dry and warm booth for the steersman on the rain and wind.  
@@ -146,25 +146,25 @@ To fly map by coordinates type they of any format to this field and press button
 
 
 ## Weather forecast
- ![Weather forecast](screenshots/s8.png)<br>
+ ![Weather forecast](screenshots/s8.jpeg)<br>
 If there is an Internet connection you can get the weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/).
 
 
 ## Display AIS info
-![AIS info](screenshots/s9-1.png)<br>
+![AIS info](screenshots/s9-1.jpeg)<br>
 GaladrielMap displayed AIS data via [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) from [gpsd](https://gpsd.io/) or directly from [Signal K](https://signalk.org/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
 Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. To temporarily disable displaying AIS data use switch in <img src="img/settings1.svg" alt="Settings" width="24px"> menu.  
 As displaying AIS data from gpsd need gpsdPROXY, you MUST use gpsdPROXY as position data service. Set up $gpsdHost and $gpsdPort variables in _params.php_ to this.
 
 ## netAIS support
-![netAIS](screenshots/s13.png)<br>
+![netAIS](screenshots/s13.jpeg)<br>
 The [netAIS](https://github.com/VladimirKalachikhin/netAIS) is the local service to exchange position information inside of a private group via internet.  
 GaladrielMap displayed full netAIS info, include text messages.  
 For example, three members of the same private group see each other on its screens.
 
 
 ## A Man OverBoard
-![A Man OverBoard](screenshots/s14.png)<br>
+![A Man OverBoard](screenshots/s14.jpeg)<br>
 Sets marker, stretches the line to and indicates distance and direction to MOB just by open tab.  
 Tap to <img src="img/mob.svg" alt="MOB button" width="24px"> opens MOB tab and start MOB mode. Track logging turned on, positions the MOB markers saved to the server. You may add new markers and dragging markers to a new position. Tap to marker to select it for stretches the direction line to. Tap on indication of MOB position copies it to clipboard.  
 MOB information spreading to all connected devices and may edit from any of this.  
@@ -202,7 +202,7 @@ Highly recommended to use [gpsdPROXY](https://github.com/VladimirKalachikhin/gps
 
 
 ## The GaladrielCache Loader
- ![Control Loader](screenshots/s4.png)<br>
+ ![Control Loader](screenshots/s4.jpeg)<br>
 Sets region, start loader, watch the progress. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
 For see of loaded tiles use coverage switch.
 
