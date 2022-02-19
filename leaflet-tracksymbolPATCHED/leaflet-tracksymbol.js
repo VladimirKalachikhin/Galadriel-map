@@ -215,7 +215,8 @@ L.TrackSymbol = L.Path.extend({
 		<span style='font-size:110%;'>${statusText||''}</span><br>
 	</div>
 	<div style='width:100%;'>
-		<span >${this.options.destination||''}</span><span style='float:right;'>${speedKMH}</span>
+		<div style='width:40%;float:right;text-align:right;'>${speedKMH}</div>
+		<span >${this.options.destination||''}</span>
 	</div>
 ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>
 <span style='float:right;'>This on <a href='http://www.marinetraffic.com/ais/details/ships/mmsi:${this.options.mmsi}' target='_blank'>MarineTraffic.com</a></span>
