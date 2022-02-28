@@ -513,7 +513,7 @@ foreach($jobsInfo as $jobName) { 	//
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span style="font-size:120%;verticsl-align:middle;"><?php echo $DisplayAIS_TXT;?></span>
+				<span style="font-size:120%;vertical-align:middle;"><?php echo $DisplayAIS_TXT;?></span>
 			</div>
 			<br><br>
 			<div style="margin: 1rem 1rem;"> <?php // максимальная скорость обновления ?>
@@ -527,7 +527,7 @@ foreach($jobsInfo as $jobName) { 	//
 					"
 					>
 				</div>
-				<span style="font-size:120%;verticsl-align:middle;"><?php echo $minWATCHintervalTXT;?></span>
+				<span style="font-size:120%;vertical-align:middle;"><?php echo $minWATCHintervalTXT;?></span>
 			</div>
 		</div>
 	</div>
@@ -887,7 +887,7 @@ function spatialWebSocketStart(){
 
 	spatialWebSocket.onmessage = function(event) {
 		//console.log(event);
-		//console.log(`[message] Данные получены с сервера: ${event.data}`);
+		//console.log(`[message] Данные TPV получены с сервера: ${event.data}`);
 		let data;
 		try{
 			data = JSON.parse(event.data);
@@ -915,14 +915,14 @@ function spatialWebSocketStart(){
 		case 'AIS':
 			break;
 		case 'MOB':
-			//console.log('spatial MOB',data);
+			console.log('recieved MOB data',data);
 			// pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
 			if(data.status === false) { 	// режим MOB надо выключить
 				if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
 					MOBclose(); 	// пришло, что режима MOB нет -- завершим его
 				}
 			}
-			else { 	//console.log('режим MOB есть, пришли новые данные');
+			else { 	console.log('режим MOB есть, пришли новые данные');
 				//console.log('Index data',data);
 				// создадим GeoJSON
 				let mobMarkerJSON = {"type":"FeatureCollection",
@@ -964,7 +964,10 @@ function spatialWebSocketStart(){
 				mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable
 					if(layer instanceof L.Marker)	{	
 						layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
-						layer.on('dragend', sendMOBtoServer); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось
+						layer.on('dragend', function(event){
+							console.log("New MOB marker from server data dragged end, send to server new coordinates",currentMOBmarker);
+							sendMOBtoServer(); 
+						}); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
 					}
 				});
 			}
@@ -1121,7 +1124,7 @@ function warchAISstart() {
 	}; // end aisWebSocket.onopen
 
 	aisWebSocket.onmessage = function(event) {
-		//console.log(`[aisWebSocket message] Данные получены с сервера: ${event.data}`);
+		//console.log(`[aisWebSocket message] Данные AIS получены с сервера: ${event.data}`);
 		let data;
 		try{
 			data = JSON.parse(event.data);

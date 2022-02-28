@@ -1036,6 +1036,7 @@ return;
 
 function MOBalarm() {
 //
+// Global: map, cursor, currentMOBmarker
 let latlng;
 if(map.hasLayer(cursor)) latlng = cursor.getLatLng(); 	// координаты известны и показываются, хотя, возможно, устаревшие
 else return false;
@@ -1050,7 +1051,10 @@ currentMOBmarker.on('click', function(ev){
 	currentMOBmarker.feature.properties.current = true;
 	sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
 }); 	// текущим будет маркер, по которому кликнули
-currentMOBmarker.on('dragend', function(event){sendMOBtoServer()}); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Иначе -- в sendMOBtoServer передаётся event
+currentMOBmarker.on('dragend', function(event){
+	//console.log("MOB marker dragged end, send to server new coordinates",currentMOBmarker);
+	sendMOBtoServer(); 
+}); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
 clearCurrentStatus(); 	// удалим признак current у всех маркеров
 currentMOBmarker.feature = { 	// укажем признак "текущий маркер" как GeoJson свойство
 	type: 'Feature',
@@ -1066,11 +1070,6 @@ if(loggingIndicator !== undefined && !loggingSwitch.checked) {
 if(mobMarker.getLayers().length > 2) delMOBmarkerButton.disabled = false;
 
 sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
-// Посадим куку, ибо информация с сервера поступит, только когда изменится, а кто её изменит?
-const toSave = JSON.stringify(mobMarker.toGeoJSON());
-const expires =  new Date();
-expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
-document.cookie = "GaladrielMapMOB="+toSave+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 
 return true;
 } // end function MOBalarm
@@ -1127,12 +1126,13 @@ function sendMOBtoServer(status=true){
 /* Кладёт данные MOB в массив, который передаётся на сервер 
 mobMarker -- это Leaflet LayerGroup, т.е. там исчерпывающая информация
 */
+//console.log("sendMOBtoServer status=",status);
 upData.MOB = {};
 upData.MOB.class = 'MOB';
 upData.MOB.status = status; 	// 
 upData.MOB.points = [];
 //upData.MOB.LineString = {};
-const mobMarkerJSON = mobMarker.toGeoJSON(); 	//
+let mobMarkerJSON = mobMarker.toGeoJSON(); 	//
 for(let feature of mobMarkerJSON.features){
 	switch(feature.geometry.type){
 	case "Point":
@@ -1143,16 +1143,22 @@ for(let feature of mobMarkerJSON.features){
 		break;
 	}
 }
-//console.log('upData',upData.MOB);
+//console.log('Sending to server upData.MOB',upData.MOB);
 //console.log('upData',JSON.stringify(upData.MOB));
 //console.log(spatialWebSocket);
 spatialWebSocket.send('?UPDATE={"updates":['+JSON.stringify(upData.MOB)+']};'); 	// отдадим данные MOB для передачи на сервер через глобальный сокет для передачи координат. Он есть, иначе -- нет координат и нет проблем.
+
+// Посадим куку
+mobMarkerJSON = JSON.stringify(mobMarkerJSON);
+const expires =  new Date();
+expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
+document.cookie = "GaladrielMapMOB="+mobMarkerJSON+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 } // end function sendMOBtoServer
 
 
 function bearing(latlng1, latlng2) {
 /**/
-console.log(latlng1,latlng2)
+//console.log(latlng1,latlng2)
 const rad = Math.PI/180;
 let lat1 = latlng1.lat * rad,
 lat2 = latlng2.lat * rad,
