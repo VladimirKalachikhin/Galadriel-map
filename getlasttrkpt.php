@@ -22,7 +22,7 @@ if(! $currTrackFileName) return;
 $currTrackFileName = "$trackDir/$currTrackFileName.gpx";
 //echo "currTrackFileName=$currTrackFileName; <br>\n";
 
-// определимЮ записывается ли трек
+// определим, записывается ли трек
 $treckLogging = false; $lastTrkPtGPX = false;
 $tailStrings = 5 * 20; 	// сколько строк заведомо включает последнюю trkpt. Спецификация говорит, что trkpt может иметь 20 строк
 clearstatcache(TRUE,"$currTrackFileName");
