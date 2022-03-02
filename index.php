@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.0.3';
+$versionTXT = '2.0.4';
 /* 
 */
 // start gpsdPROXY
@@ -915,14 +915,14 @@ function spatialWebSocketStart(){
 		case 'AIS':
 			break;
 		case 'MOB':
-			console.log('recieved MOB data',data);
+			//console.log('recieved MOB data',data);
 			// pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
 			if(data.status === false) { 	// режим MOB надо выключить
 				if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
 					MOBclose(); 	// пришло, что режима MOB нет -- завершим его
 				}
 			}
-			else { 	console.log('режим MOB есть, пришли новые данные');
+			else { 	//console.log('режим MOB есть, пришли новые данные');
 				//console.log('Index data',data);
 				// создадим GeoJSON
 				let mobMarkerJSON = {"type":"FeatureCollection",
@@ -954,7 +954,7 @@ function spatialWebSocketStart(){
 							currentMOBmarker.feature.properties.current = true;
 							sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
 						}); 	// текущим будет маркер, по которому кликнули
-						//console.log(layer);
+						//console.log('Маркеры в полученной информации MOB ',layer);
 						if(layer.feature.properties.current) currentMOBmarker = layer; 	// текущим станет указанный в переданных данных
 					}
 					else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
@@ -965,7 +965,7 @@ function spatialWebSocketStart(){
 					if(layer instanceof L.Marker)	{	
 						layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
 						layer.on('dragend', function(event){
-							console.log("New MOB marker from server data dragged end, send to server new coordinates",currentMOBmarker);
+							//console.log("New MOB marker from server data dragged end, send to server new coordinates",currentMOBmarker);
 							sendMOBtoServer(); 
 						}); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
 					}

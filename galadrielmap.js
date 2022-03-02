@@ -1101,7 +1101,7 @@ sidebar.close();	// закрыть панель
 
 
 function delMOBmarker(){
-/* Удаляет текущий маркер MOD
+/* Удаляет текущий маркер MOB
 mobMarker это LayerGroup 
 */
 let layers = mobMarker.getLayers();
@@ -1112,7 +1112,9 @@ layers = mobMarker.getLayers(); 	// мы не знаем, какой именн�
 for(let i=layers.length-1; i>=0; i--){ 	// мы не знаем, где там линия
 	//if (layers[i] instanceof L.marker) { 	// почему это здесь не работает?
 	if (layers[i].options.icon) {
-		currentMOBmarker = layers[i]; 	// последний маркер в mobMarker, но в layers их же прежнее число
+		currentMOBmarker = layers[i]; 	// последний маркер в mobMarker
+		currentMOBmarker.feature.properties.current = true;
+		//console.log('New currentMOBmarker after del ',currentMOBmarker);
 		break;
 	}
 }
