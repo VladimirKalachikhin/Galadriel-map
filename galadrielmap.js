@@ -175,13 +175,13 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 		//console.log('mapname=',mapname,savedLayers[mapname]);
 		if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
 			//alert('on Ellipsoide')
-			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {}));
+			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom}));
 		}
 		else if(mapParm['mapboxStyle']) { 	// векторные тайлы
-			savedLayers[mapname].addLayer(L.mapboxGL({style: mapParm['mapboxStyle']}));
+			savedLayers[mapname].addLayer(L.mapboxGL({style: mapParm['mapboxStyle'],minZoom:mapParm.minZoom}));
 		}
 		else {
-			savedLayers[mapname].addLayer(L.tileLayer(tileCacheURIthis, {}));
+			savedLayers[mapname].addLayer(L.tileLayer(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom}));
 		}
 	}
 }
@@ -192,13 +192,13 @@ else {
 	//console.log(tileCacheURIthis);
 	if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
 		//alert('on Ellipsoide')
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom});
 	}
 	else if(mapParm['mapboxStyle']) { 	// векторные тайлы
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.mapboxGL({style: mapParm['mapboxStyle']});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.mapboxGL({style:mapParm['mapboxStyle'],minZoom:mapParm.minZoom});
 	}
 	else {
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer(tileCacheURIthis, {});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom});
 	}
 }
 //console.log(savedLayers[mapname]);
@@ -354,6 +354,7 @@ xhr.onreadystatechange = function() { //
 		console.log('Server return '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
 		return; 	// что-то не то с сервером
 	}
+	//console.log(this.responseText);
 	const resp = JSON.parse(this.responseText);
 	//console.log(resp);
 	if(resp.logging){ 	// лог пишется

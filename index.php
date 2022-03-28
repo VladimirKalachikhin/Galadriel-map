@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.0.4';
+$versionTXT = '2.0.5';
 /* 
 */
 // start gpsdPROXY
@@ -70,19 +70,20 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 else {$mapsInfo = array(); $jobsInfo = array();}
  
 // Получаем список имён треков
-$trackInfo = array();
+$trackInfo = array(); $currentTrackName = '';
 if($trackDir) {
 	$trackInfo = glob("$trackDir/*.gpx"); 	// gpxDir - из файла params.php
-	array_walk($trackInfo,function (&$name,$ind) {
-			//$name=basename($name,'.gpx'); 	// 
-			$name=explode('.gpx',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
-		}); 	// 
+	array_walk($trackInfo,function (&$name,$ind) { 	// удаление расширения из имени в списке. А оно нужно?
+		//$name=basename($name,'.gpx'); 	// 
+		$name=explode('.gpx',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
+	}); 	// 
 	//echo "trackInfo:<pre>"; print_r($trackInfo); echo "</pre>";
 	foreach($trackInfo as $trk){
-		$lastStr = tailCustom("$trackDir/$trk.gpx"); 	// fcommon.php
-		//echo "lastStr=".htmlspecialchars($lastStr)."; <br>\n";
-		if($lastStr AND ($lastStr <> '</gpx>')) { 	// трек не завершён
+		$lastStr = end(explode("\n",trim(tailCustom("$trackDir/$trk.gpx",5)))); 	// fcommon.php
+		//echo "trk=$trk; lastStr=".htmlspecialchars($lastStr)."; <br>\n";
+		if($lastStr <> '</gpx>') { 	// трек не завершён
 			$currentTrackName = $trk;
+			//echo "currentTrackName=$currentTrackName;<br>\n";
 			if($currTrackFirst) break; 	// текущий трек - первый из незавершённых
 		}
 	}
@@ -523,7 +524,7 @@ foreach($jobsInfo as $jobName) { 	//
 					 if(isNaN(minWATCHinterval)) minWATCHinterval=0;
 					 //console.log('Изменение, minWATCHinterval',minWATCHinterval);
 					 spatialWebSocketStop('Close socket to change WATCH interval');
-					 warchAISstop('Close socket to change WATCH interval');
+					 watchAISstop('Close socket to change WATCH interval');
 					"
 					>
 				</div>
@@ -541,7 +542,7 @@ foreach($jobsInfo as $jobName) { 	//
 var defaultMap = 'OpenTopoMap'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
-var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто
+var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Присваивается в javascriptOpen в параметрах карты. Или ещё где-нибудь.
 var startCenter = JSON.parse(getCookie('GaladrielMapPosition')); 	// getCookie from galadrielmap.js
 if(! startCenter) startCenter = L.latLng([55.754,37.62]); 	// начальная точка
 var startZoom = JSON.parse(getCookie('GaladrielMapZoom')); 	// getCookie from galadrielmap.js
@@ -551,8 +552,9 @@ var userMoveMap = true; 	// флаг для отделения собствен�
 var minWATCHinterval=JSON.parse(getCookie('GaladrielminWATCHinterval'));	// Минимальный интервал, сек., с которым будут приходить данные от gpsdPROXY. Если 0 -- то по мере их получения от датчиков
 if(!minWATCHinterval) minWATCHinterval = 0;
 minWATCHintervalInput.value = minWATCHinterval;
-var heading = 0; 	// начальное направление
 var PosFreshBefore = <?php echo $PosFreshBefore * 1000;?>; 	// время в милисекундах, через которое положение считается протухшим
+if(PosFreshBefore < (2*minWATCHinterval*1000+1000)) PosFreshBefore = 2*minWATCHinterval*1000+1000;
+var heading = 0; 	// начальное направление
 var followToCursor = true; 	// карта следует за курсором Обеспечивает только паузу следования при перемещениях и масштабировании карты руками
 var noFollowToCursor = false; 	// карта никогда не следует за курсором Глобальное отключение следования. Само не восстанавливается.
 var CurrnoFollowToCursor = 1; 	// глобальная переменная для сохранения состояния
@@ -879,10 +881,19 @@ else mobMarker = L.layerGroup().addLayer(toMOBline);
 if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') $gpsdProxyHost = $_SERVER['HTTP_HOST'];
 ?>
 var spatialWebSocket; // будет глобальным сокетом
+let lastDataUpdate;	// момент последнего обновления координат
 function spatialWebSocketStart(){
+	let checkDataFreshInterval;	// объект периодического запуска проверки свежести данных
 	spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>"); 	// должен быть глобальным, ибо к нему отовсюду обращаются
 	spatialWebSocket.onopen = function(e) {
 		console.log("[spatialWebSocket open] Connection established");
+		// Проверка актуальности координат если, скажем, нет связи с сервером.
+		checkDataFreshInterval = setInterval(function (){
+			if((Date.now()-lastDataUpdate)>PosFreshBefore){
+				console.log('The latest TPV data was received too long ago, trying to reconnect for checking.');
+				spatialWebSocket.close(1000,'The latest data was received too long ago');
+			}
+		},PosFreshBefore);
 	}; // end spatialWebSocket.onopen
 
 	spatialWebSocket.onmessage = function(event) {
@@ -896,6 +907,7 @@ function spatialWebSocketStart(){
 			console.log('spatialWebSocket: Parsing inbound data',error.message);
 			return;
 		}
+		lastDataUpdate = Date.now();	// какое-то обновление данных пришло.
 		switch(data.class){
 		case 'VERSION':
 			console.log('spatialWebSocket: Handshaiking with gpsd begin: VERSION recieved. Sending WATCH');
@@ -979,12 +991,14 @@ function spatialWebSocketStart(){
 	spatialWebSocket.onclose = function(event) {
 		console.log(`spatialWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
 		window.setTimeout(spatialWebSocketStart, 3000); 	// перезапустим сокет через  секунд. В каком контексте здесь вызывается callback -- мне осталось непонятным, поэтому сокет ваще глобален
-		positionCursor.remove(); 	// уберём курсор с карты
+		if((Date.now()-lastDataUpdate)>PosFreshBefore*30) positionCursor.remove(); 	// уберём курсор (layerGroup) с карты
+		else cursor.setIcon(NoGpsCursor)	// заменим курсор (значёк) на серый
 		velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
 		headingDisplay.innerHTML = '&nbsp;';
 		locationDisplay.innerHTML = '&nbsp;';
 		depthDial.innerHTML = '';
 		//MOBtab.className='disabled'; 	// если нет курсора (координат) -- невозможно включить режим MOB. Это плохая идея.
+		clearInterval(checkDataFreshInterval);	// остановить периодическую проверку свежести
 	}; // end spatialWebSocket.onclose
 
 	spatialWebSocket.onerror = function(error) {
@@ -1011,7 +1025,7 @@ function spatialWebSocketStart(){
 		cursor.setLatLng(L.latLng(gpsdData.lat,gpsdData.lon));
 		var positionTime = new Date(gpsdData.time);
 		var now = new Date();
-		//console.log('gpsdData.time:',gpsdData.time,'now-positionTime',now-positionTime);
+		//console.log('gpsdData.time:',gpsdData.time,'now',now,'now-positionTime',now-positionTime);
 		if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
 		else cursor.setIcon(GpsCursor);
 		
@@ -1116,7 +1130,7 @@ function spatialWebSocketStop(message=''){
 // Данные AIS
 // 	Запуск периодических функций
 var aisWebSocket;	// будет глобальный сокет для AIS
-function warchAISstart() {
+function watchAISstart() {
 	//console.log('AIS switched ON');
 	aisWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>");	// этот сокет не глобальный!!!!
 	aisWebSocket.onopen = function(e) {
@@ -1156,7 +1170,7 @@ function warchAISstart() {
 
 	aisWebSocket.onclose = function(event) {
 		console.log(`aisWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
-		window.setTimeout(warchAISstart, 3000); 	// перезапустим сокет через  секунд
+		if(DisplayAISswitch.checked ) window.setTimeout(watchAISstart, 3000); 	// перезапустим сокет через  секунд, если в интерфейсе указано
 		for(const vehicle in vehicles){
 			vehicles[vehicle].remove();
 			vehicles[vehicle] = null;
@@ -1169,6 +1183,9 @@ function warchAISstart() {
 	}; 	//end aisWebSocket.onerror
 
 	function realtimeAISupdate(aisClass) {
+	// Показывает цели AIS, перечисленные в aisClass.ais
+	// те, которых там нет -- перестаёт показывать
+	//console.log(aisClass); 	// 
 	let aisData = aisClass.ais;
 	//console.log(aisData); 	// массив с данными целей
 	//console.log(DisplayAISswitch);
@@ -1178,7 +1195,7 @@ function warchAISstart() {
 		if(vehicle.toLowerCase() == 'error') break;
 		//console.log(aisData[vehicle].lat);	console.log(aisData[vehicle].lon);
 		//console.log(typeof(vehicles[vehicle]));
-		if((aisData[vehicle].lat === null) || (aisData[vehicle].lon === null)) continue;	// не показываем цели без координат
+		if((aisData[vehicle].lat === null) || (aisData[vehicle].lon === null) || (aisData[vehicle].lat === undefined) || (aisData[vehicle].lon === undefined)) continue;	// не показываем цели без координат
 		if(!vehicles[vehicle]) { 	// global var, массив layers с целями
 			//console.log(vehicle);
 			//console.log(aisData[vehicle]);
@@ -1219,12 +1236,12 @@ function warchAISstart() {
 	} // end function realtimeAISupdate
 
 return aisWebSocket
-} // end function warchAISstart
+} // end function watchAISstart
 
-warchAISstart(); 	// запускам периодическую функцию смотреть AIS
+watchAISstart(); 	// запускам периодическую функцию смотреть AIS
 DisplayAISswitch.checked = true;
 
-function warchAISstop(message=''){
+function watchAISstop(message=''){
 console.log('AIS switched OFF');
 aisWebSocket.close(1000,message);
 for(const vehicle in vehicles){
@@ -1232,15 +1249,15 @@ for(const vehicle in vehicles){
 	vehicles[vehicle] = null;
 	delete vehicles[vehicle];
 }
-} // end function warchAISstop
+} // end function watchAISstop
 
 function watchAISswitching(){
-if(DisplayAISswitch.checked) warchAISstart();
-else warchAISstop('Dispalying AIS stopped');
+if(DisplayAISswitch.checked) watchAISstart();
+else watchAISstop('Dispalying AIS stopped');
 }; // end function watchAISswitching
 
 
-// 	Запуск периодических функций
+// 	Запуск периодических функций	 realtime -- в galadrielmap.js, функция, асинхронно обращающаяся к uri
 //setInterval(function(){realtime(gpsanddataServerURI,realtimeTPVupdate,lat);},1000); 	// данные позиционирования. Однако, function(){} компилячится каждый оборот, что как бы неправильно.
 //setInterval(realtime,1000,gpsanddataServerURI,realtimeTPVupdate,upData); 	// данные позиционирования. Здесь компилячится при загрузке, и параметры передаются в realtime один раз. Что исключает динамические параметры. А как же передача по ссылке?
 

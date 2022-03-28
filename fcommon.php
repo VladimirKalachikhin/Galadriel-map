@@ -11,6 +11,7 @@ function tailCustom($filepath, $lines = 1, $adaptive = true) {
 * @author Torleif Berger, Lorenzo Stanco
 * @link http://stackoverflow.com/a/15025877/995958
 * @license http://creativecommons.org/licenses/by/3.0/
+но вообще-то проще вызвать tail 
 */
 // Open file
 $f = @fopen($filepath, "rb");

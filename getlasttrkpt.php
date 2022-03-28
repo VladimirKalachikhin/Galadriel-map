@@ -1,4 +1,6 @@
-<?php session_start();
+<?php 
+ob_start(); 	// попробуем перехватить любой вывод скрипта
+session_start();
 /* This is a current track server. Read gpx from gpxlogger directory. 
 Work with any logger, not obligatory gpxlogger
 Отдаёт последнюю структуру типа trkpt из незакрытого файла gpx.
@@ -9,7 +11,6 @@ Work with any logger, not obligatory gpxlogger
 
 */
 
-ob_start(); 	// попробуем перехватить любой вывод скрипта
 require_once('fcommon.php');
 require('params.php'); 	// пути и параметры
 
