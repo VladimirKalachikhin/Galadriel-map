@@ -1,4 +1,4 @@
-<?php 
+<?php
 ob_start(); 	// попробуем перехватить любой вывод скрипта
 session_start();
 /* This is a current track server. Read gpx from gpxlogger directory. 
@@ -90,9 +90,9 @@ if($trackLogging) { 	// трек пишется - просмотрим трек
 	// Теперь в $lastTrkPtGPX одна строка с последней ранее переданной точкой, или одна строка с 
 	// последней точкой в файле, или более строк, или пусто
 	if(count($lastTrkPtGPX)==1){
-		if($lastTrkPtGPX[0]==$_SESSION['lastTrkPt']) goto END;	// не было новых точек
-		elseif($_SESSION['lastTrkPt']) $lastTrkPtGPX = array($_SESSION['lastTrkPt'],$lastTrkPtGPX[0]);
-		else  goto END;
+		if($lastTrkPtGPX[0]==$_SESSION['lastTrkPt']) $lastTrkPtGPX = [];	// не было новых точек
+		elseif($_SESSION['lastTrkPt']) $lastTrkPtGPX = array($_SESSION['lastTrkPt'],$lastTrkPtGPX[0]);	// от последней сохранённой к последней в файле
+		else $lastTrkPtGPX = [];
 	}
 
 	if($lastTrkPtGPX){
@@ -110,7 +110,6 @@ $content_lenght = ob_get_length();
 header("Content-Length: $content_lenght");
 ob_end_flush(); 	// отправляем и прекращаем буферизацию
 
-END:
 return;
 
 function gpx2geoJSONpoint($gpxPts) {

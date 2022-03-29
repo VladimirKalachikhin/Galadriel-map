@@ -368,7 +368,7 @@ xhr.onreadystatechange = function() { //
 	}
 	//console.log(resp);
 	if(resp.logging){ 	// лог пишется
-		if(loggingIndicator !== undefined){ 	// лампочка в интерфейсе
+		if(typeof loggingIndicator != 'undefined'){ 	// лампочка в интерфейсе
 			loggingIndicator.style.color='green';
 			loggingIndicator.innerText='\u2B24';
 		}
@@ -381,7 +381,7 @@ xhr.onreadystatechange = function() { //
 		}
 	}
 	else { 	// лог не пишется
-		if(loggingIndicator !== undefined){
+		if(typeof loggingIndicator != 'undefined'){
 			if(loggingSwitch.checked){ 	// лампочка и переключатель в интерфейсе
 				loggingIndicator.style.color='red';
 				loggingIndicator.innerText='\u2B24';
@@ -391,6 +391,7 @@ xhr.onreadystatechange = function() { //
 				loggingIndicator.innerText='';
 			}
 		}
+		clearInterval(currentTrackUpdateProcess);	// прекратим следить за логом
 	}
 }
 } // end function updateCurrTrack
