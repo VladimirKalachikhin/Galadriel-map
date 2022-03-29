@@ -346,7 +346,7 @@ function updateCurrTrack() {
 global window currentTrackServerURI, currentTrackName
 */
 var xhr = new XMLHttpRequest();
-// Получим GeoJSON - ломную из скольких-то последних путевых точек, или false, если с последнего
+// Получим GeoJSON - ломаную из скольких-то последних путевых точек, или false, если с последнего
 // обращения нет новых точек
 // в формате GeoJSON
 //console.log(currentTrackServerURI,currentTrackName);
@@ -355,12 +355,17 @@ xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
 	if (this.status != 200) { 	// запрос завершлся, но неудачно
-		//alert('Сервер ответил '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
 		console.log('Server return '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
 		return; 	// что-то не то с сервером
 	}
 	//console.log(this.responseText);
-	const resp = JSON.parse(this.responseText);
+	let resp = {};
+	try {
+		resp = JSON.parse(this.responseText);
+	}
+	catch(err) {
+		if(this.responseText.trim()) console.log('Bad data to update current track:'+this.responseText+';',err.message)
+	}
 	//console.log(resp);
 	if(resp.logging){ 	// лог пишется
 		if(loggingIndicator !== undefined){ 	// лампочка в интерфейсе

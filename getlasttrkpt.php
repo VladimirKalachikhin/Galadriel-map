@@ -47,8 +47,7 @@ else {
 }
 //echo "treckLogging=$trackLogging;<br>\n";
 
-//if($trackLogging) { 	// трек пишется - просмотрим трек
-if(true) {
+if($trackLogging) { 	// трек пишется - просмотрим трек
 	// Для определения, какая последняя точка была отдана, найдём в ней строку с временем.
 	$sendedTRPTtimeStr = '';
 	foreach(explode("\n",$_SESSION['lastTrkPt']) as $str){
