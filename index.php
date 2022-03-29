@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.0.5';
+$versionTXT = '2.0.6';
 /* 
 */
 // start gpsdPROXY
@@ -1296,7 +1296,11 @@ for(const name of changedRouteNames){
 // Текущий трек
 // Должен обновляться, даже если обновлялка не описана в конфиге, потому что трек может писать кто-то ещё. 
 // Т.е. в худшем случае -- мы не знаем, обновляется ли currentTrack, или нет
-var currentTrackUpdateProcess = setInterval(currentTrackUpdate,2000);
+// Ещё обновление трека можно повесить на обновление координат. Это концептуально правильно, но
+// тогда при потере сервиса координат пропадёт и обновление трека (потому что функция обновления
+// координат перестанет вызываться). А совсем везде независимое обновление трека будет работать, и
+// покажет положение даже при отсутствии сервиса координат.
+var currentTrackUpdateProcess = setInterval(currentTrackUpdate,3000);
 function currentTrackUpdate(){
 // Global: map, savedLayers, currentTrackName, currentTrackShowedFlag
 // DOM objects: currTrackSwitch, loggingSwitch, trackDisplayed

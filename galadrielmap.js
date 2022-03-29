@@ -42,6 +42,9 @@ flyByString(stringPos) Получает строку предположител�
 updGeocodeList(nominatim)
 doCopyToClipboard() Копирование в буфер обмена
 
+doCurrentTrackName(liID)
+doNotCurrentTrackName(liID)
+
 loggingRun() запускает/останавливает запись трека
 loggingCheck(logging='logging.php')
 
@@ -343,7 +346,9 @@ function updateCurrTrack() {
 global window currentTrackServerURI, currentTrackName
 */
 var xhr = new XMLHttpRequest();
-// Получим последнюю путевую точку или последний сегмент, или последний трек из текущего трека
+// Получим GeoJSON - ломную из скольких-то последних путевых точек, или false, если с последнего
+// обращения нет новых точек
+// в формате GeoJSON
 //console.log(currentTrackServerURI,currentTrackName);
 xhr.open('GET', encodeURI(currentTrackServerURI+'?currTrackName='+currentTrackName), true); 	// Подготовим асинхронный запрос
 xhr.send();
@@ -950,12 +955,29 @@ else {
 }
 } // end function doCopyToClipboard
 
+function doCurrentTrackName(liID){
+let liObj = document.getElementById(liID);
+liObj.classList.add("currentTrackName");
+liObj.title='Current track';
+currentTrackName = liID;
+currentTrackShowedFlag = false; 	// флаг, что у нас новый текущий трек. Обрабатывается в realtimeTPVupdate index.php
+} // end function doCurrentTrackName
+
+function doNotCurrentTrackName(liID){
+let liObj = document.getElementById(liID);
+liObj.classList.remove("currentTrackName");
+liObj.title='';
+currentTrackName = '';
+} // end function doCurrentTrackName
 
 function loggingRun() {
 /* запускает/останавливает запись трека по кнопке в интерфейсе */
 let logging = 'logging.php';
 if(loggingSwitch.checked) logging += '?startLogging=1';
-else logging += '?stopLogging=1';
+else {
+	logging += '?stopLogging=1';
+	doNotCurrentTrackName(currentTrackName);
+}
 loggingCheck(logging);
 } // end function restartLoader
 
@@ -980,20 +1002,15 @@ xhr.onreadystatechange = function() { //
 			//console.log(tracks.querySelector('li[title="Current Track"]'));
 			//tracks.querySelector('li[title="Current Track"]').classList.remove("currentTrackName");
 			if(currentTrackName) {
-				document.getElementById(currentTrackName).classList.remove("currentTrackName");
-				//tracks.querySelector('li[title="Current Track"]').title='';
-				document.getElementById(currentTrackName).title='';
+				doNotCurrentTrackName(currentTrackName);
 			}
 			newTrackLI = trackLiTemplate.cloneNode(true);
 			newTrackLI.id = newTrackName;
 			newTrackLI.innerText = newTrackName;
 			newTrackLI.hidden=false;
-			newTrackLI.classList.add("currentTrackName");
-			newTrackLI.title='Current track';
 			//console.log(newTrackLI);
 			trackList.append(newTrackLI);
-			currentTrackName = newTrackName;
-			currentTrackShowedFlag = false; 	// флаг, что у нас новый текущий трек. Обрабатывается в realtimeTPVupdate index.php
+			doCurrentTrackName(newTrackName);	// обязательно после append, ибо вне дерева элементы не ищутся. JavaScript -- коллекция нелепиц.
 		} 	// иначе он и так текущий
 	}
 	else {
