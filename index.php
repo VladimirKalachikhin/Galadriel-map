@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.0.6';
+$versionTXT = '2.0.7';
 /* 
 */
 // start gpsdPROXY
@@ -380,7 +380,7 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 						<div style="font-size:40%;" onClick="doCopyToClipboard(Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+' '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000);" >
 							<span style="font-size:50%;display:block;"><?php echo $dashboardPosTXT;?></span>
 							<span style="font-size:40%;display:block;"><?php echo $dashboardPosAltTXT;?></span>
-							<span style="margin:0.5rem;display:block;" id='locationMOBdisplay'></span>
+							<span style="margin:0.3rem;display:block;" id='locationMOBdisplay'></span>
 						</div>
 				</div>
 			</div>
@@ -718,7 +718,7 @@ else {?>
 displayMap('default');
 <?php }?>
 
-// Восстановим показываемые треки
+// Восстановим показываемые маршруты
 if(SelectedRoutesSwitch.checked) {
 	let showRoutes = JSON.parse(getCookie('GaladrielRoutes')); 	// getCookie from galadrielmap.js
 	if(showRoutes) {
@@ -1134,7 +1134,7 @@ function watchAISstart() {
 	//console.log('AIS switched ON');
 	aisWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>");	// этот сокет не глобальный!!!!
 	aisWebSocket.onopen = function(e) {
-		console.log("[aisWebSocket open] Соединение установлено");
+		console.log("[aisWebSocket open] Connection established");
 	}; // end aisWebSocket.onopen
 
 	aisWebSocket.onmessage = function(event) {
@@ -1301,14 +1301,18 @@ for(const name of changedRouteNames){
 // координат перестанет вызываться). А совсем везде независимое обновление трека будет работать, и
 // покажет положение даже при отсутствии сервиса координат.
 var currentTrackUpdateProcess = setInterval(currentTrackUpdate,3000);
+//console.log('Запущено слежение за логом, currentTrackUpdateProcess=', currentTrackUpdateProcess);
 function currentTrackUpdate(){
 // Global: map, savedLayers, currentTrackName, currentTrackShowedFlag
 // DOM objects: currTrackSwitch, loggingSwitch, trackDisplayed
 //console.log('currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
 //console.log(trackDisplayed.querySelector('li[title="Current track"]'));
+
+// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек, или текущий трек в списке показываемых
 if((currentTrackName && currTrackSwitch.checked)||trackDisplayed.querySelector('li[title="Current track"]')) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек, или текущий трек в списке показываемых
 	if(currentTrackShowedFlag !== false) { 	// Текущий трек некогда был загружен или сейчас загружается
 		if(map.hasLayer(savedLayers[currentTrackName])) { 	// если он реально есть
+			//console.log('Текущий трек есть на карте','currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
 			if(typeof loggingSwitch === 'undefined'){ 	// обновлялка не сконфигурирована
 				updateCurrTrack(); 	//  - обновим,  galadrielmap.js
 			}
@@ -1321,13 +1325,14 @@ if((currentTrackName && currTrackSwitch.checked)||trackDisplayed.querySelector('
 			if(currentTrackShowedFlag != 'loading') currentTrackShowedFlag = false;
 		}
 	}
-	else { 	// текущий трек ещё не был загружен
+	else { 	 //console.log("текущий трек ещё не был загружен", currentTrackName);
 		//console.log(document.getElementById(currentTrackName));
 		//console.log(tracks.querySelector('li[title="Current Track"]'));
 		currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
 		selectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно. galadrielmap.js
 	}
 }
+//console.log('Обновлён трек','currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
 } // end function currentTrackUpdate
 
 // Сохранение переменных

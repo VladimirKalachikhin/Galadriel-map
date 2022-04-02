@@ -342,14 +342,11 @@ else {
 } // end function displayRoute
 
 function updateCurrTrack() {
-/* От сервера получается точка в формате gpx - структура типа trkpt
-global window currentTrackServerURI, currentTrackName
-*/
-var xhr = new XMLHttpRequest();
 // Получим GeoJSON - ломаную из скольких-то последних путевых точек, или false, если с последнего
 // обращения нет новых точек
 // в формате GeoJSON
-//console.log(currentTrackServerURI,currentTrackName);
+//console.log('[updateCurrTrack]',currentTrackServerURI,currentTrackName);
+var xhr = new XMLHttpRequest();
 xhr.open('GET', encodeURI(currentTrackServerURI+'?currTrackName='+currentTrackName), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
@@ -366,18 +363,20 @@ xhr.onreadystatechange = function() { //
 	catch(err) {
 		if(this.responseText.trim()) console.log('Bad data to update current track:'+this.responseText+';',err.message)
 	}
-	//console.log(resp);
+	//console.log('[updateCurrTrack]',resp);
 	if(resp.logging){ 	// лог пишется
 		if(typeof loggingIndicator != 'undefined'){ 	// лампочка в интерфейсе
 			loggingIndicator.style.color='green';
 			loggingIndicator.innerText='\u2B24';
 		}
 		if(resp.pt) { 	// есть данные
-			if(savedLayers[currentTrackName].getLayers()) { 	// это layerGroup
-				savedLayers[currentTrackName].getLayers()[0].addData(resp.pt); 	// добавим полученное к слою с текущим треком
-				//console.log(savedLayers[currentTrackName].getLayers()[0]);
+			if(savedLayers) {	// может не быть, если, например, показ треков выключили, но выполнение currentTrackUpdate уже запланировано. Вообще-то, так быть не может, но сообщение об отсутствии иногда наблюдается. А иногда -- нет.
+				if(savedLayers[currentTrackName].getLayers()) { 	// это layerGroup
+					savedLayers[currentTrackName].getLayers()[0].addData(resp.pt); 	// добавим полученное к слою с текущим треком
+					//console.log(savedLayers[currentTrackName].getLayers()[0]);
+				}
+				else savedLayers[currentTrackName].addData(resp.pt); 	// добавим полученное к слою с текущим треком
 			}
-			else savedLayers[currentTrackName].addData(resp.pt); 	// добавим полученное к слою с текущим треком
 		}
 	}
 	else { 	// лог не пишется
@@ -391,7 +390,9 @@ xhr.onreadystatechange = function() { //
 				loggingIndicator.innerText='';
 			}
 		}
-		clearInterval(currentTrackUpdateProcess);	// прекратим следить за логом
+		//console.log('[updateCurrTrack] прекратим следить за логом');
+		clearInterval(currentTrackUpdateProcess);	
+		currentTrackUpdateProcess = null;
 	}
 }
 } // end function updateCurrTrack
@@ -689,7 +690,7 @@ gpxtrack += '	<time>'+ date +'</time>\n';
 const geojsongroup = L.geoJSON(geoJSON);
 let bounds = geojsongroup.getBounds();
 //console.log(bounds);
-if(bounds) gpxtrack += '	<bounds minlat="'+bounds.getSouth().toFixed(4)+'" minlon="'+bounds.getWest().toFixed(4)+'" maxlat="'+bounds.getNorth().toFixed(4)+'" maxlon="'+bounds.getEast().toFixed(4)+'"  />\n';
+if(Object.entries(bounds).length) gpxtrack += '	<bounds minlat="'+bounds.getSouth().toFixed(4)+'" minlon="'+bounds.getWest().toFixed(4)+'" maxlat="'+bounds.getNorth().toFixed(4)+'" maxlon="'+bounds.getEast().toFixed(4)+'"  />\n';
 gpxtrack += '</metadata>\n';
 let i,k,j;
 for( i=0; i<geoJSON.features.length;i++) {
@@ -963,6 +964,7 @@ else {
 
 function doCurrentTrackName(liID){
 let liObj = document.getElementById(liID);
+//console.log('doCurrentTrackName',liID,liObj);
 liObj.classList.add("currentTrackName");
 liObj.title='Current track';
 currentTrackName = liID;
@@ -974,21 +976,33 @@ let liObj = document.getElementById(liID);
 liObj.classList.remove("currentTrackName");
 liObj.title='';
 currentTrackName = '';
-} // end function doCurrentTrackName
+} // end function doNotCurrentTrackName
 
 function loggingRun() {
 /* запускает/останавливает запись трека по кнопке в интерфейсе */
 let logging = 'logging.php';
-if(loggingSwitch.checked) logging += '?startLogging=1';
+if(loggingSwitch.checked) {
+	logging += '?startLogging=1';
+	if(!currentTrackUpdateProcess) {
+		currentTrackUpdateProcess =  setInterval(currentTrackUpdate,3000);	// запустим слежение за логом, если ещё не
+		//console.log('[loggingRun] Запущено слежение за логом, currentTrackUpdateProcess=', currentTrackUpdateProcess);
+	}
+}
 else {
 	logging += '?stopLogging=1';
 	doNotCurrentTrackName(currentTrackName);
+	//console.log('[loggingRun] прекратим следить за логом');
+	clearInterval(currentTrackUpdateProcess);	 
+	currentTrackUpdateProcess = null;
 }
 loggingCheck(logging);
-} // end function restartLoader
+} // end function loggingRun
 
 function loggingCheck(logging='logging.php') {
-/* проверяет, ведётся ли запись трека */
+/* включает и выключает запись трека, а также проверяет, ведётся ли запись 
+путём запроса logging.
+Запрос должен вернуть JSON массив из двух значенией: ведётся ли запись bool и имя пишущегося файла
+*/
 let xhr = new XMLHttpRequest();
 xhr.open('GET', encodeURI(logging), true); 	// Подготовим асинхронный запрос
 xhr.send();
@@ -996,7 +1010,7 @@ xhr.onreadystatechange = function() { //
 	if (this.readyState != 4) return; 	// запрос ещё не завершился
 	if (this.status != 200) return; 	// что-то не то с сервером
 	let status = JSON.parse(this.response);
-	if(status[0]) { 	// состояние gpxlogger после выполнения logging.php, 1 или 0
+	if(status[0]) { 	// состояние gpxlogger после выполнения logging.php, 1 или 0 - запущен успешно
 		loggingIndicator.style.color='green';
 		loggingIndicator.innerText='\u2B24';
 		// Новый текущий трек
@@ -1014,7 +1028,7 @@ xhr.onreadystatechange = function() { //
 			newTrackLI.id = newTrackName;
 			newTrackLI.innerText = newTrackName;
 			newTrackLI.hidden=false;
-			//console.log(newTrackLI);
+			//console.log(newTrackName,newTrackLI);
 			trackList.append(newTrackLI);
 			doCurrentTrackName(newTrackName);	// обязательно после append, ибо вне дерева элементы не ищутся. JavaScript -- коллекция нелепиц.
 		} 	// иначе он и так текущий
@@ -1229,7 +1243,7 @@ fetch(dataUrl)
 	catch(err) {
 		// error handling
 		//console.log(err);
-		throw Error(err.message); 	// просто сбросим ошибку ближайшему catch
+		throw Error(err); 	// просто сбросим ошибку ближайшему catch
 	}
 })
 .then(data => {
@@ -1240,7 +1254,7 @@ fetch(dataUrl)
 	fUpdate(data);
 })
 .catch( (err) => {
-	fUpdate({'error':err});
+	fUpdate({'error':err.message});
 })
 
 } 	// end function realtime
