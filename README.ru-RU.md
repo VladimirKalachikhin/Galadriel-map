@@ -230,11 +230,13 @@ opkg install php-cli
  
 ## Поддержка
 
-[Обсуждение](https://github.com/VladimirKalachikhin/Galadriel-map/discussions)
+[Форум](https://github.com/VladimirKalachikhin/Galadriel-map/discussions)
 
-За чашку кофе [через ЯндексДеньги](https://yasobe.ru/na/galadrielmap) или [PayPal](https://paypal.me/VladimirKalachikhin?locale.x=ru_RU) можно получить консультации по адресу [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)  
+Форум будет живее, если вы сделаете пожертвование [через PayPal](https://paypal.me/VladimirKalachikhin) по адресу [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com) или на [ЮМани](https://yasobe.ru/na/galadrielmap).
 
 ### Платно
+Вы можете получить [индивидуальную консультацию](https://kwork.ru/training-consulting/20093293/konsultatsii-po-ustanovke-i-ispolzovaniyu-galadrielmap) по вопросам установки и использования GaladrielMap, описанию источников тайлов и другим вопросам.  
+
 Можно заказать загрузочный образ требуемого размера для Raspberry Pi на основе Raspbian, OpenWRT или VenusOS, содержащий полностью сконфигурированную и готовую к использованию программу GaladrielMap. Обращайтесь на [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)   
 Возможна запись этого образа на флэш-карту требуемого размера с последующей пересылкой бумажной почтой. Обращайтесь на [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)
 
