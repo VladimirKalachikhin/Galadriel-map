@@ -36,6 +36,7 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$dashboardKeyPrevTXT = 'Previous mode';
 	$dashboardKeyMenuTXT = 'Alarm menu';
 	$dashboardKeyMagneticTXT = 'Magnetic course';
+	$dashboardMOBTXT = 'A man overboard!';
 }
 else {
 	$dashboardHeadingTXT = 'Истинный курс'; 	//  хотя это "путевой угол", "путь"
@@ -59,6 +60,7 @@ else {
 	$dashboardKeyPrevTXT = 'Предыдущий режим';
 	$dashboardKeyMenuTXT = 'Меню оповещений';
 	$dashboardKeyMagneticTXT = 'Магнитный курс';
+	$dashboardMOBTXT = 'Человек за бортом!';
 }
 
 // перечень типов данных из различных источников, которые требуется взять от gpsd
@@ -280,7 +282,7 @@ if($mob) {
 	$toHeadingAlarm = TRUE;
 	$toHeadingValue = bearing($mob);
 	//echo "Азимут на MOB $toHeadingValue<br>\n";
-	$MOBtxt = '<div style="position:absolute;left:25%;right:auto;top:30%;"><span class="big_mid_symbol wb" style="opacity: 0.5;">&nbsp;&nbsp; MOB &nbsp;&nbsp;</span></div>';
+	$MOBtxt = '<div style="position:absolute;left:1%;right:auto;top:20%;opacity: 0.3;"  class="big_mid_symbol wb"><span style="">'.$dashboardMOBTXT.'</span></div>';
 }
 
 if($toHeadingAlarm) {

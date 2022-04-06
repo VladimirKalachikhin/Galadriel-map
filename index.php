@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.0.7';
+$versionTXT = '2.0.8';
 /* 
 */
 // start gpsdPROXY
@@ -114,6 +114,11 @@ if(file_exists($netAISJSONfileName)) {
 
 // Проверим состояние записи трека
 $gpxloggerRun = gpxloggerRun();
+
+// Подготовим картинку для передачи её клиенту, чтобы тот мог видеть её и при потере связи с сервером
+$imgFileName = 'img/mob_marker.png';
+$mob_markerImg = base64_encode(file_get_contents($imgFileName));
+$mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_markerImg;
 ?>
 <!DOCTYPE html >
 <html lang="ru">
@@ -593,7 +598,8 @@ var dashboardMeterMesTXT = '<?php echo $dashboardMeterMesTXT;?>';
 var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
 // MOB
 var currentMOBmarker;
-<?php echo $relBearingTXT; ?>
+const mob_markerImg = '<?php echo $mob_markerImg; ?>';
+<?php echo $relBearingTXT; // internationalisation ?>
 // main output data
 var upData = {};
 
@@ -801,28 +807,28 @@ var GpsCursor = L.icon({
 	//popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
 });
 
-var NoGpsCursor = L.icon({
-	iconUrl: './img/nogpscursor.png',
+// курсор
+var NoGpsCursor = L.icon({	// этот значёк может показываться и при пропаже связи с сервером, а в этом случае загрузить картинку не удастся. Попытка загрузить её заранее не получилась: Leaflet, видимо, убивает долго неиспользуемые объекты. Или сборщик мусора?
+	iconUrl: './img/gpscursor.png',
 	iconSize:     [120, 120], // size of the icon
 	iconAnchor:   [60, 60], // point of the icon which will correspond to marker's location
+	className: "NoGpsCursorIcon"	// galadrielmap.css
 });
 var velocityCursor = L.icon({
 	iconUrl: './img/1x1.png',
 	//iconUrl: './img/minLine.svg',
 });
-
-// курсор
-let NoCursor = L.icon({
+var NoCursor = L.icon({
 	iconUrl: './img/1x1.png',
 	iconSize: [0, 0], // size of the icon
 });
-let cursor = L.marker(startCenter, {
+var cursor = L.marker(startCenter, {
 	'icon': GpsCursor,
 	rotationAngle: heading, // начальный угол поворота маркера
 	rotationOrigin: "50% 50%", 	// вертим маркер вокруг центра
 });
 // указатель скорости
-let velocityVector = L.marker(cursor.getLatLng(), {
+var velocityVector = L.marker(cursor.getLatLng(), {
 	'icon': velocityCursor,
 	rotationAngle: heading, // начальный угол поворота маркера
 	opacity: 0.1
@@ -840,7 +846,7 @@ var positionCursor = L.layerGroup([GNSScircle,velocityVector,cursor]);
 
 // MOB marker
 var mobIcon = L.icon({ 	// 
-	iconUrl: "img/mob_marker.png",
+	iconUrl: mob_markerImg,
 	//iconUrl: "img/mob.png",
 	iconSize: [32, 37],
 	//iconSize: [64, 74],
@@ -870,6 +876,15 @@ if(mobMarker) {
 	});
 	mobMarker.addLayer(toMOBline);
 	mobMarker.addTo(map);
+	mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable. 
+		if(layer instanceof L.Marker)	{	
+			layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
+			layer.on('dragend', function(event){
+				//console.log("New MOB marker from server data dragged end, send to server new coordinates",currentMOBmarker);
+				sendMOBtoServer(); 
+			}); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
+		}
+	});
 }
 else mobMarker = L.layerGroup().addLayer(toMOBline);
 
@@ -887,6 +902,9 @@ function spatialWebSocketStart(){
 	spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>"); 	// должен быть глобальным, ибо к нему отовсюду обращаются
 	spatialWebSocket.onopen = function(e) {
 		console.log("[spatialWebSocket open] Connection established");
+		if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
+			sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер, на всякий случай -- вдруг там не знают
+		}
 		// Проверка актуальности координат если, скажем, нет связи с сервером.
 		checkDataFreshInterval = setInterval(function (){
 			if((Date.now()-lastDataUpdate)>PosFreshBefore){
