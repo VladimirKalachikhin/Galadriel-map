@@ -223,21 +223,21 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $dashboardHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<div class="big_symbol"> <?php // передвинуть карту на место курсора ?>
 				<div>
-					<div style="line-height:0.4;" onClick="map.setView(cursor.getLatLng());">				
+					<div style="line-height:0.6;" onClick="map.setView(cursor.getLatLng());">				
 						<div style="font-size:50%;"><?php echo $dashboardSpeedTXT;?></div><br>
 						<div id='velocityDial'></div><br>
 						<div style="font-size:50%;"><?php echo $dashboardSpeedMesTXT;?></div>
 					</div>
 					<div id='depthDial' style="line-height:0.4;" onClick="map.setView(cursor.getLatLng());">				
 					</div>
-					<div style="font-size:60%;line-height:0.4;" onClick="map.setView(cursor.getLatLng());">
-						<br><br><span style="font-size:50%;"><?php echo $dashboardHeadingTXT;?></span>
+					<div style="line-height:0.6;" onClick="map.setView(cursor.getLatLng());">
+						<br><span style="font-size:50%;"><?php echo $dashboardHeadingTXT;?></span>
 						<span style="font-size:30%; "><br><?php echo $dashboardHeadingAltTXT;?></span>
 					</div>
-					<div style="font-size:50%;">
+					<div style="">
 						<span id='headingDisplay'></span>
 					</div>
-					<div style="font-size:50%;line-height:0.4;" onClick="doCopyToClipboard(lat+' '+lng);" >
+					<div style="font-size:50%;line-height:0.6;" onClick="doCopyToClipboard(lat+' '+lng);" >
 						<br><span style="font-size:50%;"><?php echo $dashboardPosTXT;?></span><br>
 						<span style="font-size:30%; "><?php echo $dashboardPosAltTXT;?></span>
 					</div>
@@ -246,7 +246,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 					</div>
 				</div>
 			</div>
-			<div style="text-align:center; position: absolute; bottom: 0;">
+			<div class="scaledText" style="text-align:center; position: absolute; bottom: 0;">
 				<?php echo $dashboardSpeedZoomTXT;?> <span id='velocityVectorLengthInMnDisplay'></span> <?php echo $dashboardSpeedZoomMesTXT;?>.
 			</div>
 		</div>

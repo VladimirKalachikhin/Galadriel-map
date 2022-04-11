@@ -61,6 +61,9 @@
 	.big_symbol {
 		font-size:20px;
 	}
+	.scaledText {
+		font-size:50%;
+	}
 }
 @media (min-width: 768px) and (max-width: 991px) {
 	.leaflet-sidebar-header {
@@ -84,6 +87,9 @@
 	}
 	.big_symbol {
 		font-size:25px;
+	}
+	.scaledText {
+		font-size:75%;
 	}
 }
 @media (min-width: 992px) and (max-width: 1199px) { /* 1920x1200 */
@@ -109,6 +115,9 @@
 	.big_symbol {
 		font-size:40px;
 	}
+	.scaledText {
+		font-size:inherit;
+	}
 }
 @media (min-width: 1200px) {
 	.leaflet-sidebar {
@@ -129,6 +138,9 @@
 	}
 	.big_symbol {
 		font-size:52px;
+	}
+	.scaledText {
+		font-size:inherit;
 	}
 }
 .leaflet-sidebar-left .leaflet-sidebar-close-icn {
@@ -307,3 +319,5 @@ ul { /* нужно, чтобы стили работали */
 	filter: grayscale(100%);
 }
 
+.scaledText {
+}
