@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.0.8';
+$versionTXT = '2.0.9';
 /* 
 */
 // start gpsdPROXY
@@ -792,6 +792,7 @@ var centerMark = L.marker(map.getBounds().getCenter(), {
 		iconUrl: './img/Crosshair.svg',
 		iconSize:     [markSize, markSize], // size of the icon
 		iconAnchor:   [markSize/2, markSize/2], // point of the icon which will correspond to marker's location
+		className: "centerMarkIcon"	// galadrielmap.css
 	})
 });
 
@@ -1324,7 +1325,6 @@ function currentTrackUpdate(){
 // Global: map, savedLayers, currentTrackName, currentTrackShowedFlag
 // DOM objects: currTrackSwitch, loggingSwitch, trackDisplayed
 //console.log('currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
-//console.log(trackDisplayed.querySelector('li[title="Current track"]'));
 
 // имеется имя текущего трека, и в интерфейсе указано показывать текущий трек, или текущий трек в списке показываемых
 if((currentTrackName && currTrackSwitch.checked)||trackDisplayed.querySelector('li[title="Current track"]')) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек, или текущий трек в списке показываемых

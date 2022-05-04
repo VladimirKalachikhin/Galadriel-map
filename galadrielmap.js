@@ -991,7 +991,7 @@ if(loggingSwitch.checked) {
 else {
 	logging += '?stopLogging=1';
 	doNotCurrentTrackName(currentTrackName);
-	//console.log('[loggingRun] прекратим следить за логом');
+	console.log('[loggingRun] прекратим следить за логом');
 	clearInterval(currentTrackUpdateProcess);	 
 	currentTrackUpdateProcess = null;
 }

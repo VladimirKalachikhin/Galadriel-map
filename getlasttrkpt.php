@@ -24,14 +24,14 @@ require('params.php'); 	// пути и параметры
 if($trackDir[0]!='/') $trackDir = __DIR__."/$trackDir";	// если путь относительный - будет абсолютный
 
 $currTrackFileName = $_REQUEST['currTrackName'];
-//$currTrackFileName = "2020-12-18_141744";
+//$currTrackFileName = "2022-05-04_112407";
 if(! $currTrackFileName) $currTrackFileName = $argv[1];
 if(! $currTrackFileName) return;
 $currTrackFileName = "$trackDir/$currTrackFileName.gpx";
 //echo "currTrackFileName=$currTrackFileName; <br>\n";
 
 // определим, записывается ли трек
-$trackLogging = false;
+$trackLogging = false; $lastTrkPtGPX = array();
 // сколько строк включает последние с момента передачи trkpt. Спецификация говорит, что trkpt может иметь 20 строк
 // если это независимо вызывается раз в 2 секунды, а приёмник ГПС отдаёт координаты 10 раз в секунду, и все они пишутся...
 $tailStrings = 2 * 10 * 20;	// это примерно 10КБ. Норм?
@@ -39,11 +39,13 @@ clearstatcache(TRUE,"$currTrackFileName");
 $lastTrkPts = explode("\n",tailCustom($currTrackFileName,$tailStrings));
 $lastTrkPts = array_filter( $lastTrkPts,function ($str){return strlen(trim($str));}); 	// удалим пустые строки
 //echo "lastTrkPts:<pre>"; print_r($lastTrkPts); echo "</pre>";
-if($gpxlogger) { 	// params.php трек записывает gpxlogger
-	if(gpxloggerRun()) $trackLogging = true;
-}
-else {
-	if( trim(end($lastTrkPts)) != '</gpx>') $trackLogging = true; 	// если это завершённый GPX -- укажем, что трек не пишется
+if($lastTrkPts){	// файл, например, грохнули, но клиент-то об этом не знает...
+	if($gpxlogger) { 	// params.php трек записывает gpxlogger
+		if(gpxloggerRun()) $trackLogging = true;
+	}
+	else {
+		if( trim(end($lastTrkPts)) != '</gpx>') $trackLogging = true; 	// если это завершённый GPX -- укажем, что трек не пишется
+	}
 }
 //echo "trackLogging=$trackLogging;<br>\n";
 
@@ -62,8 +64,10 @@ if($trackLogging) { 	// трек пишется - просмотрим трек
 		elseif(trim($str)==$sendedTRPTtimeStr) break;	// Строка time последней отданной точки
 	}
 	//$debugMessage = "TRPTstart=$TRPTstart; sendedTRPTtimeStr=$sendedTRPTtimeStr;"; 
+	//echo "TRPTstart=$TRPTstart; sendedTRPTtimeStr=$sendedTRPTtimeStr;<br>\n"; 
 	// в считанном хвосте файла обнаружена последняя отправленная, или просто последняя точка, или ничего
 	$lastTrkPts = array_slice($lastTrkPts,$TRPTstart);	// теперь массив начинается с первой строки последней отправленной точки или первой строки последней точки или пустой.
+	//echo "lastTrkPts:$n<pre>"; print_r($lastTrkPts); echo "</pre>"; 
 
 	$TRPTend = -1;
 	foreach($lastTrkPts as $n => $str){
@@ -73,7 +77,7 @@ if($trackLogging) { 	// трек пишется - просмотрим трек
 	//echo "lastTrkPts:$n<pre>"; print_r($lastTrkPts); echo "</pre>"; 
 
 	// Собираем точки в строку, а строки -- в массив.
-	$lastTrkPtGPX = array(); $TRPTfind = false; $TRPTstr = '';
+	$TRPTfind = false; $TRPTstr = '';
 	foreach($lastTrkPts as $str){
 		if(substr(trim($str),0,6) == '<trkpt'){
 			$TRPTstr = "$str\n";
@@ -87,13 +91,17 @@ if($trackLogging) { 	// трек пишется - просмотрим трек
 		elseif($TRPTfind) $TRPTstr .= "$str\n";
 	}
 	unset($lastTrkPts);
+	//echo "lastTrkPtGPX:$n<pre>"; print_r($lastTrkPtGPX); echo "</pre>"; 
 
 	// Теперь в $lastTrkPtGPX одна строка с последней ранее переданной точкой, или одна строка с 
 	// последней точкой в файле, или более строк, или пусто
 	if(count($lastTrkPtGPX)==1){
 		if($lastTrkPtGPX[0]==$_SESSION['lastTrkPt']) $lastTrkPtGPX = [];	// не было новых точек
 		elseif($_SESSION['lastTrkPt']) $lastTrkPtGPX = array($_SESSION['lastTrkPt'],$lastTrkPtGPX[0]);	// от последней сохранённой к последней в файле
-		else $lastTrkPtGPX = [];
+		else {
+			$_SESSION['lastTrkPt'] = $lastTrkPtGPX[0];
+			$lastTrkPtGPX = [];
+		}
 	}
 
 	if($lastTrkPtGPX){
@@ -101,6 +109,7 @@ if($trackLogging) { 	// трек пишется - просмотрим трек
 		$lastTrkPtGPX = gpx2geoJSONpoint($lastTrkPtGPX); 	// сделаем GeoJSON LineString
 	}
 }
+
 $output = array('logging' => $trackLogging,'pt' => $lastTrkPtGPX);
 ob_clean(); 	// очистим, если что попало в буфер
 header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
