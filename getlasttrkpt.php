@@ -29,6 +29,10 @@ if(! $currTrackFileName) $currTrackFileName = $argv[1];
 if(! $currTrackFileName) return;
 $currTrackFileName = "$trackDir/$currTrackFileName.gpx";
 //echo "currTrackFileName=$currTrackFileName; <br>\n";
+if($currTrackFileName != $_SESSION['currTrackFileName']){	// новый трек
+	$_SESSION['currTrackFileName'] = $currTrackFileName;
+	$_SESSION['lastTrkPt'] = '';
+}
 
 // определим, записывается ли трек
 $trackLogging = false; $lastTrkPtGPX = array();
@@ -98,16 +102,10 @@ if($trackLogging) { 	// трек пишется - просмотрим трек
 	if(count($lastTrkPtGPX)==1){
 		if($lastTrkPtGPX[0]==$_SESSION['lastTrkPt']) $lastTrkPtGPX = [];	// не было новых точек
 		elseif($_SESSION['lastTrkPt']) $lastTrkPtGPX = array($_SESSION['lastTrkPt'],$lastTrkPtGPX[0]);	// от последней сохранённой к последней в файле
-		else {
-			$_SESSION['lastTrkPt'] = $lastTrkPtGPX[0];
-			$lastTrkPtGPX = [];
-		}
 	}
+	$_SESSION['lastTrkPt'] = end($lastTrkPtGPX);
 
-	if($lastTrkPtGPX){
-		$_SESSION['lastTrkPt'] = end($lastTrkPtGPX);
-		$lastTrkPtGPX = gpx2geoJSONpoint($lastTrkPtGPX); 	// сделаем GeoJSON LineString
-	}
+	if(count($lastTrkPtGPX)>1) $lastTrkPtGPX = gpx2geoJSONpoint($lastTrkPtGPX); 	// сделаем GeoJSON LineString
 }
 
 $output = array('logging' => $trackLogging,'pt' => $lastTrkPtGPX);

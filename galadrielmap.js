@@ -390,7 +390,7 @@ xhr.onreadystatechange = function() { //
 				loggingIndicator.innerText='';
 			}
 		}
-		//console.log('[updateCurrTrack] прекратим следить за логом');
+		console.log('[updateCurrTrack]  Logging check stopped');
 		clearInterval(currentTrackUpdateProcess);	
 		currentTrackUpdateProcess = null;
 	}
@@ -985,13 +985,13 @@ if(loggingSwitch.checked) {
 	logging += '?startLogging=1';
 	if(!currentTrackUpdateProcess) {
 		currentTrackUpdateProcess =  setInterval(currentTrackUpdate,3000);	// запустим слежение за логом, если ещё не
-		//console.log('[loggingRun] Запущено слежение за логом, currentTrackUpdateProcess=', currentTrackUpdateProcess);
+		console.log('[loggingRun]  Logging check started');
 	}
 }
 else {
 	logging += '?stopLogging=1';
 	doNotCurrentTrackName(currentTrackName);
-	console.log('[loggingRun] прекратим следить за логом');
+	console.log('[loggingRun] Logging check stopped');
 	clearInterval(currentTrackUpdateProcess);	 
 	currentTrackUpdateProcess = null;
 }
