@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.0 
+## v. 2.1 
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 **The author is not responsible for the consequences of using the GaladrielMap for navigation.**
@@ -31,7 +31,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 * [Work on OpenWRT](#work-on-openwrt)
 * [Work on VenusOS](#work-on-venusos)
 
-* [Support](#support)
+ [Support](#support)
 
 
 ## Compatibility
@@ -202,9 +202,10 @@ Highly recommended to use [gpsdPROXY](https://github.com/VladimirKalachikhin/gps
 
 
 ## The GaladrielCache Loader
- ![Control Loader](screenshots/s4.jpeg)<br>
-Sets region, start loader, watch the progress. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
-For see of loaded tiles use coverage switch.
+![Control Loader](screenshots/s4.jpeg)<br>
+Choose a region by specifying tile numbers by hand in the panel or by tap on tile number on the map. After tap the Ok button to  start loader.  
+All displayed maps will be loaded from the current zoom to the maximum zoom. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
+For see of loaded tiles use coverage switch. 
 
 ## Work on OpenWRT
 On powerful computers (Raspbery Pi, yes) on OpenWRT installation and startup of GaladrielMap are performed in the same way as on common Linux.  

@@ -397,25 +397,107 @@ xhr.onreadystatechange = function() { //
 }
 } // end function updateCurrTrack
 
-// 
+// Загрузчик и подготовка задания
+function XYentryFields(element){
+//console.log(element.parentNode);
+downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание, При этом реальный масштаб скачивания -- в dwnldJobZoom, а это -- только логический флаг
+const xElement = element.parentNode.previousElementSibling.getElementsByTagName('input')[0];
+const x = xElement.value;
+const y = element.value;
+if(x && y){
+	const tileId = 'gridTile_'+parseInt(dwnldJobZoom.innerText)+'_'+x+'_'+y;
+	const tile = document.getElementById(tileId);
+	if(tile) tile.classList.add('selectedTile');
+
+	let newXinput = element.parentNode.previousElementSibling.cloneNode(true); 	// клонируем div с x
+	newXinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
+	let newYinput = element.parentNode.cloneNode(true); 	// клонируем div с y
+	newYinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
+	element.parentNode.parentNode.insertBefore(newXinput,element.parentNode.nextElementSibling); 	// вставляем после последнего. Да, вот так через задницу, потому что это javascript
+	element.parentNode.parentNode.insertBefore(newYinput,newXinput.nextElementSibling);
+	newXinput.getElementsByTagName('input')[0].focus(); 	// установим курсор ввода
+}
+else {
+	xElement.value = '';
+	element.value = '';
+	xElement.focus();
+	tileGrid.redraw();
+}
+} // end function XYentryFields
+
+function loaderListPopulate(element){
+//console.log(element);
+if(parseInt(dwnldJobZoom.innerText) != map.getZoom()) return;	// текущий масштаб -- не тот, для которого начали создавать задание
+let e,x,y,z;
+//[x,y] = element.innerText.split("\n")[1].split('/').map(item=>parseInt(item));
+[e,z,x,y] = element.parentElement.id.split("_");
+//console.log('z=',z,'x=',x,'y=',y);
+const tileXs = dwnldJob.getElementsByClassName("tileX");
+const tileYs = dwnldJob.getElementsByClassName("tileY");
+if(element.parentElement.classList.contains('selectedTile')){
+	element.parentElement.classList.remove('selectedTile');
+	for (var k = 0; k < tileXs.length; k++) {
+		if((tileXs[k].value==x) && (tileYs[k].value==y)){
+			tileXs[k].value = '';
+			tileYs[k].value = '';
+		}
+	}
+}
+else {
+	const lastX = tileXs[tileXs.length-1];
+	const lastY = tileYs[tileYs.length-1];
+	lastX.value = x;
+	lastY.value = y;
+	XYentryFields(lastY);
+}
+} // end function loaderListPopulate
+
+function coloreSelectedTiles(){
+const zoom = parseInt(dwnldJobZoom.innerText);
+if(zoom != map.getZoom()) return;	// текущий масштаб -- не тот, для которого создано задание
+const tileXs = dwnldJob.getElementsByClassName("tileX");
+const tileYs = dwnldJob.getElementsByClassName("tileY");
+for (var k = 0; k < tileXs.length; k++) {
+	if(tileXs[k].value && tileYs[k].value){
+		const tileId = 'gridTile_'+zoom+'_'+tileXs[k].value+'_'+tileYs[k].value;
+		const tile = document.getElementById(tileId);
+		if(tile) tile.classList.add('selectedTile');
+	}
+}
+} // end function coloreSelectedTiles
+function chkColoreSelectedTile(tileEvent){
+const zoom = parseInt(dwnldJobZoom.innerText);
+//console.log('zoom=',zoom,'z=',tileEvent.coords.z);
+if(zoom != tileEvent.coords.z) return;	// текущий масштаб -- не тот, для которого создано задание
+//console.log('zoom=',zoom,'z=',tileEvent.coords.z,tileEvent.tile, tileEvent.coords);
+const tileXs = dwnldJob.getElementsByClassName("tileX");
+const tileYs = dwnldJob.getElementsByClassName("tileY");
+for (var k = 0; k < tileXs.length; k++) {
+	if(tileXs[k].value && tileYs[k].value){
+		const tileId = 'gridTile_'+zoom+'_'+tileXs[k].value+'_'+tileYs[k].value;
+		const tile = document.getElementById(tileId);
+		if(tile) tile.classList.add('selectedTile');
+	}
+}
+} // end function chkColoreSelectedTile
+
 function createDwnldJob() {
 /* Собирает задания на загрузку: для каждой карты кладёт на сервер csv с номерами тайлов текущего масштаба.
 Считается, что номера тайлов указываются на сфере */
 //alert('submit '+mapDisplayed.children.length+' maps');
 var tileXs = dwnldJob.getElementsByClassName("tileX");
 var tileYs = dwnldJob.getElementsByClassName("tileY");
-var zoom = current_zoom.innerHTML;
+var zoom = dwnldJobZoom.innerText;
 var XYs = '', XYsE = '', xhr = [];
 for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
 	var mapname = mapDisplayed.children[i].innerHTML; 	// 
 	if(mapname.indexOf('EPSG3395')==-1) {	// карта - на сфере, пишем тайлы как есть
 		if(!XYs.length) {
 			for (var k = 0; k < tileXs.length; k++) {
-				//alert('|'+tileXs[k].value+'|'+tileYs[k].value+'|');
-				if(+tileXs[k].value && +tileYs[k].value) 	XYs += tileXs[k].value+','+tileYs[k].value+'\n';
+				if(tileXs[k].value && tileYs[k].value) 	XYs += tileXs[k].value+','+tileYs[k].value+'\n';
 			}
 		}
-		//alert(XYs);
+		//console.log(XYs);
 		var uri = 'loaderJob.php?jobname='+mapname+'.'+zoom+'&xys='+XYs;
 	}
 	else {	// карта - на эллипсоиде, пишем тайлы на один ниже
@@ -434,10 +516,10 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 				}
 			}
 		}
-		//alert(XYsE);
+		//console.log(XYsE);
 		var uri = 'loaderJob.php?jobname='+mapname+'.'+zoom+'&xys='+XYsE;
 	}
-	//alert(encodeURI(uri)+'           \n\n');
+	//console.log(encodeURI(uri));
 	//continue;
 	xhr[i] = new XMLHttpRequest();
 	xhr[i].open('GET', encodeURI(uri), true); 	// Подготовим асинхронный запрос
@@ -479,6 +561,7 @@ xhr.onreadystatechange = function() { //
 	dwnldJobList.innerHTML += '<li>' + responseText[1] + '</li>\n';
 }
 } // end function restartLoader
+
 
 // Функции рисования маршрутов
 function routeControlsDeSelect() {
@@ -1258,6 +1341,8 @@ fetch(dataUrl)
 })
 
 } 	// end function realtime
+
+
 
 /* Определения классов */
 // control для копирования в клипбоард

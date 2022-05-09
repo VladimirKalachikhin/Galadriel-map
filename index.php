@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.0.10';
+$versionTXT = '2.1.0';
 /* 
 */
 // start gpsdPROXY
@@ -418,9 +418,9 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 				</div>
 				<span id='coverMap' style='font-size:150%;'></span> 
 			</div>
-			<h2 style=''><?php echo $downloadZoomTXT;?>: <span id='current_zoom'></span></h2>
+			<h2 style=''><?php echo $downloadZoomTXT;?>: <span id='dwnldJobZoom'></span></h2>
 			<div class="" style="font-size:120%;margin:0;">
-				<form id="dwnldJob" onSubmit="createDwnldJob(); downJob=false; return false;" onreset="current_zoom.innerHTML=map.getZoom(); downJob=false;//alert('reset');">
+				<form id="dwnldJob" onSubmit="createDwnldJob(); return false;" onreset="dwnldJobZoom.innerHTML=map.getZoom(); downJob=false; tileGrid.redraw();">
 					<div style='display:grid;grid-template-columns:auto auto;'>
 						<div>X</div><div>Y</div>
 						<div style='height:28vh;overflow-y:auto;overflow-x:hidden;grid-column:1/3'>
@@ -429,20 +429,7 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:5rem;font-size:150%;'>
 								</div>
 								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:5rem;font-size:150%;' 
-										onChange="
-											//console.log(this.parentNode);
-											downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание
-											let newXinput = this.parentNode.previousElementSibling.cloneNode(true); 	// клонируем div с x
-											newXinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
-											let newYinput = this.parentNode.cloneNode(true); 	// клонируем div с y
-											newYinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
-											this.onchange = null; 	// удалим обработчик с этого элемента
-											this.parentNode.parentNode.insertBefore(newXinput,this.parentNode.nextElementSibling); 	// вставляем после последнего. Да, вот так через задницу, потому что это javascript
-											this.parentNode.parentNode.insertBefore(newYinput,newXinput.nextElementSibling);
-											newXinput.getElementsByTagName('input')[0].focus(); 	// установим курсор ввода
-										"
-									>
+									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:5rem;font-size:150%;' onChange="XYentryFields(this);">
 								</div>
 							</div>
 						</div>
@@ -687,7 +674,7 @@ map.on('movestart zoomstart', function(event) { 	// карту начали дв
 });
 map.on('zoomend', function(event) {
 	let zoom = event.target.getZoom();
-	if(!downJob) current_zoom.innerHTML = zoom;
+	if(!downJob) dwnldJobZoom.innerHTML = zoom;
 	cover_zoom.innerHTML = zoom+8;
 	
 });
@@ -743,16 +730,18 @@ if(SelectedRoutesSwitch.checked) {
 
 // Сетка
 var tileGrid = new L.GridLayer();
+tileGrid.on('tileload',chkColoreSelectedTile);	// подсветить тайлы, указанные в dwnldJob
 tileGrid.createTile = function (coords) {
 	var tile = document.createElement('div');
+	tile.id = 'gridTile_'+coords.z+'_'+coords.x+'_'+coords.y
 	tile.style.outline = '1px solid rgba(255,69,0,1)';
 	tile.style.fontWeight = 'bold';
-	tile.style.fontSize = '23pt';
+	tile.style.fontSize = 'xx-large';
 	tile.style.color = 'rgba(255,69,0,0.75)';
-	tile.innerHTML = '<div style="padding:1rem;">'+coords.z+'<br>'+coords.x+' / '+coords.y+'</div>';
+	tile.innerHTML = '<div style="padding:1rem;pointer-events:auto;" onClick="loaderListPopulate(this)">'+coords.z+'<br>'+coords.x+' / '+coords.y+'</div>';	// pointer-events:auto потому, что для слоёв в leaflet указано pointer-events:none;, и они не принимают события указателя
 	return tile;
 }
-if( !downJob) current_zoom.innerHTML = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
+if( !downJob) dwnldJobZoom.innerHTML = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
 cover_zoom.innerHTML = map.getZoom()+8;
 
 // Рисование маршрута

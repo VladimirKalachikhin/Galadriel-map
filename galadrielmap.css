@@ -324,14 +324,12 @@ ul { /* нужно, чтобы стили работали */
 .mobIcon {
 	opacity: 0.7;
 }
-
 .NoGpsCursorIcon {
 	filter: grayscale(100%);
 }
-
 .centerMarkIcon {
 	z-index: auto;
 }
-
-.scaledText {
+.selectedTile {
+	background-color: rgba(0,200,255,0.35);
 }
