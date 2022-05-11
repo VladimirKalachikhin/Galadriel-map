@@ -1,5 +1,8 @@
 <?php
+ob_start(); 	// попробуем перехватить любой вывод скрипта
+session_start();
 /* Вызывается для создания задания на загрузку */
+chdir(__DIR__); // задаем директорию выполнение скрипта
 require('params.php'); 	// пути и параметры
 
 if($mapSourcesDir[0]!='/') $mapSourcesDir = "$tileCachePath/$mapSourcesDir";	// если путь абсолютный (и в unix, конечно)
@@ -9,6 +12,8 @@ if($jobsDir[0]!='/') $jobsDir = "$tileCachePath/$jobsDir";	// если путь 
 $XYs = $_REQUEST['xys'];
 $jobName = $_REQUEST['jobname'];
 //echo "XYs=$XYs; jobName=$jobName; <br>\n";
+//$jobName='OpenTopoMap.11';
+//$XYs="1189,569\n1190,569\n1191,569";
 if($jobName != 'restart') {
 	$name_parts = pathinfo($jobName);
 	//echo "name_parts:<pre>"; print_r($name_parts); echo "</pre>";
@@ -20,12 +25,29 @@ if($jobName != 'restart') {
 	// Сохраним задание на всякий случай
 	file_put_contents("$jobsDir/oldJobs/$jobName".'_'.gmdate("Y-m-d_Gis", time()),$XYs);
 	//file_put_contents("$jobName",$XYs);
-	chmod("$jobsDir/$jobName",0777); 	// чтобы запуск от другого юзера
+	chmod("$jobsDir/$jobName",0666); 	// чтобы запуск от другого юзера
 }
-//exit;
-//echo "$tileCachePath<br>\n";
+
 // Запустим планировщик
-exec("$phpCLIexec $tileCachePath/loaderSched.php > /dev/null 2>&1 &",$ret,$status); 	// если запускать сам файл, ему нужны права
-//exec("$tileCachePath/loaderSched.php"); 	
-echo "$status;$jobName;"; 	// вернём что-нибудь. Например, $status запущенного exec
+// Если эта штука вызывается для нескольких карт подряд, то просто при запуске планировщика
+// каждый его экземпляр видит, что запущены другие, и завершается. В результате не запускается ни один.
+// Поэтому будем запускать планировщик не чаще чем раз в секунд.
+$status = 0;
+//echo (time()-$_SESSION['loaderJobStartLoader'])." ";
+if((time()-$_SESSION['loaderJobStartLoader'])>3) {
+	exec("$phpCLIexec $tileCachePath/loaderSched.php > /dev/null 2>&1 &",$ret,$status); 	// если запускать сам файл, ему нужны права
+	//exec("$phpCLIexec $tileCachePath/loaderSched.php > log_$jobName.txt 2>&1 &",$ret,$status); 	// если запускать сам файл, ему нужны права
+	if($status==0)$_SESSION['loaderJobStartLoader'] = time();	// при успешном запуске
+}
+
+ob_clean(); 	// очистим, если что попало в буфер
+header("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
+header('Content-Type: text/html; charset=utf-8;');
+
+echo "$status;$jobName"; 	// вернём что-нибудь. Например, $status запущенного exec. Правда, $status всегда будет 0, потому что оболочка запустится, а про остальное мы не узнаем. $ret -- пустой массив
+
+$content_lenght = ob_get_length();
+header("Content-Length: $content_lenght");
+//header("X-debug: $debugMessage");
+ob_end_flush(); 	// отправляем и прекращаем буферизацию
 ?>

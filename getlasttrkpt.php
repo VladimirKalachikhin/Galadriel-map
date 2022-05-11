@@ -17,7 +17,7 @@ Work with any logger, not obligatory gpxlogger
 Если файл завершён, или какие-то проблемы с последней точкой - отдаётся состояние записи и пустая LineString.
 
 */
-
+chdir(__DIR__); // задаем директорию выполнение скрипта
 require_once('fcommon.php');
 require('params.php'); 	// пути и параметры
 

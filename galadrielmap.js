@@ -15,7 +15,7 @@ displayRoute(routeNameNode)
 updateCurrTrack()
 
 createDwnldJob() 	создаёт файлы заданий и запускает загрузчик
-restartLoader() 	запускает загрузчик
+chkLoaderStatus() 	запускает загрузчик
 
 routeControlsDeSelect()
 delShapes(realy)
@@ -519,7 +519,7 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 		//console.log(XYsE);
 		var uri = 'loaderJob.php?jobname='+mapname+'.'+zoom+'&xys='+XYsE;
 	}
-	//console.log(encodeURI(uri));
+	//console.log(uri);
 	//continue;
 	xhr[i] = new XMLHttpRequest();
 	xhr[i].open('GET', encodeURI(uri), true); 	// Подготовим асинхронный запрос
@@ -528,6 +528,7 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 		if (this.readyState != 4) return; 	// запрос ещё не завершился
 		if (this.status != 200) return; 	// что-то не то с сервером
 		let responseText = this.responseText.split(';');
+		//console.log('[createDwnldJob] responseText:',this.responseText);
 		if(responseText[0] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
 			loaderIndicator.style.color='green';
 			loaderIndicator.innerText='\u263A';
@@ -541,26 +542,45 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 }
 } 	// end function createDwnldJob
 
-function restartLoader() {
-/* запускает загрузчик */
+function chkLoaderStatus(restartLoader=0) {
+/*  */
 let xhr = new XMLHttpRequest();
-xhr.open('GET', encodeURI('loaderJob.php?jobname=restart'), true); 	// Подготовим асинхронный запрос
+xhr.open('GET', encodeURI('chkLoaderStatus.php?restartLoader='+restartLoader), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился
 	if (this.status != 200) return; 	// что-то не то с сервером
-	let responseText = this.responseText.split(';');
-	if(responseText[0] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
-		loaderIndicator.style.color='green';
-		loaderIndicator.innerText='\u263A';
-	}
-	else {
+	//console.log('[chkLoaderStatus] this.response=',this.response);
+	let {loaderRun,jobsInfo} = JSON.parse(this.response);
+	
+	dwnldJobList.innerHTML = '';
+	loaderIndicator.innerText='\u2B24 ';
+	if(jobsInfo.length && !loaderRun){	// есть задания, но загрузчик не запущен
 		loaderIndicator.style.color='red';
-		loaderIndicator.innerText='\u2639';
+		//loaderIndicator.innerText='\u2639';
+		loaderIndicator.onclick=chkLoaderStatus(true);
+
+		let liS = '';
+		for(let jobName in jobsInfo){
+			liS += `<li  ><span>${jobName} </span><span style='font-size:75%;'>${jobsInfo[jobName]}%</span></li>`;
+		}
+		dwnldJobList.innerHTML = liS;
 	}
-	dwnldJobList.innerHTML += '<li>' + responseText[1] + '</li>\n';
+	else if(loaderRun){	// загрузчик запущен
+		loaderIndicator.style.color='green';
+		//loaderIndicator.innerText='\u263A';
+
+		let liS = '';
+		for(let jobName in jobsInfo){
+			liS += `<li  ><span>${jobName} &nbsp; </span><span style='font-size:115%;'>${jobsInfo[jobName]}%</span></li>`;
+		}
+		dwnldJobList.innerHTML = liS;
+	}
+	else {	// загрузчик не должен быть запущен
+		loaderIndicator.innerText=' ';
+	}
 }
-} // end function restartLoader
+} // end function chkLoaderStatus
 
 
 // Функции рисования маршрутов

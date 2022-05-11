@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.1.0';
+$versionTXT = '2.1.1';
 /* 
 */
 // start gpsdPROXY
@@ -41,31 +41,6 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 			break;
 		}
 	}
-// Получаем список выполняющихся заданий на скачивание
-	if($jobsDir[0]!='/') $jobsDir = "$tileCachePath/$jobsDir";	//  сделаем путь абсолютным, потому что jobsDir - из конфига GaladrielCache
-	if($jobsInWorkDir[0]!='/') $jobsInWorkDir = "$tileCachePath/$jobsInWorkDir";	//  сделаем путь абсолютным
-	$jobsInfo = preg_grep('~.[0-9]$~', scandir($jobsDir)); 	// возьмём только файлы с цифровым расшрением
-	foreach($jobsInfo as $i => $jobName) {
-		$jobSize = filesize("$jobsDir/$jobName");
-		if(!$jobSize) continue;	// внезапно может оказаться файл нулевой длины
-		$jobComleteSize =  @filesize("$jobsInWorkDir/$jobName"); 	// файла в этот момент может уже и не оказаться
-		//echo "jobSize=$jobSize; jobComleteSize=$jobComleteSize; <br>\n";
-		if($jobComleteSize==0) $jobComleteSize = $jobSize;
-		$jobsInfo[$i] = array($jobName, round((1-$jobComleteSize/$jobSize)*100)); 	// выполнено
-	}
-	//echo "jobsInfo:<pre>"; print_r($jobsInfo); echo "</pre>";
-	$schedInfo = glob("$jobsDir/*.slock"); 	// имеющиеся PIDs запущенных планировщиков. Должен быть только один, но мало ли...
-	//echo "schedInfo:<pre>"; print_r($schedInfo); echo "</pre>";
-	$schedPID = FALSE;
-	foreach($schedInfo as $schedPID) {
-		$schedPID=explode('.slock',end(explode('/',$schedPID)))[0]; 	// basename не работает с неанглийскими буквами!!!!
-		if(file_exists( "/proc/$schedPID")) break; 	// процесс с таким PID работает
-		else {
-			unlink("$jobsDir/$schedPID.slock"); 	// файл-флаг остался от чего-то, но процесс с таким PID не работает - удалим
-			$schedPID = FALSE;
-		}
-	}
-	//echo "schedPID=$schedPID; <br>\n";
 }
 else {$mapsInfo = array(); $jobsInfo = array();}
  
@@ -442,25 +417,9 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 			</div>
 			<div style="font-size:120%;margin:1rem 0;">
 				<h3>
-					<span id="loaderIndicator" style="font-size:100%;
-<?php if($jobsInfo) { ?>
-<?php 		if($schedPID) { ?>
-					  color: green;" title="<?php echo $downloadLoaderIndicatorOnTXT;?>">&#9786;
-<?php 		} else { ?>
-					  color: red;" title="<?php echo $downloadLoaderIndicatorOffTXT;?>" onClick="restartLoader();">&#9785;
-<?php 		} ?>
-<?php } else {?>
-					">
-<?php 		} ?>
-					</span><?php echo $downloadJobListTXT;?>:
+					<span id="loaderIndicator" style="font-size:75%;"></span><?php echo $downloadJobListTXT;?>:
 				</h3>
 				<ul id="dwnldJobList">
-<?php
-foreach($jobsInfo as $jobName) { 	// 
-	list($jobName,$jobPercent) = $jobName;
-	echo "						<li  ><span>$jobName </span><span style='font-size:75%;'>$jobPercent% $completeTXT</span></li>";
-}
-?>
 				</ul>
 			</div>
 		</div>
@@ -634,6 +593,7 @@ sidebar.on("content", function(event){ 	// Событие открытия? па
 	//alert(event.id);
 	switch(event.id){ 	// какую вкладку открыли
 	case 'download':
+		chkLoaderStatus();	// проверим загрузки
 		tileGrid.addTo(map); 	// добавить на карту тайловую сетку
 		if(CurrnoFollowToCursor === 1)CurrnoFollowToCursor = noFollowToCursor;  // запомним состояние глобального признака следования за курсором, если ещё не запоминали
 		noFollowToCursor = true; 	// отключим следование за курсором
