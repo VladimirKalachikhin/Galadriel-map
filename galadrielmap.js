@@ -554,7 +554,7 @@ xhr.onreadystatechange = function() { //
 	let {loaderRun,jobsInfo} = JSON.parse(this.response);
 	
 	dwnldJobList.innerHTML = '';
-	loaderIndicator.innerText='\u2B24 ';
+	//loaderIndicator.innerText='\u2B24 ';
 	if(jobsInfo.length && !loaderRun){	// есть задания, но загрузчик не запущен
 		loaderIndicator.style.color='red';
 		//loaderIndicator.innerText='\u2639';
@@ -577,7 +577,8 @@ xhr.onreadystatechange = function() { //
 		dwnldJobList.innerHTML = liS;
 	}
 	else {	// загрузчик не должен быть запущен
-		loaderIndicator.innerText=' ';
+		loaderIndicator.style.color='gray';
+		//loaderIndicator.innerText=' ';
 	}
 }
 } // end function chkLoaderStatus

@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.1.1';
+$versionTXT = '2.1.2';
 /* 
 */
 // start gpsdPROXY
@@ -417,7 +417,7 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 			</div>
 			<div style="font-size:120%;margin:1rem 0;">
 				<h3>
-					<span id="loaderIndicator" style="font-size:75%;"></span><?php echo $downloadJobListTXT;?>:
+					<span id="loaderIndicator" style="font-size:75%;vertical-align:top;color:gray;">&#x2B24; </span><?php echo $downloadJobListTXT;?>:
 				</h3>
 				<ul id="dwnldJobList">
 				</ul>
@@ -512,7 +512,8 @@ var CurrnoFollowToCursor = 1; 	// глобальная переменная дл
 var followPause = 10 * 1000; 	// пауза следования карты за курсором, когда карту подвинули руками, микросекунд
 var savePositionEvery = 15 * 1000; 	// будем сохранять положение каждые микросекунд локально в куку
 var followPaused; 	// объект таймера, который восстанавливает следование курсору
-var velocityVectorLengthInMn = 10; 	// длинной в сколько минут пути рисуется линия скорости
+var velocityVectorLengthInMn = <?php echo $velocityVectorLengthInMn;?>; 	// длинной в сколько минут пути рисуется линия скорости
+if(!velocityVectorLengthInMn) velocityVectorLengthInMn = 10;
 // AIS
 var vehicles = []; 	// list of visible by AIS data vehicle objects 
 var AISstatusTXT = {
