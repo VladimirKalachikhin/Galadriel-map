@@ -262,7 +262,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 			<div id='routeControls' class="routeControls" style="padding:1rem 0 2rem; text-align: center;">
 				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
 					onChange="
-						if(L.Browser.mobile && L.Browser.touch) var weight = 15; 	// мобильный браузер
+						if(L.Browser.mobile && L.Browser.touch) var weight = 10; 	// мобильный браузер
 						else var weight = 7; 	// стационарный браузер
 						//window.LAYER = map.editTools.startPolyline(false,{showMeasurements: true,color: '#ccff00',weight: weight,opacity: 0.7});
 						window.LAYER = map.editTools.startPolyline(false,{showMeasurements: true,color: '#FDFF00',weight: weight,opacity: 0.5});

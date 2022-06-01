@@ -38,6 +38,14 @@
   text-align: center;
   cursor: pointer; 
 }
+.leaflet-measure-path-measurement { /* цифры на маршруте */
+	font-size: 130%;
+}
+.leaflet-measure-path-measurement > div { /* подпись на маршруте */
+    position: relative;
+    margin-top: -75% !important;	/* поскольку собственный стиль библиотеки leaflet-measure-path загружается позже */
+    left: -50%;
+}
 @media (max-width: 767px) { /* 854×480 */
 	.leaflet-sidebar-header {
 		font-size: 9px;
@@ -54,9 +62,6 @@
 	}
 	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
 		right: 160px; 
-	}
-	.leaflet-measure-path-measurement {
-		font-size: 9px;
 	}
 	.big_symbol {
 		font-size:20px;
@@ -82,9 +87,6 @@
 	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
 		right: 280px; 
 	}
-	.leaflet-measure-path-measurement {
-		font-size: 12px;
-	}
 	.big_symbol {
 		font-size:25px;
 	}
@@ -109,9 +111,6 @@
 	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
 		right: 315px; 
 	}
-	.leaflet-measure-path-measurement {
-		font-size: 15px;
-	}
 	.big_symbol {
 		font-size:40px;
 	}
@@ -132,9 +131,6 @@
 	}
 	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
 		right: 335px; 
-	}
-	.leaflet-measure-path-measurement {
-		font-size: 19px;
 	}
 	.big_symbol {
 		font-size:52px;
@@ -196,7 +192,6 @@ div.leaflet-control-zoom {
 }
 
 
-
 /* Свои стили */
 
 ul { /* нужно, чтобы стили работали */
@@ -217,7 +212,7 @@ ul { /* нужно, чтобы стили работали */
 	white-space: nowrap;
 }
 .currentTrackName {
-	background-color:  rgba(227, 231, 251, 0.5); /* бледно-голубой */
+	background-color:  rgba(227, 231, 251, 0.5); /* бледно-голубой полупрозрачный */
 }
 .big_symbol {
 	height:90%;
@@ -324,12 +319,14 @@ ul { /* нужно, чтобы стили работали */
 .mobIcon {
 	opacity: 0.7;
 }
+
 .NoGpsCursorIcon {
 	filter: grayscale(100%);
 }
+
 .centerMarkIcon {
 	z-index: auto;
 }
-.selectedTile {
-	background-color: rgba(0,200,255,0.35);
+
+.scaledText {
 }
