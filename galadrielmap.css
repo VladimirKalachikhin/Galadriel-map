@@ -328,5 +328,8 @@ ul { /* нужно, чтобы стили работали */
 	z-index: auto;
 }
 
+.selectedTile {
+	background-color: rgba(0,200,255,0.35);
+
 .scaledText {
 }
