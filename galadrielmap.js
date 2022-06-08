@@ -531,11 +531,11 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 		//console.log('[createDwnldJob] responseText:',this.responseText);
 		if(responseText[0] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
 			loaderIndicator.style.color='green';
-			loaderIndicator.innerText='\u263A';
+			//loaderIndicator.innerText='\u263A';
 		}
 		else {
 			loaderIndicator.style.color='red';
-			loaderIndicator.innerText='\u2639';
+			//loaderIndicator.innerText='\u2639';
 		}
 		dwnldJobList.innerHTML += '<li>' + responseText[1] + '</li>\n';
 	}
