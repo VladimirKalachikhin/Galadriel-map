@@ -552,10 +552,12 @@ xhr.onreadystatechange = function() { //
 	if (this.status != 200) return; 	// что-то не то с сервером
 	//console.log('[chkLoaderStatus] this.response=',this.response);
 	let {loaderRun,jobsInfo} = JSON.parse(this.response);
+	//console.log('[chkLoaderStatus]',loaderRun,jobsInfo);
 	
 	dwnldJobList.innerHTML = '';
 	//loaderIndicator.innerText='\u2B24 ';
-	if(jobsInfo.length && !loaderRun){	// есть задания, но загрузчик не запущен
+	if((JSON.stringify(jobsInfo)!=='{}') && !loaderRun){	// есть задания, но загрузчик не запущен. Менее через жопу выяснить, не пуст ли объект в этом кривом языке нельзя.
+	//if(jobsInfo.length && !loaderRun){	// есть задания, но загрузчик не запущен
 		loaderIndicator.style.color='red';
 		//loaderIndicator.innerText='\u2639';
 		loaderIndicator.onclick=chkLoaderStatus(true);
