@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.1.4';
+$versionTXT = '2.1.5';
 /* 
 */
 // start gpsdPROXY
@@ -702,8 +702,8 @@ tileGrid.createTile = function (coords) {
 	tile.innerHTML = '<div style="padding:1rem;pointer-events:auto;" onClick="loaderListPopulate(this)">'+coords.z+'<br>'+coords.x+' / '+coords.y+'</div>';	// pointer-events:auto потому, что для слоёв в leaflet указано pointer-events:none;, и они не принимают события указателя
 	return tile;
 }
-if( !downJob) dwnldJobZoom.innerHTML = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
-cover_zoom.innerHTML = map.getZoom()+8;
+if( !downJob) dwnldJobZoom.innerText = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
+cover_zoom.innerText = map.getZoom()+8;
 
 // Рисование маршрута
 var measuredPaths = [];

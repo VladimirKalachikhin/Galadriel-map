@@ -399,15 +399,17 @@ xhr.onreadystatechange = function() { //
 
 // Загрузчик и подготовка задания
 function XYentryFields(element){
+/* Генерация полей ввода списка тайлов для загрузки
+element - второе поле input номера тайла
+*/
 //console.log(element.parentNode);
-downJob = map.getZoom(); 	// выставим флаг, что идёт подготовка задания на скачивание, При этом реальный масштаб скачивания -- в dwnldJobZoom, а это -- только логический флаг
 const xElement = element.parentNode.previousElementSibling.getElementsByTagName('input')[0];
 const x = xElement.value;
 const y = element.value;
 if(x && y){
 	const tileId = 'gridTile_'+parseInt(dwnldJobZoom.innerText)+'_'+x+'_'+y;
 	const tile = document.getElementById(tileId);
-	if(tile) tile.classList.add('selectedTile');
+	if(tile) tile.classList.add('selectedTile');	// выделим тайл, что он указан
 
 	let newXinput = element.parentNode.previousElementSibling.cloneNode(true); 	// клонируем div с x
 	newXinput.getElementsByTagName('input')[0].value = ''; 	// очистим поле ввода
@@ -423,28 +425,42 @@ else {
 	xElement.focus();
 	tileGrid.redraw();
 }
+// Узнаем, есть ли так или иначе указанные тайлы
+const tileXs = dwnldJob.getElementsByClassName("tileX");
+const tileYs = dwnldJob.getElementsByClassName("tileY");
+downJob = false;
+for (var k = 0; k < tileXs.length; k++) {
+	if(tileXs[k].value && tileYs[k].value){
+		downJob = true; 	// выставим флаг, что идёт подготовка задания на скачивание
+		break;
+	}
+}
+if( !downJob) dwnldJobZoom.innerHTML = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
 } // end function XYentryFields
 
 function loaderListPopulate(element){
+/* Заполнение списка тайлов для загрузки путём клика по тайлу 
+element - это div с подписью номера тайла, по нему кликают
+*/
 //console.log(element);
 if(parseInt(dwnldJobZoom.innerText) != map.getZoom()) return;	// текущий масштаб -- не тот, для которого начали создавать задание
 let e,x,y,z;
 //[x,y] = element.innerText.split("\n")[1].split('/').map(item=>parseInt(item));
-[e,z,x,y] = element.parentElement.id.split("_");
+[e,z,x,y] = element.parentElement.id.split("_");	// gridTile_12_2474_1288, квадрат сетки
 //console.log('z=',z,'x=',x,'y=',y);
 const tileXs = dwnldJob.getElementsByClassName("tileX");
 const tileYs = dwnldJob.getElementsByClassName("tileY");
-if(element.parentElement.classList.contains('selectedTile')){
-	element.parentElement.classList.remove('selectedTile');
-	for (var k = 0; k < tileXs.length; k++) {
-		if((tileXs[k].value==x) && (tileYs[k].value==y)){
-			tileXs[k].value = '';
+if(element.parentElement.classList.contains('selectedTile')){	// квадрат сетки выделен, кликнутый тайл должен быть в списке
+	element.parentElement.classList.remove('selectedTile');	// снимем выделение
+	for (var k = 0; k < tileXs.length; k++) {	// проверим весь список, ибо номер мог быть внесён несколько раз руками
+		if((tileXs[k].value==x) && (tileYs[k].value==y)){	// найдём номер тайла в списке тайлов
+			tileXs[k].value = '';	// удалим этот номер из списка
 			tileYs[k].value = '';
 		}
 	}
 }
-else {
-	const lastX = tileXs[tileXs.length-1];
+else {	// кликнутого тайла, вероятно, нет в списке
+	const lastX = tileXs[tileXs.length-1];	// заполним последние поля списка номером кликнутого тайла
 	const lastY = tileYs[tileYs.length-1];
 	lastX.value = x;
 	lastY.value = y;
@@ -472,13 +488,16 @@ if(zoom != tileEvent.coords.z) return;	// текущий масштаб -- не 
 //console.log('zoom=',zoom,'z=',tileEvent.coords.z,tileEvent.tile, tileEvent.coords);
 const tileXs = dwnldJob.getElementsByClassName("tileX");
 const tileYs = dwnldJob.getElementsByClassName("tileY");
+downJob = false;
 for (var k = 0; k < tileXs.length; k++) {
 	if(tileXs[k].value && tileYs[k].value){
 		const tileId = 'gridTile_'+zoom+'_'+tileXs[k].value+'_'+tileYs[k].value;
 		const tile = document.getElementById(tileId);
 		if(tile) tile.classList.add('selectedTile');
+		downJob = true; 	// выставим флаг, что идёт подготовка задания на скачивание
 	}
 }
+if( !downJob) dwnldJobZoom.innerHTML = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
 } // end function chkColoreSelectedTile
 
 function createDwnldJob() {
@@ -552,11 +571,11 @@ xhr.onreadystatechange = function() { //
 	if (this.status != 200) return; 	// что-то не то с сервером
 	//console.log('[chkLoaderStatus] this.response=',this.response);
 	let {loaderRun,jobsInfo} = JSON.parse(this.response);
-	//console.log('[chkLoaderStatus]',loaderRun,jobsInfo);
+	//console.log('[chkLoaderStatus]',loaderRun,jobsInfo,JSON.stringify(jobsInfo));
 	
 	dwnldJobList.innerHTML = '';
 	//loaderIndicator.innerText='\u2B24 ';
-	if((JSON.stringify(jobsInfo)!=='{}') && !loaderRun){	// есть задания, но загрузчик не запущен. Менее через жопу выяснить, не пуст ли объект в этом кривом языке нельзя.
+	if((JSON.stringify(jobsInfo)!=='[]') && !loaderRun){	// есть задания, но загрузчик не запущен. Менее через жопу выяснить, не пуст ли объект в этом кривом языке нельзя. При том, что в PHP оно всегда array.
 	//if(jobsInfo.length && !loaderRun){	// есть задания, но загрузчик не запущен
 		loaderIndicator.style.color='red';
 		//loaderIndicator.innerText='\u2639';
