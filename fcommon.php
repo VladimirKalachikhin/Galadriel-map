@@ -1,6 +1,7 @@
 <?php
 /*
 tailCustom
+gpxloggerRun
 */
 
 function tailCustom($filepath, $lines = 1, $adaptive = true) {

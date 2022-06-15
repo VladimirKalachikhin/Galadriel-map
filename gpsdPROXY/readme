@@ -1,3 +1,3 @@
-Put to this directory gpsdPROXY project (https://github.com/VladimirKalachikhin/gpsdPROXY) files (or links to) to AIS and instruments data support.
+Put to this directory gpsdPROXY project (https://github.com/VladimirKalachikhin/gpsdPROXY) files (or links to gpsdPROXY.php and gpsdPROXY's params.php) to AIS and instruments data support.
 
-В этом каталоге должны быть файлы проекта gpsdPROXY (или ссылки на них), иначе поддержка AIS, данных эхолота и анемометра работать не будет.
+В этом каталоге должны быть файлы проекта gpsdPROXY (или ссылка на gpsdPROXY.php и params.php из gpsdPROXY), иначе поддержка AIS, данных эхолота и анемометра работать не будет.

@@ -486,6 +486,8 @@ foreach($routeInfo as $routeName) { 	// ниже создаётся аноним
 </div>
 <div id="mapid" ></div>
 <?php
+if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = $collisionDistance;	// gpsdPROXY's params.php
+if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
 ?>
 <script> "use strict";
 
@@ -513,7 +515,6 @@ var followPause = 10 * 1000; 	// пауза следования карты за
 var savePositionEvery = 15 * 1000; 	// будем сохранять положение каждые микросекунд локально в куку
 var followPaused; 	// объект таймера, который восстанавливает следование курсору
 var velocityVectorLengthInMn = <?php echo $velocityVectorLengthInMn;?>; 	// длинной в сколько минут пути рисуется линия скорости
-if(!velocityVectorLengthInMn) velocityVectorLengthInMn = 10;
 // AIS
 var vehicles = []; 	// list of visible by AIS data vehicle objects 
 var AISstatusTXT = {
