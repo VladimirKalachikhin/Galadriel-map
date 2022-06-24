@@ -1325,10 +1325,17 @@ function bearing(latlng1, latlng2) {
 /**/
 //console.log(latlng1,latlng2)
 const rad = Math.PI/180;
-let lat1 = latlng1.lat * rad,
-lat2 = latlng2.lat * rad,
-lon1 = latlng1.lng * rad,
-lon2 = latlng2.lng * rad;
+let lat1,lat2,lon1,lon2;
+if(latlng1.lat) lat1 = latlng1.lat * rad;
+else lat1 = latlng1.latitude * rad;
+if(latlng2.lat) lat2 = latlng2.lat * rad;
+else lat2 = latlng2.latitude * rad;
+if(latlng1.lng) lon1 = latlng1.lng * rad;
+else if(latlng1.lon) lon1 = latlng1.lon * rad;
+else lon1 = latlng1.longitude * rad;
+if(latlng2.lng) lon2 = latlng2.lng * rad;
+else if(latlng2.lon) lon2 = latlng2.lon * rad;
+else lon2 = latlng2.longitude * rad;
 //console.log('lat1=',lat1,'lat2=',lat2,'lon1=',lon1,'lon2=',lon2)
 
 let y = Math.sin(lon2 - lon1) * Math.cos(lat2);
@@ -1401,4 +1408,34 @@ L.Control.CopyToClipboard = L.Control.extend({
 		// Nothing to do here
 		}
 });
+
+///////// for collision test purpose /////////
+// Функции для отладки предупреждения о столкновениях
+function displayCollisionAreas(selfArea=null){
+/**/
+function mkPolyline(area){
+	let polyline = [];
+	area.forEach(point => {polyline.push([point.lat,point.lon]);});
+	polyline.push([area[0].lat,area[0].lon]);
+	return polyline;
+};
+//collisisonAreas.remove();	// так гораздо медленней
+collisisonAreas.clearLayers();	// очистим слой 
+if(selfArea){
+	//console.log('selfArea:',selfArea);
+	let polyline = mkPolyline(selfArea);
+	collisisonAreas.addLayer(L.polyline(polyline,{color: 'red',weight: 2,}));
+}
+for(let vessel in vehicles){
+	//console.log(vessel,vehicles[vessel]);
+	if(!vehicles[vessel].options.collisionArea) continue;	// 
+	//console.log(vessel,vehicles[vessel].options.collisionArea);
+	let polyline = mkPolyline(vehicles[vessel].options.collisionArea);
+	//console.log('vessel',vessel,'course=',vehicles[vessel].options.course,'polyline:',polyline.length);
+	collisisonAreas.addLayer(L.polyline(polyline,{color: 'red',weight: 2,}));
+};
+collisisonAreas.addTo(map);
+} // end function displayCollisionAreas
+
+///////// for collision test purpose /////////
 

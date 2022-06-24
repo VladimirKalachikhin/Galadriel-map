@@ -132,7 +132,7 @@ L.TrackSymbol = L.Path.extend({
 		this._shiptype = aisData.shiptype;
 		delete aisData.shiptype;
 		this._setColorsByTypeOfShip();
-		//if(this.options.mmsi==244770791) console.log(aisData.lat,aisData.lon);
+		//if(this.options.mmsi=='371255000') console.log('this._heading=',this._heading,'this._course=',this._course);
 		if(((aisData.lat !== undefined) && (aisData.lat !== null)) && ((aisData.lon !== undefined) && (aisData.lon !== null))) {
 		//if(aisData.lat && aisData.lon) {
 		    var oldLatLng = this._latlng;
