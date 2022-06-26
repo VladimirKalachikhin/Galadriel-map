@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.1 
+## v. 2.2 
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -22,11 +22,12 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 6. [Exchange coordinates](#exchange-coordinates) via clipboard
 7. [Weather forecast](#weather-forecast) from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
 8. [Display AIS info](display-ais-info)
-9. [netAIS support](#netais)
-10. [A Man OverBoard feature](a-man-overboard)
-11. Optimised for E-Ink screens [Dashboard](#dashboard)
-12. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
-13. English or Russian interface, dependent of browser language settings
+9. [Collision detection](#collision-detection)
+10. [netAIS support](#netais)
+11. [A Man OverBoard feature](a-man-overboard)
+12. Optimised for E-Ink screens [Dashboard](#dashboard)
+13. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
+14. English or Russian interface, dependent of browser language settings
 
 
 * [Work on OpenWRT](#work-on-openwrt)
@@ -153,9 +154,14 @@ If there is an Internet connection you can get the weather forecast from [Thomas
 
 ## Display AIS info
 ![AIS info](screenshots/s9-1.jpeg)<br>
-GaladrielMap displayed AIS data via [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) from [gpsd](https://gpsd.io/) or directly from [Signal K](https://signalk.org/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
+The GaladrielMap displayed AIS data via [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) from [gpsd](https://gpsd.io/) or directly from [Signal K](https://signalk.org/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
 Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. To temporarily disable displaying AIS data use switch in <img src="img/settings1.svg" alt="Settings" width="24px"> menu.  
 As displaying AIS data from gpsd need gpsdPROXY, you MUST use gpsdPROXY as position data service. Set up $gpsdHost and $gpsdPort variables in _params.php_ to this.
+
+## Collision detection
+![collision indicate](screenshots/s11.png)<br>  
+The GaladrielMap shows information on possible collisions calculated by the gpsdPROXY. Potentially dangerous objects are highlighted and their direction is indicated by an arrow.  
+Do not rely too much on the collision detection system. Remember that **no information issued or not issued by the collision detection system can be the basis for the actions or inaction of the navigator.** Be careful.
 
 ## netAIS support
 ![netAIS](screenshots/s13.jpeg)<br>

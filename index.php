@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.1.5';
+$versionTXT = '2.2.0';
 /* 
 */
 // start gpsdPROXY
@@ -802,9 +802,9 @@ var collisisonDetected = L.layerGroup(); 	// слой, на котором ри�
 var collisionDirectionsCursor = L.layerGroup().addTo(positionCursor);	// слой с указателями направлений на опасности столкновений
 if(DisplayAISswitch.checked) collisionDirectionsCursor.addTo(positionCursor);	// слой с указателями направлений на опасности столкновений
 
-///////////////////////////// for collision test purpose //////////////////////////////////
+/*//////////////////////////// for collision test purpose //////////////////////////////////
 var collisisonAreas = L.layerGroup(); 	// для тестовых целей collisionDetector
-///////////////////////////// for collision test purpose //////////////////////////////////
+///////////////////////////// for collision test purpose /////////////////////////////////*/
 
 // MOB marker
 var mobIcon = L.icon({ 	// 
@@ -860,7 +860,9 @@ if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=
 let subscribe = ['TPV','AIS','ALARM'];
 
 var spatialWebSocket; // будет глобальным сокетом
-var lastDataUpdate;	// момент последнего обновления координат
+var lastDataUpdate=0;	// момент последнего получения данных
+var PosFreshBeforeMultiplexor=30;	// через сколько интервалов PosFreshBefore убирать курсор совсем
+var lastPositionUpdate=0;	// момент последнего обновления координат
 
 function spatialWebSocketStart(){
 /**/
@@ -923,8 +925,8 @@ spatialWebSocket.onmessage = function(event) {
 				break;
 			case 'collisions':
 				//console.log('recieved ALARM collisions data',data.alarms.collisions);
-				//realtimeCollisionsUpdate(data.alarms.collisions);
-				realtimeCollisionsUpdate(data.alarms.collisions,data.alarms.collisionSegments);	///////// for collision test purpose /////////
+				realtimeCollisionsUpdate(data.alarms.collisions);
+				//realtimeCollisionsUpdate(data.alarms.collisions,data.alarms.collisionSegments);	///////// for collision test purpose /////////
 				break;
 			}
 		}
@@ -936,7 +938,7 @@ spatialWebSocket.onclose = function(event) {
 	console.log(`spatialWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
 	window.setTimeout(spatialWebSocketStart, 3000); 	// перезапустим сокет через  секунд. В каком контексте здесь вызывается callback -- мне осталось непонятным, поэтому сокет ваще глобален
 	//console.log('lastDataUpdate=',lastDataUpdate,'PosFreshBefore=',PosFreshBefore,Date.now()-lastDataUpdate);
-	if((Date.now()-lastDataUpdate)>PosFreshBefore*60) {	// обычно PosFreshBefore -- 3-5 секунд
+	if((Date.now()-lastDataUpdate)>PosFreshBefore*PosFreshBeforeMultiplexor) {	// обычно PosFreshBefore -- 3-5 секунд
 		positionCursor.remove(); 	// уберём курсор (layerGroup) с карты
 		for(const vehicle in vehicles){	// уберём цели AIS с карты
 			vehicles[vehicle].remove();
@@ -947,7 +949,6 @@ spatialWebSocket.onclose = function(event) {
 		collisisonDetected.remove();
 		collisionDirectionsCursor.clearLayers();
 		collisionDirectionsCursor.remove();
-		lastDataUpdate = 0;
 	}
 	else cursor.setIcon(NoGpsCursor)	// заменим курсор (значёк) на серый
 	velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
@@ -1010,7 +1011,15 @@ function realtimeTPVupdate(gpsdData) {
 //console.log('Index gpsdData',gpsdData.lon,gpsdData.lat);
 if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
 	console.log('No spatial info in GPSD data');
-	positionCursor.remove(); 	// уберём курсор с карты
+	//console.log('lastPositionUpdate=',lastPositionUpdate,'PosFreshBefore*PosFreshBeforeMultiplexor=',PosFreshBefore*PosFreshBeforeMultiplexor,Date.now()-lastPositionUpdate);
+	if((Date.now()-lastPositionUpdate)>PosFreshBefore*PosFreshBeforeMultiplexor) {	// обычно PosFreshBefore -- 3-5 секунд
+		positionCursor.remove(); 	// уберём курсор (layerGroup) с карты
+		collisisonDetected.clearLayers();	// очистим слой 
+		collisisonDetected.remove();
+		collisionDirectionsCursor.clearLayers();
+		collisionDirectionsCursor.remove();
+	}
+	else cursor.setIcon(NoGpsCursor)	// заменим курсор (значёк) на серый
 	velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
 	headingDisplay.innerHTML = '&nbsp;';
 	locationDisplay.innerHTML = '&nbsp;';
@@ -1019,6 +1028,7 @@ if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData
 	return;
 }
 // Свежее ли положение известно
+lastPositionUpdate = Date.now();
 //MOBtab.className=''; 	// координаты появились -- можно включить режим MOB
 positionCursor.invoke('setLatLng',[gpsdData.lat,gpsdData.lon]); // установим координаты всех маркеров
 var positionTime = new Date(gpsdData.time);
@@ -1114,7 +1124,7 @@ if(map.hasLayer(mobMarker)){ 	// если показывается мульти�
 	}
 }
 
-displayCollisionAreas(gpsdData.collisionArea);	///////// for collision test purpose /////////
+//displayCollisionAreas(gpsdData.collisionArea);	///////// for collision test purpose /////////
 
 }; // end function realtimeTPVupdate
 
@@ -1264,7 +1274,7 @@ for(const vesselID in collisions){
 		}
 };
 
-///////// for collision test purpose /////////
+/*//////// for collision test purpose /////////
 //console.log(collisionSegments);						
 // Общий объемлющий прямоугольник
 collisionSegments.unitedSquareAreas.forEach(area => {
@@ -1298,7 +1308,7 @@ if(collisionSegments.intersections){
 		});
 	};
 }
-///////// for collision test purpose /////////
+///////// for collision test purpose ////////*/
 
 collisisonDetected.addTo(map);	// а collisionDirectionsCursor часть positionCursor, и оно и так addTo(map)
 } // end function realtimeCollisionsUpdate
