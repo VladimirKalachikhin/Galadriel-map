@@ -1010,7 +1010,7 @@ function realtimeTPVupdate(gpsdData) {
 // Положение неизвестно
 //console.log('Index gpsdData',gpsdData.lon,gpsdData.lat);
 if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
-	console.log('No spatial info in GPSD data');
+	console.log('No spatial info in GPSD data',gpsdData);
 	//console.log('lastPositionUpdate=',lastPositionUpdate,'PosFreshBefore*PosFreshBeforeMultiplexor=',PosFreshBefore*PosFreshBeforeMultiplexor,Date.now()-lastPositionUpdate);
 	if((Date.now()-lastPositionUpdate)>PosFreshBefore*PosFreshBeforeMultiplexor) {	// обычно PosFreshBefore -- 3-5 секунд
 		positionCursor.remove(); 	// уберём курсор (layerGroup) с карты
