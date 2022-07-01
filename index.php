@@ -876,13 +876,14 @@ spatialWebSocket.onopen = function(e) {
 	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
 		sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер, на всякий случай -- вдруг там не знают
 	}
-	// Проверка актуальности координат если, скажем, нет связи с сервером.
+	/*/ Проверка актуальности координат если, скажем, нет связи с сервером.
 	checkDataFreshInterval = setInterval(function (){
 		if((Date.now()-lastDataUpdate)>PosFreshBefore){
 			console.log('The latest TPV data was received too long ago, trying to reconnect for checking.');
 			spatialWebSocket.close(1000,'The latest data was received too long ago');
 		}
 	},PosFreshBefore);
+	*/
 }; // end spatialWebSocket.onopen
 
 spatialWebSocket.onmessage = function(event) {
@@ -1326,7 +1327,7 @@ var updateRoutesInterval = setInterval(realtime,2000,updateRouteServerURI,routeU
 // Динамическое обновление показываемых маршрутов
 function routeUpdate(changedRouteNames) {
 /* Вызывается из-под realtime */
-//console.log(changedRouteNames);
+//console.log('changedRouteNames:',changedRouteNames);
 if(routeDisplayed.innerHTML.trim() == "") { 	// не показывается ни одного маршрута
 	updateRoutesInterval = clearInterval(updateRoutesInterval); 	// прекратим следить за изменениями
 	routeDisplayed.addEventListener("DOMNodeInserted", function (event) { 	// добавим обработчик события изменения DOM
