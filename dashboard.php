@@ -6,7 +6,7 @@ W   281.25|          |        |          |E 101.25
 WSW 258.75|          |        |          |ESE 123.75
 SW  236.25|SSW 213.75|S 191.25|SSE 168.75|SE 146.25
 */
-$versionTXT = '2.0.2';
+$versionTXT = '2.0.3';
 /*
 2.0.2 -- MOB info support
 */
@@ -37,6 +37,17 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$dashboardKeyMenuTXT = 'Alarm menu';
 	$dashboardKeyMagneticTXT = 'Magnetic course';
 	$dashboardMOBTXT = 'A man overboard!';
+	$relBearingTXT = array(
+'straight ahead',
+'right ahead',
+'to starboard',	
+'right rear',
+'directly astern',
+'left rear',
+'to port',	
+'left ahead',
+	);
+
 }
 else {
 	$dashboardHeadingTXT = 'Истинный курс'; 	//  хотя это "путевой угол", "путь"
@@ -61,6 +72,17 @@ else {
 	$dashboardKeyMenuTXT = 'Меню оповещений';
 	$dashboardKeyMagneticTXT = 'Магнитный курс';
 	$dashboardMOBTXT = 'Человек за бортом!';
+	$relBearingTXT = array(
+'прямо по курсу',
+'справа впереди',
+'справа по борту',	
+'справа сзади',
+'сзади по корме',
+'слева сзади',
+'слева по борту',	
+'слева впереди',
+	);
+
 }
 
 // перечень типов данных из различных источников, которые требуется взять от gpsd
@@ -281,8 +303,16 @@ $MOBtxt = '';
 if($mob) {
 	$toHeadingAlarm = TRUE;
 	$toHeadingValue = bearing($mob);
-	//echo "Азимут на MOB $toHeadingValue<br>\n";
-	$MOBtxt = '<div style="position:absolute;left:1%;right:auto;top:20%;opacity: 0.3;"  class="big_mid_symbol wb"><span style="">'.$dashboardMOBTXT.'</span></div>';
+	//echo "Азимут на MOB $toHeadingValue, курс $theHeading<br>\n";
+		
+	$mobRumb = $toHeadingValue-$theHeading+22.5;
+	if($mobRumb<0) $mobRumb = 360 + $mobRumb;
+	$mobRumb = floor($mobRumb/45);
+	if($mobRumb>7) $mobRumb = 0;
+	$mobRumb = $relBearingTXT[$mobRumb];
+	//echo "$mobRumb<br>\n";
+
+	$MOBtxt = '<div style="position:absolute;left:1%;right:auto;top:15%;opacity: 0.3;"  class="big_mid_symbol wb"><span style="">'.$dashboardMOBTXT.'</span><br><span style="font-size:50%">'.$mobRumb.'</span></div>';
 }
 
 if($toHeadingAlarm) {
