@@ -617,23 +617,19 @@ for (var i = 0; i < elements.length; i++) {
 function delShapes(realy) {
 /* Удаляет полилинии в состоянии редактирования, если realy = true
 возвращает число таких объектов
-полилинии находятся в глобальном массиве measuredPaths, куда заносятся при создании
+полилинии находятся в мультислое dravingLines
 */
-//alert(measuredPaths);
 var edEnShapesCntr=0;
 if(realy) map.editTools.stopDrawing(); 	// нужно прекратить рисование перед удалением, иначе будут глюки
-for(var i=0; i<measuredPaths.length; i++) {
-	if(measuredPaths[i].editEnabled()) {
+dravingLines.eachLayer( function (layer) { 	// для каждого слоя этой группы выполним
+	if(layer.editEnabled()) {
 		edEnShapesCntr++;
-		//console.log(measuredPaths[i]);
-		//alert(measuredPaths[i].getLatLngs()[0]);
+		//console.log(layer);
 		if(realy) {
-			measuredPaths[i].editor.deleteShapeAt(measuredPaths[i].getLatLngs()[0]);
-			measuredPaths.splice(i,1);
+			layer.editor.deleteShapeAt(layer.getLatLngs()[0]);
 		}
 	}
-};
-//alert(measuredPaths);
+});
 return edEnShapesCntr;
 }	// end function delShapes
 
@@ -654,7 +650,6 @@ if(('feature' in e.target) && ('fileName' in e.target.feature.properties)) {
 else {
 	//currentRoute = e.target; 	// сделаем объект, по которому щёлкнули, текущим
 	routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату
-	if( measuredPaths.indexOf(e.target) === -1) measuredPaths.push(e.target); 	// положим объект в список редактируемых объектов. Тогда эта линия локально сохранится.
 }
 
 e.target.toggleEdit();
@@ -676,35 +671,51 @@ function doSaveMeasuredPaths() {
 Сохраняются только маршруты, не находящиеся в состоянии редактирования.
 Предполагается, что это для сохранения маршрутов/замеров расстояний на конкретном устройстве
 */
-var toSave = [];
-if(measuredPaths.length) { 	// если есть, что сохранять
-	var expires =  new Date();
-	expires.setTime(expires.getTime() + (60*24*60*60*1000)); 	// протухнет через два месяца
-	for(var i=0; i<measuredPaths.length; i++) {	// в глобальном списке маргрутов
-		if(!measuredPaths[i].editEnabled()) { 	// те, что не редактируются
-			toSave.push(measuredPaths[i].getLatLngs()); 	// сохраним координаты вершин
-		}
+let expires =  new Date();
+let toSave = L.geoJSON();
+//console.log('[doSaveMeasuredPaths] toSave original:',toSave);
+dravingLines.eachLayer( function (layer) { 	// для каждого слоя этой группы выполним
+	//console.log('[doSaveMeasuredPaths] layer:',layer,layer.editEnabled());
+	if(!layer.editEnabled()){	// режим редактирования этого слоя выключен
+		toSave.addData(layer.toGeoJSON());
+		expires.setTime(expires.getTime() + (60*24*60*60*1000)); 	// протухнет через два месяца
 	}
-}
-//alert(toSave.length);
+});
+toSave = toSave.toGeoJSON();	// здесь я реально не понял. А оно не geoJSON?
+//console.log('[doSaveMeasuredPaths] toSave:',toSave);
 toSave = JSON.stringify(toSave);
-//alert(toSave);
+// если expires осталась сейчас -- кука удалится, иначе -- поставится.
 document.cookie = "GaladrielMapMeasuredPaths="+toSave+"; expires="+expires+"; path=/; samesite=Lax"; 	// если сечас и нет, чего сохранять - грохнем куки
+//console.log('[doSaveMeasuredPaths] Save to cookie GaladrielMapMeasuredPaths',toSave);
 } 	// end function doSaveMeasuredPaths
 
 function doRestoreMeasuredPaths() {
-//var RestoreMeasuredPaths = JSON.parse(JSON.retrocycle(getCookie('GaladrielMapMeasuredPaths')));
-var RestoreMeasuredPaths = JSON.parse(getCookie('GaladrielMapMeasuredPaths'));
+let RestoreMeasuredPaths = JSON.parse(getCookie('GaladrielMapMeasuredPaths'));
 if(RestoreMeasuredPaths) {
-	if(L.Browser.mobile && L.Browser.touch) var weight = 15; 	// мобильный браузер
-	else var weight = 7; 	// стационарный браузер
-	for(var i=0; i<RestoreMeasuredPaths.length; i++) {	// в списке маршрутов
-		window.LAYER = L.polyline(RestoreMeasuredPaths[i],{showMeasurements: true,color: '#FDFF00',weight: weight,opacity: 0.5})
-		.addTo(map);
-		//window.LAYER.on('dblclick', L.DomEvent.stop).on('dblclick', window.LAYER.toggleEdit);
-        window.LAYER.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
-		measuredPaths.push(window.LAYER);
+	//console.log('[doRestoreMeasuredPaths] Restore from cookie',RestoreMeasuredPaths);
+	let weight = 7; 	// стационарный браузер
+	if(L.Browser.mobile && L.Browser.touch) weight = 15; 	// мобильный браузер
+	
+	try {	// там может быть кривой geoJSON, если в куки положили пустой объект. Да и мало ли...
+		dravingLines = L.geoJSON(RestoreMeasuredPaths);
 	}
+	catch(err) {
+		console.log('[doRestoreMeasuredPaths] Error on L.geoJSON(RestoreMeasuredPaths):',err.message);
+		return;
+	}
+	dravingLines.eachLayer( function (layer) { 	// для каждого слоя этой группы выполним
+		//console.log('[doRestoreMeasuredPaths] layer:',layer,typeof layer.getLatLngs);
+		if (layer instanceof L.Path) {	// Polygon, Polyline, Circle
+		//if(typeof layer.getLatLngs === "function"){	// Polilyne, есть getLatLngs, но не getLatLng
+			console.log('[doRestoreMeasuredPaths] Polilyne');
+			layer.options.color = '#FDFF00';
+			layer.options.opacity = 0.5;
+			layer.options.weight = weight;
+		    layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
+		    layer.on('editable:disable', function (event){doSaveMeasuredPaths();});
+		}
+	});
+	dravingLines.addTo(map);
 }
 }	// end function doRestoreMeasuredPaths
 
@@ -726,7 +737,7 @@ if(! fileName) { 	// внезапно имени нет, хотя в index по�
 }
 // унифицируем сохраняемое.
 if('feature' in currentRoute) { 	// currentRoute - часть чего-то большего, и сохранять надо это что-то большее. При этом считаем, что у этого есть filename
-	//console.log('Layer');
+	//console.log('Layer from gpx',currentRoute);
 	let oldFileName;
 	if(savedLayers[currentRoute.feature.properties.fileName]) {
 		toSaveRoute = savedLayers[currentRoute.feature.properties.fileName]; 	// это весь объект, где-то внутри которого есть currentRoute
@@ -742,18 +753,23 @@ if('feature' in currentRoute) { 	// currentRoute - часть чего-то бо
 	}
 }
 else { 	// 
-	//console.log('Polyline');
-	if(!('eachLayer' in currentRoute)) currentRoute = new L.layerGroup([currentRoute]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит, потому что всё же layergroup не layer
-	// дальше считаем, что у нас всё происходит в первом слое
-	let layers = currentRoute.getLayers()
-	if(!('feature' in layers[0])){
-		layers[0].feature = {'properties':{}}; 	// типа, оно будет JSONLayer
-		layers[0].feature.type = "Feature";
-	}
-	layers[0].feature.properties.fileName = fileName;
-	layers[0].feature.properties.desc = routeSaveDescr.value; 	// поле в интерфейсе
-	layers[0].feature.properties.isRoute = true; 	// укажем, что это путь
-	layers[0].feature.properties.name = fileName; 	// укажем, что это путь
+	//console.log('Created layer',currentRoute);
+	if(!('eachLayer' in currentRoute)) currentRoute = new L.layerGroup([currentRoute]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит, потому что всё же layergroup не layer. Да, впрочем, нормально?
+	currentRoute.eachLayer( function (layer) { 	// для каждого слоя этой группы выполним
+		if (layer instanceof L.Path) {	// Polygon, Polyline, Circle
+		//if(typeof layer.getLatLngs === "function"){	// Polilyne, есть getLatLngs, но не getLatLng
+			//console.log('Polyline',layer);
+			if(!('feature' in layer)){
+				layer.feature = {'properties':{}}; 	// типа, оно будет JSONLayer
+				layer.feature.type = "Feature";
+				layer.feature.properties.isRoute = true; 	// укажем, что это путь
+			}
+		}
+	})
+	if(!('feature' in currentRoute)) currentRoute.feature = {'properties':{}};
+	currentRoute.feature.properties.fileName = fileName;
+	currentRoute.feature.properties.desc = routeSaveDescr.value; 	// поле в интерфейсе
+	currentRoute.feature.properties.name = fileName; 	// 
 	toSaveRoute = currentRoute;
 }
 //		currentRoute.options.fileName = routeName; 	// установим это имя для внешнего объекта. ГДЕ ЭТО ИСПОЛЬЗУЕТСЯ? leaflet-omnivore.js строка 334
@@ -761,19 +777,19 @@ else { 	//
 
 // Теперь делаем JSON, из которого сделаем gpx
 // Сначала соберём в pointsFeatureCollection реальные точки из данных superclaster
-let pointsFeatureCollection; 	// 
+let pointsFeatureCollection = []; 	// 
 // поскольку мы хотим toGeoJSON() все имеющиеся точки, а слой может быть superclaster, то будем доставать точки из supercluster'а
 toSaveRoute.eachLayer( function (layer) { 	// для каждого слоя этой группы выполним
 	if('supercluster' in layer) { 	// это superclaster'изованный слой, с точками, надо полагать, ранее положенными в свойство layer.supercluster
 		//console.log(layer.supercluster.points);
-		pointsFeatureCollection = layer.supercluster.points; 	// считаем, что слой с точками только один. У нас, вроде, это так.
+		pointsFeatureCollection.concat(layer.supercluster.points);
 	}
 });
 //console.log(pointsFeatureCollection);
 
-//console.log(toSaveRoute);
+console.log(toSaveRoute);
 let route = toSaveRoute.toGeoJSON(); 	// сделаем из Editable объект geoJSON
-//console.log(route);
+console.log(route);
 
 if(pointsFeatureCollection) { 	// это был supercluster, поэтому в geoJSON неизвестно, сколько оригинальных точек, а не все. Но у нас с собой было...
 	for(let i=0; i<route.features.length;i++) {	// выкинем все точки
@@ -800,7 +816,8 @@ xhr.onreadystatechange = function() { //
 } // end function createGPX()
 
 function toGPX(geoJSON) {
-/* Create gpx route or track (createTrk==true) from geoJSON object
+/* Create gpx route or track (createTrk==true) from geoJSON object вместо этого LineString
+должна иметь свойство properties.isRoute == true, тогда рисуется маршрут, иначе -- путь (track)
 geoJSON must have a needle gpx attributes
 bounds - потому что geoJSON.getBounds() не работает
 */
@@ -931,6 +948,7 @@ if(layer.supercluster) {
 		bbox: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
 		zoom: map.getZoom()
 	}
+	//console.log('[realUpdClaster]',mapBox.bbox, mapBox.zoom)
 	layer.clearLayers();
 	layer.addData(layer.supercluster.getClusters(mapBox.bbox, mapBox.zoom)); 	// возвращает точки (и кластеры как точки) как GeoJSON Feature и загружает в слой
 }
@@ -1223,6 +1241,7 @@ currentMOBmarker.feature = { 	// укажем признак "текущий м�
 	type: 'Feature',
 	properties: {current: true},
 };
+//console.log('[MOBalarm] currentMOBmarker:',currentMOBmarker);
 mobMarker.addLayer(currentMOBmarker);
 if(!map.hasLayer(mobMarker)) mobMarker.addTo(map); 	// выставим маркер
 

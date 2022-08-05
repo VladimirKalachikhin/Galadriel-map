@@ -253,13 +253,12 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 					onChange="
 						if(L.Browser.mobile && L.Browser.touch) var weight = 10; 	// мобильный браузер
 						else var weight = 7; 	// стационарный браузер
-						//window.LAYER = map.editTools.startPolyline(false,{showMeasurements: true,color: '#ccff00',weight: weight,opacity: 0.7});
-						window.LAYER = map.editTools.startPolyline(false,{showMeasurements: true,color: '#FDFF00',weight: weight,opacity: 0.5});
-                        //console.log(window.LAYER);
-				        window.LAYER.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
-						measuredPaths.push(window.LAYER);
+						let layer = map.editTools.startPolyline(false,{showMeasurements: true,color: '#FDFF00',weight: weight,opacity: 0.5});
+				        layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
+					    layer.on('editable:disable', function (event){doSaveMeasuredPaths();});
+						dravingLines.addLayer(layer);
 						routeEraseButton.disabled=false;
-						currentRoute = window.LAYER; 	// сделаем объект, по которому щёлкнули, текущим
+						currentRoute = dravingLines; 	// сделаем объект, по которому щёлкнули, текущим
 						if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
 					"
 				>
@@ -284,6 +283,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 						routeControlsDeSelect();
 						this.disabled=true;
 						routeContinueButton.disabled=true;
+						doSaveMeasuredPaths();
 					"
 				>
 				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
@@ -530,8 +530,6 @@ var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
 var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
 var dashboardDepthMesTXT = '<?php echo $dashboardDepthMesTXT;?>';
 var dashboardMeterMesTXT = '<?php echo $dashboardMeterMesTXT;?>';
-// Прокладка
-var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
 // MOB
 var currentMOBmarker;
 const mob_markerImg = '<?php echo $mob_markerImg; ?>';
@@ -664,7 +662,7 @@ else {?>
 displayMap('default');
 <?php }?>
 
-// Восстановим показываемые маршруты
+// Восстановим показываемые из gpx маршруты
 if(SelectedRoutesSwitch.checked) {
 	let showRoutes = JSON.parse(getCookie('GaladrielRoutes')); 	// getCookie from galadrielmap.js
 	if(showRoutes) {
@@ -698,7 +696,8 @@ if( !downJob) dwnldJobZoom.innerText = map.getZoom(); 	// текущий мас�
 cover_zoom.innerText = map.getZoom()+8;
 
 // Рисование маршрута
-var measuredPaths = [];
+var dravingLines = L.layerGroup();	// слои, в которых, собственно, рисуются маршруты и путевые точки
+var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
 doRestoreMeasuredPaths(); 	// восстановим из кук сохранённые на устройстве маршруты
 routeControlsDeSelect(); 	// сделать кнопки рисования невыбранными
 routeContinueButton.disabled=true; 	// сделать кнопку "Продолжить" неактивной.
@@ -724,7 +723,7 @@ map.on('editable:vertex:dragstart',
 		window.navigator.vibrate(200); // Вибрировать 200ms
 	}
 )
-var doSaveMeasuredPathsProcess = setInterval(doSaveMeasuredPaths,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery
+//var doSaveMeasuredPathsProcess = setInterval(doSaveMeasuredPaths,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery
 
 // центр экрана
 let markSize = Math.round(window.innerWidth/5);
@@ -1342,6 +1341,7 @@ if(routeDisplayed.innerHTML.trim() == "") { 	// не показывается н
 /* в связи с возможностью наличия в trackDisplayed дублирующихся id --
 может быть, вместо document.getElementById(name) сделать цикл по потомкам routeDisplayed? */
 let node;
+if(changedRouteNames.error) return;
 for(const name of changedRouteNames){
 	node = document.getElementById(name); 	// однако, в trackDisplayed могут быть те же имена. Забить? в querySelector требуется экранирование пробелов и спец-символов. Это секс.
 	if(node.parentNode != routeDisplayed) continue; 	// элемент, конечно, всегда есть, нужно, чтобы он показывался

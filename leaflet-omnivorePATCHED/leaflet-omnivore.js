@@ -474,9 +474,12 @@ for (var i=0; i<links.length; i++) {
 	case "object":
 		for(var j=0; j<links[i].length; j++) { 	// для каждой ссылки
 			//console.log(links[i][j]);
-			if(links[i][j].attributes.length) 		var link = links[i][j].attributes.href.value.trim();
-			//if(links[i][j].attributes.length) 		var link = links[i][j].attributes.http.value.trim(); 	// зачем это было? Правильно же attributes.href?
-			else 	var link = links[i][j].innerHTML.trim();
+			let link;
+			if(links[i][j].attributes.length){
+				if(links[i][j].attributes.http)	link = links[i][j].attributes.http.value.trim(); 	// зачем это было? Правильно же attributes.href?
+				else if(links[i][j].attributes.href) link = links[i][j].attributes.href.value.trim();
+			}
+			else 	link = links[i][j].innerHTML.trim();
 			linkHTML += '<a href="'+link+'" target=”_blank” >';
 			var text = ' ', textAttr;
 			if( textAttr = links[i][j].getElementsByTagName('text')[0]) text = textAttr.textContent+'<br>'; 	// есть атрибут text
