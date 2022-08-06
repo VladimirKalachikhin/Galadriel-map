@@ -803,7 +803,7 @@ if(pointsFeatureCollection) { 	// это был supercluster, поэтому в 
 }
 //console.log(route);
 route = toGPX(route); 	// сделаем gpx 
-console.log(route);
+//console.log(route);
 
 var xhr = new XMLHttpRequest();
 xhr.open('POST', 'saveGPX.php', true); 	// Подготовим асинхронный запрос
