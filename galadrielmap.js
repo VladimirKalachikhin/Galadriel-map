@@ -676,7 +676,7 @@ let toSave = L.geoJSON();
 //console.log('[doSaveMeasuredPaths] toSave original:',toSave);
 dravingLines.eachLayer( function (layer) { 	// для каждого слоя этой группы выполним
 	//console.log('[doSaveMeasuredPaths] layer:',layer,layer.editEnabled());
-	if(!layer.editEnabled()){	// режим редактирования этого слоя выключен
+	if(!layer.editEnabled()){	// режим редактирования этого слоя выключен или отсутствует
 		toSave.addData(layer.toGeoJSON());
 		expires.setTime(expires.getTime() + (60*24*60*60*1000)); 	// протухнет через два месяца
 	}
@@ -706,12 +706,13 @@ if(RestoreMeasuredPaths) {
 	dravingLines.eachLayer( function (layer) { 	// для каждого слоя этой группы выполним
 		//console.log('[doRestoreMeasuredPaths] layer:',layer,typeof layer.getLatLngs);
 		if (layer instanceof L.Path) {	// Polygon, Polyline, Circle
-		//if(typeof layer.getLatLngs === "function"){	// Polilyne, есть getLatLngs, но не getLatLng
-			console.log('[doRestoreMeasuredPaths] Polilyne');
+			//console.log('[doRestoreMeasuredPaths] Polilyne');
 			layer.options.color = '#FDFF00';
 			layer.options.opacity = 0.5;
 			layer.options.weight = weight;
+			layer.options.showMeasurements = true;	// включить показ расстояний
 		    layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
+		    layer.on('editable:editing', function (event){event.target.updateMeasurements();});	// обновлять расстояния при редактировании
 		    layer.on('editable:disable', function (event){doSaveMeasuredPaths();});
 		}
 	});
@@ -763,12 +764,12 @@ else { 	//
 				layer.feature = {'properties':{}}; 	// типа, оно будет JSONLayer
 				layer.feature.type = "Feature";
 				layer.feature.properties.isRoute = true; 	// укажем, что это путь
+				layer.feature.properties.desc = routeSaveDescr.value; 	// поле в интерфейсе
 			}
 		}
 	})
 	if(!('feature' in currentRoute)) currentRoute.feature = {'properties':{}};
 	currentRoute.feature.properties.fileName = fileName;
-	currentRoute.feature.properties.desc = routeSaveDescr.value; 	// поле в интерфейсе
 	currentRoute.feature.properties.name = fileName; 	// 
 	toSaveRoute = currentRoute;
 }
@@ -787,9 +788,9 @@ toSaveRoute.eachLayer( function (layer) { 	// для каждого слоя э�
 });
 //console.log(pointsFeatureCollection);
 
-console.log(toSaveRoute);
+//console.log(toSaveRoute);
 let route = toSaveRoute.toGeoJSON(); 	// сделаем из Editable объект geoJSON
-console.log(route);
+//console.log(route);
 
 if(pointsFeatureCollection) { 	// это был supercluster, поэтому в geoJSON неизвестно, сколько оригинальных точек, а не все. Но у нас с собой было...
 	for(let i=0; i<route.features.length;i++) {	// выкинем все точки
@@ -802,7 +803,7 @@ if(pointsFeatureCollection) { 	// это был supercluster, поэтому в 
 }
 //console.log(route);
 route = toGPX(route); 	// сделаем gpx 
-//console.log(route);
+console.log(route);
 
 var xhr = new XMLHttpRequest();
 xhr.open('POST', 'saveGPX.php', true); 	// Подготовим асинхронный запрос

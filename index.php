@@ -254,6 +254,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 						if(L.Browser.mobile && L.Browser.touch) var weight = 10; 	// мобильный браузер
 						else var weight = 7; 	// стационарный браузер
 						let layer = map.editTools.startPolyline(false,{showMeasurements: true,color: '#FDFF00',weight: weight,opacity: 0.5});
+					    layer.on('editable:editing', function (event){event.target.updateMeasurements();});	// обновлять расстояния при редактировании
 				        layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
 					    layer.on('editable:disable', function (event){doSaveMeasuredPaths();});
 						dravingLines.addLayer(layer);
@@ -702,18 +703,17 @@ doRestoreMeasuredPaths(); 	// восстановим из кук сохранё�
 routeControlsDeSelect(); 	// сделать кнопки рисования невыбранными
 routeContinueButton.disabled=true; 	// сделать кнопку "Продолжить" неактивной.
 routeEraseButton.disabled=true; 	// сделать кнопку "Стереть" неактивной.
-
+/*
 map.on('editable:editing', // обязательный обработчик для editable для перересовывания расстояний при изменении пути
 	function (e) {
-		//console.log('обязательный обработчик для editable start by editable:editing');
-		//console.log(e);
-		//console.log(e.layer);
+		//console.log('обязательный обработчик для editable start by editable:editing',e);
+		// А это норм, что оно глобально?
 		if (e.layer instanceof L.Path) e.layer.updateMeasurements();
     }
 );
+*/
 map.on('editable:drawing:end', // выключать кнопку "Начать" при окончании рисования, сделать доступной "Продолжить"
 	function () {
-		//alert('Stop create'); 
 		routeCreateButton.checked=false;
 		routeContinueButton.disabled=false;
 	}
@@ -723,7 +723,6 @@ map.on('editable:vertex:dragstart',
 		window.navigator.vibrate(200); // Вибрировать 200ms
 	}
 )
-//var doSaveMeasuredPathsProcess = setInterval(doSaveMeasuredPaths,savePositionEvery); 	// велим сохранять позицию каждые savePositionEvery
 
 // центр экрана
 let markSize = Math.round(window.innerWidth/5);
