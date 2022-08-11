@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.2.0';
+$versionTXT = '2.2.1';
 /* 
 */
 // start gpsdPROXY
@@ -257,10 +257,14 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 					    layer.on('editable:editing', function (event){event.target.updateMeasurements();});	// обновлять расстояния при редактировании
 				        layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
 					    layer.on('editable:disable', function (event){doSaveMeasuredPaths();});
+						layer.feature = {'properties':{}}; 	// типа, оно будет JSONLayer
+						layer.feature.type = 'Feature';
+						layer.feature.properties.isRoute = true; 	// укажем, что это путь
 						dravingLines.addLayer(layer);
 						routeEraseButton.disabled=false;
 						currentRoute = dravingLines; 	// сделаем объект, по которому щёлкнули, текущим
-						if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
+						//if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
+						if(!routeSaveName.value) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было
 					"
 				>
 				<label for="routeCreateButton"><?php echo $routeControlsBeginTXT;?></label>
@@ -308,8 +312,9 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 			<div style="width:95%; padding: 1rem 0; text-align: center;">
 				<h3><?php echo $routeSaveTitle;?></h3>
 				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:95%;font-size:150%;'>
-				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='5' cols='255' placeholder='<?php echo $routeSaveDescrTXT;?>' style='width:93%;padding: 0.5rem 3%;'></textarea>
+				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='5' cols='255' placeholder='<?php echo $routeSaveDescrTXT;?>' style='width:93%;padding: 0.5rem 3%;'></textarea><br>
 				<button onClick='saveGPX();' type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
+				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' style="margin-top:5px;width:4rem;padding:0.2rem;float:left;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
 			</div>			
 		</div>
@@ -559,7 +564,7 @@ L.control.zoom({
 
 // Версия и пр. в правом нижнем углу
 var info = L.control.attribution({
-	prefix: 'GaladrielMap <?php echo $versionTXT;?> by Leaflet'
+	prefix: '<a href="https://youtu.be/kwMt4rjgsJs"  target=”_blank”><i>имевший цель, но чуждый смысла</i></a>'
 }
 ).addTo(map);
 
@@ -732,8 +737,10 @@ var centerMark = L.marker(map.getBounds().getCenter(), {
 		iconUrl: './img/Crosshair.svg',
 		iconSize:     [markSize, markSize], // size of the icon
 		iconAnchor:   [markSize/2, markSize/2], // point of the icon which will correspond to marker's location
-		className: "centerMarkIcon"	// galadrielmap.css
-	})
+		//className: "centerMarkIcon"	// galadrielmap.css
+	}),
+	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
+	zIndexOffset: -1000
 });
 
 // Местоположение
@@ -1211,7 +1218,7 @@ else { 	//console.log('режим MOB есть, пришли новые данн
 	}
 	// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
 	mobMarker.remove(); 	// убрать мультислой-маркер с карты
-	mobMarker = null; 	// реально удалим объект
+	mobMarker = null; 	// ритуальное действие. Возможно, оно воздействует на сборщик мусора, и приведёт к быстрому реальному удалению объекта, но это ни откуда не следует.
 	mobMarker = L.geoJSON(mobMarkerJSON); 	// создадим новый объект
 	mobMarker.eachLayer(function (layer) {
 		if(layer instanceof L.Marker)	{
@@ -1343,10 +1350,11 @@ let node;
 if(changedRouteNames.error) return;
 for(const name of changedRouteNames){
 	node = document.getElementById(name); 	// однако, в trackDisplayed могут быть те же имена. Забить? в querySelector требуется экранирование пробелов и спец-символов. Это секс.
+	//console.log('[routeUpdate] node:',name,node);
 	if(node.parentNode != routeDisplayed) continue; 	// элемент, конечно, всегда есть, нужно, чтобы он показывался
-	//console.log(node);
+	//console.log('[routeUpdate] replase node:',node);
 	savedLayers[name].remove(); 	// удалим слой с карты
-	savedLayers[name] = null; 	// удалим сам слой
+	savedLayers[name] = null; 	// обозначим, что слоя с таким именем у нас нет
 	displayRoute(node); 	// перересуем маршрут
 }
 } // end  function routeUpdate

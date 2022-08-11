@@ -325,7 +325,6 @@ ul { /* нужно, чтобы стили работали */
 }
 
 .centerMarkIcon {
-	z-index: auto;
 }
 
 .selectedTile {

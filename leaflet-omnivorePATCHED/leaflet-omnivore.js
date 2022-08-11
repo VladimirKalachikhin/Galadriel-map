@@ -123,6 +123,7 @@ function onload(err, response) {
         error = true;
     }
     layer.on('error', avoidReady);
+    //console.log('leaflet-omnivore [gpxLoad] onload response:',response.responseText);
     gpxParse(response.responseXML || response.responseText, options, layer);
 //    gpxParse(response.responseText, options, layer);
     layer.off('error', avoidReady);
@@ -271,18 +272,20 @@ function gpxParse(gpx, options, layer) {
 Создаёт layerGroup из двух слоёв, в одном - линии, в другом - точки.
 
 */
-//console.log(gpx);
-var xml = parseXML(gpx);
+//console.log('leaflet-omnivore [gpxParse] gpx:',gpx);
+var xml = parseXML(gpx);	// делает DOM XML, если gpx -- строка, иначе не делает ничего
 if (!xml) return layer.fire('error', {
     error: 'Could not parse GPX'
 });
+//console.log('leaflet-omnivore [gpxParse] xml:',xml);
 if(layer) {
+	//console.log('leaflet-omnivore [gpxParse] layer:',layer,layer instanceof L.layerGroup,"getLayers" in layer);
 	if("getLayers" in layer) { 	// это layerGroup
 		var featuresLayer = layer.getLayers()[0] || L.geoJson();
 	}
 	else {	// это одиночный Layer
 		var featuresLayer = layer;
-		layer = new L.layerGroup([featuresLayer]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит
+		layer = new L.layerGroup([featuresLayer]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит. Но, вообще-то, layer создаётся как layerGroup.
 	}
 }
 else {
@@ -291,14 +294,18 @@ else {
 }
 
 var geojson = toGeoJSON.gpx(xml);
-//console.log(geojson);
+//console.log('leaflet-omnivore [gpxParse] geojson:',geojson);
+
+if(layer.properties) Object.assign(layer.properties,geojson.properties);
+else layer.properties = geojson.properties;
+
 var Points=[];
 var Features=[];
 for(let i=0; i<geojson.features.length;i++) {
 	if(geojson.features[i].geometry.type=='Point') Points.push(geojson.features[i]);
 	else {
 		//console.log(geojson.features[i]);
-		if(geojson.features[i].properties.isRoute) geojson.features[i].properties.fileName = options.featureNameNode.innerText.trim();
+		//if(geojson.features[i].properties.isRoute) geojson.features[i].properties.fileName = options.featureNameNode.innerText.trim();	// оно не надо
 		Features.push(geojson.features[i]);
 	}
 }
@@ -622,7 +629,7 @@ if(iconName) {
 
 function kmlParse(gpx, options, layer) {
 /**/
-var xml = parseXML(gpx);
+var xml = parseXML(gpx);	// делает DOM XML, если gpx -- строка, иначе не делает ничего
 if (!xml) return layer.fire('error', {
     error: 'Could not parse KML'
 });
@@ -721,27 +728,29 @@ function corslite(url, callback, cors) {
     function isSuccessful(status) {
         return status >= 200 && status < 300 || status === 304;
     }
-
+	/*
     if (cors && !('withCredentials' in x)) {
         // IE8-9
         x = new window.XDomainRequest();
-
+		
         // Ensure callback is never called synchronously, i.e., before
         // x.send() returns (this has been observed in the wild).
         // See https://github.com/mapbox/mapbox.js/issues/472
+        // Это костыль к косяку?
         var original = callback;
         callback = function() {
             if (sent) {
-                original.apply(this, arguments);
+                original.apply(this, arguments);	// это эквивалентно просто вызову callback с её штатными аргументами
             } else {
                 var that = this, args = arguments;
-                setTimeout(function() {
+                setTimeout(function() {	// а это -- вызову callback после завершения текущего цикла корпоративной многозадачности, т.е. здесь -- заведомо не раньше, чем выполнится x.send(null);
                     original.apply(that, args);
                 }, 0);
             }
         }
+        
     }
-
+	*/
     function loaded() {
         if (
             // XDomainRequest
@@ -786,7 +795,9 @@ function corslite(url, callback, cors) {
 
     // GET is the only supported HTTP Verb by XDomainRequest and is the
     // only one supported here.
-    x.open('GET', url, true);
+    x.open('GET', url, true);	// асинхронно
+    //x.open('GET', url, true);	// синхронно
+	x.setRequestHeader("Cache-Control", "no-cache, no-store, max-age=0");	// иначе файл жестоко кешировался браузером, и никакого обновления не происходило
 
     // Send the request. Sending data is not supported.
     x.send(null);
@@ -1918,14 +1929,16 @@ var toGeoJSON = (function() {
         gpx: function(doc) {
         	//console.log(doc);
             var i,
-                tracks = get(doc, 'trk'),
+                tracks = get(doc, 'trk'),	// get() возвращает HTML Collection
                 routes = get(doc, 'rte'),
                 waypoints = get(doc, 'wpt'),
-                //metadata = get(doc, 'metadata'), 	// no way to save metadata to GeoJSON
+                metadata = get(doc, 'metadata'), 	// no way to save metadata to GeoJSON А, собственно, почему?
                 gj = fc(), 	// a feature collection
                 feature,
             	prevPoint; 	// для показа сегментов из одной точки будем делать из них сегмент из двух точек - своей и предыдущей
-			//console.log(routes);
+			//if(metadata.length) console.log('leaflet-omnivore [gpx:] metadata:',metadata,getProperties(metadata[0]));
+			//if(routes.length) console.log('leaflet-omnivore [gpx:] routes:',routes,getProperties(routes[0]));
+			gj.properties = getProperties(metadata[0]);
             for (i = 0; i < tracks.length; i++) {
                 feature = getTrack(tracks[i]);
                 if (feature) gj.features.push(feature);
@@ -1937,7 +1950,7 @@ var toGeoJSON = (function() {
             for (i = 0; i < waypoints.length; i++) {
                 gj.features.push(getPoint(waypoints[i]));
             }
-            //console.log(gj);
+			//console.log('leaflet-omnivore [gpx:] gj:',gj);
             function getPoints(node, pointname) {
                 var pts = get(node, pointname),
                     line = [],
@@ -2000,7 +2013,7 @@ var toGeoJSON = (function() {
             function getRoute(node) {
                 var line = getPoints(node, 'rtept');
                 if (!line.line) return;
-                //console.log(node);
+                //console.log('leaflet-omnivore [getRoute] node:',node,getProperties(node));
                 var routeObj = {
                     type: 'Feature',
                     properties: getProperties(node),
@@ -2010,7 +2023,7 @@ var toGeoJSON = (function() {
                     }
                 };
                 routeObj.properties.isRoute = true;
-                //console.log(routeObj);
+                //console.log('leaflet-omnivore [getRoute] routeObj:',routeObj);
                 return routeObj;
             }
             function getPoint(node) {
