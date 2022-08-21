@@ -4,6 +4,9 @@
 .wpIcon {
 	opacity: 0.7;
 }
+.wpIconEditable {
+	opacity: 0.3;
+}
 
 /* supercluster */
 .marker-cluster {

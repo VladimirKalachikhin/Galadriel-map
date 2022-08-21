@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.2.1';
+$versionTXT = '2.3.0';
 /* 
 */
 // start gpsdPROXY
@@ -248,21 +248,19 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 		<div class="leaflet-sidebar-pane" id="measure">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $measureHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<?php // Кнопки создания/редактирования маршрута ?>
-			<div id='routeControls' class="routeControls" style="padding:1rem 0 2rem; text-align: center;">
+			<div id='routeControls' class="routeControls" style="width:95%; padding:1rem 0 2rem; text-align: center;">
 				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
 					onChange="
-						if(L.Browser.mobile && L.Browser.touch) var weight = 10; 	// мобильный браузер
-						else var weight = 7; 	// стационарный браузер
-						let layer = map.editTools.startPolyline(false,{showMeasurements: true,color: '#FDFF00',weight: weight,opacity: 0.5});
-					    layer.on('editable:editing', function (event){event.target.updateMeasurements();});	// обновлять расстояния при редактировании
-				        layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
-					    layer.on('editable:disable', function (event){doSaveMeasuredPaths();});
-						layer.feature = {'properties':{}}; 	// типа, оно будет JSONLayer
-						layer.feature.type = 'Feature';
-						layer.feature.properties.isRoute = true; 	// укажем, что это путь
-						dravingLines.addLayer(layer);
+						console.log('[Кнопка Начать] currentRoute:',currentRoute,'dravingLines:',dravingLines);
+						pointsControlsDisable();	// отключить кнопки точек
+						if(!currentRoute) currentRoute = dravingLines; 	// 
+						let layer = map.editTools.startPolyline(false,drivedPolyLineOptions.options).addTo(currentRoute);
+						layer.options.color = '#FDFF00';
+						layer.feature = drivedPolyLineOptions.feature;
+						layer.on('editable:editing', function (event){event.target.updateMeasurements();});	// обновлять расстояния при редактировании
+						//layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
+						layer.on('click',tooggleEditRoute);
 						routeEraseButton.disabled=false;
-						currentRoute = dravingLines; 	// сделаем объект, по которому щёлкнули, текущим
 						//if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
 						if(!routeSaveName.value) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было
 					"
@@ -270,6 +268,8 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				<label for="routeCreateButton"><?php echo $routeControlsBeginTXT;?></label>
 				<input type="radio" name="routeControl" class='R' id="routeContinueButton"
 					onChange="
+						// по нажатию кнопки создаётся однократно срабатываемый обработчик клика
+						// на вершине объекта editable
 						map.once('editable:vertex:click', function f(e) { // это CancelableVertexEvent
 	                        //console.log(e);
 	                        //console.log(e.vertex);
@@ -281,14 +281,28 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 					"
 				>
 				<label for="routeContinueButton"><?php echo $routeControlsContinueTXT;?></label><br>
+				<div id='pointsButtons'>
+					<br>
+					<button id='ButtonSetpoint' onClick='createEditableMarker(pointIcon);' class='pointButton'><img src="leaflet-omnivorePATCHED/symbols/point.png" alt="<?php echo $okTXT;?>" width="100%"></button>
+					<button id='ButtonSetanchor' onClick='createEditableMarker(anchorIcon);' class='pointButton'><img src="leaflet-omnivorePATCHED/symbols/anchor.png" alt="<?php echo $okTXT;?>" width="100%"></button>
+					<button id='ButtonSetcaution' onClick='createEditableMarker(cautionIcon);' class='pointButton'><img src="leaflet-omnivorePATCHED/symbols/caution.png" alt="<?php echo $okTXT;?>" width="100%"></button><br>
+					<br>
+				</div>
+				<input id = 'editableObjectName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:90%;font-size:150%;'><br>
+				<textarea id = 'editableObjectDescr' title="<?php echo $editableObjectDescrTXT;?>" rows='3' cols='255' placeholder='<?php echo $editableObjectDescrTXT;?>' style='width:87%;padding: 0.5rem 3%;'></textarea><br>
 				<br>
 				<input type="radio" name="routeControl" id="routeEraseButton"
 					onChange="
-						delShapes(true);
-						routeControlsDeSelect();
+						delShapes(true);	// удалим все редактируемые объекты
+						routeControlsDeSelect();	// сделаем невыбранными кнопки управления рисованием маршрута
+						routeCreateButton.disabled=false; 	// - сделать доступной кнопку Начать
+						pointsControlsEnable();	// включим кнопки точек
 						this.disabled=true;
 						routeContinueButton.disabled=true;
-						doSaveMeasuredPaths();
+						// раз не осталось редактируемых объектов, редактирование завершено? Сохраним.
+						if(currentRoute==dravingLines)	doSaveMeasuredPaths();
+						//else saveGPX();	// ?но загруженный файл не будем сохранять, потому что он тогда перезагрузится, и перестанет быть текущим редактируемым
+						//currentRoute = null;	// ?не будем считать, что редактирование завершено
 					"
 				>
 				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
@@ -296,13 +310,13 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 			<?php // Поиск места ?>
 			<div style="width:95%;">
 				<div style="margin:0;padding:0;">
-					<button onClick='goToPositionField.value += "°";goToPositionField.focus();' style="width:2rem;height:1.5rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">°</span></button>
-					<button onClick='goToPositionField.value += "′";goToPositionField.focus();' style="width:2rem;height:1.5rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">′</span></button>
-					<button onClick='goToPositionField.value += "″";goToPositionField.focus();' style="width:2rem;height:1.5rem;margin:0 0rem 0 0;"><span style="font-weight: bold; font-size:150%;">″</span></button><br>
+					<button onClick='goToPositionField.value += "°";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">°</span></button>
+					<button onClick='goToPositionField.value += "′";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">′</span></button>
+					<button onClick='goToPositionField.value += "″";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0rem 0 0;"><span style="font-weight: bold; font-size:150%;">″</span></button><br>
 				</div>
-				<span style=""><?php echo $dashboardPosAltTXT;?></span><br>
-				<input id = 'goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:11rem;font-size:150%;'>			
-				<button id = 'goToPositionButton' onClick='flyByString(this.value);' style="width:3rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
+				<span style=""><?php echo $routePosTXT;?></span><br>
+				<input id='goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:11rem;font-size:150%;'>			
+				<button id='goToPositionButton' onClick='flyByString(this.value);' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
 			</div>
 			<div  style='width:98%;height:12rem;overflow:auto;margin:0.3rem 0;'>
 				<ul id='geocodedList' class='commonList'>
@@ -311,10 +325,14 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 			<?php // Сохранение маршрута ?>
 			<div style="width:95%; padding: 1rem 0; text-align: center;">
 				<h3><?php echo $routeSaveTitle;?></h3>
-				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:95%;font-size:150%;'>
-				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='5' cols='255' placeholder='<?php echo $routeSaveDescrTXT;?>' style='width:93%;padding: 0.5rem 3%;'></textarea><br>
-				<button onClick='saveGPX();' type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
-				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' style="margin-top:5px;width:4rem;padding:0.2rem;float:left;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px"></button>
+				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:90%;font-size:150%;'>
+				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='5' cols='255' placeholder='<?php echo $routeSaveDescrTXT;?>' style='width:87%;padding: 0.5rem 3%;'></textarea><br>
+				<br>
+				<button onClick="
+					saveGPX();
+					routeSaveName.value = '';
+					routeSaveDescr.value = '';" type='submit' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
+				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
 			</div>			
 		</div>
@@ -325,9 +343,9 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 			</ul>
 			<ul id="routeList" class='commonList'>
 <?php
-foreach($routeInfo as $routeName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
+foreach($routeInfo as $routeName) { 	// event -- предопределённый объект, который браузер передаёт в качестве первого аргумента в функцию-обработчик
 ?>
-					<li onClick='{selectTrack(event.currentTarget,routeList,routeDisplayed,displayRoute)}'<?php echo " id='$routeName'>$routeName"; // однако, имена в track и route могут совпадать...?></li>
+					<li onClick='selectTrack(event.currentTarget,routeList,routeDisplayed,displayRoute);'<?php echo " id='$routeName'>$routeName"; // однако, имена в track и route могут совпадать...?></li>
 <?php
 }
 ?>
@@ -484,7 +502,7 @@ if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = $collisionDistance;	/
 if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
 ?>
 <script> "use strict";
-
+// Глобальные переменные
 // Карта
 var defaultMap = 'OpenTopoMap'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте
@@ -517,6 +535,8 @@ var AISstatusTXT = {
 // Loader
 var downJob = false; 	// флаг - не создаётся ли задание на скачивание
 // Пути и маршруты
+var editorEnabled = false;	// семафор, что можно использовать редактирования
+// Путь
 var currentTrackServerURI = '<?php echo $currentTrackServerURI;?>'; 	// адрес для подключения к сервису, отдающему сегменты текущего трека
 var trackDirURI = '<?php echo $trackDir;?>'; 	// адрес каталога с треками
 var routeDirURI = '<?php echo $routeDir;?>'; 	// адрес каталога с маршрутами
@@ -526,9 +546,31 @@ if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked =
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch')); 	// getCookie from galadrielmap.js
 if(getCookie('GaladrielSelectedRoutesSwitch') == undefined) SelectedRoutesSwitch.checked = false; 	// показывать выбранные маршруты
 else SelectedRoutesSwitch.checked = Boolean(+getCookie('GaladrielSelectedRoutesSwitch')); 	// getCookie from galadrielmap.js
-var currentRoute; 	// объект Editable, по которому щёлкнули. Типа, текущий.
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.
+// Маршрут
+var drivedPolyLineOptions;
+var currentRoute; 	// L.layerGroup, по объекту Editable которого щёлкнули. Типа, текущий.
+{let weight;
+if(L.Browser.mobile && L.Browser.touch) weight = 10; 	// мобильный браузер
+else weight = 7; 	// стационарный браузер
+drivedPolyLineOptions = { options: {
+		showMeasurements: true,	// включить показ расстояний
+		//color: '#FDFF00',
+		weight: weight,
+		opacity: 0.5,
+	},
+	feature: {type: 'Feature',
+		properties: { 	// типа, оно будет JSONLayer
+			isRoute: true 	// укажем, что это путь
+		},
+	},
+};
+}
+var dravingLines = L.layerGroup();	// слои, в которых, собственно, рисуются маршруты и путевые точки
+dravingLines.properties = {};
+var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
+
 // Dashboard
 var lat; 	 	// широта
 var lng; 	 	// долгота, округлённые до 4-х знаков
@@ -586,8 +628,8 @@ var copyToClipboard = new L.Control.CopyToClipboard({ 	// класс опред�
 var sidebar = L.control.sidebar('sidebar',{
 	container: 'sidebar',
 }).addTo(map);
-sidebar.on("content", function(event){ 	// Событие открытия? панели 
-	//alert(event.id);
+sidebar.on("content", function(event){ 	// Событие открытия панели с информацией о вкладке. А такого же события закрытия нет.
+	//console.log('sidebar.on "content"',event.id);
 	switch(event.id){ 	// какую вкладку открыли
 	case 'download':
 		chkLoaderStatus();	// проверим загрузки
@@ -599,6 +641,9 @@ sidebar.on("content", function(event){ 	// Событие открытия? па
 		centerMarkOn(); 	// включить крестик в середине
 		if(CurrnoFollowToCursor === 1)CurrnoFollowToCursor = noFollowToCursor;  // запомним состояние глобального признака следования за курсором, если ещё не запоминали
 		noFollowToCursor = true; 	// отключим следование за курсором
+		editorEnabled = true;	// разрешим редактирования
+		routeCreateButton.disabled=false; 	// - сделать доступной кнопку Начать
+		pointsControlsEnable();	// включим кнопки точек
 		break;
 	case 'MOB': 	// человек за бортом
 		if(!map.hasLayer(mobMarker)) MOBalarm();
@@ -606,10 +651,18 @@ sidebar.on("content", function(event){ 	// Событие открытия? па
 	}
 });
 sidebar.on("closing", function(){
+	//console.log('sidebar closing',map.editTools.drawing(),currentRoute);
 	tileGrid.remove(); 	// удалить с карты тайловую сетку
 	if(CurrnoFollowToCursor !== 1) noFollowToCursor = CurrnoFollowToCursor; 	// восстановим признак следования за курсором
 	CurrnoFollowToCursor = 1;
 	centerMarkOff(); 	// выключить крестик в середине
+	if(currentRoute && delShapes()) editorEnabled='maybe';	// есть редактируемые слои
+	else {
+		editorEnabled=false; 	// если нет редактируемых слоёв -- запретим включать редактирования
+		currentRoute = null;
+		routeSaveName.value = '';
+		routeSaveDescr.value = '';
+	}
 });
 // end controls
 // Поведение карты
@@ -617,7 +670,6 @@ map.on('movestart zoomstart', function(event) { 	// карту начали дв
 	// функция отменяет следование карты за курсором, и устанавливает таймер, чтобы вернуть
 	// пытается отделить собственные движения карты от юзерских, включая изменение масштаба
 	if(userMoveMap) { 	// Убран флаг в куске, двигающем карту за курсором
-		//alert('Карту сдвинули событием '+event.type);
 		if(event.type == 'zoomstart') userMoveMap = 2; // юзер нажал zoom
 		else {
 			if(userMoveMap == 2) userMoveMap = true; 	// на это дело сработало movestart - игнорируем
@@ -636,7 +688,7 @@ map.on('zoomend', function(event) {
 	
 });
 <?php if($trackDir OR $routeDir) {?>
-map.on('moveend', updateClasters); 	// кластеризация точек POI
+map.on('moveend', updateClasters); 	// кластеризация точек POI, показывает кластеры в области просмотра
 <?php }?>    
 map.on("layeradd", function(event) {
 	//alert(tileGrid);
@@ -668,23 +720,6 @@ else {?>
 displayMap('default');
 <?php }?>
 
-// Восстановим показываемые из gpx маршруты
-if(SelectedRoutesSwitch.checked) {
-	let showRoutes = JSON.parse(getCookie('GaladrielRoutes')); 	// getCookie from galadrielmap.js
-	if(showRoutes) {
-		showRoutes.forEach(
-			function(layerName){ 	// 
-				for (let i = 0; i < routeList.children.length; i++) { 	// для каждого потомка списка routeList маршрутов
-					if (routeList.children[i].innerHTML==layerName) { 	// 
-						selectTrack(routeList.children[i],routeList,routeDisplayed,displayRoute)
-						break;
-					}
-				}
-			}
-		);
-	}
-}
-
 // Сетка
 var tileGrid = new L.GridLayer();
 tileGrid.on('tileload',chkColoreSelectedTile);	// подсветить тайлы, указанные в dwnldJob
@@ -701,13 +736,50 @@ tileGrid.createTile = function (coords) {
 if( !downJob) dwnldJobZoom.innerText = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
 cover_zoom.innerText = map.getZoom()+8;
 
+// Восстановим показываемые из gpx пути
+if(SelectedRoutesSwitch.checked) {
+	let showRoutes = JSON.parse(getCookie('GaladrielRoutes')); 	// getCookie from galadrielmap.js
+	if(showRoutes) {
+		showRoutes.forEach(
+			function(layerName){ 	// 
+				for (let i = 0; i < routeList.children.length; i++) { 	// для каждого потомка списка routeList маршрутов
+					if (routeList.children[i].innerHTML==layerName) { 	// 
+						selectTrack(routeList.children[i],routeList,routeDisplayed,displayRoute)
+						break;
+					}
+				}
+			}
+		);
+	}
+}
+
 // Рисование маршрута
-var dravingLines = L.layerGroup();	// слои, в которых, собственно, рисуются маршруты и путевые точки
-var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
+dravingLines.addTo(map);
 doRestoreMeasuredPaths(); 	// восстановим из кук сохранённые на устройстве маршруты
 routeControlsDeSelect(); 	// сделать кнопки рисования невыбранными
-routeContinueButton.disabled=true; 	// сделать кнопку "Продолжить" неактивной.
-routeEraseButton.disabled=true; 	// сделать кнопку "Стереть" неактивной.
+
+var pointIcon = L.icon({
+	iconUrl: 'leaflet-omnivorePATCHED/symbols/point.png',
+	iconSize: [32, 37],
+	iconAnchor: [16, 37],
+	tooltipAnchor: [16,-25],
+	className: 'wpIcon',
+});
+var anchorIcon = L.icon({
+	iconUrl: 'leaflet-omnivorePATCHED/symbols/anchor.png',
+	iconSize: [32, 37],
+	iconAnchor: [16, 37],
+	tooltipAnchor: [16,-25],
+	className: 'wpIcon'
+});
+var cautionIcon = L.icon({
+	iconUrl: 'leaflet-omnivorePATCHED/symbols/caution.png',
+	iconSize: [32, 37],
+	iconAnchor: [16, 37],
+	tooltipAnchor: [16,-25],
+	className: 'wpIcon'
+});
+
 /*
 map.on('editable:editing', // обязательный обработчик для editable для перересовывания расстояний при изменении пути
 	function (e) {
@@ -717,17 +789,23 @@ map.on('editable:editing', // обязательный обработчик дл
     }
 );
 */
-map.on('editable:drawing:end', // выключать кнопку "Начать" при окончании рисования, сделать доступной "Продолжить"
-	function () {
-		routeCreateButton.checked=false;
+map.on('editable:drawing:end',	function(event) {
+	 // выключать кнопку "Начать" при окончании рисования, сделать доступной "Продолжить"
+	//console.log('map.on [editable:drawing:end] event.target:',event.target);
+	/*
+	if(event.layer instanceof L.Marker){
+		console.log('[map.on editable:drawing:end] event.layer is a L.marker');
+	}
+	*/
+	if(event.layer instanceof L.Path){
+		//console.log('[map.on editable:drawing:end] event.layer is a L.Path');
 		routeContinueButton.disabled=false;
 	}
-);
-map.on('editable:vertex:dragstart', 
-	function (e) {
-		window.navigator.vibrate(200); // Вибрировать 200ms
-	}
-)
+	routeCreateButton.checked=false;
+});
+map.on('editable:vertex:dragstart',	function(event) {
+	window.navigator.vibrate(200); // Вибрировать 200ms
+});
 
 // центр экрана
 let markSize = Math.round(window.innerWidth/5);
@@ -771,24 +849,30 @@ var NoCursor = L.icon({
 	iconSize: [0, 0], // size of the icon
 });
 var cursor = L.marker(startCenter, {
-	'icon': GpsCursor,
+	icon: GpsCursor,
 	rotationAngle: heading, // начальный угол поворота маркера
 	rotationOrigin: "50% 50%", 	// вертим маркер вокруг центра
+	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
+	zIndexOffset: -500
 });
 // указатель скорости
 var velocityVector = L.marker(cursor.getLatLng(), {
-	'icon': velocityCursor,
+	icon: velocityCursor,
 	rotationAngle: heading, // начальный угол поворота маркера
-	opacity: 0.1
+	opacity: 0.1,
+	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
+	zIndexOffset: -501
 });
 velocityVectorLengthInMnDisplay.innerHTML = velocityVectorLengthInMn; 	// нарисуем цену вектора скорости на панели управления
 // Точность ГПС
 let GNSScircle = L.circle(cursor.getLatLng(), {
-	'radius': 10,
-	'color':'#000000',
-	'weight':0,
-	'opacity':0.1,
-	'fillOpacity':0.1
+	radius: 10,
+	color: '#000000',
+	weight: 0,
+	opacity: 0.1,
+	fillOpacity: 0.1,
+	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
+	zIndexOffset: -502
 });
 var positionCursor = L.layerGroup([GNSScircle,velocityVector,cursor]);
 

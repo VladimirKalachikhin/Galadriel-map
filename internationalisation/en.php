@@ -19,10 +19,12 @@ $measureHeaderTXT = 'Handle route';
 $routeControlsBeginTXT = 'Begin';
 $routeControlsContinueTXT = 'Continue';
 $routeControlsClearTXT = 'Erase';
+$routePosTXT = "Latitude &nbsp; Longitude";
 $goToPositionTXT = 'Flay map to';
 $routeSaveTXT = 'Label';
 $routeSaveTitle = 'Save route to a server';
-$routeSaveDescrTXT = 'Description to route';
+$routeSaveDescrTXT = 'Description to file';
+$editableObjectDescrTXT = 'Object description';
 
 $routesHeaderTXT = 'Routes and POI';
 
