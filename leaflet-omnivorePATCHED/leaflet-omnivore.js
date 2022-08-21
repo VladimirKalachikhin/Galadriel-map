@@ -274,7 +274,7 @@ function gpxParse(gpx, options, layer) {
 */
 //console.log('leaflet-omnivore [gpxParse] gpx:',gpx);
 var xml = parseXML(gpx);	// делает DOM XML, если gpx -- строка, иначе не делает ничего
-if (!xml) return layer.fire('error', {
+if (!xml) return windows.fire('error', {
     error: 'Could not parse GPX'
 });
 //console.log('leaflet-omnivore [gpxParse] xml:',xml);
@@ -285,12 +285,12 @@ if(layer) {
 	}
 	else {	// это одиночный Layer
 		var featuresLayer = layer;
-		layer = new L.layerGroup([featuresLayer]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит. Но, вообще-то, layer создаётся как layerGroup.
+		layer = L.layerGroup([featuresLayer]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит. Но, вообще-то, layer создаётся как layerGroup.
 	}
 }
 else {
 	var featuresLayer = L.geoJson();
-	var layer = new L.layerGroup([featuresLayer]);
+	var layer = L.layerGroup([featuresLayer]);
 }
 
 var geojson = toGeoJSON.gpx(xml);
@@ -309,20 +309,20 @@ for(let i=0; i<geojson.features.length;i++) {
 		Features.push(geojson.features[i]);
 	}
 }
-//console.log(options);
-//console.log(Points);
-//console.log(Features);
+//console.log('leaflet-omnivore [gpxParse] options:',options);
+//console.log('leaflet-omnivore [gpxParse] Points:',Points);
+//console.log('leaflet-omnivore [gpxParse] Features:',Features);
 var color = globalCurrentColor;
 globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет, from galadrielmap.js
 if(color == 0xFFFFFF) featuresLayer.options.color = 0x3388FF; 	//  умолчальный цвет линий
 else featuresLayer.options.color = color; 	//  цвет линий
-if(options.featureNameNode) { 	// li с именем файла, из которого делаем layer
+if(options && options.featureNameNode) { 	// li с именем файла, из которого делаем layer
 	options.featureNameNode.style.backgroundColor = '#'+('000000' + color.toString(16)).slice(-6);
 }
 featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
 featuresLayer.options.style = function(geoJsonFeature){return{color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6)};}; 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
 // Добавим в слой объекты
-addData(featuresLayer, Features); 	// добавим и покажем всё остальное
+featuresLayer.addData(Features); 	// добавим и покажем всё остальное
 if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
 //console.log(featuresLayer);
 // Теперь добавим точки
@@ -332,6 +332,19 @@ if(Points.length) {
 	pointsLayer.options.pointToLayer = function (geoJsonPoint, latlng) { 	// функция, вызываемая для каждой точки при её создании
 		var parameters = {color: pointsLayer.options.color}; 	// таким образом мы забросим цвет в создание маркера
 		var marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
+		//marker.on('dblclick', L.DomEvent.stop).on('dblclick', tooggleEditRoute);
+		//marker.on('click', L.DomEvent.stop).on('click', tooggleEditRoute); 	// galadrielmap.js чёта stop не работает?
+		marker.on('click', tooggleEditRoute); 	// galadrielmap.js
+		marker.on('editable:dragstart', function(event){
+			// Нужно будет перестроить superclaster с точкой с новыми координатами
+			removeFromSuperclaster(pointsLayer,event.target); 	// galadrielmap.js
+		});
+		marker.on('editable:dragend', function(event){
+			// Нужно перестроить superclaster с точкой с новыми координатами
+			//console.log('leaflet-omnivore.js [marker.on editable:dragend] pointsLayer:',pointsLayer);
+			pointsLayer.supercluster.points.push(event.target.toGeoJSON());
+			pointsLayer.supercluster = createSuperclaster(pointsLayer.supercluster.points); 	// galadrielmap.js создание нового и загрузка в суперкластер точек 		
+		});
 		return marker;
 	};
 	doClastering(pointsLayer, Points); 	// закластеризуем точки
@@ -348,13 +361,15 @@ function doClastering(layer, geojson) {
 /* Кластеризует wpt в layer, если они там есть 
 Требует наличия supercluster.js
 */
+/*
 const index = new Supercluster({
     log: false, 	// вывод лога в консоль
     radius: 40,
     extent: 256,
     maxZoom: 15,
 }).load(geojson); 	// собственно, загрузка в суперкластер точек index
-layer.supercluster = index;
+*/
+layer.supercluster = createSuperclaster(geojson);	// galadrielmap.js
 layer.on('click', (e) => { 	// клик по любому значку (вообще по любому месту?) :-( потому что нам нужен layer
 	//console.log('leaflet-omnivore.js : doClastering start by click');
 	//console.log(e);
@@ -429,14 +444,14 @@ else { 	// это индивидуальная точка
 	// Информация о - PopUp
 	//console.log(geoJsonPoint.properties.link);
 	var popUpHTML = '';
-	if(geoJsonPoint.properties.number) popUpHTML =geoJsonPoint.properties.number;
+	if(geoJsonPoint.properties.number) popUpHTML = geoJsonPoint.properties.number;
 	if(geoJsonPoint.properties.name) popUpHTML = "<b>"+geoJsonPoint.properties.name+"</b> "+popUpHTML;
 	if(!popUpHTML) popUpHTML = latlng.lat+" "+latlng.lng;
-	//console.log(latlng);
+	//console.log('leaflet-omnivore.js [getMarkerToPoint] latlng:',latlng);
 	popUpHTML = "<span style='font-size:120%'; onClick='doCopyToClipboard(\""+latlng.lat+" "+latlng.lng+"\")'>" + popUpHTML + "</span><br>";
 	//popUpHTML = "<span style='font-size:120%';'>" + popUpHTML + "</span><br>";
 
-	if(geoJsonPoint.properties.cmt) popUpHTML = 		popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.cmt.replace(/\n/g, '<br>')+"</p>"; 	// gpx description;
+	if(geoJsonPoint.properties.cmt) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.cmt.replace(/\n/g, '<br>')+"</p>"; 	// gpx description;
 	if(geoJsonPoint.properties.desc) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
 	if(geoJsonPoint.properties.notes) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.notes.replace(/\n/g, '<br>')+"</p>"; 	// csv description
 	if(geoJsonPoint.properties.description) popUpHTML = popUpHTML+"<p>"+geoJsonPoint.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
@@ -520,28 +535,41 @@ return popUpHTML;
 function getPopUpToLine(feature, layer) {
 /* A Function that will be called once for each created Feature
 */
-//console.log(feature);
-//console.log(layer);
+//console.log('leaflet-omnivore [getPopUpToLine] feature:',feature,'layer:',layer);
 if(feature.properties && feature.properties.isRoute) { 	// это маршрут.
-	layer.options.showMeasurements=true;
-	//layer.options.editable = true;	//
+	//console.log('leaflet-omnivore [getPopUpToLine] drivedPolyLineOptions:',drivedPolyLineOptions,globalCurrentColor);
+	Object.assign(layer.options,drivedPolyLineOptions.options);	// drivedPolyLineOptions из index.php
+	Object.assign(layer.feature.properties,drivedPolyLineOptions.feature.properties);	// drivedPolyLineOptions из index.php
+	layer.on('editable:editing', function (event){event.target.updateMeasurements();});	// обновлять расстояния при редактировании
 	//layer.on('dblclick', L.DomEvent.stop).on('dblclick', tooggleEditRoute);
-	layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute); 	// galadrielmap.js
-	//console.log(layer);
+	//layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute); 	// galadrielmap.js чёта stop не работает?
+	layer.on('click', tooggleEditRoute); 	// galadrielmap.js
 }
 if(feature.properties) {
+	// Подпись - Tooltip
+	if(feature.properties.name) {
+		layer.bindTooltip(feature.properties.name,{ 	
+			permanent: true,  	// всегда показывать
+			direction: 'auto', 
+			//direction: 'center', 
+			//offset: [0,-15],
+			className: 'wpTooltip', 	// css class
+			opacity: 0.75
+		});
+	}
+	// PopUp
 	var popUpHTML = '';
 	if(feature.properties.number) popUpHTML = " <span style='font-size:120%;'>"+feature.properties.number+"</span> "+popUpHTML;
 	if(feature.properties.cmt) popUpHTML += "<p>"+feature.properties.cmt+"</p>";
 	if(feature.properties.desc) popUpHTML += "<p>"+feature.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
 	if(feature.properties.description) popUpHTML += "<p>"+feature.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
 	popUpHTML += getLinksHTML(feature); 	// приклеим ссылки
-	if(feature.properties.name) popUpHTML = "<b>"+feature.properties.name+"</b> "+popUpHTML;
+	//if(feature.properties.name) popUpHTML = "<b>"+feature.properties.name+"</b> "+popUpHTML;
 	if(popUpHTML) {
-		//alert(popUpHTML);
 		layer.bindPopup(popUpHTML+'<br>');
 	}
 }
+//console.log('leaflet-omnivore [getPopUpToLine] layer:',layer);
 } // end function getPopUpToLine
 
 // определение имени файла этого скрипта
@@ -572,7 +600,7 @@ if(iconName) {
 			else throw new Error('Network response was not ok for icon '+iconName); 	// Перейдём сразу к .catch
 		})
 		.then(function(blob){
-			var iconURL = URL.createObjectURL(blob);
+			var iconURL = URL.createObjectURL(blob);	// здесь получается blob -- такой хитрый Data URL. В результате его понимает L.icon как ссылку, но файл уже загружен. Вопрос выгрузки остаётся открытым: ведь оно нужновсё время после загрузки, и загружается только один раз. https://developer.mozilla.org/ru/docs/Web/API/URL/createObjectURL
 			//console.log(iconURL);
 			var icon = L.icon({
 				iconUrl: iconURL,

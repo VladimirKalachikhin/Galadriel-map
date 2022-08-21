@@ -19,10 +19,12 @@ $measureHeaderTXT = 'Маршрут';
 $routeControlsBeginTXT = 'Начать';
 $routeControlsContinueTXT = 'Продолжить';
 $routeControlsClearTXT = 'Стереть';
+$routePosTXT = "Широта &nbsp; Долгота";
 $routeSaveTXT = 'Название';
 $goToPositionTXT = 'Переместить карту в';
 $routeSaveTitle = 'Сохранить маршрут на сервере';
-$routeSaveDescrTXT = 'Описание маршрута';
+$routeSaveDescrTXT = 'Описание файла';
+$editableObjectDescrTXT = 'Описание объекта';
 
 $routesHeaderTXT = 'Места и маршруты';
 

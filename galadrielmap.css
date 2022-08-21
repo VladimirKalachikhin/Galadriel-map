@@ -280,7 +280,7 @@ ul { /* нужно, чтобы стили работали */
     display: inline-block;
 	font-weight: bold;
 	font-size: 120%;
-	width: 7rem;
+	width: 47%;
     border: 1px solid;
     border-radius: 5px;
     text-align: center;
@@ -289,12 +289,12 @@ ul { /* нужно, чтобы стили работали */
 .routeControls > input[type="radio"].L + label {
     /*border-right: none;*/
     border-radius: 5px 0px 0px 5px;
-    width:7rem;
+    width:47%;
 }
 .routeControls > input[type="radio"].R + label {
     /*border-left: none;*/
     border-radius: 0px 5px 5px 0px;
-    width:7rem;
+    width:47%;
 }
 .routeControls > input[type="radio"]:checked + label {
 	background-color: rgb(233, 233, 233);
@@ -330,5 +330,22 @@ ul { /* нужно, чтобы стили работали */
 .selectedTile {
 	background-color: rgba(0,200,255,0.35);
 }
+
 .scaledText {
+}
+
+.pointButton {
+	width:2rem;
+	padding:0.2rem;
+	margin:0 1rem;
+}
+
+.pointButton:disabled {
+	opacity: 0.2;
+}
+
+.okButton {
+	width:2rem;
+	padding:0.2rem;
+	margin:0 1rem;
 }
