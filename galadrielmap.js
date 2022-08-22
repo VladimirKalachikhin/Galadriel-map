@@ -932,6 +932,12 @@ if(RestoreMeasuredPaths) {
 	dravingLines.clearLayers();
 	dravingLines = omnivore.gpx.parse(RestoreMeasuredPaths);	// leaflet-omnivore.js
 	//console.log('[doRestoreMeasuredPaths] dravingLines',dravingLines);
+	dravingLines.eachLayerRecursive(function (layer){
+		//console.log('[doRestoreMeasuredPaths] layer',layer);
+		if(layer.feature && (layer.feature.geometry.type == 'LineString' || layer.feature.geometry.type == 'Line')){
+			layer.options.color = '#FDFF00';
+		}
+	});
 	dravingLines.addTo(map);
 }
 }	// end function doRestoreMeasuredPaths
@@ -1001,7 +1007,6 @@ if(!currentRoute) { 	// глобальная переменная, присва�
 			pointsFeatureCollection = pointsFeatureCollection.concat(layer.supercluster.points);
 		}
 		if(layer instanceof L.LayerGroup) {	// это LayerGroup
-		//if('eachLayer' in layer) {	// это LayerGroup
 			pointsFeatureCollection = pointsFeatureCollection.concat(collectSuperclasterPoints(layer));
 		}
 	}
@@ -1016,7 +1021,7 @@ if(! fileName) { 	// внезапно имени нет, хотя в index по�
 	routeSaveName.value = fileName;
 }
 
-if(!('eachLayer' in currentRoute)) currentRoute = new L.LayerGroup([currentRoute]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит, потому что всё же layergroup не layer. Да, впрочем, нормально?
+if(!(currentRoute  instanceof L.LayerGroup)) currentRoute = new L.LayerGroup([currentRoute]); 	// попробуем сменть тип на layerGroup, но это обычно боком выходит, потому что всё же layergroup не layer. Да, впрочем, нормально?
 
 // Теперь делаем JSON, из которого сделаем gpx
 // Сначала соберём в pointsFeatureCollection реальные точки из данных superclaster
@@ -1656,6 +1661,19 @@ else {
 }
 return res;
 } // end function hasLayerRecursively
+
+L.LayerGroup.include({	
+	// рекурсивный eachLayer. Их просили это сделать с 2016 года, но они только плачь по Украине осилили. 
+	// https://github.com/Leaflet/Leaflet/issues/4461
+    eachLayerRecursive: function(method, context) {
+        this.eachLayer(function(layer) {
+            if (layer._layers)
+                layer.eachLayerRecursive(method, context);
+            else
+                method.call(context, layer);
+        });
+    }
+});
 
 /**
 Эти казлы так и ниасилили юникод в JavaScript. Багу более 15 лет.

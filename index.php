@@ -251,18 +251,19 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 			<div id='routeControls' class="routeControls" style="width:95%; padding:1rem 0 2rem; text-align: center;">
 				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
 					onChange="
-						//console.log('[Кнопка Начать] currentRoute:',currentRoute,'dravingLines:',dravingLines);
 						pointsControlsDisable();	// отключить кнопки точек
 						if(!currentRoute) currentRoute = dravingLines; 	// 
-						let layer = map.editTools.startPolyline(false,drivedPolyLineOptions.options).addTo(currentRoute);
+						let layer = map.editTools.startPolyline(false,drivedPolyLineOptions.options);
 						layer.options.color = '#FDFF00';
 						layer.feature = drivedPolyLineOptions.feature;
 						layer.on('editable:editing', function (event){event.target.updateMeasurements();});	// обновлять расстояния при редактировании
 						//layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
 						layer.on('click',tooggleEditRoute);
+						layer.addTo(currentRoute);
 						routeEraseButton.disabled=false;
 						//if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
 						if(!routeSaveName.value) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было
+						//console.log('[Кнопка Начать] layer:',layer);
 					"
 				>
 				<label for="routeCreateButton"><?php echo $routeControlsBeginTXT;?></label>
