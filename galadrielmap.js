@@ -801,6 +801,7 @@ else {
 			//saveGPX();
 		}
 		else {
+			//console.log('[tooggleEditRoute] Сохраняется кука');
 			doSaveMeasuredPaths();
 		};
 
@@ -825,6 +826,7 @@ else {
 			}
 		};
 	}
+	else pointsControlsEnable();
 }
 } // end function tooggleEditRoute
 
@@ -898,7 +900,7 @@ function findEditDisabled(layer){
 			expires.setTime(expires.getTime() + (60*24*60*60*1000)); 	// протухнет через два месяца
 		}
 	}
-}
+} // end function findEditDisabled
 //console.log('[doSaveMeasuredPaths] toSave original:',toSave);
 dravingLines.eachLayer(findEditDisabled);
 toSave.properties = dravingLines.properties;	// на самом деле -- чисто чтобы там было properties, оно нигде не используется
@@ -938,7 +940,10 @@ function bindPopUptoEditable(layer){
 // Подпись - Tooltip
 let tooltip = layer.getTooltip();
 if(tooltip){
-	if(layer.feature.properties.name) tooltip.setTooltipContent(layer.feature.properties.name);
+	if(layer.feature.properties.name) {
+		//console.log('[bindPopUptoEditable] изменение tooltip',tooltip);
+		layer.setTooltipContent(layer.feature.properties.name);
+	}
 	else layer.unbindTooltip();
 }
 else {
@@ -970,7 +975,7 @@ if(layer.feature.properties.cmt) popUpHTML += "<p>"+layer.feature.properties.cmt
 if(layer.feature.properties.desc) popUpHTML += "<p>"+layer.feature.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
 if(layer.feature.properties.ele) popUpHTML += "<p>Alt: "+layer.feature.properties.ele+"</p>"; 	// gpx elevation
 //popUpHTML += getLinksHTML(feature); 	// приклеим ссылки Пока не реализовано
-layer.unbindPopup();
+layer.unbindPopup();	// если, допустим, описание было, а потом не стало
 if(popUpHTML) {
 	//console.log('[bindPopUptoEditable] binding popup',popUpHTML);
 	layer.bindPopup(popUpHTML+'<br>');

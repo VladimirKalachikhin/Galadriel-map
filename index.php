@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.3.0';
+$versionTXT = '2.3.1';
 /* 
 */
 // start gpsdPROXY
@@ -251,7 +251,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 			<div id='routeControls' class="routeControls" style="width:95%; padding:1rem 0 2rem; text-align: center;">
 				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
 					onChange="
-						console.log('[Кнопка Начать] currentRoute:',currentRoute,'dravingLines:',dravingLines);
+						//console.log('[Кнопка Начать] currentRoute:',currentRoute,'dravingLines:',dravingLines);
 						pointsControlsDisable();	// отключить кнопки точек
 						if(!currentRoute) currentRoute = dravingLines; 	// 
 						let layer = map.editTools.startPolyline(false,drivedPolyLineOptions.options).addTo(currentRoute);

@@ -432,9 +432,9 @@ else { 	// это индивидуальная точка
 		marker.bindTooltip(geoJsonPoint.properties.name,{ 	
 			permanent: true,  	// всегда показывать
 			//direction: 'auto', 
-			direction: 'left', 
-			//offset: [-16,-25],
-			offset: [-32,0],
+			//direction: 'left', 
+			direction: 'top', 
+			offset: [-16,0],
 			className: 'wpTooltip', 	// css class
 			opacity: 0.75
 		});
@@ -560,6 +560,7 @@ if(feature.properties) {
 	// PopUp
 	var popUpHTML = '';
 	if(feature.properties.number) popUpHTML = " <span style='font-size:120%;'>"+feature.properties.number+"</span> "+popUpHTML;
+	if(feature.properties.name) popUpHTML = "<b>"+feature.properties.name+"</b> "+popUpHTML;
 	if(feature.properties.cmt) popUpHTML += "<p>"+feature.properties.cmt+"</p>";
 	if(feature.properties.desc) popUpHTML += "<p>"+feature.properties.desc.replace(/\n/g, '<br>')+"</p>"; 	// gpx description
 	if(feature.properties.description) popUpHTML += "<p>"+feature.properties.description.replace(/\n/g, '<br>')+"</p>"; 	// kml description
