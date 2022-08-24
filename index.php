@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.3.1';
+$versionTXT = '2.3.2';
 /* 
 */
 // start gpsdPROXY
@@ -253,6 +253,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 					onChange="
 						pointsControlsDisable();	// отключить кнопки точек
 						if(!currentRoute) currentRoute = dravingLines; 	// 
+						console.log('[Кнопка Начать] currentRoute:',currentRoute._leaflet_id,'dravingLines:',dravingLines._leaflet_id);
 						let layer = map.editTools.startPolyline(false,drivedPolyLineOptions.options);
 						layer.options.color = '#FDFF00';
 						layer.feature = drivedPolyLineOptions.feature;
@@ -331,8 +332,10 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 				<br>
 				<button onClick="
 					saveGPX();
+					currentRoute = null;
 					routeSaveName.value = '';
-					routeSaveDescr.value = '';" type='submit' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
+					routeSaveDescr.value = '';" 
+					type='submit' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
 			</div>			

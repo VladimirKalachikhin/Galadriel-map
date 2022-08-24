@@ -1,27 +1,38 @@
 "use strict"
 /* Функции
-getCookie(name)
-doSavePosition() 	Сохранение положения
+getCookie(name)		возвращает cookie с именем name, если есть, если нет, то undefined
+doSavePosition() 	Сохранение положения, списка показываемых карт, маршрутов и используемых параметров
 
 selectMap(node) 	Выбор карты из списка имеющихся
 deSelectMap(node) 	Прекращение показа карты, и возврат её в список имеющихся.
 displayMap(mapname) Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
 removeMap(mapname)
 
-selectTrack()
-deSelectTrack()
-displayTrack()
-displayRoute(routeNameNode)
+selectTrack()		Выбор трека из списка имеющихся. 
+deSelectTrack()		Прекращение показа трека, и возврат его в список имеющихся.
+displayTrack()		рисует трек с именем в trackNameNode
+displayRoute(routeNameNode)	рисует маршрут или места с именем routeName 
 updateCurrTrack()
 
+XYentryFields(element)	Генерация полей ввода списка тайлов для загрузки
+loaderListPopulate(element)	Заполнение списка тайлов для загрузки путём клика по тайлу 
+coloreSelectedTiles()
+chkColoreSelectedTile(tileEvent)
 createDwnldJob() 	создаёт файлы заданий и запускает загрузчик
 chkLoaderStatus() 	запускает загрузчик
 
 routeControlsDeSelect()
-delShapes(realy)
+pointsControlsDisable()
+pointsControlsEnable()
+getGPXicon(gpxtype)
+delShapes(realy,inLayer=null)	Удаляет полилинии в состоянии редактирования, если realy = true
+createSuperclaster(geoJSONpoints)
+removeFromSuperclaster(superclasterLayer,point)
 tooggleEditRoute(e)
+createEditableMarker(Icon)
 doSaveMeasuredPaths()
 doRestoreMeasuredPaths()
+bindPopUptoEditable(layer)
 
 saveGPX() 			Сохраняет на сервере маршрут из объекта currentRoute
 toGPX(geoJSON,createTrk) Create gpx route or track (createTrk==true) from geoJSON object
@@ -45,23 +56,32 @@ doCopyToClipboard() Копирование в буфер обмена
 doCurrentTrackName(liID)
 doNotCurrentTrackName(liID)
 
-loggingRun() запускает/останавливает запись трека
-loggingCheck(logging='logging.php')
+loggingRun() 		запускает/останавливает запись трека
+loggingCheck(logging='logging.php')	включает и выключает запись трека, а также проверяет, ведётся ли запись 
 
 coverage()
 
 MOBalarm()
-clearCurrentStatus()
+clearCurrentStatus()	удаляет признак "текущий маркер" у всех маркеров мультислоя mobMarker
 MOBclose()
 delMOBmarker()
 sendMOBtoServer()
 
 bearing(latlng1, latlng2)
 
+atou(b64)		ASCII to Unicode (decode Base64 to original data)
+utoa(data)		Unicode to ASCII (encode data to Base64)
+
 realtime(dataUrl,fUpdate)
 
 Классы
 L.Control.CopyToClipboard
+hasLayerRecursive(what)
+eachLayerRecursive()
+
+///////// for collision test purpose /////////
+displayCollisionAreas(selfArea=null)
+///////// for collision test purpose /////////
 */
 /*
 // определение имени файла этого скрипта, например, чтобы знать пути на сервере
@@ -725,7 +745,7 @@ else target = e;	// вызвали просто как функцию
 let layerName = '';
 currentRoute = null;
 //console.log('[tooggleEditRoute] dravingLines',dravingLines);
-if(hasLayerRecursively(dravingLines,target)){	// Щёлкнули по одному из нарисованных объектов. hasLayerRecursively потому что omnivore импортирует gpx как L.LayerGroup с двумя слоями: точки и всё остальное
+if(dravingLines.hasLayerRecursive(target)){	// Щёлкнули по одному из нарисованных объектов. hasLayerRecursive потому что omnivore импортирует gpx как L.LayerGroup с двумя слоями: точки и всё остальное
 	//console.log('[tooggleEditRoute] Щёлкнули на объекте',target._leaflet_id,target,'в dravingLines',dravingLines._leaflet_id,dravingLines);
 	currentRoute = dravingLines;
 	layerName = new Date().toJSON(); 	// запишем в поле ввода имени дату
@@ -735,8 +755,8 @@ else {
 		//console.log('[tooggleEditRoute] layerName=',layerName);
 		// Почему-то savedLayers[layerName] instanceof L.layerGroup) не работает,
 		// поэтому проверяем наличие специфического метода. Потому что оно L.LayerGroup.
-		if((savedLayers[layerName] instanceof L.LayerGroup) && hasLayerRecursively(savedLayers[layerName],e.target)){
-		//if((typeof savedLayers[layerName].getLayers  == 'function') && hasLayerRecursively(savedLayers[layerName],e.target)){
+		if((savedLayers[layerName] instanceof L.LayerGroup) && savedLayers[layerName].hasLayerRecursive(e.target)){
+		//if((typeof savedLayers[layerName].getLayers  == 'function') && savedLayers[layerName].hasLayerRecursive(e.target)){
 			//console.log('[tooggleEditRoute] Щёлкнули на объекте',target._leaflet_id,target,'в',savedLayers[layerName]._leaflet_id,layerName,savedLayers[layerName]);
 			currentRoute = savedLayers[layerName];
 			routeSaveName.value = layerName; 	// запишем в поле ввода имени имя загруженного файла
@@ -809,7 +829,7 @@ else {
 		routeEraseButton.disabled=true; 	// - сделать недоступной кнопку Удалить
 		routeContinueButton.disabled=true; 	//  - сделать недоступной кнопку Продолжить
 		if(editorEnabled==='maybe') editorEnabled=false;	// панель закрыли во время редактирования, потом редактирование завершили
-		currentRoute = null;
+		//currentRoute = null;	// иначе saveGPX не сработает
 		//routeSaveName.value = '';	// если нет автоматического сохранения gpx, то надо оставить
 		//routeSaveDescr.value = '';
 		editableObjectName.value = '';
@@ -1642,38 +1662,6 @@ if(bearing >= 360) bearing = bearing-360;
 return bearing;
 } // end function bearing
 
-// Различные костыли к косякам javascript и leaflet
-function hasLayerRecursively(where,what){
-// Почему-то layer instanceof L.layerGroup) не работает,
-// поэтому проверяем наличие специфического метода. Потому что оно L.LayerGroup.
-//console.log('[hasLayerRecursively] ищет в',where._leaflet_id,'объект',what._leaflet_id);
-let res = false;
-if (where.hasLayer(what)) return where;
-else {
-	//console.log('[hasLayerRecursively] where.getLayers()',where.getLayers());
-	for(const layer of where.getLayers()){
-		//console.log('[hasLayerRecursively] layer._leaflet_id',layer._leaflet_id);
-		if(!(layer instanceof L.LayerGroup)) continue;	// это не LayerGroup
-		//if(typeof layer.getLayers  !== 'function') continue;	// это не LayerGroup
-		if(layer.hasLayer(what)) return layer;
-		else res = hasLayerRecursively(layer,what);
-	}
-}
-return res;
-} // end function hasLayerRecursively
-
-L.LayerGroup.include({	
-	// рекурсивный eachLayer. Их просили это сделать с 2016 года, но они только плачь по Украине осилили. 
-	// https://github.com/Leaflet/Leaflet/issues/4461
-    eachLayerRecursive: function(method, context) {
-        this.eachLayer(function(layer) {
-            if (layer._layers)
-                layer.eachLayerRecursive(method, context);
-            else
-                method.call(context, layer);
-        });
-    }
-});
 
 /**
 Эти казлы так и ниасилили юникод в JavaScript. Багу более 15 лет.
@@ -1751,6 +1739,31 @@ L.Control.CopyToClipboard = L.Control.extend({
 	onRemove: function(map) {
 		// Nothing to do here
 		}
+});
+
+L.LayerGroup.include({	
+	// рекурсивный eachLayer. Их просили это сделать с 2016 года, но они только плачь по Украине осилили. 
+	// https://github.com/Leaflet/Leaflet/issues/4461
+	eachLayerRecursive: function(method, context) {
+		this.eachLayer(function(layer) {
+			if (layer._layers) layer.eachLayerRecursive(method, context);	// а почему они не применяют instanceof? Медленно? 
+			else method.call(context, layer);
+		});
+	}
+});
+
+L.LayerGroup.include({	
+	// рекурсивный hasLayer
+	hasLayerRecursive: function(what) {
+		let res = false;
+		if(this.hasLayer(what)) return true;
+		for(const layer of this.getLayers()){	// нужно прекратить обход, eachLayer не подойдёт
+			if(!(layer instanceof L.LayerGroup)) continue;	// это не LayerGroup
+			if(layer.hasLayer(what)) return true;
+			else res = layer.hasLayerRecursive(what);
+		}
+		return res;
+	}
 });
 
 ///////// for collision test purpose /////////
