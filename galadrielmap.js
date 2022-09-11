@@ -246,6 +246,7 @@ savedLayers[mapname].addTo(map);
 
 function removeMap(mapname) {
 mapname=mapname.trim();
+if(!savedLayers[mapname]) return;	// например, в списке есть трек, но gpx был кривой, и слой не был создан
 if(savedLayers[mapname].options.javascriptClose) eval(savedLayers[mapname].options.javascriptClose);
 if(savedLayers[mapname].options.zoom) { 
 	map.setZoom(savedLayers[mapname].options.zoom); 	// вернём масштаб как было
@@ -253,7 +254,7 @@ if(savedLayers[mapname].options.zoom) {
 }
 savedLayers[mapname].remove(); 	// удалим слой с карты
 //savedLayers[mapname] = null; 	// удалим сам слой. Но это не надо, ибо включение/выключение отображения слоёв должно быть быстро, и обычно их не надо повторно получать с сервера
-}
+} // end function removeMap
 
 // Функции выбора - удаления треков
 function selectTrack(node,trackList,trackDisplayed,displayTrack) { 	
@@ -312,12 +313,13 @@ else {
 	xhr.onreadystatechange = function() { // trackName - внешняя
 		if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
 		if (this.status != 200) { 	// запрос завершлся, но неудачно
-			alert('На запрос трека сервер ответил '+this.status);
+			console.log('Server return bad status '+this.status);
 			return; 	// что-то не то с сервером
 		}
 		//console.log('|'+this.responseText.slice(-10)+'|');
 		let str = this.responseText.trim().slice(-12);
-		//console.log('|'+str+'|');
+		//console.log('[displayTrack] |'+str+'|');
+		if(!str) return;
 		if(str.indexOf('</gpx>') == -1) {
 			// может получиться кривой gpx -- по разным причинам
 			if(str.indexOf('</trkpt>')==-1) { 	// на самом деле, здесь </metadata>, т.е., gpxlogger запустился, но ничего не пишет: нет gpsd, нет спутников, нет связи...
@@ -1421,10 +1423,6 @@ function loggingRun() {
 let logging = 'logging.php';
 if(loggingSwitch.checked) {
 	logging += '?startLogging=1';
-	if(!currentTrackUpdateProcess) {
-		currentTrackUpdateProcess =  setInterval(currentTrackUpdate,3000);	// запустим слежение за логом, если ещё не
-		console.log('[loggingRun]  Logging check started');
-	}
 }
 else {
 	logging += '?stopLogging=1';
@@ -1470,6 +1468,11 @@ xhr.onreadystatechange = function() { //
 			trackList.append(newTrackLI);
 			doCurrentTrackName(newTrackName);	// обязательно после append, ибо вне дерева элементы не ищутся. JavaScript -- коллекция нелепиц.
 		} 	// иначе он и так текущий
+		// запустим слежение за логом, если ещё не
+		if(!currentTrackUpdateProcess) {
+			currentTrackUpdateProcess =  setInterval(currentTrackUpdate,3000);	
+			console.log('[loggingCheck]  Logging check started');
+		}
 	}
 	else {
 		if(loggingSwitch.checked){
@@ -1512,10 +1515,15 @@ return;
 
 function MOBalarm() {
 //
-// Global: map, cursor, currentMOBmarker
+// Global: map, cursor, currentMOBmarker, centerMark
 let latlng;
 if(map.hasLayer(cursor)) latlng = cursor.getLatLng(); 	// координаты известны и показываются, хотя, возможно, устаревшие
-else return false;
+else {
+	// если даже нет координат -- дадим возможность ставить маркер в центре карты
+	centerMarkOn(); 	// включить крестик в середине
+	latlng = centerMark.getLatLng();
+	//return false;	
+}
 
 currentMOBmarker = L.marker(latlng, { 	// маркер для этой точки
 	icon: mobIcon,
@@ -1573,7 +1581,11 @@ distanceMOBdisplay.innerHTML = '&nbsp;';
 directionMOBdisplay.innerHTML = '&nbsp;';
 locationMOBdisplay.innerHTML = '&nbsp;';
 delMOBmarkerButton.disabled = true;
+
+//centerMarkOff(); 	// выключить крестик в середине -- не надо, ибо при закрытии панели оно уже вызывается
+
 sidebar.close();	// закрыть панель
+
 } // end function MOBclose
 
 
@@ -1622,11 +1634,12 @@ for(let feature of mobMarkerJSON.features){
 		break;
 	}
 }
-//console.log('Sending to server upData.MOB',upData.MOB);
-//console.log('upData',JSON.stringify(upData.MOB));
-//console.log(spatialWebSocket);
-spatialWebSocket.send('?UPDATE={"updates":['+JSON.stringify(upData.MOB)+']};'); 	// отдадим данные MOB для передачи на сервер через глобальный сокет для передачи координат. Он есть, иначе -- нет координат и нет проблем.
-
+//console.log('[sendMOBtoServer] Sending to server upData.MOB:',upData.MOB);
+//console.log('[sendMOBtoServer] upData=',JSON.stringify(upData.MOB));
+//console.log('[sendMOBtoServer] spatialWebSocket.readyState:',spatialWebSocket.readyState);
+if(spatialWebSocket.readyState == 1) {
+	spatialWebSocket.send('?UPDATE={"updates":['+JSON.stringify(upData.MOB)+']};'); 	// отдадим данные MOB для передачи на сервер через глобальный сокет для передачи координат. Он есть, иначе -- нет координат и нет проблем.
+}
 // Посадим куку
 mobMarkerJSON = JSON.stringify(mobMarkerJSON);
 const expires =  new Date();

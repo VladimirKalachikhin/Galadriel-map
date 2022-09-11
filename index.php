@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.3.2';
+$versionTXT = '2.3.3';
 /* 
 */
 // start gpsdPROXY
@@ -83,6 +83,11 @@ $gpxloggerRun = gpxloggerRun();
 $imgFileName = 'img/mob_marker.png';
 $mob_markerImg = base64_encode(file_get_contents($imgFileName));
 $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_markerImg;
+$imgFileName = 'img/Crosshair.svg';
+$centerMark_markerImg = base64_encode(file_get_contents($imgFileName));
+$centerMark_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $centerMark_markerImg;
+
+
 ?>
 <!DOCTYPE html >
 <html lang="ru">
@@ -146,7 +151,7 @@ html, body, #mapid {
 		<ul role="tablist" id="featuresList">
 			<li id="homeTab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
 			<li id="dashboardTab"><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
-			<li id="tracksTab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%" OnClick='loggingCheck();'></a></li>
+			<li id="tracksTab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
 			<li id="measureTab" ><a href="#measure" role="tab"><img src="img/route.svg" alt="Create route" width="70%"></a></li>
 			<li id="routesTab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
 		</ul>
@@ -253,7 +258,7 @@ foreach($trackInfo as $trackName) { 	// ниже создаётся аноним
 					onChange="
 						pointsControlsDisable();	// отключить кнопки точек
 						if(!currentRoute) currentRoute = dravingLines; 	// 
-						console.log('[Кнопка Начать] currentRoute:',currentRoute._leaflet_id,'dravingLines:',dravingLines._leaflet_id);
+						//console.log('[Кнопка Начать] currentRoute:',currentRoute._leaflet_id,'dravingLines:',dravingLines._leaflet_id);
 						let layer = map.editTools.startPolyline(false,drivedPolyLineOptions.options);
 						layer.options.color = '#FDFF00';
 						layer.feature = drivedPolyLineOptions.feature;
@@ -363,18 +368,18 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 			</div>
 			<div class="big_symbol" style="line-height: normal;align-items: center;height:70%;" onClick="map.setView(currentMOBmarker.getLatLng());"> <?php //  передвинуть карту на место текущего маркера MOB ?>
 				<div style=''><?php // объемлющий div необходим ?>
-						<div style="font-size:40%;">
+						<div style="font-size:50%;">
 							<span style="font-size:50%;display:block;"><?php echo $bearingTXT; ?></span>
 							<span style="font-size:40%;display:block;"><?php echo $altBearingTXT; ?></span>
 							<span style="margin:0.5rem;display:block;" id='azimuthMOBdisplay'> </span>
 						</div>
-						<div style="font-size:65%;margin:1rem 0;">
+						<div style="font-size:75%;margin:1rem 0;">
 							<span style="font-size:40%;display:block;"><?php echo $distanceTXT ?>, <?php echo $dashboardMeterMesTXT ?></span>
 							<span style="font-size:30%;display:block;"><?php echo $altDistanceTXT ?></span>
 							<span style="margin:0.5rem;display:block;" id='distanceMOBdisplay'> </span>
 							<span style="font-size:75%;margin:0.5rem;display:block;" id='directionMOBdisplay'></span>
 						</div>
-						<div style="font-size:40%;" onClick="doCopyToClipboard(Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+' '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000);" >
+						<div style="font-size:50%;" onClick="doCopyToClipboard(Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+' '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000);" >
 							<span style="font-size:50%;display:block;"><?php echo $dashboardPosTXT;?></span>
 							<span style="font-size:40%;display:block;"><?php echo $dashboardPosAltTXT;?></span>
 							<span style="margin:0.3rem;display:block;" id='locationMOBdisplay'></span>
@@ -534,7 +539,7 @@ var velocityVectorLengthInMn = <?php echo $velocityVectorLengthInMn;?>; 	// дл
 // AIS
 var vehicles = []; 	// list of visible by AIS data vehicle objects 
 var AISstatusTXT = {
-<?php foreach($AISstatusTXT as $k => $v) echo "$k: '$v',\n";?>
+<?php foreach($AISstatusTXT as $k => $v) echo "$k: '$v',\n"; 	// не используется??>
 }
 // Loader
 var downJob = false; 	// флаг - не создаётся ли задание на скачивание
@@ -584,11 +589,14 @@ var dashboardDepthMesTXT = '<?php echo $dashboardDepthMesTXT;?>';
 var dashboardMeterMesTXT = '<?php echo $dashboardMeterMesTXT;?>';
 // MOB
 var currentMOBmarker;
-const mob_markerImg = '<?php echo $mob_markerImg; ?>';
 <?php echo $relBearingTXT; // internationalisation ?>
 // main output data
 var upData = {};
 DisplayAISswitch.checked = true;	// Показывать цели AIS. Всегда?
+
+// Подготовленные картинки для случая off-line
+const mob_markerImg = '<?php echo $mob_markerImg; ?>';
+const centerMark_markerImg = '<?php echo $centerMark_markerImg; ?>';
 
 
 
@@ -635,11 +643,8 @@ var sidebar = L.control.sidebar('sidebar',{
 sidebar.on("content", function(event){ 	// Событие открытия панели с информацией о вкладке. А такого же события закрытия нет.
 	//console.log('sidebar.on "content"',event.id);
 	switch(event.id){ 	// какую вкладку открыли
-	case 'download':
-		chkLoaderStatus();	// проверим загрузки
-		tileGrid.addTo(map); 	// добавить на карту тайловую сетку
-		if(CurrnoFollowToCursor === 1)CurrnoFollowToCursor = noFollowToCursor;  // запомним состояние глобального признака следования за курсором, если ещё не запоминали
-		noFollowToCursor = true; 	// отключим следование за курсором
+	case 'tracks':	// треки
+		loggingCheck();
 		break;
 	case 'measure': 	// рисование маршрута
 		centerMarkOn(); 	// включить крестик в середине
@@ -651,6 +656,13 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		break;
 	case 'MOB': 	// человек за бортом
 		if(!map.hasLayer(mobMarker)) MOBalarm();
+		else if(!map.hasLayer(cursor)) centerMarkOn(); 	// включить крестик в середине
+		break;
+	case 'download':
+		chkLoaderStatus();	// проверим загрузки
+		tileGrid.addTo(map); 	// добавить на карту тайловую сетку
+		if(CurrnoFollowToCursor === 1)CurrnoFollowToCursor = noFollowToCursor;  // запомним состояние глобального признака следования за курсором, если ещё не запоминали
+		noFollowToCursor = true; 	// отключим следование за курсором
 		break;
 	}
 });
@@ -816,7 +828,8 @@ let markSize = Math.round(window.innerWidth/5);
 //console.log(markSize);
 var centerMark = L.marker(map.getBounds().getCenter(), {
 	'icon': new L.icon({
-		iconUrl: './img/Crosshair.svg',
+		//iconUrl: './img/Crosshair.svg',
+		iconUrl: centerMark_markerImg,
 		iconSize:     [markSize, markSize], // size of the icon
 		iconAnchor:   [markSize/2, markSize/2], // point of the icon which will correspond to marker's location
 		//className: "centerMarkIcon"	// galadrielmap.css
@@ -838,7 +851,7 @@ var GpsCursor = L.icon({
 });
 
 // курсор
-var NoGpsCursor = L.icon({	// этот значёк может показываться и при пропаже связи с сервером, а в этом случае загрузить картинку не удастся. Попытка загрузить её заранее не получилась: Leaflet, видимо, убивает долго неиспользуемые объекты. Или сборщик мусора?
+var NoGpsCursor = L.icon({	// этот значёк может показываться и при пропаже связи с сервером, а в этом случае загрузить картинку не удастся. Но таскать с собой картинку заранее, как для MOB -- наверно, слишком накладно. Поэтому -- стилем.
 	iconUrl: './img/gpscursor.png',
 	iconSize:     [120, 120], // size of the icon
 	iconAnchor:   [60, 60], // point of the icon which will correspond to marker's location
@@ -901,8 +914,10 @@ var collisisonAreas = L.layerGroup(); 	// для тестовых целей col
 
 // MOB marker
 var mobIcon = L.icon({ 	// 
+	// поскольку картинка скачивается браузером только в момент показа, то, если хотеть
+	// работу при отсутствии сервера -- картинка должна быть заранее
 	iconUrl: mob_markerImg,
-	//iconUrl: "img/mob.png",
+	//iconUrl: "img/mob.png",	
 	iconSize: [32, 37],
 	//iconSize: [64, 74],
 	iconAnchor: [16, 37],
@@ -1019,6 +1034,9 @@ spatialWebSocket.onmessage = function(event) {
 				break;
 			case 'collisions':
 				//console.log('recieved ALARM collisions data',data.alarms.collisions);
+				if(!DisplayAISswitch.checked) break;	// если в параметрах не указано показывать AIS
+				// Вообще-то, хотелось бы чтобы когда-нибудь указывалась опасность столкновения
+				// не только с судами. Но пока у нас только цели AIS.
 				realtimeCollisionsUpdate(data.alarms.collisions);
 				//realtimeCollisionsUpdate(data.alarms.collisions,data.alarms.collisionSegments);	///////// for collision test purpose /////////
 				break;
@@ -1067,30 +1085,58 @@ function spatialWebSocketStop(message=''){
 
 
 function watchAISstart() {
-subscribe = subscribe.filter(i=>i!='AIS');
-subscribe.push('AIS');
-spatialWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"'+subscribe.join()+'","minPeriod":"'+minWATCHinterval+'"};');
-collisionDirectionsCursor.addTo(positionCursor);	// слой с указателями направлений на опасности столкновений
+let res = false;
+if(spatialWebSocket.readyState == 1) {
+	subscribe = subscribe.filter(i=>i!='AIS');
+	subscribe.push('AIS');
+	res = true;
+	try {
+		spatialWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"'+subscribe.join()+'","minPeriod":"'+minWATCHinterval+'"};');
+	}
+	catch(err) {
+		res = false;
+	}
+	collisionDirectionsCursor.addTo(positionCursor);	// слой с указателями направлений на опасности столкновений
+}
+return res;
 } // end function watchAISstart
 
 function watchAISstop() {
-subscribe = subscribe.filter(i=>i!='AIS');
-spatialWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"'+subscribe.join()+'","minPeriod":"'+minWATCHinterval+'"};');
-collisionDirectionsCursor.clearLayers();	// очистим слой указателей направлений на опасности столкновений на курсоре
-collisionDirectionsCursor.remove();
-collisisonDetected.clearLayers();	// очистим слой 
-collisisonDetected.remove();
+let res = false;
+if(spatialWebSocket.readyState == 1) {
+	subscribe = subscribe.filter(i=>i!='AIS');
+	res = true;
+	try {
+		spatialWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"'+subscribe.join()+'","minPeriod":"'+minWATCHinterval+'"};');
+	}
+	catch(err) {
+		res = false;
+	}
+}
+return res;
 } // end function watchAISstop
 
 function watchAISswitching(){
-if(DisplayAISswitch.checked) watchAISstart();
+let res;
+if(DisplayAISswitch.checked) {
+	res = watchAISstart();
+	//console.log('[watchAISswitching] START res=',res,'DisplayAISswitch.checked=',DisplayAISswitch.checked,);
+	if(!res) DisplayAISswitch.checked = false;
+}
 else {
-	watchAISstop('Dispalying AIS stopped');
+	res = watchAISstop('Dispalying AIS stopped');
+	//console.log('[watchAISswitching] STOP res=',res,'DisplayAISswitch.checked=',DisplayAISswitch.checked,);
+	// даже если неуспешно, всё равно
 	for(const vehicle in vehicles){	// уберём цели AIS с карты
 		vehicles[vehicle].remove();
 		vehicles[vehicle] = null;
 		delete vehicles[vehicle];
-	}
+	};
+	collisionDirectionsCursor.clearLayers();	// очистим слой указателей направлений на опасности столкновений на курсоре
+	collisionDirectionsCursor.remove();
+	collisisonDetected.clearLayers();	// очистим слой 
+	collisisonDetected.remove();
+	if(!res) DisplayAISswitch.checked = true;
 }
 }; // end function watchAISswitching
 

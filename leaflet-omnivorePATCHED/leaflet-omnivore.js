@@ -423,6 +423,7 @@ else { 	// это индивидуальная точка
 		//console.log(iNm);
 		if(iNm.length) iconNames.push(iNm.replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// kml icon name in <Style><IconStyle><Icon> attribyte
 	}
+	iconNames = [...new Set(iconNames)];	// только уникальные значения. Сначала из неуникального массива делается Set, потом из Set -- массив.
 	iconServer.setIconCustomIcon(marker,iconNames); 	// заменить в marker icon на нужный асинхронно
 	//console.log(iconServer.iconsByType);
 	//console.log(marker);
@@ -579,79 +580,86 @@ var index = scripts.length - 1; 	// это так, потому что эта ч
 var leafletOmnivoreScript = scripts[index];
 //console.log(leafletOmnivoreScript);
 
-var iconServer = { 	// типа, объект, централизованно раздающий icon
+var iconServer = { 	
+// типа, объект, централизованно раздающий L.icon, в которых уже есть сама картинка как base64
+// объект скачивает требуемые файлы картинок и хранит. Когда надо -- указывает в объекте L.icon как iconUrl.
+// Неиспользуемые картинки не удаляются, так что при удаче можно закачать в память все 400 картинок.
+// Но это меньше 600Kb.
+// Основная цель предварительной закачки картинок -- определить наличие файла с таким именем.
+// Список возможных имён iconNames получен из разных мест показываемого (gpx, kml, csv) файла. Там,
+// в принципе, могут быть разные слова, которые могут быть поняты как тип объекта, и которые
+// могут стать именем файла значка для объекта. Но значка с таким именем в коллекции может не быть.
+// Чтобы это понять, и установить умолчальный значёк -- и используется предварительная загрузка файла.
 iconsByType: {}, 	// сюда будем складывать L.icon каждого типа
 setIconCustomIcon: function (marker,iconNames) {
 /* пытается создать L.icon с iconUrl из iconNames, где они без пути и расширения
 при наличии такого файла - создаёт, устанавливает эту L.icon в marker
 и складывает в iconsByType
 */
-var iconName = iconNames.shift();
+let iconName = iconNames.shift();
 //console.log(iconName);
-if(iconName) {
-	//console.log(this.iconsByType);
-	if(this.iconsByType[iconName] === undefined) { 	// такая icon ещё не получена
-		this.iconsByType[iconName] = true; 	// укажем, что понеслось получать
-		// получить асинхронно
-		//console.log(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/")));
-		fetch(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/"))+"/symbols/"+iconName+".png")
-		.then(function(response) {
-			//console.log(response);
-			if(response.ok)	return response.blob(); 	// руками обработаем ошибки сервера
-			else throw new Error('Network response was not ok for icon '+iconName); 	// Перейдём сразу к .catch
-		})
-		.then(function(blob){
-			var iconURL = URL.createObjectURL(blob);	// здесь получается blob -- такой хитрый Data URL. В результате его понимает L.icon как ссылку, но файл уже загружен. Вопрос выгрузки остаётся открытым: ведь оно нужновсё время после загрузки, и загружается только один раз. https://developer.mozilla.org/ru/docs/Web/API/URL/createObjectURL
-			//console.log(iconURL);
-			var icon = L.icon({
-				iconUrl: iconURL,
-				iconSize: [32, 37],
-				iconAnchor: [16, 37],
-				tooltipAnchor: [16,-25],
-				className: 'wpIcon'
-			});
-			iconServer.iconsByType[iconName] = icon;
-			marker.setIcon(icon).openTooltip(); 	// посадить значёк и перерисовать подпись
-			//console.log('Create and Set icon '+iconName);
-			//console.log(marker);
-		})
-		.catch(function(error) {	// - не работает в случае 404!
-			iconServer.iconsByType[iconName] = false; 	// укажем, что со значком облом
-			console.log('iconServer setIconCustomIcon fetch error: ' + error.message);
-		    iconServer.setIconCustomIcon(marker,iconNames); 	// вызовем себя для следующего имени
-		});
+if(!iconName) return;
+//console.log(this.iconsByType);
+if(this.iconsByType[iconName]) {
+	if(typeof this.iconsByType[iconName] === 'object') { 	// такая icon уже получена
+		marker.setIcon(this.iconsByType[iconName]).openTooltip(); 	// если  icon с таким именем уже создавали - посадить значёк и перерисовать подпись
+		//console.log('icon '+iconName+' из хранилища');
 	}
-	else {
-		if(typeof this.iconsByType[iconName] === 'object' && this.iconsByType[iconName] !== null) { 	// такая icon уже получена
-			// присвоить
-			marker.setIcon(this.iconsByType[iconName]).openTooltip(); 	// если  icon с таким именем уже создавали - посадить значёк и перерисовать подпись
-			//console.log('icon '+iconName+' из хранилища');
-		}
-		else { 	// такой icon нет
-			if(this.iconsByType[iconName] === true) { 	// такую icon кто-то сейчас получает
-				// ждать
-				var vait = setInterval(function(){ 	// запустим асинхронное ожидание. В результате сначала присвоится умолчальный значёк, а потом - нужный
-					//console.log('Ждём icon '+iconName);
-					if(typeof iconServer.iconsByType[iconName] === 'object' && iconServer.iconsByType[iconName] !== null) { 	// такая icon уже получена
-						marker.setIcon(iconServer.iconsByType[iconName]).openTooltip(); 	// если  icon с таким именем уже создавали  посадить значёк и перерисовать подпись
-						//console.log('Дождались icon '+iconName);
-						clearInterval(vait); 	// прекратим ждать
-					}
-					else {
-						if(iconServer.iconsByType[iconName] === false) {
-							//console.log('Не дождались icon '+iconName);
-							clearInterval(vait); 	// оно обломалось, прекратим ждать
-						}
-					}
-				},100); 	// таймер на  милисекунд
+	else { 	// такую icon кто-то сейчас получает
+		// ждать
+		let vait = setInterval(function(){ 	// запустим асинхронное ожидание. В результате сначала присвоится умолчальный значёк, а потом - нужный
+			//console.log('Ждём icon '+iconName);
+			if(iconServer.iconsByType[iconName] && typeof iconServer.iconsByType[iconName] === 'object') { 	// такая icon уже получена
+				marker.setIcon(iconServer.iconsByType[iconName]).openTooltip(); 	// если  icon с таким именем уже создавали  посадить значёк и перерисовать подпись
+				//console.log('Дождались icon '+iconName);
+				clearInterval(vait); 	// прекратим ждать
 			}
-			else { 	// такой icon вообще нет, её кто-то пытался получить, но безуспешно
-				//console.log('Уже был облом с icon '+iconName);
-			    iconServer.setIconCustomIcon(marker,iconNames); 	// вызовем себя для следующего имени
-				// ничего не делать - поставится умолчальная
+			else {
+				if(iconServer.iconsByType[iconName] === false) {
+					//console.log('Не дождались icon '+iconName);
+					clearInterval(vait); 	// оно обломалось, прекратим ждать
+				}
 			}
-		}
-	}	
+		},100); 	// таймер на  милисекунд
+	}
+}
+else if(this.iconsByType[iconName] === false) { 	// такой icon вообще нет, её кто-то пытался получить, но безуспешно
+	//console.log('Уже был облом с icon '+iconName);
+    iconServer.setIconCustomIcon(marker,iconNames); 	// вызовем себя для следующего имени
+	// ничего не делать - поставится умолчальная
+}
+else { 	// такая icon ещё не получена
+	this.iconsByType[iconName] = true; 	// укажем, что понеслось получать
+	// получить асинхронно
+	// все требуемые картинки значков скачиваются и хранятся в памяти
+	// а нафига? А так мы узнаем, какой картинки нет.
+	//console.log(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/")));
+	fetch(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/"))+"/symbols/"+iconName+".png")
+	.then(function(response) {
+		//console.log(response);
+		if(response.ok)	return response.blob(); 	// руками обработаем ошибки сервера
+		else throw new Error('Network response was not ok for icon '+iconName); 	// Перейдём сразу к .catch
+	})
+	.then(function(blob){
+		let iconURL = URL.createObjectURL(blob);	// здесь получается blob -- такой хитрый Data URL. В результате его понимает L.icon как ссылку, но файл уже загружен. Вопрос выгрузки остаётся открытым: ведь оно нужновсё время после загрузки, и загружается только один раз. https://developer.mozilla.org/ru/docs/Web/API/URL/createObjectURL
+		//console.log(iconURL);
+		let icon = L.icon({
+			iconUrl: iconURL,
+			iconSize: [32, 37],
+			iconAnchor: [16, 37],
+			tooltipAnchor: [16,-25],
+			className: 'wpIcon'
+		});
+		iconServer.iconsByType[iconName] = icon;	// сохраним полученный значёк в кеше
+		marker.setIcon(icon).openTooltip(); 	// посадить значёк и перерисовать подпись
+		//console.log('Create and Set icon '+iconName);
+		//console.log(marker);
+	})
+	.catch(function(error) {	// - не работает в случае 404!, поэтому выше throw new Error
+		iconServer.iconsByType[iconName] = false; 	// укажем, что со значком облом
+		console.log('iconServer setIconCustomIcon fetch error: ' + error.message);
+	    iconServer.setIconCustomIcon(marker,iconNames); 	// вызовем себя для следующего имени
+	});
 }
 }, // end function setIconCustomIcon, список атрибутов объекта продолжается
 } // end object iconServer
@@ -1967,7 +1975,7 @@ var toGeoJSON = (function() {
             	prevPoint; 	// для показа сегментов из одной точки будем делать из них сегмент из двух точек - своей и предыдущей
 			//if(metadata.length) console.log('leaflet-omnivore [gpx:] metadata:',metadata,getProperties(metadata[0]));
 			//if(routes.length) console.log('leaflet-omnivore [gpx:] routes:',routes,getProperties(routes[0]));
-			gj.properties = getProperties(metadata[0]);
+			if(metadata.length) gj.properties = getProperties(metadata[0]);
             for (i = 0; i < tracks.length; i++) {
                 feature = getTrack(tracks[i]);
                 if (feature) gj.features.push(feature);
