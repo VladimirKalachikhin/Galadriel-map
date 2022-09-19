@@ -587,6 +587,8 @@ var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
 var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
 var dashboardDepthMesTXT = '<?php echo $dashboardDepthMesTXT;?>';
 var dashboardMeterMesTXT = '<?php echo $dashboardMeterMesTXT;?>';
+var latTXT = '<?php echo $latTXT;?>';
+var longTXT = '<?php echo $longTXT;?>';	
 // MOB
 var currentMOBmarker;
 <?php echo $relBearingTXT; // internationalisation ?>

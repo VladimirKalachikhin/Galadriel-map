@@ -1522,6 +1522,7 @@ else {
 	// если даже нет координат -- дадим возможность ставить маркер в центре карты
 	centerMarkOn(); 	// включить крестик в середине
 	latlng = centerMark.getLatLng();
+	locationMOBdisplay.innerHTML = latTXT+' '+Math.round(latlng.lat*10000)/10000+'<br>'+longTXT+' '+Math.round(latlng.lng*10000)/10000;	
 	//return false;	
 }
 
