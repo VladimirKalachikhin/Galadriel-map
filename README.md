@@ -41,7 +41,8 @@ Linux, OpenWRT, VenusOS. Modern browsers include mobile.
 
 
 ## Demo
-Full feature [live demo](http://130.61.159.53/map/). Sometimes there floating a virtual sailboat.
+~~Full feature [live demo](http://130.61.159.53/map/). Sometimes there floating a virtual sailboat.~~ 
+Unfortunately, the Oracle Inc. turned out to be a crook, so the demo does not work.
 
 
 ## Ready to use images

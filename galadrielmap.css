@@ -1,7 +1,7 @@
 /* Стили, заменяющие соответствующее в оригинальных стилях */
 /* leaflet */
 .leaflet-touch .leaflet-bar a {
-	background-color: rgba(255,255,255,0.66);
+	/*background-color: rgba(255,255,255,0.66);*/
     width: 1.65rem;
     height: 1.65rem;
     line-height: 1.65rem;
@@ -189,6 +189,9 @@ div.leaflet-control-zoom {
 }
 .leaflet-control-zoom-out {
 	margin-top: 2rem;
+}
+.leaflet-control-attribution {
+	background-color:rgba(0, 0, 0, 0)!important;	/* прозрачный фон, защищённый от переписывания в других css */
 }
 
 
