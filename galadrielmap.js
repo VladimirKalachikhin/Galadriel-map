@@ -179,16 +179,17 @@ if (xhr.status == 200) { 	// Успешно
 	}
 }
 // javascript в загружаемом источнике на открытие карты
-//console.log(mapParm);
+//console.log('[displayMap] mapParm:',mapParm);
 if(mapParm['data'] && mapParm['data']['javascriptOpen']) eval(mapParm['data']['javascriptOpen']);
 // Загружаемая карта - многослойная?
 if(Array.isArray(additionalTileCachePath)) { 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Например, Weather.php
 	let currZoom; 
+	//console.log('[displayMap] mapname=',mapname,'savedLayers[mapname]',savedLayers[mapname]);
 	if(savedLayers[mapname]) {
 		if(savedLayers[mapname].options.zoom) currZoom = savedLayers[mapname].options.zoom;
 		savedLayers[mapname].remove();
 	}
-	savedLayers[mapname]=L.LayerGroup();
+	savedLayers[mapname]=L.layerGroup();
 	if(currZoom) savedLayers[mapname].options.zoom = currZoom;
 	for(let addPath of additionalTileCachePath) {
 		let mapnameThis = mapname+addPath; 	// 
