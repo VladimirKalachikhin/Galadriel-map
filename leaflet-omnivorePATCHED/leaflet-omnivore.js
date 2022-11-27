@@ -32,6 +32,8 @@ module.exports.wkt.parse = wktParse;
 
 function addData(l, d) { 	// layer geojson
 /* Загружает geojson в layer 
+l - layer
+d - data
 */
 if ('setGeoJSON' in l) {
 	l.setGeoJSON(d);
@@ -280,7 +282,8 @@ if (!xml) return windows.fire('error', {
 //console.log('leaflet-omnivore [gpxParse] xml:',xml);
 if(layer) {
 	//console.log('leaflet-omnivore [gpxParse] layer:',layer,layer instanceof L.layerGroup,"getLayers" in layer);
-	if("getLayers" in layer) { 	// это layerGroup
+	if(layer instanceof L.LayerGroup) { 	// это layerGroup
+	//if("getLayers" in layer) { 	// это layerGroup
 		var featuresLayer = layer.getLayers()[0] || L.geoJson();
 	}
 	else {	// это одиночный Layer
@@ -320,7 +323,60 @@ if(options && options.featureNameNode) { 	// li с именем файла, из
 	options.featureNameNode.style.backgroundColor = '#'+('000000' + color.toString(16)).slice(-6);
 }
 featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
-featuresLayer.options.style = function(geoJsonFeature){return{color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6)};}; 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
+featuresLayer.options.style = function(geoJsonFeature){
+	// вот тут надо вычислить цвета и указать рендерер
+	//console.log('[featuresLayer.options.style] geoJsonFeature:',geoJsonFeature);
+	//console.log('[featuresLayer.options.style] depthInData:',depthInData);
+	if(depthInData.display && geoJsonFeature.properties && geoJsonFeature.properties.depths){	// depthInData - global from options.js
+		let colors = [], weights = [];
+		for(let i=0; i < geoJsonFeature.properties.depths.length; i++){
+			if(Array.isArray(geoJsonFeature.properties.depths[i])) {
+				if(!geoJsonFeature.geometry.coordinates[i].length) continue;	// если этот сегмент GeoJSON MultiLineString пустой (например, сделан из <trkseg></trkseg>), то Leaflet этот сегмент вообще опустит, что ему не говори.
+				let colors1 = [], weights1 = [];
+				for(let depth of geoJsonFeature.properties.depths[i]){
+					if(depth === null){
+						colors1.push(null);
+						weights1.push(null);
+					}
+					else {
+						colors1.push(value2color(depth,depthInData.minvalue||0,depthInData.maxvalue||10,depthInData.minColor||[255,0,0],depthInData.maxColor||[0,255,0],depthInData.underMinColor||"rgb(155,0,0)",depthInData.upperMaxColor||"rgb(200,250,240)"));
+						weights1.push(5);
+					}
+				}
+				const _weights = [...new Set(weights1)];
+				if(_weights.length == 1) weights1 = _weights;
+				
+				colors.push(colors1);
+				weights.push(weights1);
+			}
+			else {
+				if(geoJsonFeature.properties.depths[i] === null){
+					colors.push(null);
+					weights.push(null);
+				}
+				else {
+					colors.push(value2color(geoJsonFeature.properties.depths[i],depthInData.minvalue||0,depthInData.maxvalue||10,depthInData.minColor||[255,0,0],depthInData.maxColor||[0,255,0],depthInData.underMinColor||"rgb(155,0,0)",depthInData.upperMaxColor||"rgb(200,250,240)"));
+					weights.push(5);
+				}
+			}
+		}
+		const _weights = [...new Set(weights)];
+		if(_weights.length == 1) weights = _weights;
+		//console.log('leaflet-omnivore.js [featuresLayer.options.style] colors:',colors,'weights:',weights);
+		
+		return { 
+			noClip: true,	// отключить всякое упрощение линии Leaflet'ом
+			smoothFactor: 0,
+			renderer: new polycolorRenderer(),
+			color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6),
+			colors: colors,
+			useGradient: true,
+			opacity: 0.8,
+			weights: weights
+		}
+	}
+	else return {color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6)}; 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
+};	// end featuresLayer.options.style = function
 // Добавим в слой объекты
 featuresLayer.addData(Features); 	// добавим и покажем всё остальное
 if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
@@ -1719,6 +1775,7 @@ var toGeoJSON = (function() {
     function attrf(x, y) { return parseFloat(attr(x, y)); }
     // one Y child of X, if any, otherwise null
     function get1(x, y) { 
+    	// get First od ElementsByTagName if present
     	const n = get(x, y);
     	//if(y == 'desc') console.log(n); 
     	return n.length ? n[0] : null; 
@@ -1752,12 +1809,17 @@ var toGeoJSON = (function() {
         return o;
     }
     function coordPair(x) {
+		//console.log('leaflet-omnivore.js [coordPair] x:',x);
         var ll = [attrf(x, 'lon'), attrf(x, 'lat')],
-            ele = get1(x, 'ele'),
+        	ele = get1(x, 'ele'),	// get First od ElementsByTagName if present
             // handle namespaced attribute in browser
-            heartRate = get1(x, 'gpxtpx:hr') || get1(x, 'hr'),
+            heartRate = get1(x, 'gpxtpx:hr') || get1(x, 'hr'),	// как я понимаю, gpxtpx больше не существует, и корректного способа сохранить heartRate больше нет?
             time = get1(x, 'time'),
+            //extensions = get1(x, 'extensions'),
+            depth = get1(x, 'gpxx:Depth'),
             e;
+		//console.log('leaflet-omnivore.js [coordPair] extensions:',extensions);
+		//console.log('leaflet-omnivore.js [coordPair] depth=',depth);
         if (ele) {
             e = parseFloat(nodeVal(ele));
             if (!isNaN(e)) {
@@ -1767,7 +1829,8 @@ var toGeoJSON = (function() {
         return {
             coordinates: ll,
             time: time ? nodeVal(time) : null,
-            heartRate: heartRate ? parseFloat(nodeVal(heartRate)) : null
+            heartRate: heartRate ? parseFloat(nodeVal(heartRate)) : null,
+            depth: depth ? parseFloat(nodeVal(depth)) : null
         };
     }
 
@@ -1972,12 +2035,14 @@ var toGeoJSON = (function() {
                 metadata = get(doc, 'metadata'), 	// no way to save metadata to GeoJSON А, собственно, почему?
                 gj = fc(), 	// a feature collection
                 feature,
-            	prevPoint; 	// для показа сегментов из одной точки будем делать из них сегмент из двух точек - своей и предыдущей
+            	prevPoint, 	// для показа сегментов из одной точки будем делать из них сегмент из двух точек - своей и предыдущей
+				isDepth = false;	// признак, нужно ли отдавать глубину, или она ни разу не встретилась
 			//if(metadata.length) console.log('leaflet-omnivore [gpx:] metadata:',metadata,getProperties(metadata[0]));
 			//if(routes.length) console.log('leaflet-omnivore [gpx:] routes:',routes,getProperties(routes[0]));
 			if(metadata.length) gj.properties = getProperties(metadata[0]);
             for (i = 0; i < tracks.length; i++) {
                 feature = getTrack(tracks[i]);
+				//console.log('leaflet-omnivore [gpx:] feature:',feature);                
                 if (feature) gj.features.push(feature);
             }
             for (i = 0; i < routes.length; i++) {
@@ -1987,14 +2052,19 @@ var toGeoJSON = (function() {
             for (i = 0; i < waypoints.length; i++) {
                 gj.features.push(getPoint(waypoints[i]));
             }
-			//console.log('leaflet-omnivore [gpx:] gj:',gj);
+			//console.log('leaflet-omnivore [gpx:] geojson gj:',gj);
+			
             function getPoints(node, pointname) {
-                var pts = get(node, pointname),
+            /* node -- это trkseg или rte, ptseg не поддерживается. 
+            pointname должно соответствовать 
+            */
+                var pts = get(node, pointname),	// get === getElementsByTagName
                     line = [],
                     times = [],
                     heartRates = [],
+                    depths = [],
                     l = pts.length;
-				//console.log(prevPoint);
+				//console.log('leaflet-omnivore [getPoints] pts:',pts);
                 if (l < 2) {  					// Invalid line in GeoJSON  !!
                 	if(prevPoint && (prevPoint!=pts[l-1])) {
                 		var pts1 = []; 			// pts - HTMLcollection, и хрен туда что добавишь
@@ -2013,31 +2083,55 @@ var toGeoJSON = (function() {
                 for (var i = 0; i < l; i++) {
                     var c = coordPair(pts[i]);
                     line.push(c.coordinates);
-                    if (c.time) times.push(c.time);
-                    if (c.heartRate) heartRates.push(c.heartRate);
+                    times.push(c.time);
+                    heartRates.push(c.heartRate);
+                    depths.push(c.depth);	// null тоже push
                 }
+                if(arrayHasOnly(times)) times = [];
+                if(arrayHasOnly(heartRates)) heartRates = [];
+                if(arrayHasOnly(depths)) depths = [];
                 return {
                     line: line,
                     times: times,
-                    heartRates: heartRates
+                    heartRates: heartRates,
+                    depths: depths
                 };
             }
+            
             function getTrack(node) {
-                var segments = get(node, 'trkseg'),
+            /* node -- один trk из gpx 
+            	из него делается одна Feature типа LineString или MultiLineString
+            	но MultiLineString -- вещь бессмысленная, потому что Leaflet делает одну
+            	Polyline что из LineString, что из MultiLineString.
+            	Что таки не совсем так -- Leaflet делает из MultiLineString MultiPolyline.
+            */
+				//console.log('leaflet-omnivore [getTrack:] node:',node);
+                var segments = get(node, 'trkseg'),	// коллекция сегментов, trk обязан состоять из сегментов
                     track = [],
                     times = [],
                     heartRates = [],
-                    line;
-                for (var i = 0; i < segments.length; i++) {
+                    depths = [],
+                    line;	//
+				//console.log('leaflet-omnivore [getTrack:] segments:',segments);
+                for (var i = 0; i < segments.length; i++) {	// для каждого сегмента
                     line = getPoints(segments[i], 'trkpt');
-                    if (line.line) track.push(line.line);
-                    if (line.times && line.times.length) times.push(line.times);
-                    if (line.heartRates && line.heartRates.length) heartRates.push(line.heartRates);
+					//console.log('leaflet-omnivore [getTrack:] line:',line);
+                    if (line.line) {
+                    	track.push(line.line);	// пустой массив тоже push
+		                times.push(line.times);
+		                heartRates.push(line.heartRates);
+		                depths.push(line.depths);
+					}
                 }
                 if (track.length === 0) return;
+                if(arrayHasOnly(times,[])) times = null;
+                if(arrayHasOnly(heartRates,[])) heartRates = null;
+                if(arrayHasOnly(depths,[])) depths = null;
                 var properties = getProperties(node);
-                if (times.length) properties.coordTimes = track.length === 1 ? times[0] : times;
-                if (heartRates.length) properties.heartRates = track.length === 1 ? heartRates[0] : heartRates;
+                if (times && times.length) properties.coordTimes = track.length === 1 ? times[0] : times;
+                if (heartRates && heartRates.length) properties.heartRates = track.length === 1 ? heartRates[0] : heartRates;
+                if (depths && depths.length) properties.depths = track.length === 1 ? depths[0] : depths;
+				//console.log('leaflet-omnivore [getTrack:] properties:',properties);
                 return {
                     type: 'Feature',
                     properties: properties,
@@ -2048,6 +2142,7 @@ var toGeoJSON = (function() {
                 };
             }
             function getRoute(node) {
+            /* node -- один rte, из него делается Feature типа LineString */
                 var line = getPoints(node, 'rtept');
                 if (!line.line) return;
                 //console.log('leaflet-omnivore [getRoute] node:',node,getProperties(node));
@@ -2076,15 +2171,22 @@ var toGeoJSON = (function() {
                 };
             }
             function getProperties(node) {
+            	//console.log('leaflet-omnivore.js [getProperties] node:',node);
                 let meta = ['ele', 'name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords'], 	// список уникальных свойств, которые будем получать
                     prop = {},
                     k;
                 for (k = 0; k < meta.length; k++) {
                     prop[meta[k]] = nodeVal(get1(node, meta[k]));
                 }
-                meta=['link','extensions']; 	 	// список неуникальных и/или составных свойств, которые будем получать
+                meta=['link']; 	 	// список неуникальных составных свойств, которые будем получать
                 for (k = 0; k < meta.length; k++) {
-                	prop[meta[k]] = node.getElementsByTagName(meta[k]);
+                	const metas = node.querySelectorAll(`:scope > ${meta[k]}`);
+                	//console.log('leaflet-omnivore.js [getProperties] metas:',metas,node.querySelectorAll(`:scope > ${meta[k]}`))
+                	if(metas.length) prop[meta[k]] = node.querySelectorAll(`:scope > ${meta[k]}`);
+                	/*prop[meta[k]] = [];
+                	for(let i = 0; i < metas.length; i++){
+                		prop[meta[k]].push(nodeVal(metas[i]));	// но это, конечно, так себе, потому что там будет xml в виде строки. И что с этим делать потом?
+                	}*/
                 }
                 return clean(prop);
             }
@@ -2630,7 +2732,7 @@ if (typeof module !== 'undefined') module.exports = toGeoJSON;
 
     return topology;
   }
-
+  
   var version = "1.6.26";
 
   exports.version = version;

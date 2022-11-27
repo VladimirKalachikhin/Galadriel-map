@@ -1,10 +1,10 @@
 # GaladrielMap [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
-Простой картплоттер (навигационно-картографическая система), предназначенный для любительского использования на маломерных судах, в домах на колёсах и внедорожных автомобилях.  
+Простой картплоттер (электронно-картографическая система, ЭКС), предназначенный для любительского использования на маломерных судах, в домах на колёсах и внедорожных автомобилях.  
 Приложение может быть размещено на слабом сервере типа  RaspberryPi, NAS или сетевом маршрутизаторе и предполагает использование на достаточно производительных клиентских устройствах, преимущественно мобильных. Желательно применять планшет с большим экраном, однако пользоваться с телефона тоже можно. На клиентском устройстве требуется только наличие браузера -- никаких приложений устанавливать не нужно.
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Форум</a>
 </div>
 
-## v. 2.3
+## v. 2.4
  ![screen](screenshots/s10.jpeg)<br>
 Технически это веб-приложение -- просмотрщик тайловых онлайн карт. При использовании с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) становится возможным предварительное скачивание и последующий просмотр карт без подключения к сети Интернет.  
 Предполагается, что приложение функционирует в локальной  бортовой сети катера, яхты или автомобиля, поэтому никакого разграничения доступа к функциям не предусмотрено.
@@ -68,6 +68,8 @@
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) в каталоге _gpsdPROXY/_ 
 * [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) установленная в каталог _mapbox-gl-js/dist/_ 
 * [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) установленная как _mapbox-gl-leaflet/leaflet-mapbox-gl.js_
+* [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) установленная в каталог _polycolor/_  
+* [value2color](https://github.com/VladimirKalachikhin/value2color) установленная в каталог _value2color/_
 
 Для установки зависимостей нужно сделать локальную копию каждого проекта в каталоге приложения так, как это описано на сайте проекта, а потом, при необходимости, откорректировать пути в _index.php_
 
@@ -114,9 +116,10 @@ php chkGPXfiles.php
 Текущий путь записывается в папку _tracks_ (в папку, указанную в переменной $trackDir конфигурационного файла _params.php_).
 
 ## Отображение маршрутов
-GaladrielMap показывает маршруты и точки достопримечательностей, записанные в форматах gpx, kml и csv:  
+GaladrielMap показывает пути и маршруты а также точки достопримечательностей, записанные в форматах gpx, kml и csv:  
  ![Display routes and POIs](screenshots/s5.jpeg)<br>
- Файлы располагаются на сервере в папке _route_ (как она указана в файле конфигурации _params.php_). Откройте панель <img src="img/poi.svg" alt="POI" width="24px">.
+ Файлы располагаются на сервере в папке _route_ (как она указана в файле конфигурации _params.php_). Откройте панель <img src="img/poi.svg" alt="POI" width="24px">.  
+Если в пути gpx записана глубина, она может быть показана цветом линии пути, в соответствии с настройками в _params.php_
  
 ### CSV
 Текстовый файл в формате Comma-Separated Values -- самый простой способ заранее подготовить список интересующих точек (POI) для предстоящего путешествия. Для создания такого файла нужен только текстовый редактор, хотя удобней будет любой табличный процессор.  
@@ -240,7 +243,7 @@ opkg install php-cli
 
 [Форум](https://github.com/VladimirKalachikhin/Galadriel-map/discussions)
 
-Форум будет живее, если вы сделаете пожертвование [через PayPal](https://paypal.me/VladimirKalachikhin) по адресу [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com) или на [ЮМани](https://yasobe.ru/na/galadrielmap).
+Форум будет живее, если вы сделаете пожертвование на [ЮМани](https://sobe.ru/na/galadrielmap).
 
 ### Платно
 Вы можете получить [индивидуальную консультацию](https://kwork.ru/training-consulting/20093293/konsultatsii-po-ustanovke-i-ispolzovaniyu-galadrielmap) по вопросам установки и использования GaladrielMap, описанию источников тайлов и другим вопросам.  

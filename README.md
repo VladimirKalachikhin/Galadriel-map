@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.3 
+## v. 2.4 
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -72,7 +72,8 @@ You may download full pack -- more 10MB, or without vector tiles support and scr
 * [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) as _mapbox-gl-leaflet/leaflet-mapbox-gl.js_
 * [supercluster](https://github.com/mapbox/supercluster) as _supercluster/supercluster.js_
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) in _gpsdPROXY/_ directory
-
+* [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) in _polycolor/_ directory  
+* [value2color](https://github.com/VladimirKalachikhin/value2color) in _value2color/_ directory
 Create a local copy of dependences and/or edit _index.php_
 
 
@@ -116,12 +117,13 @@ GaladrielMap uses `gpxlogger` app from the gpsd-clients packet to log track on y
 GaladrielMap displays the current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
 Run _chkGPXfiles.php_ in cli to repair non-well-formed gpx files for other applications.  
 Tracks placed in _tracks_ directory on the server as it described in _params.php_.  
-Installation and configuring the `gpxlogger` describe in  [gpsd](https://gpsd.io/) documentation. You may use any other server-side logger for tracking in gpx format, set up it in _params.php_. If not - the logged track will still be updated if its name will be recognized as "current track" (see _params.php_).
-
+Installation and configuring the `gpxlogger` describe in  [gpsd](https://gpsd.io/) documentation. You may use any other server-side logger for tracking in gpx format, set up it in _params.php_. If not - the logged track will still be updated if its name will be recognized as "current track" (see _params.php_).  
 
 ## Routes and POIs
  ![Display routes and POIs](screenshots/s5.jpeg)<br>
- GaladrielMap display routes and PointOfInterest on gpx, kml and csv formats. Place you routes and POIs files to _route_ directory on the server as it directory described in _params.php_. Open <img src="img/poi.svg" alt="POI" width="24px"> tab.
+ GaladrielMap display tracks, routes and PointOfInterest on gpx, kml and csv formats. Place you routes and POIs files to _route_ directory on the server as it directory described in _params.php_. Open <img src="img/poi.svg" alt="POI" width="24px"> tab.  
+If there is depth in the gpx track, it can be shown by color along line (see _params.php_).
+
 ### CSV
 Comma-Separated Values text file - the simplest way of cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.  
 The first line in the CSV file must be field names. Good choice is a `"number","name","description","type","link","latitude","longitude"`  
@@ -243,7 +245,7 @@ opkg install php-cli
 
 [Discussions](https://github.com/VladimirKalachikhin/Galadriel-map/discussions)
 
-The forum will be more lively if you make a donation [via PayPal](https://paypal.me/VladimirKalachikhin)  at [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com) or at [ЮMoney](https://yasobe.ru/na/galadrielmap)
+The forum will be more lively if you make a donation at [ЮMoney](https://sobe.ru/na/galadrielmap)
 
 ### On paid
 [Personal consulting](https://kwork.ru/it-support/20093939/galadrielmap-installation-configuration-and-usage-consulting)  

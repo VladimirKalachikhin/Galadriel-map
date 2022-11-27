@@ -7,8 +7,9 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.3.4';
+$versionTXT = '2.4.0';
 /* 
+2.3.5	With depth coloring along gpx.
 */
 // start gpsdPROXY
 exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
@@ -104,6 +105,10 @@ $centerMark_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' 
 	<link href="mapbox-gl-js/dist/mapbox-gl.css" rel='stylesheet' />
 	<script src="mapbox-gl-js/dist/mapbox-gl.js"></script>
 <?php }?>
+
+	<script src="polycolor/polycolorRenderer.js"></script>
+	<script src="value2color/value2color.js"></script>
+
     <!-- Leaflet sidebar -->
     <link rel="stylesheet" href="leaflet-sidebar-v2/css/leaflet-sidebar.min.css" />
 	<script src="leaflet-sidebar-v2/js/leaflet-sidebar.min.js"></script>
@@ -557,6 +562,7 @@ if(getCookie('GaladrielSelectedRoutesSwitch') == undefined) SelectedRoutesSwitch
 else SelectedRoutesSwitch.checked = Boolean(+getCookie('GaladrielSelectedRoutesSwitch')); 	// getCookie from galadrielmap.js
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.
+var depthInData = <?php echo $depthInData;?>;	// параметры показа глубины вдоль пути
 // Маршрут
 var drivedPolyLineOptions;
 var currentRoute; 	// L.layerGroup, по объекту Editable которого щёлкнули. Типа, текущий.
@@ -1022,6 +1028,7 @@ spatialWebSocket.onmessage = function(event) {
 	case 'POLL':
 		break;
 	case 'TPV':
+		//console.log('spatialWebSocket: TPV recieved',data);
 		realtimeTPVupdate(data);
 		break;
 	case 'AIS':

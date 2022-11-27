@@ -201,7 +201,7 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 			//alert('on Ellipsoide')
 			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom}));
 		}
-		else if(mapParm['mapboxStyle']) { 	// векторные тайлы
+		else if(mapParm['mapboxStyle']) { 	// векторные тайлы, mapboxStyle добавляется в askMapParm.php, и содержит uri стиля
 			savedLayers[mapname].addLayer(L.mapboxGL({style: mapParm['mapboxStyle'],minZoom:mapParm.minZoom}));
 		}
 		else {
@@ -218,7 +218,7 @@ else {
 		//alert('on Ellipsoide')
 		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom});
 	}
-	else if(mapParm['mapboxStyle']) { 	// векторные тайлы
+	else if(mapParm['mapboxStyle']) { 	// векторные тайлы, mapboxStyle добавляется в askMapParm.php, и содержит uri стиля
 		if(!savedLayers[mapname])	savedLayers[mapname] = L.mapboxGL({style:mapParm['mapboxStyle'],minZoom:mapParm.minZoom});
 	}
 	else {
@@ -1696,6 +1696,20 @@ function atou(b64) {
 function utoa(data) {
   return btoa(unescape(encodeURIComponent(data)));
 }
+
+//////////// Эта функция используются в leflet-omnivore.js, но как её туда запихать правильным образом --
+// я не понимаю. arrayHasOnly нужна в двух местах, для которых, вроде, нет другого общего пространства имён,
+// кроме как это.
+function arrayHasOnly(array,value=null){
+/* содержит массив только value, или нет 
+*/
+	if(!Array.isArray(array)) return false;
+	if(array.length == 0) return false;	// every возвращает true для пустого массива, хотя обоснование этого абсолютно нематематично.
+	value = JSON.stringify(value);
+	return array.every(element => JSON.stringify(element) === value);
+}
+
+/////////////////////////////////////////
 
 
 function realtime(dataUrl,fUpdate,upData) {
