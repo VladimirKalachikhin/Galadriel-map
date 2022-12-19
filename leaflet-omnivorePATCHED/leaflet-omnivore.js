@@ -322,11 +322,12 @@ else featuresLayer.options.color = color; 	//  цвет линий
 if(options && options.featureNameNode) { 	// li с именем файла, из которого делаем layer
 	options.featureNameNode.style.backgroundColor = '#'+('000000' + color.toString(16)).slice(-6);
 }
+
 featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
 featuresLayer.options.style = function(geoJsonFeature){
 	// вот тут надо вычислить цвета и указать рендерер
-	//console.log('[featuresLayer.options.style] geoJsonFeature:',geoJsonFeature);
-	//console.log('[featuresLayer.options.style] depthInData:',depthInData);
+	//console.log('leaflet-omnivore.js [featuresLayer.options.style] geoJsonFeature:',geoJsonFeature);
+	//console.log('leaflet-omnivore.js [featuresLayer.options.style] depthInData:',depthInData);
 	if(depthInData.display && geoJsonFeature.properties && geoJsonFeature.properties.depths){	// depthInData - global from options.js
 		let colors = [], weights = [];
 		for(let i=0; i < geoJsonFeature.properties.depths.length; i++){
@@ -355,6 +356,7 @@ featuresLayer.options.style = function(geoJsonFeature){
 					weights.push(null);
 				}
 				else {
+					//console.log('leaflet-omnivore.js [featuresLayer.options.style] depth=',geoJsonFeature.properties.depths[i],'value2color:',value2color(geoJsonFeature.properties.depths[i],depthInData.minvalue,depthInData.maxvalue));
 					colors.push(value2color(geoJsonFeature.properties.depths[i],depthInData.minvalue||0,depthInData.maxvalue||10,depthInData.minColor||[255,0,0],depthInData.maxColor||[0,255,0],depthInData.underMinColor||"rgb(155,0,0)",depthInData.upperMaxColor||"rgb(200,250,240)"));
 					weights.push(5);
 				}
@@ -377,6 +379,7 @@ featuresLayer.options.style = function(geoJsonFeature){
 	}
 	else return {color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6)}; 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
 };	// end featuresLayer.options.style = function
+
 // Добавим в слой объекты
 featuresLayer.addData(Features); 	// добавим и покажем всё остальное
 if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
@@ -589,6 +592,8 @@ if(popUpHTML) popUpHTML = '<br>'+popUpHTML;
 return popUpHTML;
 }; 	// end function getLinksHTML
 
+var popupDepthInfo = L.popup();	// popup для отображения глубины на путях с глубиной
+
 function getPopUpToLine(feature, layer) {
 /* A Function that will be called once for each created Feature
 */
@@ -626,9 +631,60 @@ if(feature.properties) {
 	if(popUpHTML) {
 		layer.bindPopup(popUpHTML+'<br>');
 	}
+	
+	if(depthInData.display && feature.properties.depths){	// есть глубина и её надо показывать depthInData - global from options.js
+		layer.on('click', function(event) {
+			//console.log('leaflet-omnivore [gpxParse] event:',event);
+			// при наличии feature.geometry.coordinates 
+			let index = getNearestSegPoint(event.latlng, feature.geometry.coordinates);
+			if(feature.properties.depths[index] !== null){
+				popupDepthInfo.setLatLng({lng:feature.geometry.coordinates[index][0],lat:feature.geometry.coordinates[index][1]});	// в GeoJSON наоборот, чем в Leaflet
+				popupDepthInfo.setContent(dashboardDepthMesTXT+' '+(Math.round(feature.properties.depths[index]*100)/100)+' '+dashboardMeterMesTXT);
+				map.openPopup(popupDepthInfo);
+			}
+		})
+	}
+	
 }
+
+function getNearestSegPoint(latlng, latlngs){
+/* отыскивает координату в latlngs, ближайшую к latlng
+широта и долгота -- как в GeoJSON, не как в Leaflet!!!!
+*/
+let distance, minDistance=999999999999, index;
+let latitude = latlng.lat;
+let longitude = latlng.lng;
+
+for (let i = 0; i < latlngs.length; i++) {
+	distance = equirectangularDistance([longitude,latitude],latlngs[i]);
+	if(distance < minDistance){
+		minDistance = distance;
+		index = i;
+	}
+	//console.log('leaflet-omnivore [getNearestSegPoint] i=',i,'distance=',distance,'minDistance=',minDistance)
+}
+return index;
+} // end function getNearestSegPoint
 //console.log('leaflet-omnivore [getPopUpToLine] layer:',layer);
 } // end function getPopUpToLine
+
+function equirectangularDistance(from,to){
+// https://www.movable-type.co.uk/scripts/latlong.html
+// from,to: как в GeoJSON, не как в Leaflet!!!!
+let from_longitude = from[0];
+let from_latitude = from[1];
+let to_longitude = to[0];
+let to_latitude = to[1];
+const rad = Math.PI/180;
+const φ1 = from_latitude * rad;
+const φ2 = to_latitude * rad;
+const Δλ = (to_longitude-from_longitude) * rad;
+const R = 6371e3;	// метров
+const x = Δλ * Math.cos((φ1+φ2)/2);
+const y = (φ2-φ1);
+const d = Math.sqrt(x*x + y*y) * R;	// метров
+return d;
+} // end function equirectangularDistance
 
 // определение имени файла этого скрипта
 var scripts = document.getElementsByTagName('script');

@@ -73,7 +73,8 @@ You may download full pack -- more 10MB, or without vector tiles support and scr
 * [supercluster](https://github.com/mapbox/supercluster) as _supercluster/supercluster.js_
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) in _gpsdPROXY/_ directory
 * [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) in _polycolor/_ directory  
-* [value2color](https://github.com/VladimirKalachikhin/value2color) in _value2color/_ directory
+* [value2color](https://github.com/VladimirKalachikhin/value2color) in _value2color/_ directory  
+* 
 Create a local copy of dependences and/or edit _index.php_
 
 
