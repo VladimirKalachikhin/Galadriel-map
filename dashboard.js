@@ -1,19 +1,20 @@
 var snd = new Audio("img/beep-02.wav");  
 
-function depthAlarm() { 	// 
+function depthAlarmSound() { 	// 
 	setInterval(function(){snd.play();},300)
 }
 
-function maxSpeedAlarm() {
+function maxSpeedAlarmSound() {
 	setInterval(function(){snd.play();},1000)
 }
 
-function minSpeedAlarm() {
+function minSpeedAlarmSound() {
 	setInterval(function(){snd.play();},1500)
 }
 
-function toHeadingAlarm() {
-	setInterval(function(){snd.play();},500)
+function toHeadingAlarmSound() {
+	let timer = setInterval(function(){snd.play();},250)
+	//setTimeout(function(){clearInterval(timer)},1000);
 }
 
 

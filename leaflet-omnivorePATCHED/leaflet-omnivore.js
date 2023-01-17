@@ -250,6 +250,7 @@ csv2geojson.csv2geojson(csv, options, onparse);
 
 function onparse(err, geojson) {
     if (err) return layer.fire('error', { error: err });
+    //console.log('[onparse] geojson:',geojson);
 	var Points=[];
 	var Features=[];
 	//console.log(layer.options.markerColor);
@@ -1032,8 +1033,8 @@ function auto(x) {
     return deleteColumns(dsv.dsvFormat(delimiter).parse(x));
 }
 
-function csv2geojson(x, options, callback) { // text csv целиком, options, onparse
-
+function csv2geojson(x, options, callback) { // text csv целиком, options, функция onparse как callback
+	//console.log('[csv2geojson]',callback)
     if (!callback) {
         callback = options;
         options = {};
@@ -1045,8 +1046,7 @@ function csv2geojson(x, options, callback) { // text csv целиком, options
         lonfield = options.lonfield || '',
         crs = options.crs || '';
 
-    var features = [],
-        featurecollection = {type: 'FeatureCollection', features: features};
+    var features = [], featurecollection = {type: 'FeatureCollection', features: features};
 
     if (crs !== '') {
         featurecollection.crs = {type: 'name', properties: {name: crs}};
@@ -1062,10 +1062,11 @@ function csv2geojson(x, options, callback) { // text csv целиком, options
             return;
         }
     }
+  	//console.log('leaflet-omnivore.js [csv2geojson] options.delimiter=',options.delimiter);
 	// массив объектов из строк csv файла, начиная со второй, с именами атрибутов - из первой
     var parsed = (typeof x == 'string') ?
         dsv.dsvFormat(options.delimiter).parse(x) : x;
-  	//console.log(parsed);
+	//console.log('leaflet-omnivore.js [csv2geojson] parsed:',parsed);
 
     if (!parsed.length) {
         callback(null, featurecollection);
@@ -1079,6 +1080,7 @@ function csv2geojson(x, options, callback) { // text csv целиком, options
     if (!latfield) latfield = guessLatHeader(parsed[0]);
     if (!lonfield) lonfield = guessLonHeader(parsed[0]);
     var noGeometry = (!latfield || !lonfield);
+  	//console.log('leaflet-omnivore.js [csv2geojson] latfield=',latfield,'lonfield=',lonfield,noGeometry);
 
     if (noGeometry) {
         for (i = 0; i < parsed.length; i++) {
@@ -1093,13 +1095,11 @@ function csv2geojson(x, options, callback) { // text csv целиком, options
     }
 
     for (i = 0; i < parsed.length; i++) {
-        if (parsed[i][lonfield] !== undefined &&
-            parsed[i][latfield] !== undefined) {
+        if (parsed[i][lonfield] !== undefined && parsed[i][latfield] !== undefined) {
 
-            var lonk = parsed[i][lonfield],
-                latk = parsed[i][latfield],
-                lonf, latf,
-                a;
+            var lonk = parsed[i][lonfield],latk = parsed[i][latfield];
+			//console.log('leaflet-omnivore.js [csv2geojson] lonk=',lonk,'latk=',latk);
+            var lonf, latf, a;
 
             a = sexagesimal(lonk, 'EW');
             if (a) lonk = a;
@@ -1109,14 +1109,17 @@ function csv2geojson(x, options, callback) { // text csv целиком, options
             lonf = parseFloat(lonk);
             latf = parseFloat(latk);
 
-            if (isNaN(lonf) ||
-                isNaN(latf)) {
+            if (isNaN(lonf) || isNaN(latf)) {
+            	console.log('A row contained an invalid value for latitude or longitude','row:',parsed[i],'index:',i)
+				/*/ Ну и что такого, что у обного объекта кривые координаты? Это не повод не показывать все
                 errors.push({
                     message: 'A row contained an invalid value for latitude or longitude',
                     row: parsed[i],
                     index: i
                 });
-            } else {
+				*/
+            } 
+            else {
                 if (!options.includeLatLon) {
                     delete parsed[i][lonfield];
                     delete parsed[i][latfield];
@@ -1136,8 +1139,9 @@ function csv2geojson(x, options, callback) { // text csv целиком, options
             }
         }
     }
+	//console.log('leaflet-omnivore.js [csv2geojson]  errors:',errors)
 
-    callback(errors.length ? errors : null, featurecollection);
+    callback(errors.length ? errors : null, featurecollection);	// При таком подходе проблема у одного объекта приведёт к тому, что не будут показаны все
 }
 
 function toLine(gj) {
@@ -1252,8 +1256,10 @@ module.exports = {
     function parse(text, f) { 	// (строка - файл csv целиком,?), эта функция вызывается для разбора файла
       var convert, columns; 
       var rows = parseRows(text, function(row, i) {
-		//console.log(row);
-        if (convert) return convert(row, i - 1);
+        if (convert) {
+			//console.log('[dsv]',row,i,convert(row, i - 1));
+        	return convert(row, i - 1);
+        }
         //columns = row.map(function(colname){return colname.toLowerCase();}), convert = f ? customConverter(row, f) : objectConverter(row);
         columns = row, convert = f ? customConverter(row, f) : objectConverter(row);
 		//console.log(convert);
@@ -1273,6 +1279,7 @@ module.exports = {
           n = 0, // the current line number
           t, // the current token
           eol; // is the current token followed by EOL?
+      //console.log('[parseRows] text=',text)
 
       function token() {
         if (I >= N) return EOF; // special case: end of file

@@ -7,8 +7,9 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.4.0';
+$versionTXT = '2.5.0';
 /* 
+2.5.0	Shows the heading with the cursor, and the course with the velocity vector. Specially for gpsd 3.24.1
 2.3.5	With depth coloring along gpx.
 */
 // start gpsdPROXY
@@ -205,11 +206,11 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 					<div id='depthDial' style="line-height:0.4;" onClick="map.setView(cursor.getLatLng());">				
 					</div>
 					<div style="line-height:0.6;" onClick="map.setView(cursor.getLatLng());">
-						<br><span style="font-size:50%;"><?php echo $dashboardHeadingTXT;?></span>
-						<span style="font-size:30%; "><br><?php echo $dashboardHeadingAltTXT;?></span>
+						<br><span style="font-size:50%;" id="dashboardCourseTXTlabel"><?php echo $dashboardCourseTXT;?></span>
+						<span style="font-size:30%;"><br><span id="dashboardCourseAltTXTlabel"><?php echo $dashboardCourseAltTXT;?></span></span>
 					</div>
 					<div style="">
-						<span id='headingDisplay'></span>
+						<span id='courseDisplay'></span>
 					</div>
 					<div style="font-size:50%;line-height:0.6;" onClick="doCopyToClipboard(lat+' '+lng);" >
 						<br><span style="font-size:50%;"><?php echo $dashboardPosTXT;?></span><br>
@@ -245,7 +246,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 			</ul>
 			<ul id="trackList" class='commonList'>
 <?php
-foreach($trackInfo as $trackName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
+foreach($trackInfo as $trackName) { 	
 ?>
 					<li onClick='{selectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack)}' <?php echo " id='$trackName' "; if($trackName == $currentTrackName) echo "title='Current track' class='currentTrackName'"; echo ">$trackName";?></li>
 <?php
@@ -533,7 +534,6 @@ if(!minWATCHinterval) minWATCHinterval = 0;
 minWATCHintervalInput.value = minWATCHinterval;
 var PosFreshBefore = <?php echo $PosFreshBefore * 1000;?>; 	// время в милисекундах, через которое положение считается протухшим
 if(PosFreshBefore < (2*minWATCHinterval*1000+1000)) PosFreshBefore = 2*minWATCHinterval*1000+1000;
-var heading = 0; 	// начальное направление
 var followToCursor = true; 	// карта следует за курсором Обеспечивает только паузу следования при перемещениях и масштабировании карты руками
 var noFollowToCursor = false; 	// карта никогда не следует за курсором Глобальное отключение следования. Само не восстанавливается.
 var CurrnoFollowToCursor = 1; 	// глобальная переменная для сохранения состояния
@@ -593,6 +593,12 @@ var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
 var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
 var dashboardDepthMesTXT = '<?php echo $dashboardDepthMesTXT;?>';
 var dashboardMeterMesTXT = '<?php echo $dashboardMeterMesTXT;?>';
+var dashboardCourseTXT = '<?php echo $dashboardCourseTXT;?>';
+var dashboardCourseAltTXT = '<?php echo $dashboardCourseAltTXT;?>';
+var dashboardHeadingTXT = '<?php echo $dashboardHeadingTXT;?>';
+var dashboardHeadingAltTXT = '<?php echo $dashboardHeadingAltTXT;?>';
+var dashboardMHeadingTXT = '<?php echo $dashboardMHeadingTXT;?>';
+var dashboardMHeadingAltTXT = '<?php echo $dashboardMHeadingAltTXT;?>';
 var latTXT = '<?php echo $latTXT;?>';
 var longTXT = '<?php echo $longTXT;?>';	
 // MOB
@@ -875,7 +881,7 @@ var NoCursor = L.icon({
 });
 var cursor = L.marker(startCenter, {
 	icon: GpsCursor,
-	rotationAngle: heading, // начальный угол поворота маркера
+	rotationAngle: 0, // начальный угол поворота маркера
 	rotationOrigin: "50% 50%", 	// вертим маркер вокруг центра
 	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
 	zIndexOffset: -500
@@ -883,7 +889,7 @@ var cursor = L.marker(startCenter, {
 // указатель скорости
 var velocityVector = L.marker(cursor.getLatLng(), {
 	icon: velocityCursor,
-	rotationAngle: heading, // начальный угол поворота маркера
+	rotationAngle: 0, // начальный угол поворота маркера
 	opacity: 0.1,
 	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
 	zIndexOffset: -501
@@ -1073,7 +1079,7 @@ spatialWebSocket.onclose = function(event) {
 	}
 	else cursor.setIcon(NoGpsCursor)	// заменим курсор (значёк) на серый
 	velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
-	headingDisplay.innerHTML = '&nbsp;';
+	courseDisplay.innerHTML = '&nbsp;';
 	locationDisplay.innerHTML = '&nbsp;';
 	depthDial.innerHTML = '';
 	//MOBtab.className='disabled'; 	// если нет курсора (координат) -- невозможно включить режим MOB. Это плохая идея.
@@ -1170,7 +1176,7 @@ if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData
 	}
 	else cursor.setIcon(NoGpsCursor)	// заменим курсор (значёк) на серый
 	velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
-	headingDisplay.innerHTML = '&nbsp;';
+	courseDisplay.innerHTML = '&nbsp;';
 	locationDisplay.innerHTML = '&nbsp;';
 	depthDial.innerHTML = '';
 	//MOBtab.className='disabled'; 	// если нет курсора (координат) -- невозможно включить режим MOB. Это плохая идея.
@@ -1214,19 +1220,50 @@ else {
 	depthDial.innerHTML = '';
 }
 
-// Направление с попыткой его запомнить при прекращении движения
+// Направление
 //console.log('Index gpsdData',gpsdData.track);
 velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
 if(gpsdData.track == null || gpsdData.track == undefined) {
-	headingDisplay.innerHTML = '&nbsp;';
-	cursor.setRotationAngle(0); // повернём маркер
-	velocityVector.setRotationAngle(0); // повернём указатель скорости
+	if(gpsdData.heading !== undefined) {	// зато есть курс
+		positionCursor.invoke('setRotationAngle',gpsdData.heading); // повернём все маркеры
+		courseDisplay.innerHTML = Math.round(gpsdData.heading); // покажем направление на приборной панели
+		// Заменим подписи
+		dashboardCourseTXTlabel.innerHTML = dashboardHeadingTXT;
+		dashboardCourseAltTXTlabel.innerHTML = dashboardHeadingAltTXT
+	}
+	else if(gpsdData.mheading !== undefined){	// или магнитный курс
+		if(gpsdData.magvar !== undefined) {		// если есть склонение -- он истинный курс
+			let heading = gpsdData.mheading + gpsdData.magvar;
+			positionCursor.invoke('setRotationAngle',heading); // повернём все маркеры
+			courseDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
+			// Заменим подписи
+			dashboardCourseTXTlabel.innerHTML = dashboardHeadingTXT
+			dashboardCourseAltTXT.innerHTML = dashboardHeadingAltTXT
+		}
+		else {
+			positionCursor.invoke('setRotationAngle',gpsdData.mheading); // повернём все маркеры
+			courseDisplay.innerHTML = Math.round(gpsdData.mheading); // покажем направление на приборной панели
+			// Заменим подписи
+			dashboardCourseTXTlabel.innerHTML = dashboardMHeadingTXT
+			dashboardCourseAltTXT.innerHTML = dashboardMHeadingAltTXT
+		}
+	}
+	else {	// нет никакой информации о направлении
+		courseDisplay.innerHTML = '&nbsp;';
+		cursor.setRotationAngle(0); // повернём маркер
+		velocityVector.setRotationAngle(0); // повернём указатель скорости
+	}
 }
 else {
-	heading = gpsdData.track; // если положение изменилось - возьмём новое направление, иначе - будет старое.
-	cursor.setRotationAngle(heading); // повернём маркер
-	velocityVector.setRotationAngle(heading); // повернём указатель скорости
-	headingDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
+	velocityVector.setRotationAngle(gpsdData.track); // повернём указатель скорости
+	// gpsdData.heading есть, только если данные от SignalK, а если от gpsd -- никогда нет
+	if(gpsdData.heading !== undefined) cursor.setRotationAngle(gpsdData.heading);
+	else if((gpsdData.mheading !== undefined) && (gpsdData.magvar !== undefined)) cursor.setRotationAngle(gpsdData.mheading + gpsdData.magvar);
+	else cursor.setRotationAngle(gpsdData.track); // повернём маркер
+	courseDisplay.innerHTML = Math.round(gpsdData.track); // покажем направление на приборной панели
+	// Заменим подписи, вдруг до этого не было путевого угла
+	dashboardCourseTXTlabel.innerHTML = dashboardCourseTXT
+	dashboardCourseAltTXTlabel.innerHTML = dashboardCourseAltTXT
 }
 positionCursor.addTo(map); 	// добавить курсор на карту
 
@@ -1264,8 +1301,9 @@ if(map.hasLayer(mobMarker)){ 	// если показывается мульти�
 	azimuthMOBdisplay.innerHTML = Math.round(azimuth);
 	distanceMOBdisplay.innerHTML = Math.round(latlng1.distanceTo(latlng2));
 	locationMOBdisplay.innerHTML = '<?php echo $latTXT?> '+Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+'<br><?php echo $longTXT?> '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000;	
-	if(gpsdData.track !== null) { 	// если доступен истинный курс, heading есть всегда
-		let relBearing = azimuth-heading+22.5;	// половина от 45 против часовой стрелки
+	let heading = gpsdData.track || gpsdData.heading || gpsdData.mheading;	// для словесного определения направления - всё равно
+	if(heading) {
+		let relBearing = azimuth-heading+22.5;	// половина от 45 против часовой стрелке
 		if(relBearing<0) relBearing = 360+relBearing;
 		relBearing = Math.floor(relBearing/45); 	// курсовой угол (relative bearing) / 45 градусов -- номер сектора, против часовой стрелки
 		if(relBearing>7) relBearing = 0;

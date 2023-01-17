@@ -323,7 +323,7 @@ else {
 		if(!str) return;
 		if(str.indexOf('</gpx>') == -1) {
 			// может получиться кривой gpx -- по разным причинам
-			if(str.indexOf('</trkpt>')==-1) { 	// на самом деле, здесь </metadata>, т.е., gpxlogger запустился, но ничего не пишет: нет gpsd, нет спутников, нет связи...
+			if((str.indexOf('</trkpt>')==-1) && (str.indexOf('<trkseg>')==-1)) { 	// на самом деле, здесь </metadata>, т.е., gpxlogger запустился, но ничего не пишет: нет gpsd, нет спутников, нет связи..., но может быть просто начало файла, например, с trkseg
 				savedLayers[trackName] = omnivore.gpx.parse(this.responseText.trim()+'\n</gpx>',options); // 
 			}
 			else {

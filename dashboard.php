@@ -6,7 +6,7 @@ W   281.25|          |        |          |E 101.25
 WSW 258.75|          |        |          |ESE 123.75
 SW  236.25|SSW 213.75|S 191.25|SSE 168.75|SE 146.25
 */
-$versionTXT = '2.0.3';
+$versionTXT = '2.1.0';
 /*
 2.0.2 -- MOB info support
 */
@@ -15,8 +15,10 @@ require('params.php'); 	// пути и параметры
 // Интернационализация
 if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
 //if(TRUE) {
-	$dashboardHeadingTXT = 'Course';
-	$dashboardMagHeadingTXT = 'Magnetic course';
+	$dashboardCourseTXT = 'Course';
+	$dashboardHeadingTXT = 'Heading';
+	$dashboardMagCourseTXT = 'Magnetic course';
+	$dashboardMagHeadingTXT = 'Magnetic heading';
 	$dashboardMagVarTXT = 'Magnetic variation';
 	$dashboardSpeedTXT = 'Velocity';
 	$dashboardMinSpeedAlarmTXT = 'Speed too high';
@@ -29,7 +31,8 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 	$dashboardDepthMenuTXT = 'Shallow';
 	$dashboardMinSpeedMenuTXT = 'Min speed';
 	$dashboardMaxSpeedMenuTXT = 'Max speed';
-	$dashboardToHeadingAlarmTXT = 'The course is bad';
+	$dashboardToCourseAlarmTXT = 'The course is bad';
+	$dashboardToHeadingAlarmTXT = 'The heading is bad';
 	$dashboardKeysMenuTXT = 'Use keys to switch the screen mode';
 	$dashboardKeySetupTXT = 'Select purpose and press key for:';
 	$dashboardKeyNextTXT = 'Next mode';
@@ -50,7 +53,9 @@ if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - �
 
 }
 else {
-	$dashboardHeadingTXT = 'Истинный курс'; 	//  хотя это "путевой угол", "путь"
+	$dashboardCourseTXT = 'Истинный путь';
+	$dashboardHeadingTXT = 'Истинный курс';
+	$dashboardMagCourseTXT = 'Магнитный путь';
 	$dashboardMagHeadingTXT = 'Магнитный курс';
 	$dashboardMagVarTXT = 'Склонение';
 	$dashboardSpeedTXT = 'Скорость';
@@ -64,13 +69,14 @@ else {
 	$dashboardDepthMenuTXT = 'Опасная глубина';
 	$dashboardMinSpeedMenuTXT = 'Минимальная скорость';
 	$dashboardMaxSpeedMenuTXT = 'Максимальная скорость';
+	$dashboardToCourseAlarmTXT = 'Отклонение от пути';
 	$dashboardToHeadingAlarmTXT = 'Отклонение от курса';
 	$dashboardKeysMenuTXT = 'Используйте клавиши для смены режимов';
 	$dashboardKeySetupTXT = 'Укажите назначение и нажмите клавишу для:';
 	$dashboardKeyNextTXT = 'Следующий режим';
 	$dashboardKeyPrevTXT = 'Предыдущий режим';
 	$dashboardKeyMenuTXT = 'Меню оповещений';
-	$dashboardKeyMagneticTXT = 'Магнитный курс';
+	$dashboardKeyMagneticTXT = 'Магнитный путь';
 	$dashboardMOBTXT = 'Человек за бортом!';
 	$relBearingTXT = array(
 'прямо по курсу',
@@ -87,15 +93,21 @@ else {
 
 // перечень типов данных из различных источников, которые требуется взять от gpsd
 $dataTypes = array(  	//
-'track', 	// курс
+'track', 	// путевой угол
+'heading', 	// курс
 'speed',	// скорость
-'magtrack', 	// магнитный курс
+'magtrack', 	// магнитный путевой угол
+'mheading', 	// магнитный курс
 'magvar', 	// магнитное склонение
 'depth' 	// глубина
 );
 // типы данных, которые, собственно, будем показывать 
 $displayData = array(  	// 
-	'track' => array('variants' => [array('track',"$dashboardHeadingTXT"),array('magtrack',"$dashboardMagHeadingTXT")], 	// курс, магнитный курс
+	'track' => array('variants' => [array('track',"$dashboardCourseTXT"),array('magtrack',"$dashboardMagCourseTXT")], 	// путь, магнитный путь
+		'precision' => 0,
+		'multiplicator' => 1
+	),
+	'heading' => array('variants' => [array('heading',"$dashboardHeadingTXT"),array('mheading',"$dashboardMagHeadingTXT")], 	// путь, магнитный путь
 		'precision' => 0,
 		'multiplicator' => 1
 	),
@@ -112,6 +124,7 @@ $displayData = array(  	//
 $mode = $_REQUEST['mode'];
 if(!$mode) $mode = $_SESSION['mode'];
 if(!$mode) $mode = 'track';
+$_SESSION['mode'] = $mode;	// перепишем теневое значение mode актуальным, раз такова воля юзера
 $magnetic = $_REQUEST['magnetic'];
 //echo "Is NULL ".is_null($_REQUEST['magnetic'])."<br>\n";
 if($magnetic===NULL) $magnetic = $_SESSION['magnetic'];
@@ -186,7 +199,7 @@ if($minSpeedAlarm and ($tpv['speed']!==NULL)) {
 	if($tpv['speed']*60*60/1000 <= $minSpeedValue) {
 		$mode = 'speed';
 		$header = $dashboardMinSpeedAlarmTXT;
-		$alarmJS = 'minSpeedAlarm();';
+		$alarmJS = 'minSpeedAlarmSound();';
 		$alarm = TRUE;
 	}
 }
@@ -194,7 +207,7 @@ if($maxSpeedAlarm and ($tpv['speed']!==NULL)) {
 	if($tpv['speed']*60*60/1000 >= $maxSpeedValue) {
 		$mode = 'speed';
 		$header = $dashboardMaxSpeedAlarmTXT;
-		$alarmJS = 'maxSpeedAlarm();';
+		$alarmJS = 'maxSpeedAlarmSound();';
 		$alarm = TRUE;
 	}
 }
@@ -207,9 +220,18 @@ if($toHeadingAlarm and !$mob) {
 	if($maxHeading>=360) $maxHeading = $maxHeading-360;
 	//echo "$minHeading<$theHeading>$maxHeading";
 	if($theHeading < $minHeading or $theHeading > $maxHeading) {
-		$mode = 'track';
-		$header = $dashboardToHeadingAlarmTXT;
-		$alarmJS = 'toHeadingAlarm();';
+		switch($mode){
+		case 'track';
+			$header = $dashboardToCourseAlarmTXT;
+			break;
+		case 'heading';
+			$header = $dashboardToHeadingAlarmTXT;
+			break;
+		default:
+			$mode = 'track';
+			$header = $dashboardToCourseAlarmTXT;
+		}
+		$alarmJS = 'toHeadingAlarmSound();';
 		$alarm = true;
 	}
 }
@@ -217,7 +239,7 @@ if($depthAlarm and ($tpv['depth']!==NULL)) {
 	if($tpv['depth'] <= $minDepthValue) {
 		$mode = 'depth';
 		$header = $dashboardDepthAlarmTXT;
-		$alarmJS = 'depthAlarm();';
+		$alarmJS = 'depthAlarmSound();';
 		$alarm = TRUE;
 	}
 }
@@ -235,7 +257,7 @@ for($i=0;$i<$cnt;++$i){
 	$type = $parms[$i];	// что показывать
 	$parm = $displayData[$type];	// как показывать
 	if(!$mode) $mode = $type; 	// что-то не так с типом, сделаем текущий тип указанным
-	//echo "i=$i; type=$type; enough=$enough;<br>\n";
+	//echo "i=$i; type=$type; mode=$mode; enough=$enough;tpv[{$variantType}]={$tpv[$variantType]}<br>\n";
 	//echo "parm:<pre>"; print_r($parm); echo "</pre>";
 	//echo "displayData:<pre>"; print_r($displayData[$type]); echo "</pre>";
 	if($enough) {
@@ -273,7 +295,7 @@ for($i=0;$i<$cnt;++$i){
 		if($i == $cnt-1) $i = -1; 	// цикл по кругу
 		continue;
 	}
-	$header = $parm['variants'][$variant][1];
+	if(!$header) $header = $parm['variants'][$variant][1];
 	$symbol = round($tpv[$variantType]*$parm['multiplicator'],$parm['precision']);
 	$enough = true;
 	$cycle = $variantType;	// сдедующий тип будем искать по кругу до выбранного
@@ -282,7 +304,7 @@ for($i=0;$i<$cnt;++$i){
 if(!$prevMode){
 	$prevMode = $parms[$cnt-1];
 }
-$_SESSION['mode'] = $mode;
+//$_SESSION['mode'] = $mode;
 //print "prevMode=$prevMode; nextMode=$nextMode;<br>\n";
 
 $rumbNames = array('&nbsp;&nbsp;&nbsp;N&nbsp;&nbsp;&nbsp;','NNE','&nbsp;NE&nbsp;','ENE','&nbsp;&nbsp;E&nbsp;&nbsp;','ESE','&nbsp;SE&nbsp;','SSE','&nbsp;&nbsp;&nbsp;S&nbsp;&nbsp;&nbsp;','SSW','&nbsp;SW&nbsp;','WSW','&nbsp;&nbsp;W&nbsp;&nbsp;','WNW','&nbsp;NW&nbsp;','NNW');
@@ -546,20 +568,77 @@ return matches ? decodeURIComponent(matches[1]) : undefined;
 			<td style='width:15%;'><input type='text' name=maxSpeedValue value='<?php echo $maxSpeedValue?>' style='width:95%;font-size:inherit;'></td>
 		</tr><tr style='height:2em;'>
 			<td><input type='checkbox' name='toHeadingAlarm' value='1' <?php if($toHeadingAlarm) echo 'checked';?> style='height:3em;width:3em;'></td>
-			<td><?php if($magnetic) {
-						if($toHeadingAlarm) {
-							if($toHeadingMagnetic) echo $dashboardMagHeadingTXT;
-							else echo $dashboardHeadingTXT;
+			<td><?php
+					//echo "<br> mode=$mode; displayData[mode]['variants']:<pre>"; print_r($displayData[$mode]['variants'][1]); echo "</pre>";
+					if($magnetic) {
+						if($toHeadingAlarm) {	// имеется режим опасности
+							if($toHeadingMagnetic) {	// ранее был установлен
+								switch($mode){
+								case 'track':
+								case 'heading':
+									echo $displayData[$mode]['variants'][1][1] ;
+									break;
+								default:
+									echo $displayData['track']['variants'][1][1] ;
+								}
+							}
+							else {
+								switch($mode){
+								case 'track':
+								case 'heading':
+									echo $displayData[$mode]['variants'][0][1] ;
+									break;
+								default:
+									echo $displayData['track']['variants'][0][1] ;
+								}
+							}
 						}
-						else echo $dashboardMagHeadingTXT; 
+						else {
+							switch($mode){
+							case 'track':
+							case 'heading':
+								echo $displayData[$mode]['variants'][1][1] ;
+								break;
+							default:
+								echo $displayData['track']['variants'][1][1] ;
+							}
+						}
 					}
 					else {
 						if($toHeadingAlarm) {
-							if($toHeadingMagnetic) echo $dashboardMagHeadingTXT;
-							else echo $dashboardHeadingTXT;
+							if($toHeadingMagnetic) {
+								switch($mode){
+								case 'track':
+								case 'heading':
+									echo $displayData[$mode]['variants'][1][1] ;
+									break;
+								default:
+									echo $displayData['track']['variants'][1][1] ;
+								}
+							}
+							else {
+								switch($mode){
+								case 'track':
+								case 'heading':
+									echo $displayData[$mode]['variants'][0][1] ;
+									break;
+								default:
+									echo $displayData['track']['variants'][0][1] ;
+								}
+							}
 						}
-						else echo $dashboardHeadingTXT;
-					}?><br> &nbsp; 
+						else {
+							switch($mode){
+							case 'track':
+							case 'heading':
+								echo $displayData[$mode]['variants'][0][1] ;
+								break;
+							default:
+								echo $displayData['track']['variants'][0][1] ;
+							}
+						}
+					}
+					?><br> &nbsp; 
 			<input type='radio' name='toHeadingPrecision' value='10' <?php if($toHeadingPrecision == 10) echo 'checked';?> style='height:2em;width:2em;'> &plusmn; 10&deg; &nbsp; 
 			<input type='radio' name='toHeadingPrecision' value='20' <?php if($toHeadingPrecision == 20) echo 'checked';?> style='height:2em;width:2em;'> &plusmn; 20&deg;
 			<td style='width:15%;'><input type='text' name=toHeadingValue value='<?php if($magnetic){ 
@@ -901,6 +980,7 @@ $tpv = array();
 $selfLonLat = array();	// будет использоваться для MOB и на всякий случай
 krsort($gpsdData); 	// отсортируем устройства по времени к прошлому
 foreach($gpsdData as $device) {
+	//echo "device=<pre>"; print_r($device); echo "</pre>\n";
 	if(is_numeric($device['lon']) and is_numeric($device['lat']))	$selfLonLat = array($device['lon'],$device['lat']);
 	foreach($dataTypes as $data) {	// выберем то, что указано в $dataTypes
 		if($device[$data]!==NULL) $tpv[$data] = (float)$device[$data];
@@ -908,9 +988,13 @@ foreach($gpsdData as $device) {
 	//echo "<br>tpv=<pre>"; print_r($tpv); echo "</pre>\n";
 	if($device['mode'] == 3) { 	// последний по времени 3D fix 
 		// считаем, что это более достоверно
-		$tpv['track'] = $device['track']; 	// курс, без явного преобразования типов, чтобы остался NULL
-		$tpv['speed'] = $device['speed']; 	// скорость
+		if(array_key_exists('track',$device)) $tpv['track'] = $device['track']; 	// путь, без явного преобразования типов, чтобы остался NULL
+		if(array_key_exists('magtrack',$device)) $tpv['magtrack'] = $device['magtrack']; 	// магнитный путь
+		if(array_key_exists('heading',$device)) $tpv['heading'] = $device['heading']; 	// курс
+		if(array_key_exists('mheading',$device)) $tpv['mheading'] = $device['mheading']; 	// магнитный курс
+		if(array_key_exists('speed',$device)) $tpv['speed'] = $device['speed']; 	// скорость
 	}
+	//echo "device['mode']={$device['mode']}<br>tpv=<pre>"; print_r($tpv); echo "</pre>\n";
 	$enough = TRUE;
 	foreach($dataTypes as $data) {	// проверяем, всё ли типы данных, что указаны в $dataTypes, есть в $tpv
 		if(!($enough = ($enough and $tpv[$data]))) break;	// если все $dataTypes есть, цикл прокрутится, и $enough останется TRUE. Иначе цикл обломится с $enough FALSE, и устройства будут просматириваться дальше
@@ -932,7 +1016,7 @@ if($buf['mob']['status']){
 
 unset($gpsdData);
 return array($tpv,$mob);
-}
+} // end function askGPSDproxy
 
 function bearing($pair) {
 /* Азимут между точками

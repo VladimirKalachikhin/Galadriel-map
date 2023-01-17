@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.4 
+## v. 2.5 
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -37,7 +37,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 
 
 ## Compatibility
-Linux, OpenWRT, VenusOS. Modern browsers include mobile.
+PHP7, Linux, OpenWRT, VenusOS. Modern browsers include mobile.
 
 
 ## Demo
@@ -110,8 +110,8 @@ GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox sty
 How to install and configure gpsd see [gpsd pages](https://gpsd.io/).  
 Also, GaladrielMap can get data from VenusOS or Signal K - localy or via LAN. If GaladrielMap don't find **gpsd**, it it tries to discover Signal K and then VenusOS on LAN and takes the data from there.
 
-Map **always** sets to current position. This behavior can be temporarily disabled on the <img src="img/settings1.svg" alt="Settings" width="24px"> menu. Following the cursor is disabled if <img src="img/route.svg" alt="Route" width="24px"> or <img src="img/download1.svg" alt="Loader" width="24px"> menu are open.
-
+Map **always** sets to current position. This behavior can be temporarily disabled on the <img src="img/settings1.svg" alt="Settings" width="24px"> menu. Following the cursor is disabled if <img src="img/route.svg" alt="Route" width="24px"> or <img src="img/download1.svg" alt="Loader" width="24px"> menu are open.  
+The position cursor indicates **heading**, and velocity vector indicates **course**, if both parameters are available from a data source. If there is one, then they show the same, and what exactly is indicated on the <img src="img/speed1.svg" alt="Loader" width="24px"> dashboard.
 
 ## Tracking
 GaladrielMap uses `gpxlogger` app from the gpsd-clients packet to log track on your server. Control `gpxlogger` are in <img src="img/track.svg" alt="Handle tracks" width="24px"> tab.  
@@ -127,7 +127,8 @@ If there is depth in the gpx track, it can be shown by color along line (see _pa
 
 ### CSV
 Comma-Separated Values text file - the simplest way of cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.  
-The first line in the CSV file must be field names. Good choice is a `"number","name","description","type","link","latitude","longitude"`  
+The first line in the CSV file must be field names. Good choice is a   `"number","name","description","type","link","latitude","longitude"`  
+as the [_gpsbabel_ doc](https://www.gpsbabel.org/htmldoc-1.7.0/fmt_unicsv.html) recommends.  
 Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
 A real example of using CSV to store information about ports and piers on Lake Saimaa in Finland - [SaimaaPOI](https://github.com/VladimirKalachikhin/Saimaa-POI). File with geospatial photolinks on CSV format - is a good example too.  
 Place your CSV to _route_ directory on the server as it directory described in _params.php_. Avoid setting file names in _route_ same as names in _tracks_ directory.
