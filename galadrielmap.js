@@ -56,6 +56,7 @@ doCopyToClipboard() Копирование в буфер обмена
 doCurrentTrackName(liID)
 doNotCurrentTrackName(liID)
 
+loggingWait()		запускает/останавливает слежение за наличием пишущегося трека
 loggingRun() 		запускает/останавливает запись трека
 loggingCheck(logging='logging.php')	включает и выключает запись трека, а также проверяет, ведётся ли запись 
 
@@ -127,6 +128,7 @@ openedNames = JSON.stringify(openedNames);
 document.cookie = "GaladrielRoutes="+openedNames+"; expires="+expires+"; path=/; samesite=Lax";
 // Сохранение переключателей и параметров
 document.cookie = "GaladrielcurrTrackSwitch="+Number(currTrackSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель currTrackSwitch
+document.cookie = "GaladrielloggingSwitch="+Number(loggingSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель loggingSwitch, включение записи трека. Сохраняется, чтобы знать, что именно этот клиент включил запись.
 document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель SelectedRoutesSwitch
 document.cookie = "GaladrielminWATCHinterval="+minWATCHinterval+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 }
@@ -301,13 +303,16 @@ function displayTrack(trackNameNode) {
 /* рисует трек с именем в trackNameNode
 global trackDirURI, window, currentTrackName
 */
-//alert(trackName);
 var trackName = trackNameNode.innerText.trim();
-if( savedLayers[trackName] && (trackName != currentTrackName)) savedLayers[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем в updateCurrTrack
+//console.log('[displayTrack] trackName=',trackName,'currentTrackName=',currentTrackName,'savedLayers[trackName]',savedLayers[trackName]);
+if( savedLayers[trackName]) {
+	//console.log('[displayTrack] Рисуем на карте из кеша trackName=',trackName);
+	savedLayers[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем в updateCurrTrack
+}
 else {
 	var options = {featureNameNode : trackNameNode};
 	var xhr = new XMLHttpRequest();
-	//alert(trackDirURI+'/'+trackName+'.gpx');
+	//console.log('[displayTrack] Загружаем новый файл trackName=',trackName);
 	xhr.open('GET', encodeURI(trackDirURI+'/'+trackName+'.gpx'), true); 	// Подготовим асинхронный запрос
 	xhr.overrideMimeType( "text/plain; charset=x-user-defined" ); 	// тупые уроды из Mozilla считают, что если не указан mime type ответа -- то он text/xml. Файлы они, очевидно, не скачивают.
 	xhr.send();
@@ -317,18 +322,19 @@ else {
 			console.log('Server return bad status '+this.status);
 			return; 	// что-то не то с сервером
 		}
+		// В злопаршивом Javascript символ /00 пробельным не является
 		//console.log('|'+this.responseText.slice(-10)+'|');
-		let str = this.responseText.trim().slice(-12);
+		let str = this.responseText.replace(/\0+|\0+/g, '').trim().slice(-12);
 		//console.log('[displayTrack] |'+str+'|');
 		if(!str) return;
-		if(str.indexOf('</gpx>') == -1) {
-			// может получиться кривой gpx -- по разным причинам
-			if((str.indexOf('</trkpt>')==-1) && (str.indexOf('<trkseg>')==-1)) { 	// на самом деле, здесь </metadata>, т.е., gpxlogger запустился, но ничего не пишет: нет gpsd, нет спутников, нет связи..., но может быть просто начало файла, например, с trkseg
-				savedLayers[trackName] = omnivore.gpx.parse(this.responseText.trim()+'\n</gpx>',options); // 
-			}
-			else {
-				savedLayers[trackName] = omnivore.gpx.parse(this.responseText.trim()+'\n  </trkseg>\n </trk>\n</gpx>',options); // незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
-			}
+		if(str.indexOf('</gpx>') == -1) {	// может получиться кривой gpx -- по разным причинам
+			//console.log('кривой gpx',str);
+			// незавершённый gpx - дополним до конца. Поэтому скачиваем сами, а не omnivore
+			let responseText = this.responseText.replace(/\0+|\0+/g, '').trim();	// потому что this.responseText не строка, а getter-only property, хрен его знает, что это значит и зачем.
+			if(str.endsWith('</trkpt>')) responseText += '\n  </trkseg>\n </trk>\n</gpx>';	// точку оно всегда? успевает записать
+			else if(str.endsWith('</trkseg>')) responseText += '\n </trk>\n</gpx>';
+			else responseText += '\n</gpx>';	// на самом деле, здесь </metadata>, т.е., gpxlogger запустился, но ничего не пишет: нет gpsd, нет спутников, нет связи...
+			savedLayers[trackName] = omnivore.gpx.parse(responseText,options);
 		}
 		else {
 			savedLayers[trackName] = omnivore.gpx.parse(this.responseText,options); 	// responseXML иногда почему-то кривой
@@ -381,6 +387,10 @@ xhr.onreadystatechange = function() { //
 	if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
 	if (this.status != 200) { 	// запрос завершлся, но неудачно
 		console.log('Server return '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
+		if(typeof loggingIndicator != 'undefined'){ 	// лампочка в интерфейсе
+			loggingIndicator.style.color='red';
+			loggingIndicator.innerText='\u2B24';
+		}
 		return; 	// что-то не то с сервером
 	}
 	//console.log(this.responseText);
@@ -399,7 +409,8 @@ xhr.onreadystatechange = function() { //
 		}
 		if(resp.pt) { 	// есть данные
 			if(savedLayers) {	// может не быть, если, например, показ треков выключили, но выполнение currentTrackUpdate уже запланировано. Вообще-то, так быть не может, но сообщение об отсутствии иногда наблюдается. А иногда -- нет.
-				if(typeof savedLayers[currentTrackName].getLayers  == 'function') { 	// это layerGroup
+				//if(typeof savedLayers[currentTrackName].getLayers  == 'function') { 	// это layerGroup
+				if(savedLayers[currentTrackName] instanceof L.LayerGroup) { 	// это layerGroup
 					savedLayers[currentTrackName].getLayers()[0].addData(resp.pt); 	// добавим полученное к слою с текущим треком
 					//console.log(savedLayers[currentTrackName].getLayers()[0]);
 				}
@@ -409,18 +420,26 @@ xhr.onreadystatechange = function() { //
 	}
 	else { 	// лог не пишется
 		if(typeof loggingIndicator != 'undefined'){
-			if(loggingSwitch.checked){ 	// лампочка и переключатель в интерфейсе
+			// лампочка и переключатель в интерфейсе
+			if(loggingSwitch.checked){ 	// этот клиент сказал писать трек, состояние loggingSwitch восстанавливается из куки в index.php
 				loggingIndicator.style.color='red';
 				loggingIndicator.innerText='\u2B24';
+				loggingRun();	// попытаемся запустить запись трека
 			}
 			else {
 				loggingIndicator.style.color='';
 				loggingIndicator.innerText='';
+				console.log('[updateCurrTrack]  Track update stopped because no logging now');
+				clearInterval(currentTrackUpdateProcess);	
+				currentTrackUpdateProcess = null;
+				if(currentWaitTrackUpdateProcess){
+					clearInterval(currentWaitTrackUpdateProcess);	
+					console.log('[updateCurrTrack] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
+				}
+				currentWaitTrackUpdateProcess = setInterval(loggingCheck,10000);	// раз в 10 секунд
+				console.log('[updateCurrTrack] Logging check started');
 			}
 		}
-		console.log('[updateCurrTrack]  Logging check stopped');
-		clearInterval(currentTrackUpdateProcess);	
-		currentTrackUpdateProcess = null;
 	}
 }
 } // end function updateCurrTrack
@@ -1419,6 +1438,23 @@ liObj.title='';
 currentTrackName = '';
 } // end function doNotCurrentTrackName
 
+function loggingWait() {
+/* запускает/останавливает слежение за наличием пишущегося трека по кнопке в интерфейсе */
+if(currTrackSwitch.checked){
+	if(!currentWaitTrackUpdateProcess){
+		currentWaitTrackUpdateProcess = setInterval(loggingCheck,10000);	// раз в 10 секунд
+	}	
+	console.log('[loggingWait]  Logging check started by user');
+}
+else {
+	if(currentWaitTrackUpdateProcess){
+		clearInterval(currentWaitTrackUpdateProcess);
+		currentWaitTrackUpdateProcess = null;
+	}	
+	console.log('[loggingWait]  Logging check stopped by user');
+}
+} // end function loggingWait
+
 function loggingRun() {
 /* запускает/останавливает запись трека по кнопке в интерфейсе */
 let logging = 'logging.php';
@@ -1427,10 +1463,17 @@ if(loggingSwitch.checked) {
 }
 else {
 	logging += '?stopLogging=1';
-	doNotCurrentTrackName(currentTrackName);
-	console.log('[loggingRun] Logging check stopped');
+	if(currentTrackName) doNotCurrentTrackName(currentTrackName);
+	console.log('[loggingRun] Logging stop by user');
+	console.log('[loggingRun]  Update track stopped because no logging now');
 	clearInterval(currentTrackUpdateProcess);	 
 	currentTrackUpdateProcess = null;
+	if(currentWaitTrackUpdateProcess){
+		clearInterval(currentWaitTrackUpdateProcess);	
+		console.log('[loggingRun] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
+	}
+	currentWaitTrackUpdateProcess = setInterval(loggingCheck,10000);	// раз в 10 секунд
+	console.log('[loggingRun] Logging check started');
 }
 loggingCheck(logging);
 } // end function loggingRun
@@ -1446,21 +1489,21 @@ xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился
 	if (this.status != 200) return; 	// что-то не то с сервером
+	//console.log('[loggingCheck] this.response=',this.response);
 	let status = JSON.parse(this.response);
 	if(status[0]) { 	// состояние gpxlogger после выполнения logging.php, 1 или 0 - запущен успешно
 		loggingIndicator.style.color='green';
 		loggingIndicator.innerText='\u2B24';
 		// Новый текущий трек
 		const newTrackName = status[1].slice(0,status[1].lastIndexOf('.')); 	// имя нового текущего (пишущийся сейчас) трека -- имя файла без расширения		
+		//console.log(status,'[loggingCheck] Новый текущий трек newTrackName=',newTrackName);
 		if(!newTrackName) return; 	// не было возвращено имени, хотя запись трека работает: она работает давно, и этот файл нам известен
-		let newTrackLI = document.getElementById(newTrackName); 	// его всегда нет?
+		let newTrackLI = document.getElementById(newTrackName); 	// его всегда нет? Нет, он вполне может быть, если, например, запись запустил не этот клиент
 		//console.log(newTrackLI);
 		if(!newTrackLI) {
 			//console.log(tracks.querySelector('li[title="Current Track"]'));
 			//tracks.querySelector('li[title="Current Track"]').classList.remove("currentTrackName");
-			if(currentTrackName) {
-				doNotCurrentTrackName(currentTrackName);
-			}
+			if(currentTrackName) doNotCurrentTrackName(currentTrackName);
 			newTrackLI = trackLiTemplate.cloneNode(true);
 			newTrackLI.id = newTrackName;
 			newTrackLI.innerText = newTrackName;
@@ -1468,11 +1511,17 @@ xhr.onreadystatechange = function() { //
 			//console.log(newTrackName,newTrackLI);
 			trackList.append(newTrackLI);
 			doCurrentTrackName(newTrackName);	// обязательно после append, ибо вне дерева элементы не ищутся. JavaScript -- коллекция нелепиц.
-		} 	// иначе он и так текущий
+		}
+		else { 	// иначе он и так текущий. Авотхрен.
+			if(newTrackName !== currentTrackName) doCurrentTrackName(newTrackName);	// 
+		}
 		// запустим слежение за логом, если ещё не
 		if(!currentTrackUpdateProcess) {
-			currentTrackUpdateProcess =  setInterval(currentTrackUpdate,3000);	
-			console.log('[loggingCheck]  Logging check started');
+			clearInterval(currentWaitTrackUpdateProcess);	// остановим слежение за наличием пишущегося трека 	
+			currentWaitTrackUpdateProcess = null;
+			console.log('[loggingCheck]  Logging check stopped');
+			currentTrackUpdateProcess =  setInterval(currentTrackUpdate,3000);	// в index.php
+			console.log('[loggingCheck]  Update track started');
 		}
 	}
 	else {

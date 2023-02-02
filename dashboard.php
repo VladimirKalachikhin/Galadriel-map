@@ -6,9 +6,10 @@ W   281.25|          |        |          |E 101.25
 WSW 258.75|          |        |          |ESE 123.75
 SW  236.25|SSW 213.75|S 191.25|SSE 168.75|SE 146.25
 */
-$versionTXT = '2.1.0';
+$versionTXT = '2.1.1';
 /*
-2.0.2 -- MOB info support
+2.1.1	try to start gpsdPROXY if no data
+2.0.2	MOB info support
 */
 
 require('params.php'); 	// пути и параметры
@@ -107,7 +108,7 @@ $displayData = array(  	//
 		'precision' => 0,
 		'multiplicator' => 1
 	),
-	'heading' => array('variants' => [array('heading',"$dashboardHeadingTXT"),array('mheading',"$dashboardMagHeadingTXT")], 	// путь, магнитный путь
+	'heading' => array('variants' => [array('heading',"$dashboardHeadingTXT"),array('mheading',"$dashboardMagHeadingTXT")], 	// курс, магнитный курс
 		'precision' => 0,
 		'multiplicator' => 1
 	),
@@ -898,12 +899,16 @@ function askGPSDproxy($host='localhost',$port=3838){
 /*
 В $gpsdData данные по устройствам, в результирующем массиве - без конкретного устройства
 */
-global $dataTypes;
+global $dataTypes,$phpCLIexec,$gpsdPROXYpath;
 
 $gpsd  = @stream_socket_client('tcp://'.$host.':'.$port,$errno,$errstr); // открыть сокет 
 $res = @fwrite($gpsd, "\n\n"); 	// gpsdPROXY не пришлёт VERSION при открытии соединения
 //echo "res=$res; ";var_dump($gpsd);echo "<br>\n";
-if(($res === FALSE) or !$gpsd) return "no GPSD: $errstr";
+if(($res === FALSE) or !$gpsd) {
+	// start gpsdPROXY
+	exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
+	return "no GPSD: $errstr";
+}
 //echo "Socket to gpsd opened, handshaking<br>\n";
 $controlClasses = array('VERSION','DEVICES','DEVICE','WATCH');
 do { 	//
@@ -912,7 +917,7 @@ do { 	//
 	if($buf === FALSE) { 	// gpsd умер
 		@socket_close($gpsd);
 		$msg = "Failed to read data from gpsdPROXY";
-		echo "$msg<br>\n"; 
+		//echo "$msg<br>\n"; 
 		return $msg;
 	}
 	if (!$buf = trim($buf)) {	// пусто -- это второй \r\n в конце строки. Но пустая строка -- как бы принятое в http завершение сообщения?
@@ -932,7 +937,7 @@ do { 	//
 		if($res === FALSE) { 	// gpsd умер
 			socket_close($gpsd);
 			$msg =  "Failed to send WATCH to gpsdPROXY: $errstr";
-			echo "$msg<br>\n"; 
+			//echo "$msg<br>\n"; 
 			return $msg;
 		}
 		//echo "Send TURN ON<br>\n";
@@ -955,7 +960,7 @@ do { 	//
 		if($res === FALSE) { 	// gpsd умер
 			socket_close($gpsd);
 			$msg =  "Failed to send POLL to gpsdPROXY: $errstr";
-			echo "$msg<br>\n"; 
+			//echo "$msg<br>\n"; 
 			return $msg;
 		}
 		break;

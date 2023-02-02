@@ -2,6 +2,7 @@
 /*
 tailCustom
 gpxloggerRun
+getLastTrackName()
 */
 
 function tailCustom($filepath, $lines = 1, $adaptive = true) {
@@ -56,17 +57,30 @@ fclose($f);
 return $output;
 } // end function tailCustom
 
-function gpxloggerRun(){
-/* Определяет, запущен ли gpxlogger
-Возвращает его PID
+function gpxloggerRun($retFileName=false){
+/* Определяет, запущен ли gpxlogger, в смысле -- строка запуска, 
+содержащаяся в глобальной переменной $gpxlogger
+Возвращает его PID, или, если указано $retFileName=true, имя пишущегося файла
 */
-$gpxlogger = 'gpxlogger'; 	// будем искать именно эту строку, потому что с параметрами почему-то не находит
-$name = substr("$gpxlogger ",0,strpos("$gpxlogger ",' '));
-exec("ps -A w | grep  '$gpxlogger'",$psList);
-if(!$psList) exec("ps w | grep  '$gpxlogger'",$psList); 	// for OpenWRT. For others -- let's hope so all run from one user
+global $gpxlogger, $busyboxPresent;
+// Это не будет работать в системах, где вызывмется одно, а реально запускается другое.
+// Например, вместо указанного php  запускается /usr/bin/php или даже /usr/bin/real_php
+$gpxlg = substr($gpxlogger,0,strpos($gpxlogger,'&logfile'));
+$name = trim(substr($gpxlg,0,strpos($gpxlg,'-')));	// будем считать именем запущенной программы всё до первого символа -
+if(!$name) $name = trim(substr("$gpxlg ",0,strpos("$gpxlg ",' ')));	// если же в команде не было символов - то до первого пробела. Но это так себе подход.
+//echo "gpxlg=$gpxlg; name=$name;\n";
+if($busyboxPresent) exec("ps w | grep  '$gpxlg'",$psList); 	// for OpenWRT. For others -- let's hope so all run from one user
+else {
+	exec("ps -A w | grep  '$gpxlg'",$psList);
+	if(!$psList) {
+		exec("ps w | grep  '$gpxlg'",$psList); 	// for OpenWRT. For others -- let's hope so all run from one user
+		$busyboxPresent=true;
+	}
+}
 //echo "<pre>"; print_r($psList);echo "</pre>";
 $run = FALSE;
 foreach($psList as $str) {
+	//echo "str=$str;\n";
 	$str = explode(' ',trim($str)); 	// массив слов
 	$pid = $str[0];
 	foreach($str as $w) {
@@ -78,13 +92,35 @@ foreach($psList as $str) {
 		case 'bash': 	// если встретилось это слово -- это не та строка
 			break 2;
 		case $name:
-			$run=$pid;
+			//echo "name=$name; str="; print_r($str);echo "\n";
+			if($retFileName){
+				foreach(array_reverse($str) as $w) {	// обычно имя файла -- последний параметр, а array_reverse быстрее?
+					if(strrpos($w,'.gpx')!==false) break;
+					$w = '';
+				}
+				$run=$w;
+			}
+			else $run=$pid;
 			break 3;
 		}
 	}
 }
 //echo "run=$run;\n";
 return $run;
-}
+} // end function gpxloggerRun()
+
+function getLastTrackName($trackNames=false){
+/**/
+global $trackDir, $currTrackFirst;	// params.php
+
+if(!$trackNames) $trackNames = glob($trackDir.'/*gpx');
+if($currTrackFirst) $outpuFileName = $trackNames[0]; 	// params.php
+else $outpuFileName = $trackNames[count($trackNames)-1];
+$outpuFileName = explode('/',$outpuFileName); 	// выделим имя файла, которое, в принципе, может быть кириллицей
+$outpuFileName = $outpuFileName[count($outpuFileName)-1];
+
+return $outpuFileName;
+}; // end function getLastTrackName
+
 
 ?>

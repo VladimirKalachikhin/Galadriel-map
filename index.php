@@ -1,13 +1,13 @@
 <?php
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
-//url службы записи пути. Если не установлена -- записи пути не происходит
-$currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service, if present. If not -- not logging activity
+//url службы записи пути. Если не установлена -- обновления пишущегося пути не происходит
+$currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service, if present. If not -- no log update
 // 	Динамическое обновление маршрутов  Route updater
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.5.0';
+$versionTXT = '2.5.1';
 /* 
 2.5.0	Shows the heading with the cursor, and the course with the velocity vector. Specially for gpsd 3.24.1
 2.3.5	With depth coloring along gpx.
@@ -55,15 +55,12 @@ if($trackDir) {
 		$name=explode('.gpx',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
 	}); 	// 
 	//echo "trackInfo:<pre>"; print_r($trackInfo); echo "</pre>";
-	foreach($trackInfo as $trk){
-		$lastStr = end(explode("\n",trim(tailCustom("$trackDir/$trk.gpx",5)))); 	// fcommon.php
-		//echo "trk=$trk; lastStr=".htmlspecialchars($lastStr)."; <br>\n";
-		if($lastStr <> '</gpx>') { 	// трек не завершён
-			$currentTrackName = $trk;
-			//echo "currentTrackName=$currentTrackName;<br>\n";
-			if($currTrackFirst) break; 	// текущий трек - первый из незавершённых
-		}
+	// Текущий трек -- именно последний, есди он не завершён, а не последний не завершённый.
+	$currentTrackName = getLastTrackName($trackNames);	// fcommon.php
+	if(trim(tailCustom("$trackDir/$currentTrackName")) == '</gpx>'){ 	// трек завершён fcommon.php
+		$currentTrackName = '';
 	}
+	else $currentTrackName = pathinfo($currentTrackName)['filename'];
 }
 // Получаем список имён маршрутов
 $routeInfo = array();
@@ -231,7 +228,7 @@ foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимн�
 <?php if($gpxlogger){ // если запись пути осуществляется gpxlogger'ом ?>
 			<div style="margin: 1rem;">
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
-					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="loggingSwitch" onChange="loggingRun();" <?php if($gpxloggerRun) echo "checked"; ?>>
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="loggingSwitch" onChange="loggingRun();" <?php //if($gpxloggerRun) echo "checked"; // а вдруг не этот экземпляр клиента потребовал включить запись трека? ?>>
 					<label class="onoffswitch-label" for="loggingSwitch">
 						<span class="onoffswitch-inner"></span>
 						<span class="onoffswitch-switch"></span>
@@ -466,7 +463,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 			</div>
 			<div style="margin: 1rem 1rem;"> <?php// Текущий трек всегда показывается ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
-					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="currTrackSwitch" onChange="" checked>
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="currTrackSwitch" onChange="loggingWait();" checked>
 					<label class="onoffswitch-label" for="currTrackSwitch">
 						<span class="onoffswitch-inner"></span>
 						<span class="onoffswitch-switch"></span>
@@ -561,7 +558,6 @@ else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch')); 
 if(getCookie('GaladrielSelectedRoutesSwitch') == undefined) SelectedRoutesSwitch.checked = false; 	// показывать выбранные маршруты
 else SelectedRoutesSwitch.checked = Boolean(+getCookie('GaladrielSelectedRoutesSwitch')); 	// getCookie from galadrielmap.js
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
-var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.
 var depthInData = <?php echo $depthInData;?>;	// параметры показа глубины вдоль пути
 // Маршрут
 var drivedPolyLineOptions;
@@ -998,14 +994,14 @@ spatialWebSocket.onopen = function(e) {
 	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
 		sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер, на всякий случай -- вдруг там не знают
 	}
-	/*/ Проверка актуальности координат если, скажем, нет связи с сервером.
+	// Проверка актуальности координат если, скажем, нет связи с сервером.
 	checkDataFreshInterval = setInterval(function (){
 		if((Date.now()-lastDataUpdate)>PosFreshBefore){
 			console.log('The latest TPV data was received too long ago, trying to reconnect for checking.');
 			spatialWebSocket.close(1000,'The latest data was received too long ago');
 		}
 	},PosFreshBefore);
-	*/
+	//
 }; // end spatialWebSocket.onopen
 
 spatialWebSocket.onmessage = function(event) {
@@ -1088,6 +1084,7 @@ spatialWebSocket.onclose = function(event) {
 
 spatialWebSocket.onerror = function(error) {
 	console.log(`[spatialWebSocket error] ${error.message}`);
+	fetch('gpsdPROXYtry.php');	// если сервер перегрузился, там не запущен gpsdPROXY.
 }; // end spatialWebSocket.onerror
 
 //return spatialWebSocket;	
@@ -1506,9 +1503,9 @@ collisisonDetected.addTo(map);	// а collisionDirectionsCursor часть positi
 //setInterval(function(){realtime(gpsanddataServerURI,realtimeTPVupdate,lat);},1000); 	// данные позиционирования. Однако, function(){} компилячится каждый оборот, что как бы неправильно.
 //setInterval(realtime,1000,gpsanddataServerURI,realtimeTPVupdate,upData); 	// данные позиционирования. Здесь компилячится при загрузке, и параметры передаются в realtime один раз. Что исключает динамические параметры. А как же передача по ссылке?
 
-// 	Запуск периодических функций
 //var updateRoutesInterval = setInterval(function(){realtime(updateRouteServerURI,routeUpdate);},2000);
-var updateRoutesInterval = setInterval(realtime,2000,updateRouteServerURI,routeUpdate);
+var updateRoutesInterval;
+if(updateRouteServerURI) updateRoutesInterval = setInterval(realtime,3000,updateRouteServerURI,routeUpdate);
 
 // Динамическое обновление показываемых маршрутов
 function routeUpdate(changedRouteNames) {
@@ -1542,41 +1539,54 @@ for(const name of changedRouteNames){
 
 // Текущий трек
 // Должен обновляться, даже если обновлялка не описана в конфиге, потому что трек может писать кто-то ещё. 
+// Но как его обновлять, если нет обновлялки? Если только перегружать полностью.
+// Но это очень затратно. Поэтому -- нет, не должен.
 // Т.е. в худшем случае -- мы не знаем, обновляется ли currentTrack, или нет
 // Ещё обновление трека можно повесить на обновление координат. Это концептуально правильно, но
 // тогда при потере сервиса координат пропадёт и обновление трека (потому что функция обновления
 // координат перестанет вызываться). А совсем везде независимое обновление трека будет работать, и
 // покажет положение даже при отсутствии сервиса координат.
-var currentTrackUpdateProcess = setInterval(currentTrackUpdate,3000);
-//console.log('Запущено слежение за логом, currentTrackUpdateProcess=', currentTrackUpdateProcess);
-function currentTrackUpdate(){
-// Global: map, savedLayers, currentTrackName, currentTrackShowedFlag
-// DOM objects: currTrackSwitch, loggingSwitch, trackDisplayed
-//console.log('currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
 
-// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек, или текущий трек в списке показываемых
-if((currentTrackName && currTrackSwitch.checked)||trackDisplayed.querySelector('li[title="Current track"]')) { 	// имеется имя текущего трека, и в интерфейсе указано показывать текущий трек, или текущий трек в списке показываемых
-	if(currentTrackShowedFlag !== false) { 	// Текущий трек некогда был загружен или сейчас загружается
-		if(map.hasLayer(savedLayers[currentTrackName])) { 	// если он реально есть
-			//console.log('Текущий трек есть на карте','currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
-			if(typeof loggingSwitch === 'undefined'){ 	// обновлялка не сконфигурирована
-				updateCurrTrack(); 	//  - обновим,  galadrielmap.js
-			}
-			else {
-				if(loggingSwitch) updateCurrTrack(); 	//  - обновим  galadrielmap.js
-			}
-			currentTrackShowedFlag = true;
-		}
-		else { 
-			if(currentTrackShowedFlag != 'loading') currentTrackShowedFlag = false;
-		}
+// Установим переключатель в сохранённое состояние
+loggingSwitch.checked = Boolean(+getCookie('GaladrielloggingSwitch')); 	// getCookie from galadrielmap.js
+
+var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.
+var currentWaitTrackUpdateProcess;	// процесс ослеживания наличия текущего (пишущегося) трека
+var currentTrackUpdateProcess;	// процесс обновления текущего трека
+
+if(currTrackSwitch.checked){	// Текущий трек всегда показывается
+	if(currentTrackName && currentTrackServerURI){	// есть текущий трек и указано, откуда взять обновления
+		currentTrackUpdateProcess = setInterval(currentTrackUpdate,3000);	// раз в 3 секунды
+		console.log('Update track startet on startup with',currentTrackName,'track');
 	}
-	else { 	 //console.log("текущий трек ещё не был загружен", currentTrackName);
-		//console.log(document.getElementById(currentTrackName));
-		//console.log(tracks.querySelector('li[title="Current Track"]'));
-		currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
-		selectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно. galadrielmap.js
+	else{
+		currentWaitTrackUpdateProcess = setInterval(loggingCheck,10000);	// раз в 10 секунд
+		console.log('Logging check started on startup');
 	}
+}
+
+
+function currentTrackUpdate(){
+/*
+Global: map, savedLayers, currentTrackName, currentTrackShowedFlag
+DOM objects: loggingSwitch, trackDisplayed
+*/
+//console.log('[currentTrackUpdate] currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
+if(currentTrackShowedFlag !== false) { 	// Текущий трек некогда был загружен или сейчас загружается
+	if(map.hasLayer(savedLayers[currentTrackName])) { 	// если он реально есть
+		//console.log('[currentTrackUpdate] Текущий трек есть на карте','currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
+		updateCurrTrack(); 	//  - обновим,  galadrielmap.js
+		currentTrackShowedFlag = true;
+	}
+	else { 
+		if(currentTrackShowedFlag != 'loading') currentTrackShowedFlag = false;
+	}
+}
+else { 	 //console.log("[currentTrackUpdate] текущий трек ещё не был загружен", currentTrackName);
+	//console.log('[currentTrackUpdate] document.getElementById(currentTrackName):',document.getElementById(currentTrackName));
+	//console.log(tracks.querySelector('li[title="Current Track"]'));
+	currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
+	selectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно. galadrielmap.js
 }
 //console.log('Обновлён трек','currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
 } // end function currentTrackUpdate

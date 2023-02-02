@@ -30,8 +30,8 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 14. English or Russian interface, dependent of browser language settings
 
 
-* [Work on OpenWRT](#work-on-openwrt)
-* [Work on VenusOS](#work-on-venusos)
+* [Work on OpenWRT](#work-in-openwrt)
+* [Work on VenusOS](#work-in-venusos)
 
  [Support](#support)
 
@@ -219,11 +219,25 @@ Choose a region by specifying tile numbers by hand in the panel or by tap on til
 All displayed maps will be loaded from the current zoom to the maximum zoom. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
 For see of loaded tiles use coverage switch. 
 
-## Work on OpenWRT
+## Work in OpenWRT
 On powerful computers (Raspbery Pi, yes) on OpenWRT installation and startup of GaladrielMap are performed in the same way as on common Linux.  
 On routers usually need custom firmware if the capacity of the built-in drive is insufficient. For example, [MT7620A based router OpenWRT firmware ](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) for run GaladrielMap.
+### System configuration
+There is only one full user in the OpenWRT - _root_. But if you (at least) use php-fpm, the web server is running from _nobody_ by default. Therefore, some functions of GaladrielMap, such as fail-safe, will not work. Is necessary that the web server also works from root. 
+For this:  
+Edit `/etc/php7-fpm.d/www.conf`:  
+```
+;user = nobody
+user = root
+```
+Edit `/etc/init.d/php7-fpm`:
+```
+#PROG="/usr/bin/php-fpm"
+PROG="/usr/bin/php-fpm -R"
+```
+Reboot
 
-## Work on VenusOS
+## Work in VenusOS
 The GaladrielMap mostly can work in VenusOS v2.80~38 or above. Or get data from it in LAN. To do this, you need:
 
 * install php-cli. Run in ssh console:  
@@ -241,6 +255,7 @@ opkg install php-cli
 * VenusOS does not provide track log service.
 * VenusOS does not provide Tor service, so to avoid the tile loader ban and for netAIS raise the Tor on other computer.
 * The data provided by VenusOS are not reliable enough, so be careful.
+* It may be necessary to configure the system as described for OpenWRT.
 
 
 ## Support
