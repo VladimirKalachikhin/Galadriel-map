@@ -115,7 +115,7 @@ document.cookie = "GaladrielMapZoom="+zoom+"; expires="+expires+"; path=/; sames
 // Сохранение показываемых карт
 let openedNames = [];
 for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
-	openedNames[i] = mapDisplayed.children[i].innerHTML; 	// 
+	openedNames[i] = mapDisplayed.children[i].id; 	// 
 }
 openedNames = JSON.stringify(openedNames);
 document.cookie = "GaladrielMaps="+openedNames+"; expires="+expires+"; path=/; samesite=Lax";
@@ -139,7 +139,7 @@ function selectMap(node) {
 //alert(node);
 mapDisplayed.insertBefore(node,mapDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.onclick = function(event){deSelectMap(event.currentTarget);};
-displayMap(node.innerHTML);
+displayMap(node.id);
 }
 
 function deSelectMap(node) {
@@ -157,7 +157,7 @@ for (var i = 0; i < mapList.children.length; i++) { 	// для каждого п
 }
 mapList.insertBefore(node,li); 	// перенесём перед тем, на котором обломался цикл, или перед концом
 node.onclick = function(event){selectMap(event.currentTarget);};
-removeMap(node.innerHTML);
+removeMap(node.id);
 }
 
 function displayMap(mapname) {
@@ -556,7 +556,7 @@ var tileYs = dwnldJob.getElementsByClassName("tileY");
 var zoom = dwnldJobZoom.innerText;
 var XYs = '', XYsE = '', xhr = [];
 for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
-	var mapname = mapDisplayed.children[i].innerHTML; 	// 
+	var mapname = mapDisplayed.children[i].id; 	// 
 	if(mapname.indexOf('EPSG3395')==-1) {	// карта - на сфере, пишем тайлы как есть
 		if(!XYs.length) {
 			for (var k = 0; k < tileXs.length; k++) {
@@ -1542,7 +1542,7 @@ function coverage(){
 //console.log(mapDisplayed.firstElementChild);
 if(cowerSwitch.checked){ 	// переключатель в интерфейсе загрузчика
 	if(mapDisplayed.firstElementChild){ 	// список показываемых карт не пуст
-		const mapname = mapDisplayed.firstChild.innerText;
+		const mapname = mapDisplayed.firstChild.id;
 		displayMap(mapname+'_COVER');
 		coverMap.innerHTML = mapname;
 	}

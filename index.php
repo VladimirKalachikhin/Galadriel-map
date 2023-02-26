@@ -24,27 +24,27 @@ else {
 }
 //require_once('internationalisation/en.php');
 
+$mapsInfo = array();
 if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 // Получаем список имён карт
-	if($mapSourcesDir[0]=='/') $mapsInfo = $mapSourcesDir;	// если путь абсолютный (и в unix, конечно)
-	else  $mapsInfo = "$tileCachePath/$mapSourcesDir"; 	// сделаем путь абсолютным
-	$mapsInfo = glob("$mapsInfo/*.php");
-	//echo ":<pre>"; print_r($mapsInfo); echo "</pre>";
-	array_walk($mapsInfo,function (&$name,$ind) {
-			//$name=basename($name,'.php'); 	//
-			$name=explode('.php',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
-		}); 	// 
+	if($mapSourcesDir[0]=='/') $fullMapSourcesDir = $mapSourcesDir;	// если путь абсолютный (и в unix, конечно) $mapSourcesDir - из конфига GaladrielCache
+	else  $fullMapSourcesDir = "$tileCachePath/$mapSourcesDir"; 	// сделаем путь абсолютным
 	$vectorEnable = FALSE; 	// векторных карт у нас нет
-	if($mapSourcesDir[0]!='/') $fullMapSourcesDir = "$tileCachePath/$mapSourcesDir";	// если путь абсолютный (и в unix, конечно)
-	foreach($mapsInfo as $name) {
-		//echo "$fullMapSourcesDir/$name.json <br>\n";
+	foreach(glob("$fullMapSourcesDir/*.php") as $name) {
+		$mapName=explode('.php',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
+		$humanName = array();
+		include($name);
+		if($humanName){	// из описания источника
+			$mapsInfo[$mapName] = $humanName[$appLocale];	// $appLocale - из internationalisation
+		}
+		if(!$mapsInfo[$mapName]) $mapsInfo[$mapName] = $mapName;
 		if(file_exists("$fullMapSourcesDir/$name.json")) {
-			$vectorEnable = TRUE; 	// векторные карты у нас есть
-			break;
+			$vectorEnable = TRUE; 	// векторные карты у нас есть, укажем клиенту грузить соответствующие библиотеки
 		}
 	}
+	asort($mapsInfo,SORT_LOCALE_STRING);
 }
-else {$mapsInfo = array(); $jobsInfo = array();}
+//echo "mapsInfo:<pre>"; print_r($mapsInfo); echo "</pre>";
  
 // Получаем список имён треков
 $trackInfo = array(); $currentTrackName = '';
@@ -182,9 +182,9 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 			</ul>
 			<ul id="mapList" class='commonList'>
 <?php
-foreach($mapsInfo as $mapName) { 	// ниже создаётся анонимная функция, в которой вызывается функция, которой передаётся предопределённый в браузере объект event
+foreach($mapsInfo as $mapName => $humanName) {
 ?>
-					<li onClick="{selectMap(event.currentTarget)}"><?php echo "$mapName";?></li>
+					<li id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}"><?php echo "$humanName";?></li>
 <?php
 }
 ?>
@@ -515,7 +515,7 @@ if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
 ?>
 <script> "use strict";
 // Глобальные переменные
-var appLocale = <?php echo $appLocale; ?>;
+var appLocale = '<?php echo $appLocale; ?>';
 // Карта
 var defaultMap = 'OpenTopoMap'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте
@@ -726,9 +726,9 @@ map.on("layeradd", function(event) {
 <?php if( $tileCachePath) { // если работаем через GaladrielCache?>
 var layers = JSON.parse(getCookie('GaladrielMaps')); 	// getCookie from galadrielmap.js
 // Занесём слои на карту
-if(layers) layers.reverse().forEach(function(layerName){ 	// потому что они там были для красоты последним слоем вверъ
+if(layers) layers.reverse().forEach(function(layerName){ 	// потому что они там были для красоты последним слоем вверх
 		for (var i = 0; i < mapList.children.length; i++) { 	// для каждого потомка списка mapList
-			if (mapList.children[i].innerHTML==layerName) { 	// 
+			if (mapList.children[i].id==layerName) { 	// 
 				selectMap(mapList.children[i]);
 				break;
 			}
@@ -736,7 +736,7 @@ if(layers) layers.reverse().forEach(function(layerName){ 	// потому что
 	});
 else {
 	for (var i = 0; i < mapList.children.length; i++) { 	// для каждого потомка списка mapList
-		if (mapList.children[i].innerHTML==defaultMap) { 	// найдём, который из них defaultMap
+		if (mapList.children[i].id==defaultMap) { 	// найдём, который из них defaultMap
 			selectMap(mapList.children[i]); 	// и покажкм его
 			break;
 		}
