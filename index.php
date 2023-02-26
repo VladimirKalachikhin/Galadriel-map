@@ -515,6 +515,7 @@ if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
 ?>
 <script> "use strict";
 // Глобальные переменные
+var appLocale = <?php echo $appLocale; ?>;
 // Карта
 var defaultMap = 'OpenTopoMap'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте

@@ -88,4 +88,5 @@ $relBearingTXT = "var relBearingTXT = [
 'to port',	
 'left ahead',
 ];";
+$appLocale='ru';
 ?>
