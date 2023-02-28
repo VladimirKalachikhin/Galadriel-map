@@ -88,5 +88,4 @@ $relBearingTXT = "var relBearingTXT = [
 'слева по борту',	
 'слева впереди',
 ];";
-$appLocale='ru';
 ?>

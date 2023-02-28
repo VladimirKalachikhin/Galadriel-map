@@ -7,8 +7,9 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.5.1';
+$versionTXT = '2.6.0';
 /* 
+2.6.0	Human-readable maps names.
 2.5.0	Shows the heading with the cursor, and the course with the velocity vector. Specially for gpsd 3.24.1
 2.3.5	With depth coloring along gpx.
 */
@@ -16,11 +17,14 @@ $versionTXT = '2.5.1';
 exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
 
 // Интернационализация
-if(strpos($_SERVER['HTTP_ACCEPT_LANGUAGE'],'ru')===FALSE) { 	// клиент - нерусский
-	require_once('internationalisation/en.php');
+// требуется, чтобы языки были перечислены в порядке убывания предпочтения, так что берём первый
+$appLocale = explode('-',explode(';',explode(',',$_SERVER['HTTP_ACCEPT_LANGUAGE'])[0])[0])[0];	
+if(file_exists("internationalisation/$appLocale.php")) {
+	require_once("internationalisation/$appLocale.php");
 }
 else {
-	require_once('internationalisation/ru.php');
+	$appLocale = 'en';
+	require_once('internationalisation/en.php');
 }
 //require_once('internationalisation/en.php');
 
@@ -38,7 +42,7 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 			$mapsInfo[$mapName] = $humanName[$appLocale];	// $appLocale - из internationalisation
 		}
 		if(!$mapsInfo[$mapName]) $mapsInfo[$mapName] = $mapName;
-		if(file_exists("$fullMapSourcesDir/$name.json")) {
+		if(file_exists("$fullMapSourcesDir/$mapName.json")) {
 			$vectorEnable = TRUE; 	// векторные карты у нас есть, укажем клиенту грузить соответствующие библиотеки
 		}
 	}
