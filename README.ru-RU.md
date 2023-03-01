@@ -4,7 +4,7 @@
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Форум</a>
 </div>
 
-## v. 2.5
+## v. 2.6
  ![screen](screenshots/s10.jpeg)<br>
 Технически это веб-приложение -- просмотрщик тайловых онлайн карт. При использовании с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) становится возможным предварительное скачивание и последующий просмотр карт без подключения к сети Интернет.  
 Предполагается, что приложение функционирует в локальной  бортовой сети катера, яхты или автомобиля, поэтому никакого разграничения доступа к функциям не предусмотрено.
@@ -87,7 +87,7 @@
 
 ## Карты
 В GaladrielMap используются [тайловые карты](https://wiki.openstreetmap.org/wiki/Tiles) в разграфке, принятой для [OSM](https://wiki.openstreetmap.org). Основной формат -- растровые тайлы, но могут быть использованы и векторные тайлы в формате [Mapbox](https://www.mapbox.com/).  
-![stacked maps](screenshots/s1.jpeg)<br>
+![stacked maps](screenshots/s1_ru.jpeg)<br>
 В сочетании с [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) (что предполагается по-умолчанию) одновременно может быть показано любой число карт, наложенных друг на друга (география + гидрография + погода, например) из сети Интернет и/или из локального хранилища.  
 Конфигурация карт определяется пользоватетем и описана в документации к [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache). Как минимум, среди карт уже есть [Open Sea Map](http://www.openseamap.org/) и [Open Topo Map](https://opentopomap.org/about).
 
@@ -97,7 +97,7 @@ GaladrielMap имеет некоторую поддержку векторных
 
 ## Отображение положения
 GaladrielMap получает координаты, скорость, направление от работающего на сервере сервиса [gpsd](https://gpsd.io/).  
- ![Positioning](screenshots/s2.jpeg)<br>
+ ![Positioning](screenshots/s2_ru.jpeg)<br>
  Установка и конфигурирование gpsd описаны в [документации к gpsd](https://gpsd.io/). Обычно никакой настройки не требуется: достаточно просто подсоединить приёмник ГПС в гнездо usb, и координаты сразу начнут отображаться в GaladrielMap.
 
 Кроме того, GaladrielMap может получать координаты от VenusOS или Signal K, локально или по сети. Если GaladrielMap не может подключиться к **gpsd**, предпринимается попытка обнаружить Signal K, а затем VenusOS и получить данные оттуда.
