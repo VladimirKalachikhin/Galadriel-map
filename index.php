@@ -179,20 +179,23 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 </script>
 <?php */ ?>
 		<!-- Карты -->
-		<div class="leaflet-sidebar-pane" id="home">
+		<div class="leaflet-sidebar-pane" id="home" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<br>
-			<ul id="mapDisplayed" class='commonList'>
-			</ul>
-			<ul id="mapList" class='commonList'>
+			<div style="min-height:96%;">
+				<br>
+				<ul id="mapDisplayed" class='commonList'>
+				</ul>
+				<ul id="mapList" class='commonList'>
 <?php
 foreach($mapsInfo as $mapName => $humanName) {
 ?>
-					<li id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}"><?php echo "$humanName";?></li>
+						<li id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}"><?php echo "$humanName";?></li>
 <?php
 }
 ?>
-			</ul>
+				</ul>
+			</div>
+			<button onClick='' style="width:90%;height:1.5rem;margin-bottom:1rem;"><span style="">Все карты</span></button>			
 		</div>
 		<!-- Приборы -->
 		<div class="leaflet-sidebar-pane" id="dashboard" style="height:100%;">
