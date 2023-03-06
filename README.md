@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.6
+## v. 2.7
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -74,6 +74,7 @@ You may download full pack -- more 10MB, or without vector tiles support and scr
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) in _gpsdPROXY/_ directory
 * [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) in _polycolor/_ directory  
 * [value2color](https://github.com/VladimirKalachikhin/value2color) in _value2color/_ directory  
+* [long-press-event](https://github.com/john-doherty/long-press-event) as _long-press-event/dist/long-press-event.min.js_
 
 Create a local copy of dependences and/or edit _index.php_
 
@@ -98,7 +99,8 @@ The map source is set in the  _params.php_, and if it is [GaladrielCache](https:
 At least, it include  
 [Open Sea Map](http://www.openseamap.org/)  
 [Open Topo Map](https://opentopomap.org/about)  
-maps.
+maps.  
+The right way is to select a little lot of favourite maps (by long-click) from all maps in map list. This makes it easy to switch between them. 
 
 ### Mapbox-style vector tiles maps
 GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox style file](https://docs.mapbox.com/mapbox-gl-js/style-spec/) must be placed on `$mapSourcesDir` directory of the [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) with **{mapname}.json** name. (See [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) docs.) Sprites and glyphs you can find in _styles/_ directory.

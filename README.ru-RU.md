@@ -70,6 +70,7 @@
 * [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) установленная как _mapbox-gl-leaflet/leaflet-mapbox-gl.js_
 * [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) установленная в каталог _polycolor/_  
 * [value2color](https://github.com/VladimirKalachikhin/value2color) установленная в каталог _value2color/_
+* [long-press-event](https://github.com/john-doherty/long-press-event) как _long-press-event/dist/long-press-event.min.js_
 
 Для установки зависимостей нужно сделать локальную копию каждого проекта в каталоге приложения так, как это описано на сайте проекта, а потом, при необходимости, откорректировать пути в _index.php_
 
@@ -89,7 +90,8 @@
 В GaladrielMap используются [тайловые карты](https://wiki.openstreetmap.org/wiki/Tiles) в разграфке, принятой для [OSM](https://wiki.openstreetmap.org). Основной формат -- растровые тайлы, но могут быть использованы и векторные тайлы в формате [Mapbox](https://www.mapbox.com/).  
 ![stacked maps](screenshots/s1_ru.jpeg)<br>
 В сочетании с [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) (что предполагается по-умолчанию) одновременно может быть показано любой число карт, наложенных друг на друга (география + гидрография + погода, например) из сети Интернет и/или из локального хранилища.  
-Конфигурация карт определяется пользоватетем и описана в документации к [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache). Как минимум, среди карт уже есть [Open Sea Map](http://www.openseamap.org/) и [Open Topo Map](https://opentopomap.org/about).
+Конфигурация карт определяется пользоватетем и описана в документации к [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache). Как минимум, среди карт уже есть [Open Sea Map](http://www.openseamap.org/) и [Open Topo Map](https://opentopomap.org/about).  
+Для удобства переключения между несколькими часто используемыми картами можно выделить их долгим нажатием в полном списке карт, и перейти к списку избранных карт.
 
 ### Векторные тайлы
 GaladrielMap имеет некоторую поддержку векторных тайлов в формате [Mapbox](https://www.mapbox.com/). Такие карты могут отображаться.  
