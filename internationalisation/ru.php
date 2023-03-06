@@ -1,5 +1,6 @@
 <?php
 $homeHeaderTXT = 'Карты';
+$showMapsTogglerTXT = "'Все карты','Избранные карты'";
 $dashboardHeaderTXT = 'Скорость и направление';
 $dashboardSpeedTXT = 'Скорость';
 $dashboardSpeedMesTXT = 'км/ч';
@@ -78,14 +79,12 @@ $distanceTXT = 'Расстояние';
 $altDistanceTXT = 'distance';
 $removeMarkerTXT = "Убрать маркер";
 $cancelMOBTXT = "Завершить";
-$relBearingTXT = "var relBearingTXT = [
-'прямо по курсу',
+$relBearingTXT = "'прямо по курсу',
 'справа впереди',
 'справа по борту',	
 'справа сзади',
 'сзади по корме',
 'слева сзади',
 'слева по борту',	
-'слева впереди',
-];";
+'слева впереди'";
 ?>

@@ -1,5 +1,6 @@
 <?php
 $homeHeaderTXT = 'Maps';
+$showMapsTogglerTXT = "'All maps','Selected maps'";
 $dashboardHeaderTXT = 'Speed&heading';
 $dashboardSpeedTXT = 'Speed';
 $dashboardSpeedMesTXT = 'km/h';
@@ -78,14 +79,12 @@ $altDistanceTXT = 'расстояние';
 $altBearingTXT = "Абсолютный азимут";
 $removeMarkerTXT = "Remove marker";
 $cancelMOBTXT = "Terminate";
-$relBearingTXT = "var relBearingTXT = [
-'straight ahead',
+$relBearingTXT = "'straight ahead',
 'right ahead',
 'to starboard',	
 'right rear',
 'directly astern',
 'left rear',
 'to port',	
-'left ahead',
-];";
+'left ahead'";
 ?>

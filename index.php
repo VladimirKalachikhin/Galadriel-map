@@ -133,6 +133,8 @@ $centerMark_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' 
 
 	<script src="leaflet-tracksymbolPATCHED/leaflet-tracksymbol.js"></script>
 	
+	<script src="long-press-event/dist/long-press-event.min.js"></script>
+	
 	<link rel="stylesheet" href="galadrielmap.css" type="text/css"> <!-- замена стилей -->
 	<script src="galadrielmap.js"></script>
    <title>GaladrielMap <?php echo $versionTXT;?></title>
@@ -181,7 +183,7 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 		<!-- Карты -->
 		<div class="leaflet-sidebar-pane" id="home" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div style="min-height:96%;">
+			<div style="min-height:92%;">
 				<br>
 				<ul id="mapDisplayed" class='commonList'>
 				</ul>
@@ -189,13 +191,13 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 <?php
 foreach($mapsInfo as $mapName => $humanName) {
 ?>
-						<li id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}"><?php echo "$humanName";?></li>
+						<li hidden id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}"><?php echo "$humanName";?> </li>
 <?php
 }
 ?>
 				</ul>
 			</div>
-			<button onClick='' style="width:90%;height:1.5rem;margin-bottom:1rem;"><span style="">Все карты</span></button>			
+			<button id="showMapsToggler" onClick='showMapsToggle();' style="width:90%;height:1.5rem;margin-bottom:1rem;"><?php echo trim(explode(',',$showMapsTogglerTXT)[1],"'"); // установим режим "все карты", не смотря на то, что сейчас не показывается ни одной. При старте клиента будет вызван showMapsToggle, который переключит режим и покажет избранные именно для этого клиента?></button>			
 		</div>
 		<!-- Приборы -->
 		<div class="leaflet-sidebar-pane" id="dashboard" style="height:100%;">
@@ -525,6 +527,8 @@ if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
 var appLocale = '<?php echo $appLocale; ?>';
 // Карта
 var defaultMap = 'OpenTopoMap'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
+var showMapsTogglerTXT = [<?php echo $showMapsTogglerTXT; ?>];	// подписи на кнопке все/избранные карты
+var showMapsList = JSON.parse(getCookie('GaladrielshowMapsList')) || [];	// массив названий избранных карт
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
 var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Присваивается в javascriptOpen в параметрах карты. Или ещё где-нибудь.
@@ -607,7 +611,7 @@ var latTXT = '<?php echo $latTXT;?>';
 var longTXT = '<?php echo $longTXT;?>';	
 // MOB
 var currentMOBmarker;
-<?php echo $relBearingTXT; // internationalisation ?>
+var relBearingTXT = [<?php echo $relBearingTXT; // internationalisation ?>]
 // main output data
 var upData = {};
 DisplayAISswitch.checked = true;	// Показывать цели AIS. Всегда?
@@ -617,6 +621,27 @@ const mob_markerImg = '<?php echo $mob_markerImg; ?>';
 const centerMark_markerImg = '<?php echo $centerMark_markerImg; ?>';
 
 
+// Инициализируем список карт
+if(!showMapsList.length) showMapsToggle(true);	// покажем в списке карт все карты, если нет избранных
+else showMapsToggle();	// покажем только избранные, поскольку изначально не показывается ничего
+
+for(let mapLi of mapList.children){	// назначим обработчик длинного нажатия на каждое название карты, потому что его можно назначить только так
+	mapLi.addEventListener('long-press', function(e) {
+		e.preventDefault();	// stop the event from bubbling up
+		//console.log(e.target);
+		if(showMapsToggler.innerHTML == showMapsTogglerTXT[0]) return;	// текущий режим - "избранные карты", в нём не работаем
+		if(showMapsList.includes(e.target.id)){	// это избранная карта
+			const n = showMapsList.indexOf(e.target.id);
+			showMapsList.splice(n,1);	// вырежем имя из массива
+			e.target.classList.remove("showedMapName");
+		}
+		else {
+			showMapsList.push(e.target.id);
+			e.target.classList.add("showedMapName");
+		}
+		console.log('Список избранных карт:',showMapsList);
+	});
+}
 
 // Определим карту
 var map = L.map('mapid', {
@@ -734,21 +759,9 @@ map.on("layeradd", function(event) {
 var layers = JSON.parse(getCookie('GaladrielMaps')); 	// getCookie from galadrielmap.js
 // Занесём слои на карту
 if(layers) layers.reverse().forEach(function(layerName){ 	// потому что они там были для красоты последним слоем вверх
-		for (var i = 0; i < mapList.children.length; i++) { 	// для каждого потомка списка mapList
-			if (mapList.children[i].id==layerName) { 	// 
-				selectMap(mapList.children[i]);
-				break;
-			}
-		}
+		selectMap(document.getElementById(layerName));
 	});
-else {
-	for (var i = 0; i < mapList.children.length; i++) { 	// для каждого потомка списка mapList
-		if (mapList.children[i].id==defaultMap) { 	// найдём, который из них defaultMap
-			selectMap(mapList.children[i]); 	// и покажкм его
-			break;
-		}
-	}
-}
+else selectMap(document.getElementById(defaultMap)); 	// покажкм defaultMap
 <?php }
 else {?>
 displayMap('default');

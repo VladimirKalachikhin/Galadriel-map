@@ -7,6 +7,7 @@ selectMap(node) 	Выбор карты из списка имеющихся
 deSelectMap(node) 	Прекращение показа карты, и возврат её в список имеющихся.
 displayMap(mapname) Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
 removeMap(mapname)
+showMapsToggle()	переключает показ всех или выбранных карт в списке карт
 
 selectTrack()		Выбор трека из списка имеющихся. 
 deSelectTrack()		Прекращение показа трека, и возврат его в список имеющихся.
@@ -131,12 +132,15 @@ document.cookie = "GaladrielcurrTrackSwitch="+Number(currTrackSwitch.checked)+";
 document.cookie = "GaladrielloggingSwitch="+Number(loggingSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель loggingSwitch, включение записи трека. Сохраняется, чтобы знать, что именно этот клиент включил запись.
 document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель SelectedRoutesSwitch
 document.cookie = "GaladrielminWATCHinterval="+minWATCHinterval+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
-}
+document.cookie = "GaladrielshowMapsList="+JSON.stringify(showMapsList)+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
+console.log('Position, layers and options saved');
+} // end function doSavePosition
 
 // Функции выбора - удаления карт
 function selectMap(node) { 	
 // Выбор карты из списка имеющихся. Получим объект
-//alert(node);
+node.classList.remove("showedMapName");
+node.hidden = false;
 mapDisplayed.insertBefore(node,mapDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.onclick = function(event){deSelectMap(event.currentTarget);};
 displayMap(node.id);
@@ -145,18 +149,24 @@ displayMap(node.id);
 function deSelectMap(node) {
 // Прекращение показа карты, и возврат её в список имеющихся. Получим объект
 //alert(node);
-var li = null;
-for (var i = 0; i < mapList.children.length; i++) { 	// для каждого потомка списка mapList
+let li = null;
+for (let i = 0; i < mapList.children.length; i++) { 	// для каждого потомка списка mapList
 	li = mapList.children[i]; 	// взять этого потомка
-	var childTitle = li.innerHTML;
+	let childTitle = li.innerHTML;
+	//console.log('[deSelectMap] childTitle=',childTitle);
 	if (childTitle > node.innerHTML) { 	// если наименование потомка дальше по алфавиту, чем наименование того, на что кликнули
-		//alert(childTitle+" "+node.innerHTML);
 		break;
 	}
 	li = null;
 }
 mapList.insertBefore(node,li); 	// перенесём перед тем, на котором обломался цикл, или перед концом
 node.onclick = function(event){selectMap(event.currentTarget);};
+if(showMapsToggler.innerHTML == showMapsTogglerTXT[0]){	// текущий режим - "только избранные"
+	if(!showMapsList.includes(node.id)) node.hidden = true;
+}
+else {	// текущий режим - "все карты"
+	if(showMapsList.includes(node.id)) node.classList.add("showedMapName");
+}
 removeMap(node.id);
 }
 
@@ -258,6 +268,33 @@ if(savedLayers[mapname].options.zoom) {
 savedLayers[mapname].remove(); 	// удалим слой с карты
 //savedLayers[mapname] = null; 	// удалим сам слой. Но это не надо, ибо включение/выключение отображения слоёв должно быть быстро, и обычно их не надо повторно получать с сервера
 } // end function removeMap
+
+function showMapsToggle(all=false){
+/*	переключает показ всех или выбранных карт в списке карт */
+//console.log('[showMapsToggle] showMapsList:',showMapsList);
+if(all || showMapsToggler.innerHTML == showMapsTogglerTXT[0]){	// текущий режим - "избранные карты" (на кнопке надпись: "все карты")
+	for(let mapLi of mapList.children){
+		//console.log('покажем все карты',mapLi.id);
+		mapLi.hidden = false;	// покажем все карты
+		if(showMapsList.includes(mapLi.id)){	// избранная карта
+			mapLi.classList.add("showedMapName");
+		}
+	}
+	showMapsToggler.innerHTML = showMapsTogglerTXT[1];	// сменим режим на "все карты"
+}
+else {	// текущий режим - "все карты" - покажем только избранные
+	for(let mapLi of mapList.children){
+		//console.log('покажем только избранные',mapLi.id);
+		mapLi.hidden = false;	// при старте они все скрытые
+		if(!showMapsList.includes(mapLi.id)){	// карта не в списке избранных
+			mapLi.hidden = true;	// не покажем карту
+		}
+		mapLi.classList.remove("showedMapName");
+	}
+	showMapsToggler.innerHTML = showMapsTogglerTXT[0];	// сменим режим на "избранные карты"
+}
+} // end function showMapsToggle
+
 
 // Функции выбора - удаления треков
 function selectTrack(node,trackList,trackDisplayed,displayTrack) { 	
