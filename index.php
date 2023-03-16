@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.7.0';
+$versionTXT = '2.7.1';
 /* 
 2.7.0	favorite maps
 2.6.0	Human-readable maps names.
@@ -760,9 +760,13 @@ map.on("layeradd", function(event) {
 var layers = JSON.parse(getCookie('GaladrielMaps')); 	// getCookie from galadrielmap.js
 // Занесём слои на карту
 if(layers) layers.reverse().forEach(function(layerName){ 	// потому что они там были для красоты последним слоем вверх
-		selectMap(document.getElementById(layerName));
+		// если, скажем, поменялось имя источника карты, а она уже показывалась со старым именем,
+		// то в куке будет старое имя, selectMap обломается и всё сломается.
+		const node = document.getElementById(layerName);	
+		if(node) selectMap(node);
 	});
 else selectMap(document.getElementById(defaultMap)); 	// покажкм defaultMap
+coverage();	// Восстановим показ карты покрытия. Хотя состояние переключателя карты покрытия не сохраняется, firefox сохраняет состояние переключателя при простой перезагрузке страницы.
 <?php }
 else {?>
 displayMap('default');
@@ -1207,7 +1211,7 @@ lastPositionUpdate = Date.now();
 positionCursor.invoke('setLatLng',[gpsdData.lat,gpsdData.lon]); // установим координаты всех маркеров
 var positionTime = new Date(gpsdData.time);
 var now = new Date();
-//console.log('gpsdData.time:',gpsdData.time,'now',now,'now-positionTime',now-positionTime);
+//console.log('gpsdData.time:',gpsdData.time,'now',now,'now-positionTime',(now-positionTime)/1000);
 if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
 else cursor.setIcon(GpsCursor);
 

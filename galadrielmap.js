@@ -133,7 +133,7 @@ document.cookie = "GaladrielloggingSwitch="+Number(loggingSwitch.checked)+"; exp
 document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель SelectedRoutesSwitch
 document.cookie = "GaladrielminWATCHinterval="+minWATCHinterval+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 document.cookie = "GaladrielshowMapsList="+JSON.stringify(showMapsList)+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
-console.log('Position, layers and options saved');
+//console.log('Position, layers and options saved');
 } // end function doSavePosition
 
 // Функции выбора - удаления карт
