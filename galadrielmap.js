@@ -203,6 +203,8 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 	}
 	savedLayers[mapname]=L.layerGroup();
 	if(currZoom) savedLayers[mapname].options.zoom = currZoom;
+	// Потому что в javascript при закрытии карты могут указать dditionalTileCachePath = []; (как, собственно, и было в Weather) и тогда после закрытия такой карты открыть другую не получится
+	if(!additionalTileCachePath.length) additionalTileCachePath.push('');
 	for(let addPath of additionalTileCachePath) {
 		let mapnameThis = mapname+addPath; 	// 
 		let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
@@ -222,7 +224,7 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 	}
 }
 else {
-	let mapnameThis = mapname+additionalTileCachePath;
+	let mapnameThis = additionalTileCachePath ? mapname+additionalTileCachePath : mapname;
 	let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
 	if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
 	//console.log(tileCacheURIthis);

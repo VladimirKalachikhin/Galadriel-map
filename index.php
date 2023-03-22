@@ -411,9 +411,9 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 			</div>
 		</div>
 		<!-- Загрузчик -->
-		<div class="leaflet-sidebar-pane" id="download">
+		<div class="leaflet-sidebar-pane" id="download" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div style="margin: 1rem 0 3rem 0;padding:0 0.5rem 0 0;">
+			<div style="margin: 1rem 0 0.5 0;height:5rem;">
 				<div style="margin:0 0 0.5rem 0">
 					<div class="onoffswitch" style="float:right;margin: 0.3rem auto;"> <?php //  Переключатель https://proto.io/freebies/onoff/  ?>
 						<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="cowerSwitch" onChange="coverage();">
@@ -429,32 +429,28 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				<span id='coverMap' style='font-size:150%;'></span> 
 			</div>
 			<h2 style=''><?php echo $downloadZoomTXT;?>: <span id='dwnldJobZoom'></span></h2>
-			<div class="" style="font-size:120%;margin:0;">
-				<form id="dwnldJob" onSubmit="createDwnldJob(); return false;" onreset="dwnldJobZoom.innerHTML=map.getZoom(); downJob=false; tileGrid.redraw();">
-					<div style='display:grid;grid-template-columns:auto auto;'>
-						<div>X</div><div>Y</div>
-						<div style='height:28vh;overflow-y:auto;overflow-x:hidden;grid-column:1/3'>
-							<div style='display:grid; grid-template-columns: auto auto; grid-column-gap: 3px;'>
-								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:5rem;font-size:150%;'>
-								</div>
-								<div style='margin-bottom:10px;'>
-									<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:5rem;font-size:150%;' onChange="XYentryFields(this);">
-								</div>
+			<form id="dwnldJob" style="font-size:120%;margin:0;height:50%;" onSubmit="createDwnldJob(); return false;" onreset="dwnldJobZoom.innerHTML=map.getZoom(); downJob=false; tileGrid.redraw();">
+					<div>
+						<span style="display:inline-block;width:50%;">X</span><span style="display:inline-block;">Y</span>
+					</div>
+						<div style="height:75%;display:grid;grid-template-columns:50% auto;grid-column-gap:3px;grid-auto-rows:min-content;overflow-y:auto;overflow-x:hidden;margin:0.5rem 0 0.5rem 0;">
+							<div style='margin-bottom:0.5em;'>
+								<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='width:6rem;font-size:150%;'>
+							</div>
+							<div style='margin-bottom:0.5em;'>
+								<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='width:6rem;font-size:150%;' onChange="XYentryFields(this);">
 							</div>
 						</div>
-					</div>
-					<div style="width:90%;">
-						<button type='reset' style="margin-top:5px;width:4rem;padding:0.2rem;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px" ></button>
-						<button type='submit' style="margin-top:5px;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
-					</div>
-				</form>
-			</div>
+				<div style="width:95%;">
+					<button type='reset' style="margin:0 1.75rem 0 0;width:4rem;padding:0.2rem;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px" ></button>
+					<button type='submit' style="margin:0 0 0 1.75rem;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
+				</div>
+			</form>
 			<div style="font-size:120%;margin:1rem 0;">
 				<h3>
 					<span id="loaderIndicator" style="font-size:75%;vertical-align:top;color:gray;">&#x2B24; </span><?php echo $downloadJobListTXT;?>:
 				</h3>
-				<ul id="dwnldJobList">
+				<ul id="dwnldJobList" style="margin:0;">
 				</ul>
 			</div>
 		</div>

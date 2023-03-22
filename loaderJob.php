@@ -21,11 +21,18 @@ if($jobName != 'restart') {
 	if(!is_file("$mapSourcesDir/".$name_parts['filename'].'.php')) return; 	// нет такого источника
 	if(!$XYs) return; 	// нет собственно задания
 	// Создадим задание
+	$umask = umask(0); 	// сменим на 0777 и запомним текущую
+	// нужно положить в каталог заданий для загрузчика, ибо аналогичное задание уже может выполняться, и если его дать планировщику, то оно исчезнет
+	if(file_exists("$jobsInWorkDir/$jobName")){
+		file_put_contents("$jobsInWorkDir/$jobName", "$x,$y\n",FILE_APPEND); 	// создадим/добавим файл задания для загрузчика
+		@chmod("$jobsInWorkDir/$jobName",0666); 	// чтобы запуск от другого юзера
+	}
 	file_put_contents("$jobsDir/$jobName",$XYs,FILE_APPEND); 	// возможно, такое задание уже есть. Тогда, скорее всего, тайлы указанного масштаба не будут загружены, а будут загружены эти тайлы следующего масштаба. Не страшно.
 	// Сохраним задание на всякий случай
 	file_put_contents("$jobsDir/oldJobs/$jobName".'_'.gmdate("Y-m-d_Gis", time()),$XYs);
 	//file_put_contents("$jobName",$XYs);
-	chmod("$jobsDir/$jobName",0666); 	// чтобы запуск от другого юзера
+	@chmod("$jobsDir/$jobName",0666); 	// чтобы запуск от другого юзера
+	umask($umask); 	// 	Вернём. Зачем? Но umask глобальна вообще для всех юзеров веб-сервера
 }
 
 // Запустим планировщик
