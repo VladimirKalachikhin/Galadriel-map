@@ -100,7 +100,7 @@ At least, it include
 [Open Sea Map](http://www.openseamap.org/)  
 [Open Topo Map](https://opentopomap.org/about)  
 maps.  
-The right way is to select a little lot of favourite maps (by long-click) from all maps in map list. This makes it easy to switch between them. 
+The right way is to select a little lot of favourite maps (by long-click or right-swap) from all maps in map list. This makes it easy to switch between them. 
 
 ### Mapbox-style vector tiles maps
 GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox style file](https://docs.mapbox.com/mapbox-gl-js/style-spec/) must be placed on `$mapSourcesDir` directory of the [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) with **{mapname}.json** name. (See [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) docs.) Sprites and glyphs you can find in _styles/_ directory.

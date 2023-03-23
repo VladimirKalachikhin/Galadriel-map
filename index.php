@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.7.2';
+$versionTXT = '2.7.3';
 /* 
 2.7.0	favorite maps
 2.6.0	Human-readable maps names.
@@ -622,22 +622,41 @@ const centerMark_markerImg = '<?php echo $centerMark_markerImg; ?>';
 if(!showMapsList.length) showMapsToggle(true);	// покажем в списке карт все карты, если нет избранных
 else showMapsToggle();	// покажем только избранные, поскольку изначально не показывается ничего
 
+// сего не сделаешь, если двойное нажатие не работает нигде, а на длительное в некоторых (мобильных)
+// браузерах навешана всякая фигня, и непросто навешана, а с запрещением всего остального
+function longressListener(e){
+e.preventDefault();
+//console.log(e.target);
+if(showMapsToggler.innerHTML == showMapsTogglerTXT[0]) return;	// текущий режим - "избранные карты", в нём не работаем
+if(showMapsList.includes(e.target.id)){	// это избранная карта
+	const n = showMapsList.indexOf(e.target.id);
+	showMapsList.splice(n,1);	// вырежем имя из массива
+	e.target.classList.remove("showedMapName");
+}
+else {
+	showMapsList.push(e.target.id);
+	e.target.classList.add("showedMapName");
+}
+event.stopImmediatePropagation();	// прекратим всплытие и обломим все имеющиеся обработчики. Вдруг фигня, навешенная скотским Google, перестанет работать.
+//console.log('[longressListener] Список избранных карт:',showMapsList);
+} // end function long-pressListener
+
+let touchstartX, touchstartY;
+function handleSwipe(event){
+let touchendX=event.changedTouches[0].screenX; 
+let touchendY=event.changedTouches[0].screenY; 
+//alert(`handleSwipe touchstartY=${touchstartY}, touchendY=${touchendY}`);
+if((touchendX > touchstartX+10) && (Math.abs(touchendY-touchstartY)<10)){	// вправо горизонтально
+	//alert('handleSwipe горизонтальный жест');
+	longressListener(event);
+}
+} // end function handleSwipe()
+
 for(let mapLi of mapList.children){	// назначим обработчик длинного нажатия на каждое название карты, потому что его можно назначить только так
-	mapLi.addEventListener('long-press', function(e) {
-		e.preventDefault();	// stop the event from bubbling up
-		//console.log(e.target);
-		if(showMapsToggler.innerHTML == showMapsTogglerTXT[0]) return;	// текущий режим - "избранные карты", в нём не работаем
-		if(showMapsList.includes(e.target.id)){	// это избранная карта
-			const n = showMapsList.indexOf(e.target.id);
-			showMapsList.splice(n,1);	// вырежем имя из массива
-			e.target.classList.remove("showedMapName");
-		}
-		else {
-			showMapsList.push(e.target.id);
-			e.target.classList.add("showedMapName");
-		}
-		console.log('Список избранных карт:',showMapsList);
-	});
+	mapLi.addEventListener('long-press', longressListener); 
+	// а также обработчики свайпа, ибо в мобильных браузерах вообще всё через жопу
+	mapLi.addEventListener('touchstart',function(e){touchstartX=e.changedTouches[0].screenX; touchstartY=e.changedTouches[0].screenY;});
+	mapLi.addEventListener('touchend',handleSwipe);
 }
 
 // Определим карту
