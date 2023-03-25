@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.7.3';
+$versionTXT = '2.7.4';
 /* 
 2.7.0	favorite maps
 2.6.0	Human-readable maps names.
@@ -62,10 +62,12 @@ if($trackDir) {
 	//echo "trackInfo:<pre>"; print_r($trackInfo); echo "</pre>";
 	// Текущий трек -- именно последний, есди он не завершён, а не последний не завершённый.
 	$currentTrackName = getLastTrackName($trackNames);	// fcommon.php
-	if(trim(tailCustom("$trackDir/$currentTrackName")) == '</gpx>'){ 	// трек завершён fcommon.php
-		$currentTrackName = '';
+	if($currentTrackName) {	// там может не быть ни одного трека
+		if(trim(tailCustom("$trackDir/$currentTrackName")) == '</gpx>'){ 	// трек завершён fcommon.php
+			$currentTrackName = '';
+		}
+		else $currentTrackName = pathinfo($currentTrackName)['filename'];
 	}
-	else $currentTrackName = pathinfo($currentTrackName)['filename'];
 }
 // Получаем список имён маршрутов
 $routeInfo = array();

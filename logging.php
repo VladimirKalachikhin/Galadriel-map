@@ -11,6 +11,7 @@ ob_start(); 	// попробуем перехватить любой вывод 
 chdir(__DIR__); // задаем каталог выполнение скрипта
 require('fcommon.php'); 	// 
 require('params.php'); 	// пути и параметры
+echo "Поехали\n";
 
 if(!$trackDir) return "{[0,'']}";	// нет каталога, куда писать
 
@@ -24,7 +25,7 @@ $outpuFileName = '';
 //file_put_contents($trackDir."/logging_started_by_cron","Запущено, \n_REQUEST[startLogging]={$_REQUEST['startLogging']}\n_REQUEST[stopLogging]={$_REQUEST['stopLogging']}");
 
 $status=(int)gpxloggerRun();	// поскольку неизвестно, что содержится в строке global $gpxlogger, нужно определить PID именно этого процесса
-//echo "\n[logging.php] start status=$status;\n";
+echo "\n[logging.php] start status=$status;\n";
 //error_log("[logging.php] start status=$status;");
 if($status) { 	// fcommon.php $gpxlogger работает
 	if($_REQUEST['stopLogging']) { 	
@@ -37,17 +38,20 @@ if($status) { 	// fcommon.php $gpxlogger работает
 	else { 	// вернём имя последнего трека. Однако, запись трека может быть криво запущена
 		// и последний трек не является записываемым
 		$outpuFileName = getLastTrackName();
-		$lastTrackName = $trackDir.'/'.$outpuFileName;
-		if(substr(trim(tailCustom($lastTrackName,10)),-6)==='</gpx>') $outpuFileName = '';	// неизвестно, куда оно пишет
-		else {	// трек пишется в файл $outpuFileName
-			$date = DateTime::createFromFormat('Y-m-d_His',pathinfo($outpuFileName)['filename']);
-			if(date_diff(new DateTime("now"), $date)->days >= $newTrackEveryDays){
-				exec("kill $status");
-				$status=(int)gpxloggerRun(); 	// оно могло и не убиться
-				if($status) echo "Unable to stop logging\n";
-				else {
-					echo "Restarting logging after $newTrackEveryDays days\n";
-					list($status,$outpuFileName) = startGPXlogger(); 	
+		//echo "[logging.php] outpuFileName=$outpuFileName;\n";
+		if($outpuFileName) {
+			$lastTrackName = $trackDir.'/'.$outpuFileName;
+			if(substr(trim(tailCustom($lastTrackName,10)),-6)==='</gpx>') $outpuFileName = '';	// неизвестно, куда оно пишет
+			else {	// трек пишется в файл $outpuFileName
+				$date = DateTime::createFromFormat('Y-m-d_His',pathinfo($outpuFileName)['filename']);
+				if(date_diff(new DateTime("now"), $date)->days >= $newTrackEveryDays){
+					exec("kill $status");
+					$status=(int)gpxloggerRun(); 	// оно могло и не убиться
+					if($status) echo "Unable to stop logging\n";
+					else {
+						echo "Restarting logging after $newTrackEveryDays days\n";
+						list($status,$outpuFileName) = startGPXlogger(); 	
+					}
 				}
 			}
 		}
@@ -63,14 +67,17 @@ else {
 	}
 	else { 
 		// Проверим, нет ли необходимости запустить запись трека
-		$lastTrackName = $trackDir.'/'.getLastTrackName();
-		//echo "gpxlogger не запущен, последний трек: $lastTrackName\n";
-		if(substr(trim(tailCustom($lastTrackName,10)),-6)!=='</gpx>'){
-			//echo "gpxlogger не запущен, а последний трек $lastTrackName не является завершённым, запускаем запись трека\n";
-			list($status,$outpuFileName) = startGPXlogger(); 	
-		}
-		else {
-			exec("crontab -l | grep -v '".__FILE__."'  | crontab -"); 	// удалим себя из cron
+		$lastTrackName = getLastTrackName();
+		if($lastTrackName){
+			$lastTrackName = $trackDir.'/'.$lastTrackName;
+			echo "[logging.php] gpxlogger не запущен, последний трек: $lastTrackName\n";
+			if(substr(trim(tailCustom($lastTrackName,10)),-6)!=='</gpx>'){
+				echo "gpxlogger не запущен, а последний трек $lastTrackName не является завершённым, запускаем запись трека\n";
+				list($status,$outpuFileName) = startGPXlogger(); 	
+			}
+			else {
+				exec("crontab -l | grep -v '".__FILE__."'  | crontab -"); 	// удалим себя из cron
+			}
 		}
 	}
 }

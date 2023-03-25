@@ -38,30 +38,28 @@ $recordedTrackName = substr(end(explode('/',$recordedTrackName)),0,-4);	// мо�
 
 // Получаем список имён треков
 //echo "trackDir=$trackDir; \n";
-$trackInfo = scandir($trackDir); 	// trackDir - из файла params.php
+$trackInfo = glob("$trackDir/*.gpx"); 	// trackDir - из файла params.php
 array_walk($trackInfo,function (&$name,$ind) {
-		if(strpos($name,'~')!==FALSE) $name = NULL; 	// скрытые файлы
-		else $name=strstr($name,'.gpx',TRUE); 	// строка до 
+	$name = explode('/',$name);	// имя, в принципе, может быть русским, и тогда...
+	$name = $name[count($name)-1];
+	$name = strstr($name,'.gpx',TRUE); 	// строка до 
 	}); 	// 
-$trackInfo=array_unique($trackInfo);
-sort($trackInfo,SORT_NATURAL | SORT_FLAG_CASE); 	// 
-if(!$trackInfo[0]) unset($trackInfo[0]); 	// строка от файлов, которые не .gpx, например - каталогов
 sort($trackInfo,SORT_NATURAL | SORT_FLAG_CASE); 	// 
 if(!$allMaps) {
 	if( $currTrackFirst ) unset($trackInfo[0]); // не рассматриваем текущий трек
 	else unset($trackInfo[count( $trackInfo )-1]);
 }
 //echo "trackInfo:<pre>"; print_r($trackInfo); echo "</pre>\n";
-$reportFileName = $trackDir."/chkGPXfiles_report";
-file_put_contents($reportFileName,date('Y-m-d_His')." Now recorded track - $recordedTrackName; \n");
+//$reportFileName = $trackDir."/chkGPXfiles_report";
+if($reportFileName) file_put_contents($reportFileName,date('Y-m-d_His')." Now recorded track - $recordedTrackName; \n");
 foreach($trackInfo as $trk){
 	if($trk==$recordedTrackName) continue;	// ничего не делаем с пишущимся сейчас файлом
 	echo "\n<br> Поехал файл $trk.gpx размером " . filesize( "$trackDir/$trk.gpx" ) . "\n";
-	file_put_contents($reportFileName,"Prepared file $trk.gpx \n",FILE_APPEND);
+	if($reportFileName) file_put_contents($reportFileName,"Prepared file $trk.gpx \n",FILE_APPEND);
 	if( filesize( "$trackDir/$trk.gpx" ) <= 573 ) {
 		if(unlink( "$trackDir/$trk.gpx" ) !== FALSE)	{	
 			echo "удалён короткий файл $trackDir/$trk.gpx \n"; 	// незавершённый файл с одной точкой
-			file_put_contents($reportFileName,"Deleted short file $trk.gpx \n",FILE_APPEND);
+			if($reportFileName) file_put_contents($reportFileName,"Deleted short file $trk.gpx \n",FILE_APPEND);
 			continue;
 		}
 	}
@@ -74,12 +72,12 @@ foreach($trackInfo as $trk){
 		if($lastStr == '</trkpt>') {  	echo "трек готов к завершению\n";
 		    	if(file_put_contents( "$trackDir/$trk.gpx", "\n </trkseg>\n </trk>\n</gpx>", FILE_APPEND ) !== FALSE) {
 		    		echo "завершён файл $trackDir/$trk.gpx \n";
-					file_put_contents($reportFileName,"\tFinished file $trk.gpx \n",FILE_APPEND);
+					if($reportFileName) file_put_contents($reportFileName,"\tFinished file $trk.gpx \n",FILE_APPEND);
 		    		break;
 		    	}
 		}
 		else {  	echo "трек не завершён, обрезаем файл на $lastStrLen байт\n";
-			file_put_contents($reportFileName,"The track is not completed, will trim the file by $lastStrLen bytes \n",FILE_APPEND);
+			if($reportFileName) file_put_contents($reportFileName,"The track is not completed, will trim the file by $lastStrLen bytes \n",FILE_APPEND);
 			$h = fopen("$trackDir/$trk.gpx", 'r+');
 			$trkFileSize -= $lastStrLen; 	// невозможно каждый раз определять размер файла, потому что кэш
 			ftruncate($h, $trkFileSize);

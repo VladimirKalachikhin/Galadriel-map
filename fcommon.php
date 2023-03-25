@@ -16,8 +16,8 @@ function tailCustom($filepath, $lines = 1, $adaptive = true) {
 но вообще-то проще вызвать tail 
 */
 // Open file
-$f = @fopen($filepath, "rb");
-if ($f === false) return false;
+$f = @fopen($filepath, "rb");	// однако, если $filepath -- каталог, то он нормально откроется
+if (!$f) return false;
 // Sets buffer size, according to the number of lines to retrieve.
 // This gives a performance boost when reading a few lines from the file.
 if (!$adaptive) $buffer = 4096;

@@ -17,7 +17,7 @@ $dashboardPosAltTXT = 'Latitude &nbsp; Longitude';
 $dashboardSpeedZoomTXT = 'Вектор скорости - расстояние за';
 $dashboardSpeedZoomMesTXT = 'минут';
 
-$tracksHeaderTXT = 'Треки';
+$tracksHeaderTXT = 'Пути';
 $loggingTXT = 'Запись пути';
 
 $measureHeaderTXT = 'Маршрут';
