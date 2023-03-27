@@ -7,8 +7,9 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.7.4';
+$versionTXT = '2.8.0';
 /* 
+2.8.0	distance circles
 2.7.0	favorite maps
 2.6.0	Human-readable maps names.
 2.5.0	Shows the heading with the cursor, and the course with the velocity vector. Specially for gpsd 3.24.1
@@ -34,7 +35,6 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 // Получаем список имён карт
 	if($mapSourcesDir[0]=='/') $fullMapSourcesDir = $mapSourcesDir;	// если путь абсолютный (и в unix, конечно) $mapSourcesDir - из конфига GaladrielCache
 	else  $fullMapSourcesDir = "$tileCachePath/$mapSourcesDir"; 	// сделаем путь абсолютным
-	$vectorEnable = FALSE; 	// векторных карт у нас нет
 	foreach(glob("$fullMapSourcesDir/*.php") as $name) {
 		$mapName=explode('.php',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
 		$humanName = array();
@@ -43,9 +43,6 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 			$mapsInfo[$mapName] = $humanName[$appLocale];	// $appLocale - из internationalisation
 		}
 		if(!$mapsInfo[$mapName]) $mapsInfo[$mapName] = $mapName;
-		if(file_exists("$fullMapSourcesDir/$mapName.json")) {
-			$vectorEnable = TRUE; 	// векторные карты у нас есть, укажем клиенту грузить соответствующие библиотеки
-		}
 	}
 	asort($mapsInfo,SORT_LOCALE_STRING);
 }
@@ -105,11 +102,6 @@ $centerMark_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' 
     <!-- Leaflet -->
 	<link rel="stylesheet" href="leaflet/leaflet.css" type="text/css">
 	<script src="leaflet/leaflet.js"></script>
-<?php if($vectorEnable) { ?>
-	<!-- Mapbox GL -->
-	<link href="mapbox-gl-js/dist/mapbox-gl.css" rel='stylesheet' />
-	<script src="mapbox-gl-js/dist/mapbox-gl.js"></script>
-<?php }?>
 
 	<script src="polycolor/polycolorRenderer.js"></script>
 	<script src="value2color/value2color.js"></script>
@@ -154,9 +146,6 @@ html, body, #mapid {
    </style>
 </head>
 <body>
-<?php if($vectorEnable) { ?>
-<script src="mapbox-gl-leaflet/leaflet-mapbox-gl.js"></script>
-<?php }?>
 <div id="sidebar" class="leaflet-sidebar collapsed">
 	<!-- Nav tabs -->
 	<div class="leaflet-sidebar-tabs">
@@ -489,6 +478,16 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</div>
 				<span style="font-size:120%"><?php echo $settingsRoutesAlwaysTXT;?></span>
 			</div>
+			<div style="margin: 1rem 1rem;"> <?php// Показывать окружности дистанции ?>
+				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="distCirclesSwitch" onChange="distCirclesToggler();">
+					<label class="onoffswitch-label" for="distCirclesSwitch">
+						<span class="onoffswitch-inner"></span>
+						<span class="onoffswitch-switch"></span>
+					</label>
+				</div>
+				<span style="font-size:120%"><?php echo $settingsdistCirclesTXT;?></span>
+			</div>
 			<br><br>
 			<div style="margin: 1rem 1rem;"> <?php // Показ целей AIS ?>
 				<div class="onoffswitch" style="float:right;margin: 0 auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
@@ -524,6 +523,9 @@ if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
 <script> "use strict";
 // Глобальные переменные
 var appLocale = '<?php echo $appLocale; ?>';
+// для загрузки Mapbox GL при необходимости. Из-за чего-то надо так.
+var mapboxGLscript = null;	// скрипт Mapbox GL, загружается при открытии соответствующей карты. Эти глобальные переменные ни нафиг не нужны, но если грузить скрипты Mapbox GL где-то в глубине -- при закрытии карты возникает мутная ошибка.
+var mapboxLeafletscript = null;	// скрипт mapbox-gl-leaflet
 // Карта
 var defaultMap = 'OpenTopoMap'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
 var showMapsTogglerTXT = [<?php echo $showMapsTogglerTXT; ?>];	// подписи на кнопке все/избранные карты
@@ -568,6 +570,8 @@ if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked =
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch')); 	// getCookie from galadrielmap.js
 if(getCookie('GaladrielSelectedRoutesSwitch') == undefined) SelectedRoutesSwitch.checked = false; 	// показывать выбранные маршруты
 else SelectedRoutesSwitch.checked = Boolean(+getCookie('GaladrielSelectedRoutesSwitch')); 	// getCookie from galadrielmap.js
+if(getCookie('GaladrielMapdistCirclesSwitch') == undefined) distCirclesSwitch.checked = true; 	// показывать окружности дистанции
+else distCirclesSwitch.checked = Boolean(+getCookie('GaladrielMapdistCirclesSwitch')); 	// getCookie from galadrielmap.js
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 var depthInData = <?php echo $depthInData;?>;	// параметры показа глубины вдоль пути
 // Маршрут
@@ -600,6 +604,7 @@ var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
 var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
 var dashboardDepthMesTXT = '<?php echo $dashboardDepthMesTXT;?>';
 var dashboardMeterMesTXT = '<?php echo $dashboardMeterMesTXT;?>';
+var dashboardKiloMeterMesTXT = '<?php echo $dashboardKiloMeterMesTXT;?>';
 var dashboardCourseTXT = '<?php echo $dashboardCourseTXT;?>';
 var dashboardCourseAltTXT = '<?php echo $dashboardCourseAltTXT;?>';
 var dashboardHeadingTXT = '<?php echo $dashboardHeadingTXT;?>';
@@ -656,7 +661,7 @@ if((touchendX > touchstartX+10) && (Math.abs(touchendY-touchstartY)<10)){	// в�
 
 for(let mapLi of mapList.children){	// назначим обработчик длинного нажатия на каждое название карты, потому что его можно назначить только так
 	mapLi.addEventListener('long-press', longressListener); 
-	// а также обработчики свайпа, ибо в мобильных браузерах вообще всё через жопу
+	// а также обработчики свайпа, ибо в мобильных Chrome вообще всё через жопу
 	mapLi.addEventListener('touchstart',function(e){touchstartX=e.changedTouches[0].screenX; touchstartY=e.changedTouches[0].screenY;});
 	mapLi.addEventListener('touchend',handleSwipe);
 }
@@ -762,7 +767,7 @@ map.on('zoomend', function(event) {
 	let zoom = event.target.getZoom();
 	if(!downJob) dwnldJobZoom.innerHTML = zoom;
 	cover_zoom.innerHTML = zoom+8;
-	
+	if(distCirclesSwitch.checked) distCirclesUpdate();	// нарисуем круги дистанции
 });
 <?php if($trackDir OR $routeDir) {?>
 map.on('moveend', updateClasters); 	// кластеризация точек POI, показывает кластеры в области просмотра
@@ -895,12 +900,8 @@ var centerMark = L.marker(map.getBounds().getCenter(), {
 // маркеры
 var GpsCursor = L.icon({
 	iconUrl: './img/gpscursor.png',
-	//shadowUrl: '//leafletjs.com/docs/images/leaf-shadow.png',
 	iconSize:     [120, 120], // size of the icon
-	//shadowSize:   [50, 64], // size of the shadow
 	iconAnchor:   [60, 60], // point of the icon which will correspond to marker's location
-	//shadowAnchor: [4, 62],  // the same for the shadow
-	//popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
 });
 
 // курсор
@@ -944,7 +945,50 @@ let GNSScircle = L.circle(cursor.getLatLng(), {
 	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
 	zIndexOffset: -502
 });
+// Круги дистанции
+var distCirclesRadius = [200,500,1000,2000]
+var distCircles = [
+	L.circle(cursor.getLatLng(), {
+		radius: distCirclesRadius[0],
+		color: '#FD00DB',
+		weight: 1,
+		opacity: 0.3,
+		fill: false,
+		pane: 'overlayPane',
+		zIndexOffset: -503
+	}),
+	L.circle(cursor.getLatLng(), {
+		radius: distCirclesRadius[1],
+		color: '#FD00DB',
+		weight: 1,
+		opacity: 0.3,
+		fill: false,
+		pane: 'overlayPane',
+		zIndexOffset: -503
+	}),
+	L.circle(cursor.getLatLng(), {
+		radius: distCirclesRadius[2],
+		color: '#FD00DB',
+		weight: 1,
+		opacity: 0.3,
+		fill: false,
+		pane: 'overlayPane',
+		zIndexOffset: -503
+	}),
+	L.circle(cursor.getLatLng(), {
+		radius: distCirclesRadius[3],
+		color: '#FD00DB',
+		weight: 1,
+		opacity: 0.3,
+		fill: false,
+		pane: 'overlayPane',
+		zIndexOffset: -503
+	})
+];
+
+// Курсор: объединение всех фигур
 var positionCursor = L.layerGroup([GNSScircle,velocityVector,cursor]);
+if(distCirclesSwitch.checked) distCircles.forEach(circle => circle.addTo(positionCursor));
 
 // Для визуализации collisionDetector
 var collisionIcon = L.icon({
@@ -958,7 +1002,7 @@ var collisionDirectionIcon = L.icon({
 	iconAnchor:   [10,30]
 });
 var collisisonDetected = L.layerGroup(); 	// слой, на котором рисуются значки возможных столкновений collisionDetector
-var collisionDirectionsCursor = L.layerGroup().addTo(positionCursor);	// слой с указателями направлений на опасности столкновений
+var collisionDirectionsCursor = L.layerGroup();	// слой с указателями направлений на опасности столкновений
 if(DisplayAISswitch.checked) collisionDirectionsCursor.addTo(positionCursor);	// слой с указателями направлений на опасности столкновений
 
 /*//////////////////////////// for collision test purpose //////////////////////////////////
@@ -1226,6 +1270,7 @@ if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData
 lastPositionUpdate = Date.now();
 //MOBtab.className=''; 	// координаты появились -- можно включить режим MOB
 positionCursor.invoke('setLatLng',[gpsdData.lat,gpsdData.lon]); // установим координаты всех маркеров
+if(distCirclesSwitch.checked) distCirclesUpdate();	// нарисуем круги дистанции
 var positionTime = new Date(gpsdData.time);
 var now = new Date();
 //console.log('gpsdData.time:',gpsdData.time,'now',now,'now-positionTime',(now-positionTime)/1000);
@@ -1312,7 +1357,7 @@ var errGNSS = (+gpsdData.errX+gpsdData.errY)/2;
 if(!errGNSS) errGNSS = 10; // метров
 if(errGNSS/metresPerPixel > 15) GNSScircle.setRadius(errGNSS); 	// кружок точности больше кружка курсора
 else GNSScircle.setRadius(0);
-GNSScircle.setLatLng(cursor.getLatLng());
+//GNSScircle.setLatLng(cursor.getLatLng());	// оно часть общего курсора, и его координаты и так выставляются?
 
 // Карту в положение
 //console.log("followToCursor", followToCursor);

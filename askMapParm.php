@@ -13,6 +13,7 @@ if(strpos($mapName,'_COVER')) { 	// нужно показать покрытие
 else include("$fullMapSourcesDir/$mapName.php"); 	//  файл, описывающий источник, используемые ниже переменные - оттуда.
 $mapInfo = array(
 	'ext'=>$ext,
+	'ContentType'=>$ContentType,
 	'epsg'=>$EPSG, 
 	'minZoom'=>$minZoom,
 	'maxZoom'=>$maxZoom,

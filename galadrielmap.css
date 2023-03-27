@@ -356,3 +356,11 @@ ul { /* нужно, чтобы стили работали */
 .showedMapName {
 	font-weight: bold;
 }
+
+.distCirclesRadiusTooltip {
+	color: #FD00DB;
+	background: transparent;
+	border: none;
+	border-width : 0;
+	border : 0;
+}

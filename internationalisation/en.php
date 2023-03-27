@@ -6,6 +6,7 @@ $dashboardSpeedTXT = 'Speed';
 $dashboardSpeedMesTXT = 'km/h';
 $dashboardDepthMesTXT = 'Depth';
 $dashboardMeterMesTXT = 'meters';
+$dashboardKiloMeterMesTXT = 'km.';
 $dashboardCourseTXT = "Course over groung";
 $dashboardCourseAltTXT = "Путевой угол";
 $dashboardHeadingTXT = 'Heading';
@@ -44,6 +45,7 @@ $settingsHeaderTXT = 'Settings';
 $settingsCursorTXT = 'Follow <br>to cursor';
 $settingsTrackTXT = 'Current track<br>always visible';
 $settingsRoutesAlwaysTXT = 'Selected routes <br>always visible';
+$settingsdistCirclesTXT = 'Show distance circles';
 $DisplayAIS_TXT = 'Displaying AIS';
 $minWATCHintervalTXT = 'Update the position not quickly than, sec.';
 

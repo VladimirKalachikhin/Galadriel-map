@@ -69,7 +69,10 @@ MOBclose()
 delMOBmarker()
 sendMOBtoServer()
 
-bearing(latlng1, latlng2)
+distCirclesUpdate()	Устанавливает диаметр и подписи кругов дистанции
+distCirclesToggler() включает/выключает показ окружностей дистанции по переключателю в интерфейсе
+
+loadScriptSync(scriptURL)	Синхронная загрузка javascriptbearing(latlng1, latlng2)
 
 atou(b64)		ASCII to Unicode (decode Base64 to original data)
 utoa(data)		Unicode to ASCII (encode data to Base64)
@@ -184,12 +187,14 @@ xhr.open('GET', 'askMapParm.php?mapname='+mapname, false); 	// Подготов�
 xhr.send();
 if (xhr.status == 200) { 	// Успешно
 	try {
-		mapParm = JSON.parse(xhr.responseText); 	// параметры карты: первый - расширение, второй - проекция
+		mapParm = JSON.parse(xhr.responseText); 	// параметры карты
 		//alert('Получены параметры карты \n'+tileCacheURIthis);
 	}
 	catch(err) { 	// у карты не было параметров. Например, мы не используем GaladrielCache.
+		return;
 	}
 }
+else return;
 // javascript в загружаемом источнике на открытие карты
 //console.log('[displayMap] mapParm:',mapParm);
 if(mapParm['data'] && mapParm['data']['javascriptOpen']) eval(mapParm['data']['javascriptOpen']);
@@ -216,6 +221,15 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom}));
 		}
 		else if(mapParm['mapboxStyle']) { 	// векторные тайлы, mapboxStyle добавляется в askMapParm.php, и содержит uri стиля
+			if(typeof L.mapboxGL !== 'undefined'){
+				let link = document.createElement('link');
+				link.type = 'text/css';
+				link.href = 'style.css';
+				link.rel = 'mapbox-gl-js/dist/mapbox-gl.css';
+				document.head.appendChild(link);
+				if(!loadScriptSync("mapbox-gl-js/dist/mapbox-gl.js")) return;
+				if(!loadScriptSync("mapbox-gl-leaflet/leaflet-mapbox-gl.js")) return;
+			}
 			savedLayers[mapname].addLayer(L.mapboxGL({style: mapParm['mapboxStyle'],minZoom:mapParm.minZoom}));
 		}
 		else {
@@ -229,10 +243,20 @@ else {
 	if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
 	//console.log(tileCacheURIthis);
 	if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
-		//alert('on Ellipsoide')
 		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom});
 	}
 	else if(mapParm['mapboxStyle']) { 	// векторные тайлы, mapboxStyle добавляется в askMapParm.php, и содержит uri стиля
+		//console.log("[displayMap] typeof L.mapboxGL=",typeof L.mapboxGL,L.mapboxGL);
+		if(typeof L.mapboxGL === 'undefined'){
+			let link = document.createElement('link');
+			link.type = 'text/css';
+			link.href = 'style.css';
+			link.rel = 'mapbox-gl-js/dist/mapbox-gl.css';
+			document.head.appendChild(link);
+			if(!(mapboxGLscript=loadScriptSync("mapbox-gl-js/dist/mapbox-gl.js"))) return;	// Нахрена присваивать глобальной переменной, которая нигде не используется -- неясно, но без этого возникает ошибка при закрытии карты.
+			if(!(mapboxLeafletscript=loadScriptSync("mapbox-gl-leaflet/leaflet-mapbox-gl.js"))) return;
+			//console.log("[displayMap] функции загружены");
+		}
 		if(!savedLayers[mapname])	savedLayers[mapname] = L.mapboxGL({style:mapParm['mapboxStyle'],minZoom:mapParm.minZoom});
 	}
 	else {
@@ -1737,6 +1761,99 @@ expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет 
 document.cookie = "GaladrielMapMOB="+mobMarkerJSON+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 } // end function sendMOBtoServer
 
+// Круги дистанции
+function distCirclesUpdate(){
+/* Устанавливает диаметр и подписи кругов дистанции 
+в зависимости от координат и масштаба.
+Соответственно, координаты должны быть.
+*/
+const zoom = Math.round(map.getZoom());	// масштаб может быть дробным во время собственно масштабирования
+const metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
+switch(zoom){
+case 0:
+case 1:
+case 2:
+case 3:
+case 4:
+	distCirclesRadius = [200000,500000,1000000,2000000];
+	break
+case 5:
+case 6:
+	distCirclesRadius = [50000,100000,150000,300000];
+	break
+case 7:
+case 8:
+	distCirclesRadius = [10000,20000,50000,100000];
+	break
+case 9:
+case 10:
+	distCirclesRadius = [5000,10000,20000,30000];
+	break
+case 11:
+case 12:
+	distCirclesRadius = [1000,2000,5000,10000];
+	break
+case 13:
+case 14:
+	distCirclesRadius = [200,500,1000,2000];
+	break
+case 15:
+	distCirclesRadius = [100,200,300,500];
+	break
+case 16:
+default:
+	distCirclesRadius = [50,100,200,300];
+}
+let label;
+for (let i=0; i<4; i++)	{
+	distCircles[i].setRadius(distCirclesRadius[i]);
+	distCircles[i].unbindTooltip();
+	if(distCirclesRadius[0]>=1000) label = (distCirclesRadius[i]/1000).toString()+' '+dashboardKiloMeterMesTXT
+	else label = distCirclesRadius[i].toString();
+	distCircles[i].bindTooltip(label,{permanent:true,direction:'center',className:'distCirclesRadiusTooltip',offset:[0,-distCirclesRadius[i]/metresPerPixel]});	
+}	
+} // end function distCirclesUpdate
+
+function distCirclesToggler() {
+/* включает/выключает показ окружностей дистанции по переключателю в интерфейсе */
+if(distCirclesSwitch.checked) {
+	distCircles.forEach(circle => circle.addTo(positionCursor));
+	// Посадим куку
+	const expires =  new Date();
+	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
+	document.cookie = 'GaladrielMapdistCirclesSwitch=1; expires='+expires+"; path=/; samesite=Lax"; 	// 
+}
+else {
+	distCircles.forEach(circle => circle.removeFrom(positionCursor));
+	// Посадим куку
+	const expires =  new Date();
+	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
+	document.cookie = 'GaladrielMapdistCirclesSwitch=0; expires='+expires+"; path=/; samesite=Lax"; 	// 
+}
+} // end function distCirclesToggler
+
+
+// Общие функции
+
+function loadScriptSync(scriptURL){
+/* Синхронная загрузка javascript 
+Вопреки распространённому мнению, script.async = false не приводит к асинхронной загрузке.
+Это свойство в случае загрузки скрипта из скрипта вообще ничего не делает, и имеет смысл
+только при загрзке <script src=""><script>, где указывает, что надо сохранить порядок загрузки
+*/
+const xhr = new XMLHttpRequest();
+xhr.open('GET', scriptURL, false); 	// Подготовим синхронный запрос
+xhr.send();
+if (xhr.status == 200) { 	// Успешно
+	let script = document.createElement("script");
+	script.textContent = xhr.responseText;
+	document.head.appendChild(script);
+	//console.log("[loadScriptSync] Загружен скрипт",scriptURL,script);
+	return script;
+}
+return false;
+} // end function loadScriptSync
+
 
 function bearing(latlng1, latlng2) {
 /**/
@@ -1883,10 +2000,10 @@ L.LayerGroup.include({
 	}
 });
 
-///////// for collision test purpose /////////
+/*//////// for collision test purpose /////////
 // Функции для отладки предупреждения о столкновениях
 function displayCollisionAreas(selfArea=null){
-/**/
+//
 function mkPolyline(area){
 	let polyline = [];
 	area.forEach(point => {polyline.push([point.lat,point.lon]);});
@@ -1911,5 +2028,5 @@ for(let vessel in vehicles){
 collisisonAreas.addTo(map);
 } // end function displayCollisionAreas
 
-///////// for collision test purpose /////////
+/*//////// for collision test purpose /////////
 

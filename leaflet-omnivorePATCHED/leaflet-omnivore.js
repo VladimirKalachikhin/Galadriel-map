@@ -524,7 +524,7 @@ else { 	// это индивидуальная точка
 
 	popUpHTML += getLinksHTML(geoJsonPoint); 	// приклеим ссылки
 
-	marker.bindPopup(popUpHTML+'<br>'); 	// создадим PopUp, popUpHTML всегда не пуст
+	marker.bindPopup(popUpHTML+'<br>',{autoClose:false}); 	// создадим PopUp, popUpHTML всегда не пуст
 }
 return marker;
 } // end function getMarkerToPoint

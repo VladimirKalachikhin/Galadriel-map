@@ -6,6 +6,7 @@ $dashboardSpeedTXT = 'Скорость';
 $dashboardSpeedMesTXT = 'км/ч';
 $dashboardDepthMesTXT = 'Глубина';
 $dashboardMeterMesTXT = 'м.';
+$dashboardKiloMeterMesTXT = 'км.';
 $dashboardCourseTXT = "Путевой угол";
 $dashboardCourseAltTXT = "Course over groung";
 $dashboardHeadingTXT = 'Истинный курс';
@@ -44,6 +45,7 @@ $settingsHeaderTXT = 'Параметры';
 $settingsCursorTXT = 'Следование <br>за курсором';
 $settingsTrackTXT = 'Текущй трек <br>всегда показывается';
 $settingsRoutesAlwaysTXT = 'Выбранные маршруты <br>всегда показываются';
+$settingsdistCirclesTXT = 'Показывать окружности дистанции';
 $DisplayAIS_TXT = 'Отображение AIS';
 $minWATCHintervalTXT = 'Обновлять положение не чаще, чем раз в, сек. ';
 
