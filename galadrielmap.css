@@ -328,6 +328,7 @@ ul { /* нужно, чтобы стили работали */
 }
 
 .centerMarkIcon {
+	background: transparent;
 }
 
 .selectedTile {

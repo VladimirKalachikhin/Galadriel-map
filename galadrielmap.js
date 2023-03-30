@@ -1365,17 +1365,36 @@ return parseInt(('00'+r.toString(16)).slice(-2)+('00'+g.toString(16)).slice(-2)+
 // Показ координат центра и переход по введённым
 function centerMarkPosition() {
 /* global goToPositionField */
-centerMark.setLatLng(map.getCenter()); 	// определена в index
-//centerMark.setLatLng(map.getBounds().getCenter()); 	// определена в index
+centerMark.invoke('setLatLng',map.getCenter()); // установим координаты всех маркеров
+//centerMark.setLatLng(map.getCenter()); 	// определена в index
 if(goToPositionManualFlag === false) { 	// если поле не юзают руками
-	const lat = Math.round(centerMark.getLatLng().lat*10000)/10000; 	 	// широта с четыремя знаками после запятой - 10см
-	const lng = Math.round(((centerMark.getLatLng().lng%360+540)%360-180)*10000)/10000; 	 	// долгота
+	const lat = Math.round(centerMarkMarker.getLatLng().lat*10000)/10000; 	 	// широта с четыремя знаками после запятой - 10см
+	const lng = Math.round(((centerMarkMarker.getLatLng().lng%360+540)%360-180)*10000)/10000; 	 	// долгота
 	goToPositionField.value = lat + ' ' + lng;
 } 	// а когда руками, т.е., фокус в поле -- координаты перестают изменяться. Карта же может двигаться за курсором
 }; // end function centerMarkPosition
 
+function centerMarkUpdate(){
+//let markSize = Math.round(distCirclesUpdate(centerMarkCircles))*2; 	// нарисуем круги и заодно получим размер крестика
+distCirclesUpdate(centerMarkCircles);
+let markSize = Math.round((window.innerWidth+window.innerHeight)/10);
+//console.log("[centerMarkOn] markSize=",markSize);
+let centerMark_markerImg = `<svg width="${markSize}" height="${markSize}" viewBox="0 0 100% 100%" xmlns="http://www.w3.org/2000/svg">
+	<line x1="50%" y1="0" x2="50%" y2="100%" stroke="rgb(253,0,219)" />
+	<line x1="0" y1="50%" x2="100%" y2="50%" stroke="rgb(253,0,219)" />
+	<line x1="0" y1="50%" x2="25%" y2="50%" stroke="rgba(253,0,219,0.3)" stroke-width="3px" />
+	<line x1="75%" y1="50%" x2="100%" y2="50%" stroke="rgba(253,0,219,0.3)" stroke-width="3px" />
+	<line x1="50%" y1="0%" x2="50%" y2="25%" stroke="rgba(253,0,219,0.3)" stroke-width="3px" />
+	<line x1="50%" y1="75%" x2="50%" y2="100%" stroke="rgba(253,0,219,0.3)" stroke-width="3px" />
+</svg>`;
+centerMarkIcon.options.html = centerMark_markerImg;
+centerMarkIcon.options.iconAnchor = [markSize/2, markSize/2];
+//console.log(centerMarkIcon);
+} // end function centerMarkUpdate
+
 function centerMarkOn() {
 /**/
+centerMarkUpdate();
 centerMarkPosition();
 centerMark.addTo(map);
 map.on('move', centerMarkPosition);
@@ -1762,11 +1781,12 @@ document.cookie = "GaladrielMapMOB="+mobMarkerJSON+"; expires="+expires+"; path=
 } // end function sendMOBtoServer
 
 // Круги дистанции
-function distCirclesUpdate(){
+function distCirclesUpdate(distCircles){
 /* Устанавливает диаметр и подписи кругов дистанции 
 в зависимости от координат и масштаба.
 Соответственно, координаты должны быть.
 */
+let distCirclesRadius;
 const zoom = Math.round(map.getZoom());	// масштаб может быть дробным во время собственно масштабирования
 const metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
 switch(zoom){
@@ -1811,7 +1831,8 @@ for (let i=0; i<4; i++)	{
 	if(distCirclesRadius[0]>=1000) label = (distCirclesRadius[i]/1000).toString()+' '+dashboardKiloMeterMesTXT
 	else label = distCirclesRadius[i].toString();
 	distCircles[i].bindTooltip(label,{permanent:true,direction:'center',className:'distCirclesRadiusTooltip',offset:[0,-distCirclesRadius[i]/metresPerPixel]});	
-}	
+}
+return distCirclesRadius[2]/metresPerPixel;	
 } // end function distCirclesUpdate
 
 function distCirclesToggler() {

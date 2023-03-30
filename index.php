@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.8.0';
+$versionTXT = '2.8.1';
 /* 
 2.8.0	distance circles
 2.7.0	favorite maps
@@ -86,9 +86,6 @@ $gpxloggerRun = gpxloggerRun();
 $imgFileName = 'img/mob_marker.png';
 $mob_markerImg = base64_encode(file_get_contents($imgFileName));
 $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_markerImg;
-$imgFileName = 'img/Crosshair.svg';
-$centerMark_markerImg = base64_encode(file_get_contents($imgFileName));
-$centerMark_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $centerMark_markerImg;
 
 
 ?>
@@ -551,6 +548,9 @@ var followPause = 10 * 1000; 	// пауза следования карты за
 var savePositionEvery = 15 * 1000; 	// будем сохранять положение каждые микросекунд локально в куку
 var followPaused; 	// объект таймера, который восстанавливает следование курсору
 var velocityVectorLengthInMn = <?php echo $velocityVectorLengthInMn;?>; 	// длинной в сколько минут пути рисуется линия скорости
+// Окружности дистанции
+if(getCookie('GaladrielMapdistCirclesSwitch') == undefined) distCirclesSwitch.checked = true; 	// показывать окружности дистанции
+else distCirclesSwitch.checked = Boolean(+getCookie('GaladrielMapdistCirclesSwitch')); 	// getCookie from galadrielmap.js
 // AIS
 var vehicles = []; 	// list of visible by AIS data vehicle objects 
 var AISstatusTXT = {
@@ -570,8 +570,6 @@ if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked =
 else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch')); 	// getCookie from galadrielmap.js
 if(getCookie('GaladrielSelectedRoutesSwitch') == undefined) SelectedRoutesSwitch.checked = false; 	// показывать выбранные маршруты
 else SelectedRoutesSwitch.checked = Boolean(+getCookie('GaladrielSelectedRoutesSwitch')); 	// getCookie from galadrielmap.js
-if(getCookie('GaladrielMapdistCirclesSwitch') == undefined) distCirclesSwitch.checked = true; 	// показывать окружности дистанции
-else distCirclesSwitch.checked = Boolean(+getCookie('GaladrielMapdistCirclesSwitch')); 	// getCookie from galadrielmap.js
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 var depthInData = <?php echo $depthInData;?>;	// параметры показа глубины вдоль пути
 // Маршрут
@@ -622,15 +620,13 @@ DisplayAISswitch.checked = true;	// Показывать цели AIS. Всег�
 
 // Подготовленные картинки для случая off-line
 const mob_markerImg = '<?php echo $mob_markerImg; ?>';
-const centerMark_markerImg = '<?php echo $centerMark_markerImg; ?>';
-
 
 // Инициализируем список карт
 if(!showMapsList.length) showMapsToggle(true);	// покажем в списке карт все карты, если нет избранных
 else showMapsToggle();	// покажем только избранные, поскольку изначально не показывается ничего
 
-// сего не сделаешь, если двойное нажатие не работает нигде, а на длительное в некоторых (мобильных)
-// браузерах навешана всякая фигня, и непросто навешана, а с запрещением всего остального
+// чего не сделаешь, если двойное нажатие не работает нигде, а на длительное в Google Chrome
+// и иже с ним навешана всякая фигня, и непросто навешана, а с запрещением всего остального
 function longressListener(e){
 e.preventDefault();
 //console.log(e.target);
@@ -767,7 +763,8 @@ map.on('zoomend', function(event) {
 	let zoom = event.target.getZoom();
 	if(!downJob) dwnldJobZoom.innerHTML = zoom;
 	cover_zoom.innerHTML = zoom+8;
-	if(distCirclesSwitch.checked) distCirclesUpdate();	// нарисуем круги дистанции
+	if(distCirclesSwitch.checked) distCirclesUpdate(distCircles);	// нарисуем круги дистанции
+	if(map.hasLayer(centerMark)) centerMarkUpdate();	// нарисуем круги дистанции крестика в центре
 });
 <?php if($trackDir OR $routeDir) {?>
 map.on('moveend', updateClasters); 	// кластеризация точек POI, показывает кластеры в области просмотра
@@ -881,19 +878,57 @@ map.on('editable:vertex:dragstart',	function(event) {
 	window.navigator.vibrate(200); // Вибрировать 200ms
 });
 
-// центр экрана
-let markSize = Math.round(window.innerWidth/5);
-//console.log(markSize);
-var centerMark = L.marker(map.getBounds().getCenter(), {
-	'icon': new L.icon({
-		//iconUrl: './img/Crosshair.svg',
-		iconUrl: centerMark_markerImg,
-		iconSize:     [markSize, markSize], // size of the icon
-		iconAnchor:   [markSize/2, markSize/2], // point of the icon which will correspond to marker's location
-		//className: "centerMarkIcon"	// galadrielmap.css
+// Круги дистанции
+// Ну не хочется мне трахаться с копированием объектов, тем более, что в Leaflet там какая-то засада.
+let distCirclesCode = `[
+	L.circle([], {
+		color: '#FD00DB',
+		weight: 1,
+		opacity: 0.3,
+		fill: false,
+		pane: 'overlayPane',
+		zIndexOffset: -503
 	}),
+	L.circle([], {
+		color: '#FD00DB',
+		weight: 1,
+		opacity: 0.3,
+		fill: false,
+		pane: 'overlayPane',
+		zIndexOffset: -503
+	}),
+	L.circle([], {
+		color: '#FD00DB',
+		weight: 1,
+		opacity: 0.3,
+		fill: false,
+		pane: 'overlayPane',
+		zIndexOffset: -503
+	}),
+	L.circle([], {
+		color: '#FD00DB',
+		weight: 1,
+		opacity: 0.3,
+		fill: false,
+		pane: 'overlayPane',
+		zIndexOffset: -503
+	})
+]
+`;
+
+// центр экрана
+let centerMarkIcon = new L.divIcon({
+	className: "centerMarkIcon"	// galadrielmap.css Установить прозрачность фона иначе, чем внешним стилем не удаётся
+});
+var centerMarkMarker = L.marker(map.getBounds().getCenter(), {
+	'icon': centerMarkIcon,
 	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
 	zIndexOffset: -1000
+});
+var centerMark = L.layerGroup([centerMarkMarker]);
+var centerMarkCircles = eval(distCirclesCode);
+centerMarkCircles.forEach(circle => {
+	circle.addTo(centerMark)
 });
 
 // Местоположение
@@ -945,46 +980,8 @@ let GNSScircle = L.circle(cursor.getLatLng(), {
 	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
 	zIndexOffset: -502
 });
-// Круги дистанции
-var distCirclesRadius = [200,500,1000,2000]
-var distCircles = [
-	L.circle(cursor.getLatLng(), {
-		radius: distCirclesRadius[0],
-		color: '#FD00DB',
-		weight: 1,
-		opacity: 0.3,
-		fill: false,
-		pane: 'overlayPane',
-		zIndexOffset: -503
-	}),
-	L.circle(cursor.getLatLng(), {
-		radius: distCirclesRadius[1],
-		color: '#FD00DB',
-		weight: 1,
-		opacity: 0.3,
-		fill: false,
-		pane: 'overlayPane',
-		zIndexOffset: -503
-	}),
-	L.circle(cursor.getLatLng(), {
-		radius: distCirclesRadius[2],
-		color: '#FD00DB',
-		weight: 1,
-		opacity: 0.3,
-		fill: false,
-		pane: 'overlayPane',
-		zIndexOffset: -503
-	}),
-	L.circle(cursor.getLatLng(), {
-		radius: distCirclesRadius[3],
-		color: '#FD00DB',
-		weight: 1,
-		opacity: 0.3,
-		fill: false,
-		pane: 'overlayPane',
-		zIndexOffset: -503
-	})
-];
+
+var distCircles = eval(distCirclesCode);
 
 // Курсор: объединение всех фигур
 var positionCursor = L.layerGroup([GNSScircle,velocityVector,cursor]);
@@ -1270,7 +1267,7 @@ if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData
 lastPositionUpdate = Date.now();
 //MOBtab.className=''; 	// координаты появились -- можно включить режим MOB
 positionCursor.invoke('setLatLng',[gpsdData.lat,gpsdData.lon]); // установим координаты всех маркеров
-if(distCirclesSwitch.checked) distCirclesUpdate();	// нарисуем круги дистанции
+if(distCirclesSwitch.checked) distCirclesUpdate(distCircles);	// нарисуем круги дистанции
 var positionTime = new Date(gpsdData.time);
 var now = new Date();
 //console.log('gpsdData.time:',gpsdData.time,'now',now,'now-positionTime',(now-positionTime)/1000);
