@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.8.1';
+$versionTXT = '2.8.2';
 /* 
 2.8.0	distance circles
 2.7.0	favorite maps
@@ -879,42 +879,26 @@ map.on('editable:vertex:dragstart',	function(event) {
 });
 
 // Круги дистанции
-// Ну не хочется мне трахаться с копированием объектов, тем более, что в Leaflet там какая-то засада.
-let distCirclesCode = `[
-	L.circle([], {
+var distCircles = [];
+var centerMarkCircles = [];
+for (let n=0; n<4; n++) {
+	centerMarkCircles.push(	L.circle([], {
 		color: '#FD00DB',
 		weight: 1,
 		opacity: 0.3,
 		fill: false,
 		pane: 'overlayPane',
 		zIndexOffset: -503
-	}),
-	L.circle([], {
+	}));
+	distCircles.push(	L.circle([], {
 		color: '#FD00DB',
 		weight: 1,
 		opacity: 0.3,
 		fill: false,
 		pane: 'overlayPane',
 		zIndexOffset: -503
-	}),
-	L.circle([], {
-		color: '#FD00DB',
-		weight: 1,
-		opacity: 0.3,
-		fill: false,
-		pane: 'overlayPane',
-		zIndexOffset: -503
-	}),
-	L.circle([], {
-		color: '#FD00DB',
-		weight: 1,
-		opacity: 0.3,
-		fill: false,
-		pane: 'overlayPane',
-		zIndexOffset: -503
-	})
-]
-`;
+	}));
+};
 
 // центр экрана
 let centerMarkIcon = new L.divIcon({
@@ -926,10 +910,7 @@ var centerMarkMarker = L.marker(map.getBounds().getCenter(), {
 	zIndexOffset: -1000
 });
 var centerMark = L.layerGroup([centerMarkMarker]);
-var centerMarkCircles = eval(distCirclesCode);
-centerMarkCircles.forEach(circle => {
-	circle.addTo(centerMark)
-});
+centerMarkCircles.forEach(circle => circle.addTo(centerMark));
 
 // Местоположение
 // маркеры
@@ -980,8 +961,6 @@ let GNSScircle = L.circle(cursor.getLatLng(), {
 	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
 	zIndexOffset: -502
 });
-
-var distCircles = eval(distCirclesCode);
 
 // Курсор: объединение всех фигур
 var positionCursor = L.layerGroup([GNSScircle,velocityVector,cursor]);

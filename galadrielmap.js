@@ -1394,8 +1394,8 @@ centerMarkIcon.options.iconAnchor = [markSize/2, markSize/2];
 
 function centerMarkOn() {
 /**/
-centerMarkUpdate();
 centerMarkPosition();
+centerMarkUpdate();	// обязательно после centerMarkPosition, ибо там географическое положение используется для вычисления положения в пикселях
 centerMark.addTo(map);
 map.on('move', centerMarkPosition);
 goToPositionField.addEventListener('focus', function(e){goToPositionManualFlag=true;}); 	// при получении фокуса - прекратить обновление
@@ -1788,7 +1788,8 @@ function distCirclesUpdate(distCircles){
 */
 let distCirclesRadius;
 const zoom = Math.round(map.getZoom());	// масштаб может быть дробным во время собственно масштабирования
-const metresPerPixel = (40075016.686 * Math.abs(Math.cos(cursor.getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
+const metresPerPixel = (40075016.686 * Math.abs(Math.cos(distCircles[0].getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
+//console.log("[distCirclesUpdate] zoom",zoom,"метров в пикселе:",metresPerPixel);
 switch(zoom){
 case 0:
 case 1:
