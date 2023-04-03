@@ -47,6 +47,7 @@ realUpdClaster(layer)
 nextColor(color,step)
 
 centerMarkPosition() // Показ координат центра и переход по введённым
+centerMarkUpdate()
 centerMarkOn
 centerMarkOff
 
@@ -1784,8 +1785,8 @@ document.cookie = "GaladrielMapMOB="+mobMarkerJSON+"; expires="+expires+"; path=
 function distCirclesUpdate(distCircles){
 /* Устанавливает диаметр и подписи кругов дистанции 
 в зависимости от координат и масштаба.
-Соответственно, координаты должны быть.
 */
+if(!distCircles[0].getLatLng()) return;
 let distCirclesRadius;
 const zoom = Math.round(map.getZoom());	// масштаб может быть дробным во время собственно масштабирования
 const metresPerPixel = (40075016.686 * Math.abs(Math.cos(distCircles[0].getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
@@ -1833,7 +1834,7 @@ for (let i=0; i<4; i++)	{
 	else label = distCirclesRadius[i].toString();
 	distCircles[i].bindTooltip(label,{permanent:true,direction:'center',className:'distCirclesRadiusTooltip',offset:[0,-distCirclesRadius[i]/metresPerPixel]});	
 }
-return distCirclesRadius[2]/metresPerPixel;	
+//return distCirclesRadius[2]/metresPerPixel;	
 } // end function distCirclesUpdate
 
 function distCirclesToggler() {
