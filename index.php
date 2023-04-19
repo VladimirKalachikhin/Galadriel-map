@@ -885,7 +885,7 @@ for (let n=0; n<4; n++) {
 	centerMarkCircles.push(	L.circle([], {
 		color: '#FD00DB',
 		weight: 1,
-		opacity: 0.3,
+		opacity: 0.6,
 		fill: false,
 		pane: 'overlayPane',
 		zIndexOffset: -503
@@ -893,7 +893,7 @@ for (let n=0; n<4; n++) {
 	distCircles.push(	L.circle([], {
 		color: '#FD00DB',
 		weight: 1,
-		opacity: 0.3,
+		opacity: 0.6,
 		fill: false,
 		pane: 'overlayPane',
 		zIndexOffset: -503
