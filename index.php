@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.8.3';
+$versionTXT = '2.8.4';
 /* 
 2.8.0	distance circles
 2.7.0	favorite maps
@@ -552,7 +552,7 @@ var velocityVectorLengthInMn = <?php echo $velocityVectorLengthInMn;?>; 	// дл
 if(getCookie('GaladrielMapdistCirclesSwitch') == undefined) distCirclesSwitch.checked = true; 	// показывать окружности дистанции
 else distCirclesSwitch.checked = Boolean(+getCookie('GaladrielMapdistCirclesSwitch')); 	// getCookie from galadrielmap.js
 // AIS
-var vehicles = []; 	// list of visible by AIS data vehicle objects 
+var vehicles = {}; 	// list of visible by AIS data vehicle objects 
 var AISstatusTXT = {
 <?php foreach($AISstatusTXT as $k => $v) echo "$k: '$v',\n"; 	// не используется??>
 }
@@ -902,7 +902,7 @@ for (let n=0; n<4; n++) {
 
 // центр экрана
 let centerMarkIcon = new L.divIcon({
-	className: "centerMarkIcon"	// galadrielmap.css Установить прозрачность фона иначе, чем внешним стилем не удаётся
+	className: "centerMarkIcon"	// galadrielmap.css Установить прозрачность фона иначе, чем внешним стилем не удаётся.
 });
 var centerMarkMarker = L.marker(map.getBounds().getCenter(), {
 	'icon': centerMarkIcon,
@@ -1382,17 +1382,19 @@ function realtimeAISupdate(aisClass) {
 // те, которых там нет -- перестаёт показывать
 //console.log(aisClass); 	// 
 let aisData = aisClass.ais;
-//console.log(aisData); 	// массив с данными целей
+//console.log("[realtimeAISupdate] aisData:",aisData); 	// массив с данными целей
 //console.log(DisplayAISswitch);
 let vehiclesVisible = [];
-for(const vehicle in aisData){
+for(let vehicle in aisData){	// vehicle == mmsi
+	 vehicle = vehicle.toString();
 	//console.log(vehicle,aisData[vehicle]);
 	if(vehicle.toLowerCase() == 'error') break;
 	//if(vehicle=='371255000') console.log('aisData[vehicle]:',JSON.stringify(aisData[vehicle]));
 	//console.log(aisData[vehicle].lat);	console.log(aisData[vehicle].lon);
 	if((aisData[vehicle].lat === null) || (aisData[vehicle].lon === null) || (aisData[vehicle].lat === undefined) || (aisData[vehicle].lon === undefined)) continue;	// не показываем цели без координат
+
 	if(!vehicles[vehicle]) { 	// global var, массив layers с целями
-		//console.log(vehicle,aisData[vehicle]);
+		//console.log("[realtimeAISupdate] vehicle=",vehicle,"aisData[vehicle]:",aisData[vehicle]);
 		//console.log('aisData[vehicle].collisionArea',aisData[vehicle].collisionArea);
 		let defaultSymbol;
 		let noHeadingSymbol;
@@ -1405,7 +1407,7 @@ for(const vehicle in aisData){
 			defaultSymbol = [0.8,0, -0.3,0.35, -0.3,-0.35]; 	// треугольник вправо, расстояния от центра, через которые нарисуют polyline
 			noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
 		}
-		vehicles[vehicle] = L.trackSymbol(L.latLng(0,0),{
+		vehicles[vehicle] = L.trackSymbol([aisData[vehicle].lat,aisData[vehicle].lon],{
 			trackId: vehicle,
 			leaderTime: velocityVectorLengthInMn*60,
 			fill: true,
@@ -1417,17 +1419,21 @@ for(const vehicle in aisData){
 			noHeadingSymbol: noHeadingSymbol 	// 
 		}).addTo(map);
 	}
+
 	vehicles[vehicle].addData(aisData[vehicle]); 	// обновим данные
+	//console.log(vehicles[vehicle].getLatLng());
 	//console.log(vehicles[vehicle]);
 	
 	vehiclesVisible.push(vehicle); 	// запомним, какие есть
 }
+
 for(const vehicle in vehicles){
 	if(vehiclesVisible.includes(vehicle) && DisplayAISswitch.checked) continue; 	// типа, синхронизация... clearInterval -- асинхронная функция, и может не успеть отключить опрос AIS до того, как цели будут убраны с экрана. Тогда они уберутся здесь.
 	vehicles[vehicle].remove();
 	vehicles[vehicle] = null;
 	delete vehicles[vehicle];
 }
+
 //displayCollisionAreas();	///////// for collision test purpose /////////
 } // end function realtimeAISupdate
 

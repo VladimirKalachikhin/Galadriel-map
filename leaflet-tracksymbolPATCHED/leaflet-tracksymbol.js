@@ -111,6 +111,7 @@ L.TrackSymbol = L.Path.extend({
 
 		this._speed = aisData.speed;
 		delete aisData.speed;
+		//console.log('aisData.heading=',aisData.heading,'aisData.course=',aisData.course);
 		this._course = aisData.course * Math.PI/180;
 		delete aisData.course;
 		this._heading = aisData.heading * Math.PI/180;
@@ -132,7 +133,6 @@ L.TrackSymbol = L.Path.extend({
 		this._shiptype = aisData.shiptype;
 		delete aisData.shiptype;
 		this._setColorsByTypeOfShip();
-		//if(this.options.mmsi=='371255000') console.log('this._heading=',this._heading,'this._course=',this._course);
 		if(((aisData.lat !== undefined) && (aisData.lat !== null)) && ((aisData.lon !== undefined) && (aisData.lon !== null))) {
 		//if(aisData.lat && aisData.lon) {
 		    var oldLatLng = this._latlng;
@@ -188,7 +188,7 @@ L.TrackSymbol = L.Path.extend({
 			iconName = '';
 			break;
 		}
-		//console.log(thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName);
+		//console.log("aisData['status']=",aisData['status'],thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName);
 		if(iconName) iconName = '<img width="24px" style="float:right;margin:0.1rem;" src="'+(thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName)+'">';
 		let statusText;
 		if(!aisData.status_text) statusText = AISstatusTXT[aisData.status];
@@ -284,27 +284,6 @@ ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>
     return this.redraw();
   },
   
-  /**
-   * Sets the course over ground [degrees].
-   * The speed-leader points in this direction.
-   * @method setCourse
-   * @param course {Number} The course in radians.
-   */
-  setCourse: function( course ) {
-    this._course = course * Math.PI/180;
-    return this.redraw();
-  },
-  
-  /**
-   * Sets the heading of the symbol [degrees].
-   * The heading rotates the symbol.
-   * @method setHeading
-   * @param course {Number} The heading in radians.
-   */
-  setHeading: function( heading ) {
-    this._heading = heading * Math.PI/180;
-    return this.redraw();
-  },
   
   /**
    * Sets the leaderTime of the symbol [seconds].
