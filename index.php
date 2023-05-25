@@ -977,7 +977,7 @@ var collisionDirectionIcon = L.icon({
 	iconSize:     [20,24],
 	iconAnchor:   [10,30]
 });
-var collisisonDetected = L.layerGroup(); 	// слой, на котором рисуются значки возможных столкновений collisionDetector
+var collisisonDetected = L.layerGroup([],{pane: 'overlayPane'}); 	// слой, на котором рисуются значки возможных столкновений collisionDetector
 var collisionDirectionsCursor = L.layerGroup();	// слой с указателями направлений на опасности столкновений
 if(DisplayAISswitch.checked) collisionDirectionsCursor.addTo(positionCursor);	// слой с указателями направлений на опасности столкновений
 
@@ -1423,7 +1423,7 @@ for(let vehicle in aisData){	// vehicle == mmsi
 	vehicles[vehicle].addData(aisData[vehicle]); 	// обновим данные
 	//console.log(vehicles[vehicle].getLatLng());
 	//console.log(vehicles[vehicle]);
-	
+
 	vehiclesVisible.push(vehicle); 	// запомним, какие есть
 }
 
@@ -1514,6 +1514,7 @@ for(const vesselID in collisions){
 		collisisonDetected.addLayer( L.marker(collisions[vesselID], {
 			icon: collisionIcon,
 			opacity: 0.5,
+			pane: 'overlayPane',
 			zIndexOffset: -1000
 		}));
 		// Указатели вокруг курсора
@@ -1565,6 +1566,7 @@ if(collisionSegments.intersections){
 ///////// for collision test purpose ////////*/
 
 collisisonDetected.addTo(map);	// а collisionDirectionsCursor часть positionCursor, и оно и так addTo(map)
+collisisonDetected.setZIndex(-1000);
 } // end function realtimeCollisionsUpdate
 
 
