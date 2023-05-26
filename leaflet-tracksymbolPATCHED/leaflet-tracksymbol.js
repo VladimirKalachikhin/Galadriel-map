@@ -191,8 +191,11 @@ L.TrackSymbol = L.Path.extend({
 		//console.log("aisData['status']=",aisData['status'],thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName);
 		if(iconName) iconName = '<img width="24px" style="float:right;margin:0.1rem;" src="'+(thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName)+'">';
 		let statusText;
-		if(!aisData.status_text) statusText = AISstatusTXT[aisData.status];
+		if(!aisData.status_text) statusText = AISstatusTXT[aisData.status];	// internationalisation
 		else statusText = aisData.status_text.trim();
+		let shiptype_text;
+		if(!aisData.shiptype_text) shiptype_text = AISshipTypeTXT[this._shiptype];	// internationalisation
+		else shiptype_text = aisData.shiptype_text.trim();
 		
 		let dataStamp = '';
 		if(this.options.timestamp){
@@ -209,7 +212,7 @@ L.TrackSymbol = L.Path.extend({
 	${this.options.mmsi} <span style='float:right;'>${this.options.callsign||''}</span>
 	</div>
 	<div style="text-align: left;">
-		${this.options.shiptype_text||''}
+		${shiptype_text||''}
 	</div>
 	<div style='width:100%;background-color:lavender;'>
 		<span style='font-size:110%;'>${statusText||''}</span><br>
@@ -601,9 +604,12 @@ ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>
 		        this.setStyle({fillColor: "#00ffff"});
 		        break;
 		    case 34: //Dive Vessel
+		        this.setStyle({color: "#008b8b"});
+		        this.setStyle({fillColor: "#0A84F8"});
+		        break;
 		    case 35: //Military Ops
 		        this.setStyle({color: "#008b8b"});
-		        this.setStyle({fillColor: "#00ffff"});
+		        this.setStyle({fillColor: "#000080"});
 		        break;
 		    case 36: //Sailing Vessel
 		        this.setStyle({color: "#8b008b"});
@@ -633,11 +639,11 @@ ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>
 		        break;
 		    case 50: //Pilot Vessel
 		        this.setStyle({color: "#008b8b"});
-		        this.setStyle({fillColor: "#00ffff"});
+		        this.setStyle({fillColor: "#E53503"});
 		        break;
 		    case 51: //SAR
 		        this.setStyle({color: "#008b8b"});
-		        this.setStyle({fillColor: "#00ffff"});
+		        this.setStyle({fillColor: "#F57900"});
 		        break;
 		    case 52: //Tug
 		        this.setStyle({color: "#008b8b"});
@@ -649,11 +655,11 @@ ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>
 		        break;
 		    case 54: //Anti-Pollution
 		        this.setStyle({color: "#008b8b"});
-		        this.setStyle({fillColor: "#00ffff"});
+		        this.setStyle({fillColor: "#4E9A06"});
 		        break;
 		    case 55: //Law Enforce
 		        this.setStyle({color: "#008b8b"});
-		        this.setStyle({fillColor: "#00ffff"});
+		        this.setStyle({fillColor: "#FCAF3E"});
 		        break;
 		    case 56: //Local Vessel
 		    case 57: //Local Vessel

@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.8.4';
+$versionTXT = '2.8.5';
 /* 
 2.8.0	distance circles
 2.7.0	favorite maps
@@ -554,7 +554,10 @@ else distCirclesSwitch.checked = Boolean(+getCookie('GaladrielMapdistCirclesSwit
 // AIS
 var vehicles = {}; 	// list of visible by AIS data vehicle objects 
 var AISstatusTXT = {
-<?php foreach($AISstatusTXT as $k => $v) echo "$k: '$v',\n"; 	// не используется??>
+<?php foreach($AISstatusTXT as $k => $v) echo "$k: '$v',\n"; 	// используется в leaflet-tracksymbolPATCHED ?>
+}
+var AISshipTypeTXT = {
+<?php foreach($AISshipTypeTXT as $k => $v) echo "$k: '$v',\n"; 	// используется в leaflet-tracksymbolPATCHED ?>
 }
 // Loader
 var downJob = false; 	// флаг - не создаётся ли задание на скачивание
