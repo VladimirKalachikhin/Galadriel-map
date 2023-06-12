@@ -1,9 +1,17 @@
 <?php
 /* Options, paths and services
 */
-$currTrackFirst = FALSE; 	// In list of a tracks current track is a first (TRUE), or a last (FALSE). Depending on a your tracking app.
-
+// Параметры Options
+//	Длина вектора скорости, собственного и целей AIS. Минут движения.
+// если не указано -- то дистанция определения возможности столкновения 
+// (величина $collisionDistance в файле params.php gpsdPROXY)
+// Velocity vector length, own and AIS targets. Minutes of movement.
+// if not set - the $collisionDistance in gpsdPROXY's params.php
+//$velocityVectorLengthInMn = 10;	
 // Пути paths
+// путь в файловой системе к демону, собирающему информацию от gpsd. Демон имеет собственные настройки и зависимости!
+// The Data collection daemon. Daemon has its own config file!
+$gpsdPROXYpath = 'gpsdPROXY';	// file system path
 // путь в файловой системе к программе кеширования тайлов GaladrielCache
 $tileCachePath = '/home/www-data/tileproxy'; 	// path to GaladrielCache tile cache/proxy app location, if present, in filesystem. Comment this if no GaladrielCache. 
 // путь в файловой системе к папке с записью пути (треку), от расположения GaladrielMap или абсолютный
@@ -13,62 +21,67 @@ $routeDir = 'route'; 	// route & POI files directory, if present, in filesystem
 
 // Службы Services
 // 	Источник карты Map source
-$tileCacheServerPath = '/tileproxy'; 	// вообще, здесь этой переменной не место, и она (пере) определяется в конфиге GaladrielCache
 // url источника карты: в интернет или GaladrielCache
-$tileCacheURI = "$tileCacheServerPath/tiles.php?z={z}&x={x}&y={y}&r={map}"; 	// uri of the map service, for example Galadriel tile cache/proxy service. In case GaladrielCache {map} is a map name in GaladrielCache app.
+$tileCacheURI = "/tileproxy/tiles.php?z={z}&x={x}&y={y}&r={map}"; 	// uri of the map service, for example Galadriel tile cache/proxy service. In case GaladrielCache {map} is a map name in GaladrielCache app.
+//$tileCacheURI = "/tileproxy/tiles/{map}/{z}/{x}/{y}.{ext}"; 	// uri of the map service, for example Galadriel tile cache/proxy service. In case GaladrielCache {map} is a map name in GaladrielCache app.
 //$tileCacheURI = "http://mt2.google.com/vt/lyrs=s,m&hl=ru&x={x}&y={y}&z={z}"; 	//   uri of the map service - if no use GaladrielCache. Comment the $tileCachePath on this case.
 //$tileCacheURI = 'http://a.tile.opentopomap.org/{z}/{x}/{y}.png'; 	//  uri of the map service - if no use GaladrielCache. Comment the $tileCachePath on this case.
 
-// 	Позиционирование Positioning support    
-// url службы, отдающей координаты. При отсутствии -- позиционировании карты не будет
-$gpsanddataServerURI = 'askGPSD.php'; 	// uri of the active data service, if present. Commonly spatial and vehicle data.
-
-// url демона gpsd, к которому должна обращаться служба позиционирования
-$gpsdHost = 'localhost'; 	// gpsd host
-//$gpsdHost = '192.168.10.10';
-// порт демона gpsd
-//$gpsdPort = 2947; 	// gpsd port
-$gpsdPort = 3838; 	// gpsdPROXY
-
-// если используется gpsdPROXY, и он нигде не запускается отдельно, укажите здесь полное имя для его запуска:
-// If you use gpsdPROXY, and no start it separately, place full filename here to start it:
-$gpsdPROXYname = 'gpsdPROXY/gpsdPROXY.php';
-
-// Signal K
-//$signalKhost = array(['localhost',3000]);
 // если время последнего определения положения отличается от текущего на столько секунд -- положение показывается как устаревшее (серый курсор)
 $PosFreshBefore = 5; 	// seconds. The position is considered correct no longer than this time. If the position older - cursor is grey.
 
 // 	Запись пути Logging
 //		установите gpsd-utils, в состав которых входит gpxlogger  install gpsd-utils for gpxlogger
-//		если эта переменная не установлена -- считается, что запись пути осуществляется чем-то другим
-//		запуск gpxlogger. -f& заменяется на имя файла лога
-$gpxlogger = "gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie -f& $gpsdHost:2947"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. -f& replaced by log filename
-//$gpxlogger = "gpxlogger -e sockets -r -i $loggerNoFixTimeout -m $loggerMinMovie -f& $gpsdHost:2947"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. $gpsdHost:$gpsdPort always added to launch line end. If not set -- logging is not done by gpxlogger
-// 		url службы записи пути. Если не установлена -- записи пути не происходит
-$currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service, if present. If not -- not logging activity
 // 		при потере позиции на столько секунд будет создан новый путь
 $loggerNoFixTimeout = 30; 	// sec A new track is created if there's no fix written for an interval
 // 		новые координаты записываются каждые столько секунд
 $loggerMinMovie = 5; 	// m Motions shorter than this will not be logged 
+//		файл, куда записывается путь, имеет такое имя, что более поздние файлы находятся в начале списка (TRUE), или в конце (FALSE). Зависит от программы записи пути.
+$currTrackFirst = FALSE; 	// In list of a tracks current track is a first (TRUE), or a last (FALSE). Depending on a your tracking app.
+//		Через сколько дней начинать новый файл.
+$newTrackEveryDays = 1;	// After how many days to start a new file.
+//		запуск gpxlogger. &logfile заменяется на имя файла лога, &host -- именем хоста, на котором занущена программа
+//		если эта переменная не установлена -- считается, что запись пути осуществляется чем-то другим
+//		_Обязательно_ указывать полные пути, если вы хотите, чтобы запись пути возобновилась после
+//		случайного выключения сервера. Узнать полный путь к команде можно с помощью заклинания which.
+//		It is mandatory to specify full paths if you want the path recording to resume after
+//		accidentally shutting down the server. You can find out the full path to the command 
+//		using a spell "which"		
+$gpxlogger = "/usr/local/bin/gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. &logfile replaced by log filename
+//$gpxlogger = "gpxlogger -e shm -r --garmin -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// sins 3.24.1 - logging depth as Garmin extension. will listen to the local gpsd using shared memory, reconnect, interval, minmove. &logfile replaced by log filename
+//$gpxlogger = "gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile &host:2947"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. &logfile replaced by log filename, &host replaced by host name 
+//$gpxlogger = "gpxlogger -e sockets -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// 
+//$gpxlogger = "gpxlogger -e dbus -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// 
 
-// 	Поддержка Системы Автоматической Идентификации (AIS) и средства обмена положением через Интернет (netAIS)  AIS & netAIS support
-// url службы AIS. При отсутствии -- отображения информации AIS и netAIS не будет. Если не используется -- рекомендуется закомментировать эту строку для экономии ресурсов. AIS -- это очень ресурсоёмко.
-$aisServerURI = 'askAIS.php'; 	// uri of the AIS data service, if present. Comment it if no need any AIS support.
-// время в секундах, в течении которого цель AIS отображается после получения от неё последней информации
-$noVehicleTimeout = 600; 	// seconds, time of continuous absence of the vessel in AIS, when reached - is deleted from the data. "when a ship is moored or at anchor, the position message is only broadcast every 180 seconds;"
-// 		netAIS
-// путь в файловой системе к программе поддержки обмена положением через Интернет (netAIS)
-// нет необходимости указывать этот путь, если используется один и тот же gpsdPROXY и для GaladrielMap, и для netAIS
-// путь необходимо указать, если gpsdPROXY не используется, или используется только одним из приложений.
-// File path to netAIS app.
-// If both GaladrielMap and netAIS use one gpsdPROXY -- no need to set this path. If only one -- 
-// it's need for netAIS work.
-//$netAISPath = '/home/www-data/netAIS'; 	//  
+// Показ глубины вдоль gpx. Display depth along the gpx.
+// display	boolean	Показывать ли глубину вдоль линии пути из файлов gpx, если она там есть.
+//					Показ глубины примерно утраивает затраты памяти клиента на показ файла gpx.
+//					Whether to show the depth along the track line from the gpx files, if it is there.
+//					Showing the depth approximately triples the client's memory consumption for showing the gpx file.
+// minvalue	float	Минимально - допустимая глубина. Рекомендуется установить >= осадке судна.
+//					Minimum permissible depth. It is recommended to set >= draught of the vessel.
+// maxvalue	float	Максимально - интересная глубина. Глубина свыше будет обозначаться одним цветом.
+//					Maximum is an interesting depth. Depths over will be indicated by one colour.
+// minColor	array or string	Цвет для minvalue. Массив r,g,b или строка с html обозначением цвета.
+//							Color for minvalue. Array of r,g,b or html color string.
+// maxColor	array or string	Цвет для maxvalue.
+//							Color for maxvalue.
+// underMinColor	string	Цвет для глубины, меньшей, чем minvalue. Только! строка с html обозначением цвета.
+//							Color for a depth less than minvalue. Html color string only.
+// upperMaxColor	string	Цвет для глубины, большей чем maxvalue. Только! строка с html обозначением цвета.
+//							Colour for depth, more than maxvalue. Html color string only.
+$depthInData = '{"display":true,
+"minvalue": 2,
+"maxvalue": 10,
+"minColor": [255,0,0],
+"maxColor": [0,255,0],
+"underMinColor": "rgb(155,0,0)",
+"upperMaxColor": "rgb(200,250,240)"
+}';
 
-// 	Динамическое обновление маршрутов  Route updater
-// 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
-$updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
+// Показ символа ветра Display wind symbol
+// Использовать истинный ветер, а не вымпельный
+$useTrueWind = false;	// Use true wind instead relative
 
 // Системные параметры System
 // строка запуска консольного интерпретатора php
@@ -76,8 +89,8 @@ $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If 
 //$phpCLIexec = '/usr/bin/php'; 	// php-cli executed name on your OS
 $phpCLIexec = 'php'; 	// php-cli executed name on your OS
 
+//  поскольку params.php загружается отнюдь не только в index, все параметры должны быть здесь
 // Параметры тайлового кеша Settings of a tile cache/proxy app
-if( $tileCachePath) require("$tileCachePath/params.php"); 	//  
-// Параметры netAIS  Settings of a netAIS app
-if( $netAISPath) require("$netAISPath/params.php"); 	// 
+if( $tileCachePath) require_once("$tileCachePath/params.php");
+require_once($gpsdPROXYpath.'/params.php'); 	// 
 ?>

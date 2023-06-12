@@ -1,58 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
-   width="60.947674mm"
-   height="74.112938mm"
-   viewBox="0 0 60.947674 74.112939"
+   width="60"
+   height="75"
+   viewBox="0 0 60 75"
    version="1.1"
-   id="svg5"
-   inkscape:version="1.1.2 (1:1.1+202202050950+0a00cf5339)"
-   sodipodi:docname="redArrow.svg"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview7"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:document-units="mm"
-     showgrid="true"
-     inkscape:zoom="0.72871773"
-     inkscape:cx="-80.277997"
-     inkscape:cy="214.07466"
-     inkscape:window-width="1440"
-     inkscape:window-height="810"
-     inkscape:window-x="401"
-     inkscape:window-y="199"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="layer1"
-     inkscape:object-nodes="false"
-     inkscape:snap-bbox="false"
-     fit-margin-top="0"
-     fit-margin-left="0"
-     fit-margin-right="0"
-     fit-margin-bottom="0">
-    <inkscape:grid
-       type="xygrid"
-       id="grid958"
-       originx="-14.505328"
-       originy="-49.076959" />
-  </sodipodi:namedview>
-  <defs
-     id="defs2" />
   <g
-     inkscape:label="Слой 1"
-     inkscape:groupmode="layer"
-     id="layer1"
      transform="translate(-14.505328,-49.076957)">
     <path
-       id="rect846"
        style="fill:#ff0000;stroke:#000000;stroke-width:0.264583;stroke-opacity:1"
        d="m 44.356335,49.265726 -29.540317,30.611569 21.0721,0.05736 V 123.0576 H 54.070469 V 79.984782 l 21.062281,0.05736 z" />
   </g>

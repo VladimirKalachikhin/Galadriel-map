@@ -46,6 +46,7 @@ $settingsCursorTXT = 'Follow <br>to cursor';
 $settingsTrackTXT = 'Current track<br>always visible';
 $settingsRoutesAlwaysTXT = 'Selected routes <br>always visible';
 $settingsdistCirclesTXT = 'Show distance circles';
+$settingsdistWindTXT = "Show wind symbol";
 $DisplayAIS_TXT = 'Displaying AIS';
 $minWATCHintervalTXT = 'Update the position not quickly than, sec.';
 

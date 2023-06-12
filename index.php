@@ -7,8 +7,9 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.8.5';
+$versionTXT = '2.9.0';
 /* 
+2.9.0	wind sign
 2.8.0	distance circles
 2.7.0	favorite maps
 2.6.0	Human-readable maps names.
@@ -485,6 +486,16 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</div>
 				<span style="font-size:120%"><?php echo $settingsdistCirclesTXT;?></span>
 			</div>
+			<div style="margin: 1rem 1rem;"> <!-- Показывать символ ветра -->
+				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="windSwitch"  onChange="windSwitchToggler();">
+					<label class="onoffswitch-label" for="windSwitch">
+						<span class="onoffswitch-inner"></span>
+						<span class="onoffswitch-switch"></span>
+					</label>
+				</div>
+				<span style="font-size:120%" id="settingsdistWindTXT"><?php echo $settingsdistWindTXT;?></span>
+			</div>
 			<br><br>
 			<div style="margin: 1rem 1rem;"> <?php // Показ целей AIS ?>
 				<div class="onoffswitch" style="float:right;margin: 0 auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
@@ -597,6 +608,11 @@ drivedPolyLineOptions = { options: {
 var dravingLines = L.layerGroup();	// слои, в которых, собственно, рисуются маршруты и путевые точки
 dravingLines.properties = {};
 var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
+var distCircles = [];	// круги дистанции, массив L.circle. Обращение к этому массиву может происходить сразу после инициализации карты.
+
+if(getCookie('GaladrielWindSwitch') === null) windSwitch.checked = true; 	// показывать символ ветра
+else windSwitch.checked = Boolean(+getCookie('GaladrielWindSwitch')); 	// getCookie from galadrielmap.js
+var useTrueWind = <?php echo $useTrueWind?'true':'false';?>;
 
 // Dashboard
 var lat; 	 	// широта
@@ -882,7 +898,6 @@ map.on('editable:vertex:dragstart',	function(event) {
 });
 
 // Круги дистанции
-var distCircles = [];
 var centerMarkCircles = [];
 for (let n=0; n<4; n++) {
 	centerMarkCircles.push(	L.circle([], {
@@ -915,6 +930,35 @@ var centerMarkMarker = L.marker(map.getBounds().getCenter(), {
 var centerMark = L.layerGroup([centerMarkMarker]);
 centerMarkCircles.forEach(circle => circle.addTo(centerMark));
 
+// Символ ветра
+let windSymbolIcon = L.divIcon({
+	className: "",	// если не указать className, то для L.divIcon будет рисоваться какой-то квадратик, и от него никак не избавиться. Глюк?
+	iconAnchor: [-30,0],
+	html:`
+<svg version="1.1" id="wSVGimage"
+width="135" height="30"
+transform="scale(1,1)"
+xmlns="http://www.w3.org/2000/svg">
+<defs>
+	<line id="bLine" x1="0" y1="2.5" x2="70" y2="2.5" />
+	<line id="w2.5" x1="3" y1="2.5" x2="10" y2="13" />
+	<polyline  id="w5" points="0,2.5 10,2.5 25,25"  fill="none"\>
+	<g id="w25">
+		<polygon points="10,5 22.5,25 34.5,5" stroke-width="0" />
+		<line x1="0" y1="2.5" x2="34.5" y2="2.5" />
+	</g>
+</defs>
+<g id="wMark" fill="#8900FF" fill-opacity="0.75" stroke="#8900FF" stroke-width="5" stroke-opacity="0.75" >
+</g>
+</svg>
+	`
+});
+let windSymbolMarker = L.marker([],{
+	icon: windSymbolIcon,
+	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
+	zIndexOffset: -400
+});
+
 // Местоположение
 // маркеры
 var GpsCursor = L.icon({
@@ -932,7 +976,6 @@ var NoGpsCursor = L.icon({	// этот значёк может показыва�
 });
 var velocityCursor = L.icon({
 	iconUrl: './img/1x1.png',
-	//iconUrl: './img/minLine.svg',
 });
 var NoCursor = L.icon({
 	iconUrl: './img/1x1.png',
@@ -967,7 +1010,8 @@ let GNSScircle = L.circle(cursor.getLatLng(), {
 
 // Курсор: объединение всех фигур
 var positionCursor = L.layerGroup([GNSScircle,velocityVector,cursor]);
-if(distCirclesSwitch.checked) distCircles.forEach(circle => circle.addTo(positionCursor));
+distCirclesToggler();	// (если) добавим круги в курсор и заодно освежим куку
+windSwitchToggler();	// (если) добавим символ ветра в курсор и заодно освежим куку
 
 // Для визуализации collisionDetector
 var collisionIcon = L.icon({
@@ -1225,6 +1269,15 @@ spatialWebSocketStart(); 	// запускам периодическую фун�
 function realtimeTPVupdate(gpsdData) {
 //console.log('Index gpsdData',gpsdData);
 //console.log('Index gpsdData.MOB',gpsdData.MOB);
+// Глубина
+if(gpsdData.depth) {
+	//console.log('Index gpsdData',gpsdData.depth);
+	depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(gpsdData.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
+}
+else {
+	depthDial.innerHTML = '';
+}
+
 // Положение неизвестно
 //console.log('Index gpsdData',gpsdData.lon,gpsdData.lat);
 if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
@@ -1276,13 +1329,6 @@ else {
 	velocityCursor.options.iconAnchor=[3,velocityCursorLength];
 	velocityVector.setIcon(velocityCursor); 	// изменить иконку у маркера
 }
-if(gpsdData.depth) {
-	//console.log('Index gpsdData',gpsdData.depth);
-	depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(gpsdData.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
-}
-else {
-	depthDial.innerHTML = '';
-}
 
 // Направление
 //console.log('Index gpsdData',gpsdData.track);
@@ -1329,6 +1375,10 @@ else {
 	dashboardCourseTXTlabel.innerHTML = dashboardCourseTXT
 	dashboardCourseAltTXTlabel.innerHTML = dashboardCourseAltTXT
 }
+// Символ ветра
+//console.log('wSVGimage:',document.getElementById('wSVGimage'));
+if(windSwitch.checked) windSymbolUpdate(gpsdData);
+
 positionCursor.addTo(map); 	// добавить курсор на карту
 
 // Окружность точност ГПС

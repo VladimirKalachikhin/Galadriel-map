@@ -1786,7 +1786,7 @@ function distCirclesUpdate(distCircles){
 /* Устанавливает диаметр и подписи кругов дистанции 
 в зависимости от координат и масштаба.
 */
-if(!distCircles[0].getLatLng()) return;
+if(!distCircles[0] || !distCircles[0].getLatLng()) return;
 let distCirclesRadius;
 const zoom = Math.round(map.getZoom());	// масштаб может быть дробным во время собственно масштабирования
 const metresPerPixel = (40075016.686 * Math.abs(Math.cos(distCircles[0].getLatLng().lat*(Math.PI/180))))/Math.pow(2, map.getZoom()+8); 	// in WGS84
@@ -1854,6 +1854,99 @@ else {
 	document.cookie = 'GaladrielMapdistCirclesSwitch=0; expires='+expires+"; path=/; samesite=Lax"; 	// 
 }
 } // end function distCirclesToggler
+
+
+function windSwitchToggler() {
+/* включает/выключает показ символа ветра по переключателю в интерфейсе */
+if(windSwitch.checked) {
+	windSymbolMarker.addTo(positionCursor);
+	// Посадим куку
+	const expires =  new Date();
+	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
+	document.cookie = "GaladrielWindSwitch=1; expires="+expires+"; path=/; SameSite=Lax;";
+}
+else {
+	windSymbolMarker.remove();
+	// Посадим куку
+	const expires =  new Date();
+	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
+	document.cookie = 'GaladrielWindSwitch=0; expires='+expires+"; path=/; samesite=Lax"; 	// 
+}
+} // end function windSwitchToggler
+
+function windSymbolUpdate(TPVdata){
+/**/
+//console.log('[windSymbolUpdate] useTrueWind=',useTrueWind);
+if(useTrueWind){	// options.js указано использовать истинный ветер
+	//console.log('[windSymbolUpdate] wspeedt=',TPVdata.wspeedt,'wanglet=',TPVdata.wanglet,'track=',TPVdata.track);
+	if(TPVdata.wspeedt && TPVdata.wanglet && TPVdata.track){
+		let dir = TPVdata.wanglet + TPVdata.track - 90;	// картинка-то у нас горизонтальна
+		if(dir >= 360) dir -= 360;
+		realWindSymbolUpdate(dir,TPVdata.wspeedt);
+	}
+	else realWindSymbolUpdate();
+}
+else {	// указано использовать вымпельный ветер
+	//console.log('[windSymbolUpdate] heading=',TPVdata.heading,'wind dir=',TPVdata.wangler+TPVdata.heading,'wspeedr=',TPVdata.wspeedr);
+	if(TPVdata.wspeedr && TPVdata.wangler){
+		let dir = TPVdata.wangler + (TPVdata.heading || TPVdata.track) - 90;	// картинка-то у нас горизонтальна
+		if(dir >= 360) dir -= 360;
+		realWindSymbolUpdate(dir,TPVdata.wspeedr);
+	}
+	else realWindSymbolUpdate();
+}
+} // end function windSymbolUpdate
+
+function realWindSymbolUpdate(direction=0,speed=0){
+/**/
+// Символ
+let windSVG = document.getElementById('wSVGimage');
+if(!windSVG) return;	// картинка там как-то не сразу появляется
+let windMark = windSVG.getElementById('wMark');
+
+while (windMark.firstChild) {	// удалим все символы из значка
+	windMark.removeChild(windMark.firstChild);
+}
+let pos = 0, w25=0;
+if(speed){	// стрелка
+	windMark.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'use'));
+	windMark.lastChild.setAttribute('x',String(pos));
+	windMark.lastChild.setAttribute('y','0');
+	windMark.lastChild.setAttributeNS('http://www.w3.org/1999/xlink','xlink:href','#bLine');
+	pos += 70;
+}
+if(Math.floor(speed/25)){	// перо 25 м/сек
+	speed -= 25;
+	w25=1;
+}
+for(let i=Math.floor(speed/5); i>0; i--){	// перья 5 м/сек
+	speed -= 5;
+	//console.log('pos',pos);
+	windMark.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'use'));
+	windMark.lastChild.setAttribute('x',String(pos));
+	windMark.lastChild.setAttribute('y',0);
+	windMark.lastChild.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href','#w5');
+	pos += 10;
+}
+if(w25){
+	windMark.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'use'));
+	windMark.lastChild.setAttribute('x',String(pos));
+	windMark.lastChild.setAttribute('y',0);
+	windMark.lastChild.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href','#w25');
+}
+if(Math.floor((speed*10)/25)) {	// половинное перо
+	windMark.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'use'));
+	if(pos==70) windMark.lastChild.setAttribute('x',String(70-20));
+	else windMark.lastChild.setAttribute('x',String(70-2.5));
+	windMark.lastChild.setAttribute('y',0);
+	windMark.lastChild.setAttributeNS('http://www.w3.org/1999/xlink', 'xlink:href','#w2.5');
+}
+
+// напрвление
+windSymbolMarker.setRotationAngle(direction);
+} // end function realWindSymbolUpdate
+
+
 
 
 // Общие функции

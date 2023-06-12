@@ -104,7 +104,20 @@ L.TrackSymbol = L.Path.extend({
    * @method _setPath
    */
   _setPath: function(){
-    this._path.setAttribute('d',this.getPathString());
+  	let pathString = this.getPathString();
+  	let center = this._map.latLngToLayerPoint(this._latlng);
+  	//console.log("status=",this.options.status);
+  	switch(+this.options.status){
+  	case 1:
+  	case 5:
+  	case 6:
+	  	pathString += ` M ${center.x-4} ${center.y-4} L ${center.x+4} ${center.y+4} 
+M ${center.x+4} ${center.y-4} L ${center.x-4} ${center.y+4} 
+M ${center.x} ${center.y-4} L ${center.x} ${center.y+4} 
+M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
+  	}
+  	//console.log('[_setPath] center=',center,'pathString=',pathString);
+    this._path.setAttribute('d',pathString);
   },
 
 	addData: function(aisData){ 	// aisData опрелён во внешней функции, типа - глобален
@@ -639,7 +652,7 @@ ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>
 		        break;
 		    case 50: //Pilot Vessel
 		        this.setStyle({color: "#008b8b"});
-		        this.setStyle({fillColor: "#E53503"});
+		        this.setStyle({fillColor: "#CF3A0F"});
 		        break;
 		    case 51: //SAR
 		        this.setStyle({color: "#008b8b"});
