@@ -15,7 +15,7 @@ $jobName = $_REQUEST['jobname'];
 //$jobName='OpenTopoMap.11';
 //$XYs="1189,569\n1190,569\n1191,569";
 if($jobName != 'restart') {
-	$name_parts = pathinfo($jobName);
+	$name_parts = pathinfo($jobName);	// pathinfo не работает с русскими буквами!
 	//echo "name_parts:<pre>"; print_r($name_parts); echo "</pre>";
 	if(!(is_numeric($name_parts['extension']) AND (intval($name_parts['extension']) <=20 AND intval($name_parts['extension']) >=0))) return; 	// расширение - не масштаб
 	if(!is_file("$mapSourcesDir/".$name_parts['filename'].'.php')) return; 	// нет такого источника

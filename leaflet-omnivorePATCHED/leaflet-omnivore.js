@@ -1,3 +1,8 @@
+/* global depthInData, drivedPolyLineOptions, tooggleEditRoute
+updClaster(pointsLayer);	// galadrielmap.js
+createSuperclaster(geojson);	// galadrielmap.js
+depends polycolorRenderer, supercluster
+*/
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.omnivore = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict"
 
@@ -29,6 +34,7 @@ module.exports.wkt = wktLoad;
 module.exports.wkt.parse = wktParse;
 
 //module.exports.toGeoJSON = toGeoJSON;
+
 
 function addData(l, d) { 	// layer geojson
 /* Загружает geojson в layer 
@@ -198,6 +204,8 @@ function polylineLoad(url, options, customLayer) {
     return layer;
 }
 
+
+
 function topojsonParse(data, options, layer) {
     var o = typeof data === 'string' ?
         JSON.parse(data) : data;
@@ -210,8 +218,10 @@ function topojsonParse(data, options, layer) {
     return layer;
 }
 
+
 function csvParse(csv, options, layer) {
 /**/
+//console.log('[csvParse]',csv,options,layer);
 if(layer) {
 	if("getLayers" in layer) { 	// это layerGroup
 		var featuresLayer = layer.getLayers()[0] || L.geoJson();
@@ -225,8 +235,11 @@ else {
 	var featuresLayer = L.geoJson();
 	var layer = new L.layerGroup([featuresLayer]);
 }
-var color = globalCurrentColor;
-globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет, from galadrielmap.js
+var color = 0xFFFFFF;
+if(typeof globalCurrentColor !== 'undefined') {	// если оно определено, то определена и функция nextColor
+	color = globalCurrentColor;
+	globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет, from galadrielmap.js
+}
 if(color == 0xFFFFFF) featuresLayer.options.color = 0x3388FF; 	//  умолчальный цвет линий
 else featuresLayer.options.color = color; 	//  цвет линий
 if(options.featureNameNode) { 	// li с именем файла, из которого делаем layer
@@ -238,11 +251,23 @@ if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
 
 var pointsLayer = L.geoJson();
 pointsLayer.options.color = color; 	//  цвет значков
+
 pointsLayer.options.pointToLayer = function (geoJsonPoint, latlng) { 	// функция, вызываемая для каждой точки при её создании
-	var parameters = {color: pointsLayer.options.color}; 	// таким образом мы забросим цвет в создание маркера
-	var marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
+	let marker;
+	if(geoJsonPoint.properties.marker) {
+		//console.log('Маркер уже есть');
+		marker = geoJsonPoint.properties.marker.setLatLng(latlng);
+	}
+	else {
+		// parameters тут -- это options создаваемого маркера, плюс разное, типа - color
+		//console.log('Новый маркер');
+		let parameters = {color: pointsLayer.options.color}; 	// таким образом мы забросим цвет в создание маркера
+		marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
+		geoJsonPoint.properties.marker = marker;
+	};
 	return marker;
 };
+
 layer.addLayer(pointsLayer);
 
 options = options || {};
@@ -269,6 +294,7 @@ function onparse(err, geojson) {
 } 	// end function onparse
 return layer;
 } // end function csvParse
+
 
 function gpxParse(gpx, options, layer) {
 /* 
@@ -316,8 +342,11 @@ for(let i=0; i<geojson.features.length;i++) {
 //console.log('leaflet-omnivore [gpxParse] options:',options);
 //console.log('leaflet-omnivore [gpxParse] Points:',Points);
 //console.log('leaflet-omnivore [gpxParse] Features:',Features);
-var color = globalCurrentColor;
-globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет, from galadrielmap.js
+var color = 0xFFFFFF;
+if(typeof globalCurrentColor !== 'undefined') {	// если оно определено, то определена и функция nextColor
+	color = globalCurrentColor;
+	globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет, from galadrielmap.js
+}
 if(color == 0xFFFFFF) featuresLayer.options.color = 0x3388FF; 	//  умолчальный цвет линий
 else featuresLayer.options.color = color; 	//  цвет линий
 if(options && options.featureNameNode) { 	// li с именем файла, из которого делаем layer
@@ -325,11 +354,12 @@ if(options && options.featureNameNode) { 	// li с именем файла, из
 }
 
 featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
-featuresLayer.options.style = function(geoJsonFeature){
+featuresLayer.options.style = function(geoJsonFeature){ 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
 	// вот тут надо вычислить цвета и указать рендерер
+	let style = {};
 	//console.log('leaflet-omnivore.js [featuresLayer.options.style] geoJsonFeature:',geoJsonFeature);
 	//console.log('leaflet-omnivore.js [featuresLayer.options.style] depthInData:',depthInData);
-	if(depthInData.display && geoJsonFeature.properties && geoJsonFeature.properties.depths){	// depthInData - global from options.js
+	if(typeof depthInData !== 'undefined' && depthInData.display && geoJsonFeature.properties && geoJsonFeature.properties.depths){	// depthInData - global from options.js
 		let colors = [], weights = [];
 		for(let i=0; i < geoJsonFeature.properties.depths.length; i++){
 			if(Array.isArray(geoJsonFeature.properties.depths[i])) {
@@ -367,7 +397,7 @@ featuresLayer.options.style = function(geoJsonFeature){
 		if(_weights.length == 1) weights = _weights;
 		//console.log('leaflet-omnivore.js [featuresLayer.options.style] colors:',colors,'weights:',weights);
 		
-		return { 
+		style = { 
 			noClip: true,	// отключить всякое упрощение линии Leaflet'ом
 			smoothFactor: 0,
 			renderer: new polycolorRenderer(),
@@ -378,8 +408,16 @@ featuresLayer.options.style = function(geoJsonFeature){
 			weights: weights
 		}
 	}
-	else return {color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6)}; 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
-};	// end featuresLayer.options.style = function
+	else {
+		style.color = '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6);
+		// поскольку параметры из drivedPolyLineOptions применяются позже... А почему они позже?
+		if(geoJsonFeature.properties && geoJsonFeature.properties.isRoute){
+			style.dashArray = `0,${drivedPolyLineOptions.options.weight+2}`;	// где я в этом месте достану ширину рисуемой линии, если она ещё не задана? А drivedPolyLineOptions для этого и предназначено.
+			//style.lineCap = "bitt";
+		}
+	}
+	return style;
+	};	// end featuresLayer.options.style = function
 
 // Добавим в слой объекты
 featuresLayer.addData(Features); 	// добавим и покажем всё остальное
@@ -389,22 +427,36 @@ if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
 if(Points.length) {
 	var pointsLayer = L.geoJson();
 	pointsLayer.options.color = color; 	//  цвет значков
+	// pointToLayer вызывается рашьше, чем onEachFeature, и всё это вызывается в addData
 	pointsLayer.options.pointToLayer = function (geoJsonPoint, latlng) { 	// функция, вызываемая для каждой точки при её создании
-		var parameters = {color: pointsLayer.options.color}; 	// таким образом мы забросим цвет в создание маркера
-		var marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
-		//marker.on('dblclick', L.DomEvent.stop).on('dblclick', tooggleEditRoute);
-		//marker.on('click', L.DomEvent.stop).on('click', tooggleEditRoute); 	// galadrielmap.js чёта stop не работает?
-		marker.on('click', tooggleEditRoute); 	// galadrielmap.js
-		marker.on('editable:dragstart', function(event){
-			// Нужно будет перестроить superclaster с точкой с новыми координатами
-			removeFromSuperclaster(pointsLayer,event.target); 	// galadrielmap.js
-		});
-		marker.on('editable:dragend', function(event){
-			// Нужно перестроить superclaster с точкой с новыми координатами
-			//console.log('leaflet-omnivore.js [marker.on editable:dragend] pointsLayer:',pointsLayer);
-			pointsLayer.supercluster.points.push(event.target.toGeoJSON());
-			pointsLayer.supercluster = createSuperclaster(pointsLayer.supercluster.points); 	// galadrielmap.js создание нового и загрузка в суперкластер точек 		
-		});
+		//console.log('[csvParse] pointToLayer',geoJsonPoint);
+		let marker;
+		if(geoJsonPoint.properties.marker) {
+			//console.log('Маркер уже есть');
+			marker = geoJsonPoint.properties.marker.setLatLng(latlng);
+		}
+		else {
+			// parameters тут -- это options создаваемого маркера, плюс разное, типа - color
+			//console.log('Новый маркер');
+			let parameters = {color: pointsLayer.options.color}; 	// таким образом мы забросим цвет в создание маркера
+			marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
+			if(typeof tooggleEditRoute === 'function') {
+				//marker.on('dblclick', L.DomEvent.stop).on('dblclick', tooggleEditRoute);
+				//marker.on('click', L.DomEvent.stop).on('click', tooggleEditRoute); 	// galadrielmap.js чёта stop не работает?
+				marker.on('click', tooggleEditRoute); 	// galadrielmap.js
+			}
+			marker.on('editable:dragstart', function(event){
+				// Нужно будет перестроить superclaster с точкой с новыми координатами
+				removeFromSuperclaster(pointsLayer,event.target); 	// galadrielmap.js
+			});
+			marker.on('editable:dragend', function(event){
+				// Нужно перестроить superclaster с точкой с новыми координатами
+				//console.log('leaflet-omnivore.js [marker.on editable:dragend] pointsLayer:',pointsLayer);
+				pointsLayer.supercluster.points.push(event.target.toGeoJSON());
+				pointsLayer.supercluster = createSuperclaster(pointsLayer.supercluster.points); 	// galadrielmap.js создание нового и загрузка в суперкластер точек 		
+			});
+			//geoJsonPoint.properties.marker = marker;
+		}
 		return marker;
 	};
 	doClastering(pointsLayer, Points); 	// закластеризуем точки
@@ -452,12 +504,13 @@ function getMarkerToPoint(geoJsonPoint, latlng, parameters) { 	//  https://leafl
 
 // Сам маркер - Marker
 if(!parameters) parameters = {};
-var marker = L.marker(latlng, { 	// маркер для этой точки
-	riseOnHover: true
-});
+if(!parameters.color) parameters.color = 0xFFFFFF;
+
+let marker = L.marker(latlng,parameters);	// маркер для этой точки
+marker.options.riseOnHover = true;
+//console.log('[getMarkerToPoint] marker:',marker,'parameters:',parameters);
 if(geoJsonPoint.properties.cluster) { 	// это кластер
 	//console.log(geoJsonPoint);
-	if(!parameters.color) parameters.color = 0xFFFFFF;
     const icon  = L.divIcon({
         html: `<div style="background-color: #${('000000' + parameters.color.toString(16)).slice(-6)};"><span>${  geoJsonPoint.properties.point_count_abbreviated  }</span></div>`,
         className: `marker-cluster`,
@@ -469,24 +522,25 @@ else { 	// это индивидуальная точка
 	//console.log('marker for point');
 	// Значёк - Icon
 	//alert('icon' in marker.options);
-	var iconNames = []; 	// возможные имена значков
+	let iconNames = []; 	// возможные имена значков
 	if(geoJsonPoint.properties.sym) iconNames.push(geoJsonPoint.properties.sym.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx sym (symbol name) attribyte
 	if(geoJsonPoint.properties.symbol) iconNames.push(geoJsonPoint.properties.symbol.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// csv symbol name attribyte
 	if(geoJsonPoint.properties.symb) iconNames.push(geoJsonPoint.properties.symb.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// csv symbol name attribyte
 	if(geoJsonPoint.properties.type) iconNames.push(geoJsonPoint.properties.type.trim().replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// gpx type (classification) attribyte
 	if(geoJsonPoint.properties.icon) { 	// kml Icon
 		//console.log('"'+geoJsonPoint.properties.icon.textContent.trim()+'"');
-		var iNm = geoJsonPoint.properties.icon.textContent.trim();
+		let iNm = geoJsonPoint.properties.icon.textContent.trim();
 		iNm = iNm.substring(iNm.lastIndexOf('/')+1);
-		var iNmExt = iNm.slice((iNm.lastIndexOf(".") - 1 >>> 0) + 2); 	// icon filename ext https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
+		let iNmExt = iNm.slice((iNm.lastIndexOf(".") - 1 >>> 0) + 2); 	// icon filename ext https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
 		if(iNmExt.length) iNm = iNm.slice(0,-(iNmExt.length+1));
 		//console.log(iNm);
 		if(iNm.length) iconNames.push(iNm.replace(/ /g, '_').replace(/,/g, '').toLowerCase()); 	// kml icon name in <Style><IconStyle><Icon> attribyte
 	}
 	iconNames = [...new Set(iconNames)];	// только уникальные значения. Сначала из неуникального массива делается Set, потом из Set -- массив.
+	//console.log("[getMarkerToPoint] iconNames:",iconNames);
 	iconServer.setIconCustomIcon(marker,iconNames); 	// заменить в marker icon на нужный асинхронно
 	//console.log(iconServer.iconsByType);
-	//console.log(marker);
+	//console.log('[getMarkerToPoint] marker:',marker);
 
 	// Подпись - Tooltip
 	if(geoJsonPoint.properties.name) {
@@ -497,7 +551,18 @@ else { 	// это индивидуальная точка
 			direction: 'top', 
 			offset: [-16,0],
 			className: 'wpTooltip', 	// css class
-			opacity: 0.75
+			opacity: 0.75,
+			pane: 'overlayPane',
+			zIndexOffset: -600
+		});
+		//console.log('[getMarkerToPoint] _tooltip:',marker._tooltip);
+		// поскольку ._container появляется только после добавления на карту, изменение цвета
+		// выполняется по соответствующему событию.
+		// Но вообще нормального способа динамически менять цвет нет.
+		// Устанавливается цвет фона контейнера тултипа в полупрозрачный. Оно не надо: оно потом делается в соответствии со свойствами.
+		marker._tooltip.on('add',function (event){
+			//event.target._container.style.backgroundColor = `#${('000000' + parameters.color.toString(16)).slice(-6)}80`;
+			event.target._container.style.backgroundColor = `#${('000000' + parameters.color.toString(16)).slice(-6)}`;
 		});
 		//}).openTooltip(); 	// и перерисуем подпись под умолчальный маркер. Под другие маркеры перерисуем потом. Но это бессмысленно - она не перерисовывается
 	}
@@ -523,8 +588,7 @@ else { 	// это индивидуальная точка
 	if(geoJsonPoint.properties.depth) popUpHTML = popUpHTML+"<p>Alt: "+geoJsonPoint.properties.depth+"</p>"; 	// csv depth
 
 	popUpHTML += getLinksHTML(geoJsonPoint); 	// приклеим ссылки
-
-	marker.bindPopup(popUpHTML+'<br>',{autoClose:false}); 	// создадим PopUp, popUpHTML всегда не пуст
+	marker.bindPopup(popUpHTML+'<br>'); 	// создадим PopUp, popUpHTML всегда не пуст
 }
 return marker;
 } // end function getMarkerToPoint
@@ -537,58 +601,43 @@ function getLinksHTML(feature) {
 var camImgPath = leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/"))+"/icons/cam.svg";
 var popUpHTML = '';
 var links = [];
-if(feature.properties.link) links.push(feature.properties.link);
+if(feature.properties.link) {
+	if(typeof(feature.properties.link)=='object'){	// должно быть, это массив, который получается при импорте сложных объектов
+		feature.properties.link.forEach(link=>links.push(link));
+	}
+	else links.push(feature.properties.link);	// а тут, наверно, единичный объект
+}
 if(feature.properties.url) links.push(feature.properties.url);
 if(!links.length) return popUpHTML;
 // имеются ссылки
-//console.log('имеются ссылки',links);
-for (var i=0; i<links.length; i++) {
-	var linkHTML = '';
-	switch(typeof(links[i])) {
-	case "string":
-		linkHTML = '<a href="'+links[i]+'" target="_blank" >';
-		if((links[i].slice(-5).toLowerCase()=='.jpeg') || (links[i].slice(-4).toLowerCase()=='.jpg') || (links[i].slice(-4).toLowerCase()=='.png') || (links[i].slice(-4).toLowerCase()=='.svg') || (links[i].slice(-4).toLowerCase()=='.tif') || (links[i].slice(-5).toLowerCase()=='.tiff')) {
-			linkHTML = linkHTML + '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>';
-		}
-		else { 	// непонятная ссылка
-			linkHTML = linkHTML + 'External link' + '</a><br>';
-		}
-		break;
-	case "object":
-		for(var j=0; j<links[i].length; j++) { 	// для каждой ссылки
-			//console.log(links[i][j]);
-			let link;
-			if(links[i][j].attributes.length){
-				if(links[i][j].attributes.http)	link = links[i][j].attributes.http.value.trim(); 	// зачем это было? Правильно же attributes.href?
-				else if(links[i][j].attributes.href) link = links[i][j].attributes.href.value.trim();
-			}
-			else 	link = links[i][j].innerHTML.trim();
-			linkHTML += '<a href="'+link+'" target=”_blank” >';
-			var text = ' ', textAttr;
-			if( textAttr = links[i][j].getElementsByTagName('text')[0]) text = textAttr.textContent+'<br>'; 	// есть атрибут text
-			if(links[i][j].getElementsByTagName('type')[0]) { 	// есть атрибут type
-				if( links[i][j].getElementsByTagName('type')[0].textContent.indexOf("image") != -1) { 	// если картинка
-					linkHTML += '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>'+text;
-				}
-				else { 	// неизвестный тип
-					if(!text) text = 'External link';
-					linkHTML += text + '</a><br>';
-				}
-			}
-			else { 	// нет атрибута type
-				if((link.slice(-5).toLowerCase()=='.jpeg') || (link.slice(-4).toLowerCase()=='.jpg') || (link.slice(-4).toLowerCase()=='.png') || (link.slice(-4).toLowerCase()=='.svg') || (link.slice(-4).toLowerCase()=='.tif') || (link.slice(-5).toLowerCase()=='.tiff')) {
-					linkHTML += '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>'+text;
-				}
-				else { 	// непонятная ссылка
-					if(!text) text = 'External link';
-					linkHTML += text + '</a><br>';
-				}
-			}
-		}
-		break;
+//console.log('[getLinksHTML] имеются ссылки',links);
+// Это может быть как просто строка с url из csv, так и строковое представление  linkType gpx
+let parser = new DOMParser();
+for(let linkStr of links){
+	let linkHTML='', url='', text='', mimeType='';
+	
+	let link = parser.parseFromString(linkStr, "application/xml");
+	//console.log('[getLinksHTML] link:',linkStr,link,'parseerror',link.querySelector("parsererror"));
+	if(link.querySelector("parsererror")) url = linkStr;	// типа, там была просто строка, хотя хрен его знает, как этот кривой парсер относится к просто строкам
+	else {
+		url = link.activeElement.attributes.href.value;
+		if(text = link.querySelector("text")) text = text.innerHTML;
+		else text = '';
+		if(mimeType = link.querySelector("type")) mimeType = mimeType.innerHTML;
+		else mimeType = '';
+		//console.log('[getLinksHTML] link object:',url,text,mimeType);
 	}
-	popUpHTML = popUpHTML+linkHTML;
-}
+	
+	linkHTML = '<a href="'+url+'" target="_blank" >';
+	if(mimeType.startsWith('image') || (url.slice(-5).toLowerCase()=='.jpeg') || (url.slice(-4).toLowerCase()=='.jpg') || (url.slice(-4).toLowerCase()=='.png') || (url.slice(-4).toLowerCase()=='.svg') || (url.slice(-4).toLowerCase()=='.tif') || (url.slice(-5).toLowerCase()=='.tiff')) {
+		linkHTML += '<img src="'+camImgPath+'" width="12%" style="vertical-align: middle; margin:auto 1rem;"></a>';
+	}
+	if(text) linkHTML += ' '+text;
+	else linkHTML += ' External link';
+	linkHTML += '</a><br>';
+
+	popUpHTML += linkHTML;
+};
 if(popUpHTML) popUpHTML = '<br>'+popUpHTML;
 return popUpHTML;
 }; 	// end function getLinksHTML
@@ -597,6 +646,7 @@ var popupDepthInfo = L.popup();	// popup для отображения глуб�
 
 function getPopUpToLine(feature, layer) {
 /* A Function that will be called once for each created Feature
+ПОэтому тут не только подпись и всплывающее окно, но и прочие параметры линии
 */
 //console.log('leaflet-omnivore [getPopUpToLine] feature:',feature,'layer:',layer);
 if(feature.properties && feature.properties.isRoute) { 	// это маршрут.
@@ -604,9 +654,11 @@ if(feature.properties && feature.properties.isRoute) { 	// это маршрут
 	Object.assign(layer.options,drivedPolyLineOptions.options);	// drivedPolyLineOptions из index.php
 	Object.assign(layer.feature.properties,drivedPolyLineOptions.feature.properties);	// drivedPolyLineOptions из index.php
 	layer.on('editable:editing', function (event){event.target.updateMeasurements();});	// обновлять расстояния при редактировании
-	//layer.on('dblclick', L.DomEvent.stop).on('dblclick', tooggleEditRoute);
-	//layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute); 	// galadrielmap.js чёта stop не работает?
-	layer.on('click', tooggleEditRoute); 	// galadrielmap.js
+	if(typeof tooggleEditRoute === 'function') {
+		//layer.on('dblclick', L.DomEvent.stop).on('dblclick', tooggleEditRoute);
+		//layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute); 	// galadrielmap.js чёта stop не работает?
+		layer.on('click', tooggleEditRoute); 	// galadrielmap.js
+	}
 }
 if(feature.properties) {
 	// Подпись - Tooltip
@@ -633,7 +685,7 @@ if(feature.properties) {
 		layer.bindPopup(popUpHTML+'<br>');
 	}
 	
-	if(depthInData.display && feature.properties.depths){	// есть глубина и её надо показывать depthInData - global from options.js
+	if(typeof depthInData !== 'undefined' && depthInData.display && feature.properties.depths){	// есть глубина и её надо показывать depthInData - global from options.js
 		layer.on('click', function(event) {
 			//console.log('leaflet-omnivore [gpxParse] event:',event);
 			// при наличии feature.geometry.coordinates 
@@ -710,7 +762,7 @@ setIconCustomIcon: function (marker,iconNames) {
 и складывает в iconsByType
 */
 let iconName = iconNames.shift();
-//console.log(iconName);
+//console.log("[iconServer] iconName=",iconName);
 if(!iconName) return;
 //console.log(this.iconsByType);
 if(this.iconsByType[iconName]) {
@@ -746,7 +798,7 @@ else { 	// такая icon ещё не получена
 	// получить асинхронно
 	// все требуемые картинки значков скачиваются и хранятся в памяти
 	// а нафига? А так мы узнаем, какой картинки нет.
-	//console.log(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/")));
+	//console.log(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/")),iconName);
 	fetch(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/"))+"/symbols/"+iconName+".png")
 	.then(function(response) {
 		//console.log(response);
@@ -777,6 +829,7 @@ else { 	// такая icon ещё не получена
 }, // end function setIconCustomIcon, список атрибутов объекта продолжается
 } // end object iconServer
 
+
 function kmlParse(gpx, options, layer) {
 /**/
 var xml = parseXML(gpx);	// делает DOM XML, если gpx -- строка, иначе не делает ничего
@@ -803,8 +856,11 @@ else {
 	var featuresLayer = L.geoJson();
 	var layer = new L.layerGroup([featuresLayer]);
 }
-var color = globalCurrentColor;
-globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет, from galadrielmap.js
+var color = 0xFFFFFF;
+if(typeof globalCurrentColor !== 'undefined') {	// если оно определено, то определена и функция nextColor
+	color = globalCurrentColor;
+	globalCurrentColor = nextColor(globalCurrentColor); 	// сменим текущий цвет, from galadrielmap.js
+}
 if(color == 0xFFFFFF) featuresLayer.options.color = 0x3388FF; 	//  умолчальный цвет линий
 else featuresLayer.options.color = color; 	//  цвет линий
 if(options.featureNameNode) { 	// li с именем файла, из которого делаем layer
@@ -818,8 +874,18 @@ if(Points.length) {
 	var pointsLayer = L.geoJson();
 	pointsLayer.options.color = color; 	//  цвет значков
 	pointsLayer.options.pointToLayer = function (geoJsonPoint, latlng) { 	// функция, вызываемая для каждой точки при её создании
-		var parameters = {color: pointsLayer.options.color}; 	// таким образом мы забросим цвет в создание маркера
-		var marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
+		let marker;
+		if(geoJsonPoint.properties.marker) {
+			//console.log('Маркер уже есть');
+			marker = geoJsonPoint.properties.marker.setLatLng(latlng);
+		}
+		else {
+			// parameters тут -- это options создаваемого маркера, плюс разное, типа - color
+			//console.log('Новый маркер');
+			let parameters = {color: pointsLayer.options.color}; 	// таким образом мы забросим цвет в создание маркера
+			marker = getMarkerToPoint(geoJsonPoint, latlng, parameters);
+			geoJsonPoint.properties.marker = marker;
+		}
 		return marker;
 	};
 	doClastering(pointsLayer, Points); 	// закластеризуем точки
@@ -828,6 +894,7 @@ if(Points.length) {
 }
 return layer;
 }
+
 
 function polylineParse(txt, options, layer) {
     layer = layer || L.geoJson();
@@ -842,6 +909,7 @@ function polylineParse(txt, options, layer) {
     return layer;
 }
 
+
 function wktParse(wkt, options, layer) {
     layer = layer || L.geoJson();
     var geojson = wellknown(wkt);
@@ -849,9 +917,12 @@ function wktParse(wkt, options, layer) {
     return layer;
 }
 
+
+
 function parseXML(str) {
+	//console.log("[parseXML] str:",str);
     if (typeof str === 'string') {
-        return (new DOMParser()).parseFromString(str, 'text/xml');
+        return (new DOMParser()).parseFromString(str, 'application/xml');
     } else {
         return str;
     }
@@ -1822,6 +1893,16 @@ function swapdim(a, b, dim) {
 var toGeoJSON = (function() {
     'use strict';
 
+	//var arrayHasOnly = arrayHasOnly || function(){};	// определим функцию как пустую, если она не определена
+	function arrayHasOnly(array,value=null){
+	/* содержит массив только value, или нет 
+	*/
+		if(!Array.isArray(array)) return false;
+		if(array.length == 0) return false;	// every возвращает true для пустого массива, хотя обоснование этого абсолютно нематематично.
+		value = JSON.stringify(value);
+		return array.every(element => JSON.stringify(element) === value);
+	}
+
     var removeSpace = (/\s*/g),
         trimSpace = (/^\s*|\s*$/g),
         splitSpace = (/\s+/);
@@ -1833,14 +1914,12 @@ var toGeoJSON = (function() {
         } return h;
     }
     // all Y children of X
-    function get(x, y) { return x.getElementsByTagName(y); }
     function attr(x, y) { return x.getAttribute(y); }
     function attrf(x, y) { return parseFloat(attr(x, y)); }
     // one Y child of X, if any, otherwise null
     function get1(x, y) { 
     	// get First od ElementsByTagName if present
-    	const n = get(x, y);
-    	//if(y == 'desc') console.log(n); 
+    	const n = x.getElementsByTagName(y);
     	return n.length ? n[0] : null; 
     }
     // https://developer.mozilla.org/en-US/docs/Web/API/Node.normalize
@@ -1850,11 +1929,13 @@ var toGeoJSON = (function() {
         for (var j = 0, o = []; j < x.length; j++) { o[j] = parseFloat(x[j]); }
         return o;
     }
+/*
     function clean(x) {
         var o = {};
         for (var i in x) { if (x[i]) { o[i] = x[i]; } }
         return o;
     }
+*/
     // get the content of a text node, if any
     function nodeVal(x) {
         if (x) { norm(x); }
@@ -1901,7 +1982,8 @@ var toGeoJSON = (function() {
     function fc() {
         return {
             type: 'FeatureCollection',
-            features: []
+            features: [],
+            properties: []
         };
     }
 
@@ -1931,9 +2013,9 @@ var toGeoJSON = (function() {
                 // handled separately
                 geotypes = ['Polygon', 'LineString', 'Point', 'Track', 'gx:Track'],
                 // all root placemarks in the file
-                placemarks = get(doc, 'Placemark'),
-                styles = get(doc, 'Style'),
-                styleMaps = get(doc, 'StyleMap');
+                placemarks = doc.getElementsByTagName('Placemark'),
+                styles = doc.getElementsByTagName('Style'),
+                styleMaps = doc.getElementsByTagName('StyleMap');
 
             for (var k = 0; k < styles.length; k++) {
                 styleIndex['#' + attr(styles[k], 'id')] = okhash(xml2str(styles[k])).toString(16);
@@ -1957,10 +2039,9 @@ var toGeoJSON = (function() {
             }
             function gxCoord(v) { return numarray(v.split(' ')); }
             function gxCoords(root) {
-                var elems = get(root, 'coord', 'gx'), coords = [], times = [];
-                if (elems.length === 0) elems = get(root, 'gx:coord');
+                var elems = root.getElementsByTagName('gx:coord'), coords = [], times = [];
                 for (var i = 0; i < elems.length; i++) coords.push(gxCoord(nodeVal(elems[i])));
-                var timeElems = get(root, 'when');
+                var timeElems = root.getElementsByTagName('when');
                 for (var j = 0; j < timeElems.length; j++) times.push(nodeVal(timeElems[j]));
                 return {
                     coords: coords,
@@ -1973,7 +2054,7 @@ var toGeoJSON = (function() {
                 if (get1(root, 'MultiTrack')) { return getGeometry(get1(root, 'MultiTrack')); }
                 if (get1(root, 'gx:MultiTrack')) { return getGeometry(get1(root, 'gx:MultiTrack')); }
                 for (i = 0; i < geotypes.length; i++) {
-                    geomNodes = get(root, geotypes[i]);
+                    geomNodes = root.getElementsByTagName(geotypes[i]);
                     if (geomNodes) {
                         for (j = 0; j < geomNodes.length; j++) {
                             geomNode = geomNodes[j];
@@ -1988,7 +2069,7 @@ var toGeoJSON = (function() {
                                     coordinates: coord(nodeVal(get1(geomNode, 'coordinates')))
                                 });
                             } else if (geotypes[i] === 'Polygon') {
-                                var rings = get(geomNode, 'LinearRing'),
+                                var rings = geomNode.getElementsByTagName('LinearRing'),
                                     coords = [];
                                 for (k = 0; k < rings.length; k++) {
                                     coords.push(coord(nodeVal(get1(rings[k], 'coordinates'))));
@@ -2062,8 +2143,8 @@ var toGeoJSON = (function() {
                     if (outline) properties['stroke-opacity'] = outline === '1' ? 1 : 0;
                 }
                 if (extendedData) {
-                    var datas = get(extendedData, 'Data'),
-                        simpleDatas = get(extendedData, 'SimpleData');
+                    var datas = extendedData.getElementsByTagName('Data'),
+                        simpleDatas = extendedData.getElementsByTagName('SimpleData');
 
                     for (i = 0; i < datas.length; i++) {
                         properties[datas[i].getAttribute('name')] = nodeVal(get1(datas[i], 'value'));
@@ -2090,29 +2171,38 @@ var toGeoJSON = (function() {
             return gj;
         },
         gpx: function(doc) {
-        	//console.log(doc);
-            var i,
-                tracks = get(doc, 'trk'),	// get() возвращает HTML Collection
-                routes = get(doc, 'rte'),
-                waypoints = get(doc, 'wpt'),
-                metadata = get(doc, 'metadata'), 	// no way to save metadata to GeoJSON А, собственно, почему?
-                gj = fc(), 	// a feature collection
-                feature,
-            	prevPoint, 	// для показа сегментов из одной точки будем делать из них сегмент из двух точек - своей и предыдущей
-				isDepth = false;	// признак, нужно ли отдавать глубину, или она ни разу не встретилась
-			//if(metadata.length) console.log('leaflet-omnivore [gpx:] metadata:',metadata,getProperties(metadata[0]));
+        	//console.log('leaflet-omnivore [gpx:] doc:',doc);
+        	//console.log('leaflet-omnivore [gpx:] doc:',doc.querySelector('gpx').attributes);
+            let tracks = doc.getElementsByTagName('trk');
+			let routes = doc.getElementsByTagName('rte');
+			let waypoints = doc.getElementsByTagName('wpt');
+			// no way to save metadata to GeoJSON А, собственно, почему?
+			// Потому что FeatureCollection не имеет properties. Что мешает?
+			let metadata = doc.getElementsByTagName('metadata'); 	// html collection
+			let gj = fc(); 	// a feature collection
+			let feature;
+			let prevPoint; 	// для показа сегментов из одной точки будем делать из них сегмент из двух точек - своей и предыдущей
+			let isDepth = false;	// признак, нужно ли отдавать глубину, или она ни разу не встретилась
+			//console.log('leaflet-omnivore [gpx:] geojson gj:',JSON.stringify(gj));
+			//console.log('leaflet-omnivore [gpx:] metadata:',metadata,getProperties(metadata[0]));
+			//console.log('leaflet-omnivore [gpx:] metadata getProperties:',getProperties(metadata[0]));
 			//if(routes.length) console.log('leaflet-omnivore [gpx:] routes:',routes,getProperties(routes[0]));
-			if(metadata.length) gj.properties = getProperties(metadata[0]);
-            for (i = 0; i < tracks.length; i++) {
+			if(metadata.length) gj.properties = Object.assign(gj.properties,getProperties(metadata[0]));
+			let attributes = doc.querySelector('gpx').attributes;
+			for(let i = 0; i < attributes.length; i++) {	// как минимум один атрибут там всегда есть
+				//console.log('|'+attributes[i].name+'|',attributes[i].value);
+				gj.properties[attributes[i].name] = attributes[i].value;
+			}
+            for (let i = 0; i < tracks.length; i++) {
                 feature = getTrack(tracks[i]);
 				//console.log('leaflet-omnivore [gpx:] feature:',feature);                
                 if (feature) gj.features.push(feature);
             }
-            for (i = 0; i < routes.length; i++) {
+            for (let i = 0; i < routes.length; i++) {
                 feature = getRoute(routes[i]);
                 if (feature) gj.features.push(feature);
             }
-            for (i = 0; i < waypoints.length; i++) {
+            for (let i = 0; i < waypoints.length; i++) {
                 gj.features.push(getPoint(waypoints[i]));
             }
 			//console.log('leaflet-omnivore [gpx:] geojson gj:',gj);
@@ -2121,7 +2211,7 @@ var toGeoJSON = (function() {
             /* node -- это trkseg или rte, ptseg не поддерживается. 
             pointname должно соответствовать 
             */
-                var pts = get(node, pointname),	// get === getElementsByTagName
+                var pts = node.getElementsByTagName(pointname),
                     line = [],
                     times = [],
                     heartRates = [],
@@ -2142,7 +2232,7 @@ var toGeoJSON = (function() {
                 	else prevPoint = pts[l-1];
                 }
 				else prevPoint = pts[l-1];
-				//console.log(pts);
+				//console.log("[getPoints] pts:",pts);
                 for (var i = 0; i < l; i++) {
                     var c = coordPair(pts[i]);
                     line.push(c.coordinates);
@@ -2150,7 +2240,7 @@ var toGeoJSON = (function() {
                     heartRates.push(c.heartRate);
                     depths.push(c.depth);	// null тоже push
                 }
-                if(arrayHasOnly(times)) times = [];
+                if(arrayHasOnly(times)) times = [];	// содержит массив только value, или нет
                 if(arrayHasOnly(heartRates)) heartRates = [];
                 if(arrayHasOnly(depths)) depths = [];
                 return {
@@ -2169,7 +2259,7 @@ var toGeoJSON = (function() {
             	Что таки не совсем так -- Leaflet делает из MultiLineString MultiPolyline.
             */
 				//console.log('leaflet-omnivore [getTrack:] node:',node);
-                var segments = get(node, 'trkseg'),	// коллекция сегментов, trk обязан состоять из сегментов
+                var segments = node.getElementsByTagName('trkseg'),	// коллекция сегментов, trk обязан состоять из сегментов
                     track = [],
                     times = [],
                     heartRates = [],
@@ -2223,7 +2313,6 @@ var toGeoJSON = (function() {
             }
             function getPoint(node) {
                 var prop = getProperties(node);
-                prop.sym = nodeVal(get1(node, 'sym'));
                 return {
                     type: 'Feature',
                     properties: prop,
@@ -2235,24 +2324,33 @@ var toGeoJSON = (function() {
             }
             function getProperties(node) {
             	//console.log('leaflet-omnivore.js [getProperties] node:',node);
-                let meta = ['ele', 'name', 'cmt', 'desc', 'src', 'number', 'author', 'copyright', 'sym', 'type', 'time', 'keywords'], 	// список уникальных свойств, которые будем получать
+                let meta = ['ele','name','cmt','desc','src','number','sym','type','time','keywords'], 	// список уникальных свойств, которые будем получать
                     prop = {},
                     k;
                 for (k = 0; k < meta.length; k++) {
-                    prop[meta[k]] = nodeVal(get1(node, meta[k]));
+                    let val = nodeVal(get1(node, meta[k]));
+                    //console.log('leaflet-omnivore.js [getProperties] prop:',meta[k],val);
+                    if(val) prop[meta[k]] = val;
                 }
-                meta=['link']; 	 	// список неуникальных составных свойств, которые будем получать
+                
+                meta=['link','author','copyright','extensions']; 	 	// список неуникальных? составных свойств, которые будем получать
+				let serializer = new XMLSerializer();
                 for (k = 0; k < meta.length; k++) {
-                	const metas = node.querySelectorAll(`:scope > ${meta[k]}`);
+                	const metas = node.querySelectorAll(`:scope > ${meta[k]}`);	// только непосредственные потомки
                 	//console.log('leaflet-omnivore.js [getProperties] metas:',metas,node.querySelectorAll(`:scope > ${meta[k]}`))
-                	if(metas.length) prop[meta[k]] = node.querySelectorAll(`:scope > ${meta[k]}`);
-                	/*prop[meta[k]] = [];
-                	for(let i = 0; i < metas.length; i++){
-                		prop[meta[k]].push(nodeVal(metas[i]));	// но это, конечно, так себе, потому что там будет xml в виде строки. И что с этим делать потом?
-                	}*/
+                	if(metas.length){ 
+		            	prop[meta[k]] = [];
+		            	for(let i = 0; i < metas.length; i++){
+		            		//console.log("[getProperties] metas[i]",serializer.serializeToString(metas[i]));
+		            		prop[meta[k]].push(serializer.serializeToString(metas[i]));	// но это, конечно, так себе, потому что там будет xml в виде строки. И что с этим делать потом?
+		            	}
+		            }
                 }
-                return clean(prop);
+				//return clean(prop);
+                return prop;
             }
+            
+			//console.log('leaflet-omnivore [gpx:] geojson gj:',gj);
             return gj;
         }
     };

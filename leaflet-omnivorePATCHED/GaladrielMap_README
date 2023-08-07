@@ -1,4 +1,61 @@
 Не изменяйте имя этого каталога и вложенных каталогов! Эти имена прописаны в galadrielmap.js
 Don't change this directory name and included directory names! It's hardcoded in galadrielmap.js
 
+supercluster.js required!
+
 arrayHasOnly	galadrielmap.js
+
+function createSuperclaster(geoJSONpoints){
+/* geoJSONpoints - array of GeoJSON points, as it described in Superclaster doc */
+const index = new Supercluster({
+	log: false, 	// вывод лога в консоль
+	radius: 40,
+	extent: 256,
+	maxZoom: 15,
+}).load(geoJSONpoints); 
+return index;
+} // end function createSuperclaster
+
+async function updClaster(e) {
+// обновляет кластер
+if(!e) return;
+let layer;
+if(e.target) layer = e.target; 	// e - event
+else layer = e;	// e - layer
+//console.log('[updClaster] layer:',layer._leaflet_id,layer,layer instanceof L.LayerGroup);
+realUpdClaster(layer);
+layer.eachLayer(realUpdClaster);	//
+
+function realUpdClaster(layer) {
+	if(!layer.supercluster) return;
+	//console.log('[realUpdClaster] Обновляется кластер',layer._leaflet_id,layer);
+	const bounds = map.getBounds();
+	const mapBox = {
+		bbox: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
+		zoom: map.getZoom()
+	}
+	// Оно может быть вызвано во время изменения масштаба, и тогда map.getZoom() вернёт дробный масштаб
+	// от этого у supercluster съезжает крыша, и оно падает с весёлыми глюками.
+	// При этом бесполезно снова спрашивать здесь map.getZoom() -- возвращаемое значение не меняется
+	// хотя изменение масштаба давно закончилось.
+	// Поэтому просто не будем обновлять кластер, если масштаб дробный.
+	// Авотхрен: значение map.getZoom() не меняется (и остаётся дробным) до следующего изменения масштаба.
+	// Опять автохрен: оказывается, дробные значения масштаба -- нормально. Видимо, оно не не меняется, а правда такое -- дробное.
+	// Получается, авторы supercluster этого не знали, и заложились на целое?
+	// Таким образом, нужно изменить масштаб карты с дробного к ближайшему целому, и вызывать supercluster
+	// А можно забить, и вызывать supercluster с округлённым до целого масштабом -- это не концептуально,
+	// но на практике -- без разницы.
+	/*
+	if(!Number.isInteger(mapBox.zoom)){
+		console.log('[realUpdClaster] mapBox.zoom=',mapBox.zoom);
+		//return;
+	}
+	*/
+	mapBox.zoom = Math.round(mapBox.zoom);
+	//console.log('[realUpdClaster] mapBox.bbox:',mapBox.bbox,'mapBox.zoom=',mapBox.zoom);
+	//console.log('[realUpdClaster] layer.supercluster.getClusters:',layer.supercluster.getClusters(mapBox.bbox, mapBox.zoom));
+	layer.clearLayers();
+	layer.addData(layer.supercluster.getClusters(mapBox.bbox, mapBox.zoom)); 	// возвращает точки (и кластеры как точки) как GeoJSON Feature и загружает в слой
+} 	// end function realUpdClaster
+} // end function updClaster
+

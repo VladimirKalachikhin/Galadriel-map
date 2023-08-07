@@ -43,7 +43,7 @@ $downloadLoaderIndicatorOffTXT = 'Загрузчик не работает. На
 
 $settingsHeaderTXT = 'Параметры';
 $settingsCursorTXT = 'Следование <br>за курсором';
-$settingsTrackTXT = 'Текущй трек <br>всегда показывается';
+$settingsTrackTXT = 'Текущй путь <br>всегда показывается';
 $settingsRoutesAlwaysTXT = 'Выбранные маршруты <br>всегда показываются';
 $settingsdistWindTXT = "Показывать символ ветра";
 $settingsdistCirclesTXT = 'Показывать окружности дистанции';

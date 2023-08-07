@@ -40,17 +40,21 @@ if($status) { 	// fcommon.php $gpxlogger работает
 		$outpuFileName = getLastTrackName();
 		//echo "[logging.php] outpuFileName=$outpuFileName;\n";
 		if($outpuFileName) {
-			$lastTrackName = $trackDir.'/'.$outpuFileName;
-			if(substr(trim(tailCustom($lastTrackName,10)),-6)==='</gpx>') $outpuFileName = '';	// неизвестно, куда оно пишет
+			$lastTrackName = $trackDir.'/'.$outpuFileName;	// этот файла есть
+			if(substr(trim(tailCustom($lastTrackName)),-6)==='</gpx>') {	// неизвестно, куда оно пишет
+				$outpuFileName = pathinfo(gpxloggerRun(true))['filename'];	// fCommon.php Попробуем у писателя и спросить
+				if(!file_exists($trackDir.'/'.$outpuFileName.'.gpx')) $outpuFileName = '';	// пишется не в каталог $trackDir 
+			}
 			else {	// трек пишется в файл $outpuFileName
-				$date = DateTime::createFromFormat('Y-m-d_His',pathinfo($outpuFileName)['filename']);
+				$date = DateTime::createFromFormat('Y-m-d_His',pathinfo($outpuFileName)['filename']);	// pathinfo не работает с русскими буквами!
 				if(date_diff(new DateTime("now"), $date)->days >= $newTrackEveryDays){
 					exec("kill $status");
 					$status=(int)gpxloggerRun(); 	// оно могло и не убиться
 					if($status) echo "Unable to stop logging\n";
 					else {
 						echo "Restarting logging after $newTrackEveryDays days\n";
-						list($status,$outpuFileName) = startGPXlogger(); 	
+						list($status,$outpuFileName) = startGPXlogger(); 
+						$outpuFileName = pathinfo($outpuFileName)['filename'];	
 					}
 				}
 			}
@@ -60,6 +64,7 @@ if($status) { 	// fcommon.php $gpxlogger работает
 else {
 	if($_REQUEST['startLogging']) { 	
 		list($status,$outpuFileName) = startGPXlogger(); 	
+		$outpuFileName = pathinfo($outpuFileName)['filename'];	
 		//error_log("[logging.php] startLogging status=$status; outpuFileName=$outpuFileName;");
 	}
 	elseif($_REQUEST['stopLogging']) { 	
@@ -74,6 +79,7 @@ else {
 			if(substr(trim(tailCustom($lastTrackName,10)),-6)!=='</gpx>'){
 				echo "gpxlogger не запущен, а последний трек $lastTrackName не является завершённым, запускаем запись трека\n";
 				list($status,$outpuFileName) = startGPXlogger(); 	
+				$outpuFileName = pathinfo($outpuFileName)['filename'];	
 			}
 			else {
 				exec("crontab -l | grep -v '".__FILE__."'  | crontab -"); 	// удалим себя из cron

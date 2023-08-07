@@ -27,8 +27,6 @@ pointsControlsDisable()
 pointsControlsEnable()
 getGPXicon(gpxtype)
 delShapes(realy,inLayer=null)	Удаляет полилинии в состоянии редактирования, если realy = true
-createSuperclaster(geoJSONpoints)
-removeFromSuperclaster(superclasterLayer,point)
 tooggleEditRoute(e)
 createEditableMarker(Icon)
 doSaveMeasuredPaths()
@@ -40,6 +38,8 @@ toGPX(geoJSON,createTrk) Create gpx route or track (createTrk==true) from geoJSO
 
 String.prototype.encodeHTML = function ()
 
+createSuperclaster(geoJSONpoints)
+removeFromSuperclaster(superclasterLayer,point)
 updateClasters()
 updClaster(e)
 realUpdClaster(layer)
@@ -73,7 +73,13 @@ sendMOBtoServer()
 distCirclesUpdate()	Устанавливает диаметр и подписи кругов дистанции
 distCirclesToggler() включает/выключает показ окружностей дистанции по переключателю в интерфейсе
 
+windSwitchToggler()
+windSymbolUpdate(TPVdata)
+realWindSymbolUpdate(direction=0,speed=0)
+
 loadScriptSync(scriptURL)	Синхронная загрузка javascriptbearing(latlng1, latlng2)
+
+bearing(latlng1, latlng2) {
 
 atou(b64)		ASCII to Unicode (decode Base64 to original data)
 utoa(data)		Unicode to ASCII (encode data to Base64)
@@ -335,8 +341,11 @@ global deSelectTrack() currentTrackShowedFlag
 //console.log(trackDisplayed.firstChild);
 trackDisplayed.insertBefore(node,trackDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.onclick = function(event){deSelectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
-if(node.title.toLowerCase().indexOf("current")!= -1) currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
-//console.log('node.title=',node.title,currentTrackShowedFlag);
+if(node.title.toLowerCase().indexOf("current")!= -1) {	// текущий трек
+	currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
+	startCurrentTrackUpdateProcess();	// запустим обновление трека
+}
+//console.log('[selectTrack] node.title=',node.title,currentTrackShowedFlag);
 displayTrack(node); 	// создадим трек
 } // end function selectTrack
 
@@ -346,13 +355,24 @@ node - объект li, элемент списка показываемых, к
 trackList - объект ul, список имеющихся, куда надо вернуть node
 global selectTrack()
 */
-//alert(node.innerHTML);
+if(node.title.toLowerCase().indexOf("current")!= -1) {	// текущий трек
+	if(!currTrackSwitch.checked){	// Текущий трек не всегда показывается
+		if(currentTrackUpdateProcess) {
+			clearInterval(currentTrackUpdateProcess);	
+			currentTrackUpdateProcess = null;
+		}
+		if(currentWaitTrackUpdateProcess) {	// хотя его и не должно быть
+			clearInterval(currentWaitTrackUpdateProcess);	// 
+			currentWaitTrackUpdateProcess = null;
+		}
+	}
+};
+
 var li = null;
 for (var i = 0; i < trackList.children.length; i++) { 	// для каждого потомка списка trackList
 	li = trackList.children[i]; 	// взять этого потомка
 	var childTitle = li.innerHTML;
 	if (childTitle > node.innerHTML) { 	// если наименование потомка дальше по алфавиту, чем наименование того, на что кликнули
-		//alert(childTitle+" "+node.innerHTML);
 		break;
 	}
 	li = null;
@@ -374,16 +394,20 @@ if( savedLayers[trackName]) {
 	savedLayers[trackName].addTo(map); 	// нарисуем его на карте. Текущий трек всегда перезагружаем в updateCurrTrack
 }
 else {
+	// просто спрашиваем у сервера файл, там не ответчик
 	var options = {featureNameNode : trackNameNode};
 	var xhr = new XMLHttpRequest();
-	//console.log('[displayTrack] Загружаем новый файл trackName=',trackName);
+	//console.log('[displayTrack] Загружаем новый файл trackName=',trackDirURI+'/'+trackName+'.gpx');
 	xhr.open('GET', encodeURI(trackDirURI+'/'+trackName+'.gpx'), true); 	// Подготовим асинхронный запрос
-	xhr.overrideMimeType( "text/plain; charset=x-user-defined" ); 	// тупые уроды из Mozilla считают, что если не указан mime type ответа -- то он text/xml. Файлы они, очевидно, не скачивают.
+	xhr.overrideMimeType( "application/gpx+xml; charset=UTF-8" ); 	// тупые уроды из Mozilla считают, что если не указан mime type ответа -- то он text/xml. Файлы они, очевидно, не скачивают.
 	xhr.send();
 	xhr.onreadystatechange = function() { // trackName - внешняя
 		if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
 		if (this.status != 200) { 	// запрос завершлся, но неудачно
-			console.log('Server return bad status '+this.status);
+			console.log('[displayTrack] To request file '+trackDirURI+'/'+trackName+' server return '+this.status);
+			if(trackNameNode.title.toLowerCase().indexOf("current")!= -1) {	// текущий трек
+				currentTrackShowedFlag = 'error'; 	// укажем, что с треком что-то не то
+			}
 			return; 	// что-то не то с сервером
 		}
 		// В злопаршивом Javascript символ /00 пробельным не является
@@ -415,7 +439,9 @@ global routeDirURI map window
 */
 var routeName = routeNameNode.innerText.trim();
 var options = {featureNameNode : routeNameNode};
-if( savedLayers[routeName]) savedLayers[routeName].addTo(map); 	// нарисуем его на карте. 
+if( savedLayers[routeName]) {
+	savedLayers[routeName].addTo(map); 	// нарисуем его на карте. 
+}
 else {
 	var routeType =  routeName.slice((routeName.lastIndexOf(".") - 1 >>> 0) + 2).toLowerCase(); 	// https://www.jstips.co/en/javascript/get-file-extension/ потому что там нет естественного пути
 	//console.log('[displayRoute] routeName=',routeName,'routeType=',routeType);
@@ -450,7 +476,8 @@ xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
 	if (this.status != 200) { 	// запрос завершлся, но неудачно
-		console.log('Server return '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
+		//console.log('Server return '+this.status+'\ncurrentTrackServerURI='+currentTrackServerURI+'\ncurrTrackName='+currentTrackName+'\n\n');
+		console.log('To [updateCurrTrack] server return '+this.status+' instead '+currentTrackName+' last segment.');
 		if(typeof loggingIndicator != 'undefined'){ 	// лампочка в интерфейсе
 			loggingIndicator.style.color='red';
 			loggingIndicator.innerText='\u2B24';
@@ -472,7 +499,7 @@ xhr.onreadystatechange = function() { //
 			loggingIndicator.innerText='\u2B24';
 		}
 		if(resp.pt) { 	// есть данные
-			if(savedLayers) {	// может не быть, если, например, показ треков выключили, но выполнение currentTrackUpdate уже запланировано. Вообще-то, так быть не может, но сообщение об отсутствии иногда наблюдается. А иногда -- нет.
+			if(savedLayers[currentTrackName]) {	// может не быть, если, например, показ треков выключили, но выполнение currentTrackUpdate уже запланировано. Вообще-то, так быть не может, но сообщение об отсутствии иногда наблюдается. А иногда -- нет.
 				//if(typeof savedLayers[currentTrackName].getLayers  == 'function') { 	// это layerGroup
 				if(savedLayers[currentTrackName] instanceof L.LayerGroup) { 	// это layerGroup
 					savedLayers[currentTrackName].getLayers()[0].addData(resp.pt); 	// добавим полученное к слою с текущим треком
@@ -493,15 +520,11 @@ xhr.onreadystatechange = function() { //
 			else {
 				loggingIndicator.style.color='';
 				loggingIndicator.innerText='';
-				console.log('[updateCurrTrack]  Track update stopped because no logging now');
-				clearInterval(currentTrackUpdateProcess);	
-				currentTrackUpdateProcess = null;
 				if(currentWaitTrackUpdateProcess){
 					clearInterval(currentWaitTrackUpdateProcess);	
 					console.log('[updateCurrTrack] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
 				}
-				currentWaitTrackUpdateProcess = setInterval(loggingCheck,10000);	// раз в 10 секунд
-				console.log('[updateCurrTrack] Logging check started');
+				if(currTrackSwitch.checked) startCurrentWaitTrackUpdateProcess();	// Текущий трек всегда показывается
 			}
 		}
 	}
@@ -730,6 +753,7 @@ for(let button of pointsButtons.querySelectorAll('button')){	// кнопки у�
 	button.disabled = true;
 };
 }; // end function pointsControlsDisable
+
 function pointsControlsEnable(){
 for(let button of pointsButtons.querySelectorAll('button')){	// кнопки установки маркеров
 	let gpxtype = button.id.substring(9);	// id начинаются с "ButtonSet", а дальше, например, point: ButtonSetpoint
@@ -772,7 +796,7 @@ for(let layer of inLayer.getLayers()){
 					layer.editor.deleteShapeAt(layer.getLatLngs()[0]);	// Мутный способ убрать слой с экрана, но я не вижу, как иначе.
 				}
 				else {
-					needUpdateSuperclaster = removeFromSuperclaster(inLayer,layer);	// могут быть кластеризованные точки, а так -- достаточно removeLayer
+					needUpdateSuperclaster = needUpdateSuperclaster || removeFromSuperclaster(inLayer,layer);	// могут быть кластеризованные точки, а так -- достаточно removeLayer
 				}
 				inLayer.removeLayer(layer);	// удалим слой из LayerGroup
 				//console.log('[delShapes] из inLayer ',inLayer._leaflet_id,inLayer,'удалён объект',layer._leaflet_id,layer);
@@ -781,44 +805,17 @@ for(let layer of inLayer.getLayers()){
 		}
 	}
 }
+//console.log('[delShapes] needUpdateSuperclaster:',needUpdateSuperclaster);
 if(needUpdateSuperclaster) updClaster(inLayer);	// обновим один раз за все удаления
 return edEnShapesCntr;
 }	// end function delShapes
 
-function createSuperclaster(geoJSONpoints){
-/* geoJSONpoints - array of GeoJSON points, as it described in Superclaster doc */
-const index = new Supercluster({
-	log: false, 	// вывод лога в консоль
-	radius: 40,
-	extent: 256,
-	maxZoom: 15,
-}).load(geoJSONpoints); 
-return index;
-} // end function createSuperclaster
-
-function removeFromSuperclaster(superclasterLayer,point){
-let ret = false;
-if(!superclasterLayer.supercluster) return ret;
-if(!(point instanceof L.Marker)) return ret;
-let pointStr = JSON.stringify(point.toGeoJSON())
-for(let i = 0; i < superclasterLayer.supercluster.points.length; i++){
-	if(pointStr===JSON.stringify(superclasterLayer.supercluster.points[i])){
-		superclasterLayer.supercluster.points.splice(i,1);
-		superclasterLayer.supercluster = createSuperclaster(superclasterLayer.supercluster.points); 	// создание нового и загрузка в суперкластер точек 		
-		ret = true;
-		break;
-	}
-}
-return ret;
-} // end function removeFromSuperclaster
 
 function tooggleEditRoute(e) {
 /* Переключает режим редактирования
 Обычно обработчик клика по линии
 */
 //console.log('tooggleEditRoute start by anymore',e);
-// Сделаем объект, по которому щёлкнули, текущим, потому что кнопочки в интерфейсе оперируют
-// объектом currentRoute.
 // Щёлкнуть могли либо по нарисованному локально объекту (в том числе -- и по восстановленному из куки)
 // либо по загруженному gpx
 if(editorEnabled===false) {
@@ -830,7 +827,8 @@ if(e.target) target = e.target;	// вызвали как обработчик с
 else target = e;	// вызвали просто как функцию
 let layerName = '';
 currentRoute = null;
-//console.log('[tooggleEditRoute] dravingLines',dravingLines);
+//console.log('[tooggleEditRoute] target',target);
+//console.log('[tooggleEditRoute] savedLayers:',savedLayers);
 if(dravingLines.hasLayerRecursive(target)){	// Щёлкнули по одному из нарисованных объектов. hasLayerRecursive потому что omnivore импортирует gpx как L.LayerGroup с двумя слоями: точки и всё остальное
 	//console.log('[tooggleEditRoute] Щёлкнули на объекте',target._leaflet_id,target,'в dravingLines',dravingLines._leaflet_id,dravingLines);
 	currentRoute = dravingLines;
@@ -839,10 +837,7 @@ if(dravingLines.hasLayerRecursive(target)){	// Щёлкнули по одном�
 else {
 	for (layerName in savedLayers) {	// нет способа определить, в какой layerGroup находится layer, но у нас все показываемые слои хранятся в массиве savedLayers
 		//console.log('[tooggleEditRoute] layerName=',layerName);
-		// Почему-то savedLayers[layerName] instanceof L.layerGroup) не работает,
-		// поэтому проверяем наличие специфического метода. Потому что оно L.LayerGroup.
-		if((savedLayers[layerName] instanceof L.LayerGroup) && savedLayers[layerName].hasLayerRecursive(e.target)){
-		//if((typeof savedLayers[layerName].getLayers  == 'function') && savedLayers[layerName].hasLayerRecursive(e.target)){
+		if((savedLayers[layerName] instanceof L.LayerGroup) && savedLayers[layerName].hasLayerRecursive(target)){
 			//console.log('[tooggleEditRoute] Щёлкнули на объекте',target._leaflet_id,target,'в',savedLayers[layerName]._leaflet_id,layerName,savedLayers[layerName]);
 			currentRoute = savedLayers[layerName];
 			routeSaveName.value = layerName; 	// запишем в поле ввода имени имя загруженного файла
@@ -851,23 +846,33 @@ else {
 	}
 }
 if(!currentRoute) {
-	//console.log('[tooggleEditRoute] Не удалось определить currentRoute, облом.');
+	console.log('[tooggleEditRoute] Не удалось определить currentRoute, облом.');
 	return;
 }
 
-target.toggleEdit();	// 
+//console.log('[tooggleEditRoute] target:',target,'currentRoute:',currentRoute,'dravingLines:',dravingLines)
+target.toggleEdit();	// оно Leaflet.Editable
 if(target.editEnabled()) { 	//  если включено редактирование
 	//console.log('[tooggleEditRoute] Редактирование включили');
 	routeEraseButton.disabled=false; 	// - сделать доступной кнопку Удалить
 	if(!routeSaveName.value) routeSaveName.value = layerName;	// имя файла для сохранения
+	// здесь устанавливается выключение режима редактирования по изменению и покиданию
+	// поля "описание объекта" в редакторе маршрутов
+	// Не знаю, хорошая ли это идея, но я со временем забыл, что для сохранения названия и описания объекта
+	/*/ нужно завершить редактирование этого объекта.
+	editableObjectDescr.onchange = function (){
+		tooggleEditRoute(target);
+		//console.log("Выключено редактирование объекта",target)
+	};*/
 	if((!routeSaveDescr.value) && currentRoute.properties && currentRoute.properties.desc) routeSaveDescr.value = currentRoute.properties.desc;
 	if(target.feature && target.feature.properties && target.feature.properties.name) editableObjectName.value = target.feature.properties.name;
 	if(target.feature && target.feature.properties && target.feature.properties.desc) editableObjectDescr.value = target.feature.properties.desc;
 	if(target instanceof L.Marker){
-		//console.log('[tooggleEditRoute] target is instanceof L.Marker');
+		//console.log('[tooggleEditRoute] target is instanceof L.Marker',target);
 		routeCreateButton.disabled=true; 	// - сделать недоступной кнопку Начать
 		pointsControlsEnable();	// включим кнопки точек
 		target.setOpacity(0.4);
+		target.options.draggable = true;	// сделаем маркер перемещаемым
 		const gpxtype = target.feature.properties.type;
 		//console.log('[tooggleEditRoute] gpxtype=',gpxtype,pointsButtons.querySelectorAll('button'));
 		for(let button of pointsButtons.querySelectorAll('button')){
@@ -889,6 +894,7 @@ if(target.editEnabled()) { 	//  если включено редактирова
 }
 else {
 	//console.log('[tooggleEditRoute] Редактирование выключили');
+	editableObjectDescr.onchange = null;
 	if(delShapes(false))  routeEraseButton.disabled=false; 	// если есть редактируемые слои в currentRoute
 	else {	// 
 		//console.log('[tooggleEditRoute] нет редактируемых слоёв: как бы завершаем редактирование currentRoute с именем',layerName,currentRoute);
@@ -902,7 +908,7 @@ else {
 		// в результате поведение редактирования файла с сервера такое же, как и редактирование локального.
 		// Раз уж они выглядят одинаково.
 		// А хорошая ли это идея?
-		if(currentRoute.properties && (routeSaveName.value == currentRoute.properties.fileName)){
+		if(currentRoute.properties && (routeSaveName.value == currentRoute.properties.fileName)){	// мы редактировали ранее загруженный файл
 			//console.log('[tooggleEditRoute] Сохраняется файл',currentRoute.properties.fileName);
 			//saveGPX();
 		}
@@ -924,6 +930,7 @@ else {
 	if(target instanceof L.Marker){
 		//console.log('[tooggleEditRoute] target is instanceof L.Marker');
 		target.setOpacity(0.7);
+		target.options.draggable = false;	// сделаем маркер не перемещаемым
 		const gpxtype = target.feature.properties.type;
 		for(let button of pointsButtons.querySelectorAll('button')){	// кнопки установки маркеров
 			button.disabled = false;
@@ -939,7 +946,7 @@ else {
 function createEditableMarker(Icon){
 if(!currentRoute) currentRoute = dravingLines; 	// 
 let gpxtype = Icon.options.iconUrl.substring(Icon.options.iconUrl.lastIndexOf('/')+1,Icon.options.iconUrl.lastIndexOf('.png'));
-let layer = map.editTools.startMarker(centerMark.getLatLng(),{
+let layer = map.editTools.startMarker(centerMarkMarker.getLatLng(),{
 	icon: Icon,
 	opacity: 0.5
 }).addTo(currentRoute);
@@ -1009,8 +1016,8 @@ function findEditDisabled(layer){
 } // end function findEditDisabled
 //console.log('[doSaveMeasuredPaths] toSave original:',toSave);
 dravingLines.eachLayer(findEditDisabled);
+toSave = toSave.toGeoJSON();	// здесь я реально не понял. А оно не geoJSON? Оно не GeoJSON. Оно LayerGroup
 toSave.properties = dravingLines.properties;	// на самом деле -- чисто чтобы там было properties, оно нигде не используется
-toSave = toSave.toGeoJSON();	// здесь я реально не понял. А оно не geoJSON?
 //console.log('[doSaveMeasuredPaths] toSave:',toSave);
 
 toSave = toGPX(toSave); 	// сделаем gpx 
@@ -1023,7 +1030,7 @@ document.cookie = "GaladrielMapMeasuredPaths="+toSave+"; expires="+expires+"; pa
 } 	// end function doSaveMeasuredPaths
 
 function doRestoreMeasuredPaths() {
-/*Global drivedPolyLineOptions*/
+/**/
 let RestoreMeasuredPaths = getCookie('GaladrielMapMeasuredPaths');
 //console.log('[doRestoreMeasuredPaths] RestoreMeasuredPaths=',RestoreMeasuredPaths);
 if(RestoreMeasuredPaths) {
@@ -1094,6 +1101,7 @@ if(popUpHTML) {
 }
 } // end function bindPopUptoEditable
 
+
 function saveGPX() {
 /* Сохраняет на сервере маршрут из объекта currentRoute. currentRoute -- это или нарисованный
 локально объект, или отредактированный gpx
@@ -1138,7 +1146,16 @@ let pointsFeatureCollection = collectSuperclasterPoints(currentRoute); 	//
 let route = currentRoute.toGeoJSON(); 	// сделаем объект geoJSON. Очевидно, это новый объект?
 if(!('properties' in route)) route.properties = {};
 //route.properties.fileName = fileName;	// имя файла. А нафига?
-route.properties.desc = routeSaveDescr.value;	// общий комментарий
+if(routeSaveDescr.value.trim()) route.properties.desc = routeSaveDescr.value;	// общий комментарий
+route.properties.time = new Date().toISOString();
+route.properties.xmlns = "http://www.topografix.com/GPX/1/1";
+route.properties['xmlns:gpxx'] = "http://www8.garmin.com/xmlschemas/GpxExtensions/v3";
+route.properties['xmlns:xsi'] = "http://www.w3.org/2001/XMLSchema-instance";
+route.properties['xsi:schemaLocation'] = "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd https://www8.garmin.com/xmlschemas/GpxExtensions/v3 https://www8.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd";
+for(let key in currentRoute.properties) {	//
+	if(typeof route.properties[key] === 'undefined') route.properties[key] = currentRoute.properties[key];
+}
+//console.log('[saveGPX] currentRoute:',currentRoute);
 //console.log('[saveGPX] route as geoJSON:',route);
 
 // теперь выкинем точки, которые есть в supercluster, а потом добавим все точки из supercluster
@@ -1146,7 +1163,13 @@ route.properties.desc = routeSaveDescr.value;	// общий комментари
 // а не как значки supercluster
 if(pointsFeatureCollection.length) { 	// это был supercluster, поэтому в geoJSON неизвестно, сколько оригинальных точек, а не все. Но у нас с собой было...
 	// выкинем все точки, присутствующие в pointsFeatureCollection
-	let pointsFeatureCollectionStrings = pointsFeatureCollection.map(JSON.stringify);
+	let pointsFeatureCollectionStrings = pointsFeatureCollection.map(function (point){
+																		// а вот тут убъём все сохранённые маркеры
+																		// из-за того, что JSON.stringify нельзя
+																		// заставить что-то сделать с циклической структурой
+																		point.properties.marker = undefined;
+																		return JSON.stringify(point);
+																	});
 	route.features = route.features.filter(function(feature){	
 		// не сами кластеры, не точки, и точки, не входящие в pointsFeatureCollection
 		return (!feature.properties.cluster) && ((feature.geometry.type !== 'Point') || (! pointsFeatureCollectionStrings.includes(JSON.stringify(feature))));
@@ -1170,7 +1193,9 @@ xhr.onreadystatechange = function() { //
 	if (this.status != 200) return; 	// что-то не то с сервером
 	routeSaveMessage.innerHTML = this.responseText;
 }
-} // end function createGPX()
+
+} // end function saveGPX()
+
 
 function toGPX(geoJSON) {
 /* Create gpx route or track (createTrk==true) from geoJSON object вместо этого LineString
@@ -1180,10 +1205,16 @@ bounds - потому что geoJSON.getBounds() не работает
 */
 //console.log('[toGPX] geoJSON:',geoJSON);
 var gpxtrack = `<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<gpx xmlns="http://www.topografix.com/GPX/1/1"  creator="GaladrielMap" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+<gpx creator="GaladrielMap" version="1.1"
 `;
+for(let key in geoJSON.properties) {	//
+	if(!key.startsWith('xml') && !key.startsWith('xsi')) continue;
+	gpxtrack += `\t${key}="${geoJSON.properties[key]}"\n`;
+};
+gpxtrack += '>\n';
 gpxtrack += '<metadata>\n';
-var date = new Date().toISOString();
+var date = geoJSON.properties.date;
+if(!date) date = new Date().toISOString();
 gpxtrack += '	<time>'+ date +'</time>\n';
 // Хитрый способ получить границы всех объектов в geoJSON
 const geojsongroup = L.geoJSON(geoJSON);
@@ -1192,16 +1223,16 @@ let bounds = geojsongroup.getBounds();
 if(Object.entries(bounds).length) gpxtrack += '	<bounds minlat="'+bounds.getSouth().toFixed(4)+'" minlon="'+bounds.getWest().toFixed(4)+'" maxlat="'+bounds.getNorth().toFixed(4)+'" maxlon="'+bounds.getEast().toFixed(4)+'"  />\n';
 if(geoJSON.properties) doDescriptions(geoJSON.properties) 	// запишем разные описательные поля
 gpxtrack += '</metadata>\n';
-let i,k,j;
-for( i=0; i<geoJSON.features.length;i++) {
+
+for(let i=0; i<geoJSON.features.length;i++) {
 	//console.log('[toGPX] geoJSON.features[i]:',geoJSON.features[i]);
 	switch(geoJSON.features[i].geometry.type) {
 	case 'MultiLineString': 	// это обязательно путь
 		gpxtrack += '	<trk>\n'; 	// рисуем трек
 		doDescriptions(geoJSON.features[i].properties) 	// запишем разные описательные поля
-		for( k = 0; k < geoJSON.features[i].geometry.coordinates.length; k++) {
+		for(let k = 0; k < geoJSON.features[i].geometry.coordinates.length; k++) {
 			gpxtrack += '		<trkseg>\n'; 	// рисуем трек
-			for ( j = 0; j < geoJSON.features[i].geometry.coordinates[k].length; j++) {
+			for (let j = 0; j < geoJSON.features[i].geometry.coordinates[k].length; j++) {
 				gpxtrack += '			<trkpt '; 	// рисуем трек
 				gpxtrack += 'lat="' + geoJSON.features[i].geometry.coordinates[k][j][1] + '" lon="' + geoJSON.features[i].geometry.coordinates[k][j][0] + '">';
 				gpxtrack += '</trkpt>\n'; 	// рисуем трек
@@ -1215,7 +1246,7 @@ for( i=0; i<geoJSON.features.length;i++) {
 		else gpxtrack += '	<trk>\n'; 	// рисуем трек
 		doDescriptions(geoJSON.features[i].properties) 	// запишем разные описательные поля
 		if(!geoJSON.features[i].properties.isRoute) gpxtrack += '		<trkseg>\n'; 	// рисуем трек
-		for ( j = 0; j < geoJSON.features[i].geometry.coordinates.length; j++) {
+		for (let j = 0; j < geoJSON.features[i].geometry.coordinates.length; j++) {
 			if(!geoJSON.features[i].properties.isRoute) gpxtrack += '			<trkpt '; 	// рисуем трек
 			else gpxtrack += '		<rtept '; 	// рисуем маршрут
 			gpxtrack += 'lat="' + geoJSON.features[i].geometry.coordinates[j][1] + '" lon="' + geoJSON.features[i].geometry.coordinates[j][0] + '">';
@@ -1246,24 +1277,21 @@ return gpxtrack;
 		if(properties.link) {
 			for ( let ii = 0; ii < properties.link.length; ii++) { 	// ссылок может быть много
 				//console.log(properties.link[ii]);
-				//gpxtrack += '		<link http="' + properties.link[ii].getAttribute('href') + '">\n';
-				gpxtrack += '		<link http="' + properties.link[ii].getAttribute('http') + '">\n';
-				for(let iii = 0; iii < properties.link[ii].children.length; iii++) {
-					//console.log(properties.link[ii].children[iii].textContent);
-					gpxtrack += '			<' + properties.link[ii].children[iii].nodeName +'>' + properties.link[ii].children[iii].textContent + '</' + properties.link[ii].children[iii].nodeName + '>\n';
-				}
-				gpxtrack += '		</link>\n'
+				gpxtrack += properties.link[ii];
 			}
 			//console.log(gpxtrack);
 		}
 		if(properties.number) gpxtrack += '		<number>' + properties.number + '</number>\n';
 		if(properties.type) gpxtrack += '		<type>' + properties.type + '</type>\n';
-		if(properties.extensions) { 	// это HTMLCollection
-			// это произвольная структура, с которой непонятно что делать
+		if(properties.extensions) { 	// там просто уж оформленная строка
+			for ( let ii = 0; ii < properties.extensions.length; ii++) {
+				gpxtrack += properties.extensions[ii];
+			};
 		}
 	}
 } // end function toGPX
-    
+
+
 String.prototype.encodeHTML = function () {
     return this.replace(/&/g, '&amp;')
                .replace(/</g, '&lt;')
@@ -1272,9 +1300,59 @@ String.prototype.encodeHTML = function () {
                .replace(/'/g, '&apos;');
 };
 
+
 // Кластеризация точек
+function createSuperclaster(geoJSONpoints){
+/* geoJSONpoints - array of GeoJSON points, as it described in Superclaster doc */
+const index = new Supercluster({
+	log: false, 	// вывод лога в консоль
+	radius: superclusterRadius,
+	extent: 256,
+	maxZoom: 14,
+	minPoints: 3	// при умолчальных 2 невозможно разделить дублирующиеся точки
+}).load(geoJSONpoints); 
+return index;
+} // end function createSuperclaster
+
+
+function removeFromSuperclaster(superclasterLayer,point){
+let ret = false;
+if(!superclasterLayer.supercluster) return ret;
+if(!(point instanceof L.Marker)) return ret;
+let pointStr = point.toGeoJSON();
+// Убъём сохранённый маркер, потому что там хранится тот же GeoJSON, и в результате
+// JSON.stringify обламывается, что структура циклическая.
+// Пляски вокруг параметров JSON.stringify не помогли: ничего не работает, или я ниасилил доку.
+// Потом supercluster создаст новый маркер, ничего страшного.
+if(pointStr.properties.marker) pointStr.properties.marker = undefined;	
+//console.log('[removeFromSuperclaster] point:',pointStr,JSON.stringify(pointStr));
+pointStr = JSON.stringify(pointStr);
+for(let i = 0; i < superclasterLayer.supercluster.points.length; i++){
+	// а вот здесь не будем просто убивать маркер, ибо убъются все
+	// переприсвоим, потом убъём, потом присвоим обратно.
+	// В конце-концов, это просто пляски со ссылками. Или убить?
+	let savedMarker;
+	if(superclasterLayer.supercluster.points[i].properties.marker) {
+		savedMarker = superclasterLayer.supercluster.points[i].properties.marker;
+		superclasterLayer.supercluster.points[i].properties.marker = undefined;
+	}
+	let superStr = JSON.stringify(superclasterLayer.supercluster.points[i]); 
+	if(savedMarker) superclasterLayer.supercluster.points[i].properties.marker = savedMarker;
+	if(pointStr===superStr){
+		superclasterLayer.supercluster.points.splice(i,1);
+		superclasterLayer.supercluster = createSuperclaster(superclasterLayer.supercluster.points); 	// создание нового и загрузка в суперкластер точек 		
+		ret = true;
+		//console.log('[removeFromSuperclaster] точка найлена ret=',ret);
+		break;
+	}
+}
+return ret;
+} // end function removeFromSuperclaster
+
 function updateClasters() {
-/* Обновляет все показываемые кластеры точек
+/* Обновляет показываемые кластеры точек
+В savedLayers вообще все показываемые слои: карты, сетки, файлы. Но не окружности дистанции.
+Чтобы не разбираться - будем выбирать оттуда заведомо только файлы.
 */
 //console.log('galadrielmap.js: updateClasters start by anymore');
 for (var i = 0; i < routeDisplayed.children.length; i++) { 	// для каждого потомка списка routeDisplayed
@@ -1295,7 +1373,7 @@ if(e.target) layer = e.target; 	// e - event
 else layer = e;	// e - layer
 //console.log('[updClaster] layer:',layer._leaflet_id,layer,layer instanceof L.LayerGroup);
 realUpdClaster(layer);
-layer.eachLayer(realUpdClaster);	//
+layer.eachLayer(realUpdClaster);
 
 function realUpdClaster(layer) {
 	if(!layer.supercluster) return;
@@ -1322,13 +1400,48 @@ function realUpdClaster(layer) {
 		//return;
 	}
 	*/
+	// Точки и кластеры показываются на слое layer только в пределах bbox.
+	//все другие точки тихо лежат в кеше
 	mapBox.zoom = Math.round(mapBox.zoom);
 	//console.log('[realUpdClaster] mapBox.bbox:',mapBox.bbox,'mapBox.zoom=',mapBox.zoom);
 	//console.log('[realUpdClaster] layer.supercluster.getClusters:',layer.supercluster.getClusters(mapBox.bbox, mapBox.zoom));
-	layer.clearLayers();
-	layer.addData(layer.supercluster.getClusters(mapBox.bbox, mapBox.zoom)); 	// возвращает точки (и кластеры как точки) как GeoJSON Feature и загружает в слой
-} 	// end function realUpdClaster
+	let newGeoJSONpoints=[], pointsExistsIDs=[];
+	for(const point of layer.supercluster.getClusters(mapBox.bbox, mapBox.zoom)){
+		// возвращает новые точки: у которых нет сохранённого маркера, или этот маркер не показывается сейчас
+		if(!point.properties.marker) newGeoJSONpoints.push(point);
+		else {
+			if(!(point.properties.marker._leaflet_id in layer._layers)) newGeoJSONpoints.push(point);
+			else pointsExistsIDs.push(point.properties.marker._leaflet_id);	// это id тех, кто есть, и кто должно быть в слое
+		}
+	};
+	//console.log('[realUpdClaster] newGeoJSONpoints:',newGeoJSONpoints,'pointsExistsIDs:',pointsExistsIDs);
+	for(let id in layer._layers){	// удаляем точки, которых быть не должно
+		id = parseInt(id);
+		//console.log('[realUpdClaster] id=',id,pointsExistsIDs.includes(id));
+		if(!pointsExistsIDs.includes(id)) {
+			// Собственно, вся эта лабуда с новыми и старыми точками выше сделана исключительно
+			// ради того, чтобы определить точки, уходящие из поля зрения, но не в результате зуммирования
+			// и удаления из их GeoJSON сохранённого маркера -- в целях сбережения памяти.
+			// Т.е., память никогда не кончится при любом количестве точек, как оно и задумано в supercluster.
+			// За исключением случая, когда сначала зум (тогда маркер не удаляется, даже если точка уходит
+			// из поля зрения), а потом сдвиг, и точка уходит. Тогда маркер остаётся, но это не страшно?
+			//console.log('[realUpdClaster] lastSuperClusterUpdatePosition:',lastSuperClusterUpdatePosition,map.getZoom());
+			if(lastSuperClusterUpdatePosition[1]==map.getZoom()) {
+				//console.log('[realUpdClaster] Удаляется сохранённый маркер из',layer._layers[id]);
+				// сохранённый маркер есть, раз эта точка показывалась, но эта точка может быть кластером
+				// Чёта фигня какая-то. У кластера есть сохранённый маркер? А кто?
+				// Ха! Оказывается, сохранять маркер -- это не я придумал, такая фича есть в supercluster
+				if(layer._layers[id].feature.properties.marker) layer._layers[id].feature.properties.marker = undefined;
+			}
+			layer.removeLayer(id);
+		}
+	}
+	//layer.clearLayers();
+	layer.addData(newGeoJSONpoints); 	// добавляем новые точки
+} // end function realUpdClaster
 } // end function updClaster
+
+
 
 function nextColor(color,step) {
 /* step - by color chanel 
@@ -1367,7 +1480,6 @@ return parseInt(('00'+r.toString(16)).slice(-2)+('00'+g.toString(16)).slice(-2)+
 function centerMarkPosition() {
 /* global goToPositionField */
 centerMark.invoke('setLatLng',map.getCenter()); // установим координаты всех маркеров
-//centerMark.setLatLng(map.getCenter()); 	// определена в index
 if(goToPositionManualFlag === false) { 	// если поле не юзают руками
 	const lat = Math.round(centerMarkMarker.getLatLng().lat*10000)/10000; 	 	// широта с четыремя знаками после запятой - 10см
 	const lng = Math.round(((centerMarkMarker.getLatLng().lng%360+540)%360-180)*10000)/10000; 	 	// долгота
@@ -1411,6 +1523,7 @@ function centerMarkOff() {
 centerMark.remove();
 map.off('move', centerMarkPosition);
 }; // end function centerMarkOff
+
 
 function flyByString(stringPos){
 /* Получает строку предположительно с координатами, и перемещает туда центр карты */
@@ -1505,13 +1618,14 @@ else {
 }
 } // end function doCopyToClipboard
 
+
 function doCurrentTrackName(liID){
 let liObj = document.getElementById(liID);
 //console.log('doCurrentTrackName',liID,liObj);
 liObj.classList.add("currentTrackName");
 liObj.title='Current track';
 currentTrackName = liID;
-currentTrackShowedFlag = false; 	// флаг, что у нас новый текущий трек. Обрабатывается в realtimeTPVupdate index.php
+currentTrackShowedFlag = false; 	// флаг, что у нас новый текущий трек. Обрабатывается в currentTrackUpdate index.php
 } // end function doCurrentTrackName
 
 function doNotCurrentTrackName(liID){
@@ -1523,10 +1637,8 @@ currentTrackName = '';
 
 function loggingWait() {
 /* запускает/останавливает слежение за наличием пишущегося трека по кнопке в интерфейсе */
-if(currTrackSwitch.checked){
-	if(!currentWaitTrackUpdateProcess){
-		currentWaitTrackUpdateProcess = setInterval(loggingCheck,10000);	// раз в 10 секунд
-	}	
+if(currTrackSwitch.checked){	// Текущий трек всегда показывается
+	startCurrentWaitTrackUpdateProcess();	
 	console.log('[loggingWait]  Logging check started by user');
 }
 else {
@@ -1541,7 +1653,7 @@ else {
 function loggingRun() {
 /* запускает/останавливает запись трека по кнопке в интерфейсе */
 let logging = 'logging.php';
-if(loggingSwitch.checked) {
+if(loggingSwitch.checked) {	// Запись пути
 	logging += '?startLogging=1';
 }
 else {
@@ -1549,14 +1661,11 @@ else {
 	if(currentTrackName) doNotCurrentTrackName(currentTrackName);
 	console.log('[loggingRun] Logging stop by user');
 	console.log('[loggingRun]  Update track stopped because no logging now');
-	clearInterval(currentTrackUpdateProcess);	 
-	currentTrackUpdateProcess = null;
 	if(currentWaitTrackUpdateProcess){
 		clearInterval(currentWaitTrackUpdateProcess);	
 		console.log('[loggingRun] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
 	}
-	currentWaitTrackUpdateProcess = setInterval(loggingCheck,10000);	// раз в 10 секунд
-	console.log('[loggingRun] Logging check started');
+	if(currTrackSwitch.checked) startCurrentWaitTrackUpdateProcess();	// Текущий трек всегда показывается
 }
 loggingCheck(logging);
 } // end function loggingRun
@@ -1566,6 +1675,7 @@ function loggingCheck(logging='logging.php') {
 путём запроса logging.
 Запрос должен вернуть JSON массив из двух значенией: ведётся ли запись bool и имя пишущегося файла
 */
+//console.log('[loggingCheck] started');
 let xhr = new XMLHttpRequest();
 xhr.open('GET', encodeURI(logging), true); 	// Подготовим асинхронный запрос
 xhr.send();
@@ -1578,9 +1688,12 @@ xhr.onreadystatechange = function() { //
 		loggingIndicator.style.color='green';
 		loggingIndicator.innerText='\u2B24';
 		// Новый текущий трек
-		const newTrackName = status[1].slice(0,status[1].lastIndexOf('.')); 	// имя нового текущего (пишущийся сейчас) трека -- имя файла без расширения		
+		const newTrackName = status[1].substring(0, status[1].lastIndexOf('.')) || status[1]; 	// имя нового текущего (пишущийся сейчас) трека -- имя файла без расширения		
 		//console.log(status,'[loggingCheck] Новый текущий трек newTrackName=',newTrackName);
-		if(!newTrackName) return; 	// не было возвращено имени, хотя запись трека работает: она работает давно, и этот файл нам известен
+		if(!newTrackName) {	// не было возвращено имени, хотя запись трека работае. Возможно, кто-то запустил запись в какой-то не наш каталог.
+			loggingSwitch.disabled = true;	// отключим переключатель, и не будем нигде включать - пусть жмут Shift-Reload
+			return; 
+		}
 		let newTrackLI = document.getElementById(newTrackName); 	// его всегда нет? Нет, он вполне может быть, если, например, запись запустил не этот клиент
 		//console.log(newTrackLI);
 		if(!newTrackLI) {
@@ -1599,12 +1712,12 @@ xhr.onreadystatechange = function() { //
 			if(newTrackName !== currentTrackName) doCurrentTrackName(newTrackName);	// 
 		}
 		// запустим слежение за логом, если ещё не
-		if(!currentTrackUpdateProcess) {
-			clearInterval(currentWaitTrackUpdateProcess);	// остановим слежение за наличием пишущегося трека 	
-			currentWaitTrackUpdateProcess = null;
-			console.log('[loggingCheck]  Logging check stopped');
-			currentTrackUpdateProcess =  setInterval(currentTrackUpdate,3000);	// в index.php
-			console.log('[loggingCheck]  Update track started');
+		// Но слежение за логом должно быть запущено, только если трек показывается
+		// но startCurrentTrackUpdateProcess периодически запускает currentTrackUpdate
+		// который при первом запуске... Но процесс запускается, а он не нужен.
+		// Поэтому запускаем процесс только если указано "Текущий трек всегда показывается."
+		if(currTrackSwitch.checked) {
+			startCurrentTrackUpdateProcess();	// в index.php
 		}
 	}
 	else {
@@ -1617,8 +1730,8 @@ xhr.onreadystatechange = function() { //
 		}
 	}
 return;
-}
-} // end function loggingCheck
+}; // end xhr.onreadystatechange
+}; // end function loggingCheck
 
 function coverage(){
 //console.log(cowerSwitch);
@@ -1654,7 +1767,7 @@ if(map.hasLayer(cursor)) latlng = cursor.getLatLng(); 	// координаты �
 else {
 	// если даже нет координат -- дадим возможность ставить маркер в центре карты
 	centerMarkOn(); 	// включить крестик в середине
-	latlng = centerMark.getLatLng();
+	latlng = centerMarkMarker.getLatLng();
 	locationMOBdisplay.innerHTML = latTXT+' '+Math.round(latlng.lat*10000)/10000+'<br>'+longTXT+' '+Math.round(latlng.lng*10000)/10000;	
 	//return false;	
 }
@@ -1715,11 +1828,8 @@ distanceMOBdisplay.innerHTML = '&nbsp;';
 directionMOBdisplay.innerHTML = '&nbsp;';
 locationMOBdisplay.innerHTML = '&nbsp;';
 delMOBmarkerButton.disabled = true;
-
 //centerMarkOff(); 	// выключить крестик в середине -- не надо, ибо при закрытии панели оно уже вызывается
-
 sidebar.close();	// закрыть панель
-
 } // end function MOBclose
 
 
@@ -2017,20 +2127,6 @@ function atou(b64) {
 function utoa(data) {
   return btoa(unescape(encodeURIComponent(data)));
 }
-
-//////////// Эта функция используются в leflet-omnivore.js, но как её туда запихать правильным образом --
-// я не понимаю. arrayHasOnly нужна в двух местах, для которых, вроде, нет другого общего пространства имён,
-// кроме как это.
-function arrayHasOnly(array,value=null){
-/* содержит массив только value, или нет 
-*/
-	if(!Array.isArray(array)) return false;
-	if(array.length == 0) return false;	// every возвращает true для пустого массива, хотя обоснование этого абсолютно нематематично.
-	value = JSON.stringify(value);
-	return array.every(element => JSON.stringify(element) === value);
-}
-
-/////////////////////////////////////////
 
 
 function realtime(dataUrl,fUpdate,upData) {

@@ -1,10 +1,10 @@
 [Русское описание](https://github.com/VladimirKalachikhin/Galadriel-map/blob/master/README.ru-RU.md)  
-# GaladrielMap [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
+# GaladrielMap [![License: CC BY-SA 4.0](screenshots/CC_BY-SA_4.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 This is a server-based chart plotter navigation software for pleasure crafts, motorhomes, and off-road cars. The application can be placed on a weak server such as RaspberryPi, NAS or router and used on full clients such as tablets and smartphones. Only browser need.
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.8
+## v. 2.9
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -50,7 +50,7 @@ Unfortunately, the Oracle Inc. turned out to be a crook, so the demo does not wo
 
 
 ## Install&configure:
-You must have a web server under Linux with web server and php support. Just copy app, dependences and set paths.  
+You must have a web server under Linux with web server and php <8 support. Just copy app, dependences and set paths.  
 Paths and other are set and describe in _params.php_  
 More detailed instructions are available in _emergencykit/_ directory.
 
@@ -61,7 +61,7 @@ You may download full pack -- more 10MB, or without vector tiles support and scr
 
 
 ## Dependences and thanks
-* [Leaflet](https://leafletjs.com/) in _leaflet/_ directory
+* [Leaflet](https://leafletjs.com/) < 1.8 in _leaflet/_ directory
 * [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) in _coordinate-parserPATCHED/_ directory
 * [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) as _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
 * [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) in _Leaflet.Editable/_ directory
@@ -70,7 +70,7 @@ You may download full pack -- more 10MB, or without vector tiles support and scr
 * [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) in _leaflet-sidebar-v2/_ directory
 * [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) in _mapbox-gl-js/dist/_ directory
 * [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) as _mapbox-gl-leaflet/leaflet-mapbox-gl.js_
-* [supercluster](https://github.com/mapbox/supercluster) as _supercluster/supercluster.js_
+* [supercluster](https://github.com/mapbox/supercluster) as _supercluster/dist/supercluster.js_
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) in _gpsdPROXY/_ directory
 * [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) in _polycolor/_ directory  
 * [value2color](https://github.com/VladimirKalachikhin/value2color) in _value2color/_ directory  

@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.9.0';
+$versionTXT = '2.9.1';
 /* 
 2.9.0	wind sign
 2.8.0	distance circles
@@ -31,6 +31,16 @@ else {
 }
 //require_once('internationalisation/en.php');
 
+// Системная локаль
+$locale = setlocale(LC_ALL, 0);	// получим системную локаль
+//echo "locale=$locale;<br>\n";
+//if(substr($locale,-4)!=='utf8') {	// думаю, это всё же не очень хорошая идея
+if($locale =='C') {	// будем менять локаль, только если она совсем абстрактная
+	$res = setlocale(LC_ALL, $locale.'.utf8');
+	if(!$res) $res = setlocale(LC_ALL, $locale.'.UTF-8');
+	//echo "set locale from $locale to $res <br>\n";
+}
+
 $mapsInfo = array();
 if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 // Получаем список имён карт
@@ -48,25 +58,53 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 	asort($mapsInfo,SORT_LOCALE_STRING);
 }
 //echo "mapsInfo:<pre>"; print_r($mapsInfo); echo "</pre>";
- 
+
 // Получаем список имён треков
+// Это должно работать в случае, если запись пути не ведётся, но незавершённый gpx есть
+// Однако, нужно следить, чтобы этот файл таки был первым или последним. О чём легко забыть
 $trackInfo = array(); $currentTrackName = '';
 if($trackDir) {
 	$trackInfo = glob("$trackDir/*.gpx"); 	// gpxDir - из файла params.php
 	array_walk($trackInfo,function (&$name,$ind) { 	// удаление расширения из имени в списке. А оно нужно?
+		//echo "name=$name;<br>\n";
+		// basename не работает с неанглийскими буквами!!!!
+		// вот эти две конструкции игнорируют первое слово русскими буквами в имени файла
+		// (если имя файла с пробелами) или имя целиком
+		// Чтобы работало, надо явно установить локаль setlocale(LC_ALL, 'ru_RU.utf8'); потому что
+		// у пользователя Apache (www-data) локаль абстрактная (минимально-проблемная?).
+		// разумеется, я нифига не знаю, какая локаль должна быть правильной у сервера.
+		// При этом в cli всё работает: там в php системная локаль конечного юзера, который знает за свои буквы.
+		// Решить проблему можно тремя путями: 
+		// 1) принудительно установить какую-нибудь юникодную локаль, что стрёмно
+		// 2) системно узнать системную локаль, и установить её. Но локаль юзера веб-сервера может быть абстрактной.
+		// 3) не пользоваться pathinfo (и basename)
 		//$name=basename($name,'.gpx'); 	// 
-		$name=explode('.gpx',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
+		$name=pathinfo($name)['filename'];
+		//$name=explode('.gpx',end(explode('/',$name)))[0]; 	
+		//echo "name=$name;<br><br>\n";
 	}); 	// 
 	//echo "trackInfo:<pre>"; print_r($trackInfo); echo "</pre>";
 	// Текущий трек -- именно последний, есди он не завершён, а не последний не завершённый.
-	$currentTrackName = getLastTrackName($trackNames);	// fcommon.php
+	$currentTrackName = getLastTrackName($trackInfo);	// fcommon.php вообще, getLastTrackName возвращает имя с расширением, но мы дали ему список имён уже без расширения
 	if($currentTrackName) {	// там может не быть ни одного трека
-		if(trim(tailCustom("$trackDir/$currentTrackName")) == '</gpx>'){ 	// трек завершён fcommon.php
+		if(trim(tailCustom("$trackDir/$currentTrackName.gpx")) == '</gpx>'){ 	// echo "трек завершён<br>\n"; // fcommon.php
 			$currentTrackName = '';
 		}
 		else $currentTrackName = pathinfo($currentTrackName)['filename'];
 	}
 }
+// Проверим состояние записи трека и получим имя записываемого файла
+// Здесь можно получить имя файла записывающегося пути,
+// но проверка в целом не абсолютно надёжна
+$gpxloggerRun = pathinfo(gpxloggerRun(true))['filename'];	// fCommon.php
+//echo "gpxloggerRun=$gpxloggerRun; currentTrackName=$currentTrackName;<br>\n";
+if($gpxloggerRun and !$currentTrackName) {
+	// Однако, путь может записываться в файл, который вообще нам не виден
+	if(in_array($gpxloggerRun,$trackInfo)) $currentTrackName = $gpxloggerRun;
+}
+//echo "gpxloggerRun=$gpxloggerRun; currentTrackName=$currentTrackName;<br>\n";
+
+
 // Получаем список имён маршрутов
 $routeInfo = array();
 if($routeDir) {
@@ -79,9 +117,6 @@ if($routeDir) {
 		}); 	// 
 	sort($routeInfo);
 }
-
-// Проверим состояние записи трека
-$gpxloggerRun = gpxloggerRun();
 
 // Подготовим картинку для передачи её клиенту, чтобы тот мог видеть её и при потере связи с сервером
 $imgFileName = 'img/mob_marker.png';
@@ -112,7 +147,7 @@ $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_
 
     <script src="Leaflet.RotatedMarker/leaflet.rotatedMarker.js"></script>
 <?php if($trackDir OR $routeDir) {?>
-	<script src='supercluster/supercluster.js'></script>
+	<script src='supercluster/dist/supercluster.js'></script>
 	<link rel="stylesheet" href="leaflet-omnivorePATCHED/leaflet-omnivore.css" />
 	<script src="leaflet-omnivorePATCHED/leaflet-omnivore.js"></script>
 <?php }?>    
@@ -338,10 +373,10 @@ foreach($trackInfo as $trackName) {
 				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='5' cols='255' placeholder='<?php echo $routeSaveDescrTXT;?>' style='width:87%;padding: 0.5rem 3%;'></textarea><br>
 				<br>
 				<button onClick="
-					saveGPX();
-					currentRoute = null;
-					routeSaveName.value = '';
-					routeSaveDescr.value = '';" 
+						saveGPX();
+						currentRoute = null;
+						routeSaveName.value = '';
+						routeSaveDescr.value = '';" 
 					type='submit' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
@@ -456,7 +491,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</div>
 				<span style="font-size:120%"><?php echo $settingsCursorTXT;?></span>
 			</div>
-			<div style="margin: 1rem 1rem;"> <?php// Текущий трек всегда показывается ?>
+			<div style="margin: 1rem 1rem;"> <?php // Текущий трек всегда показывается ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="currTrackSwitch" onChange="loggingWait();" checked>
 					<label class="onoffswitch-label" for="currTrackSwitch">
@@ -538,7 +573,7 @@ var mapboxLeafletscript = null;	// скрипт mapbox-gl-leaflet
 var defaultMap = 'OpenTopoMap'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
 var showMapsTogglerTXT = [<?php echo $showMapsTogglerTXT; ?>];	// подписи на кнопке все/избранные карты
 var showMapsList = JSON.parse(getCookie('GaladrielshowMapsList')) || [];	// массив названий избранных карт
-var savedLayers = []; 	// массив для хранения объектов, когда они не на карте
+var savedLayers = []; 	// массив для хранения объектов, когда они не на карте. Типа - кеш объектов.
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
 var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Присваивается в javascriptOpen в параметрах карты. Или ещё где-нибудь.
 var startCenter = JSON.parse(getCookie('GaladrielMapPosition')); 	// getCookie from galadrielmap.js
@@ -556,7 +591,7 @@ var followToCursor = true; 	// карта следует за курсором �
 var noFollowToCursor = false; 	// карта никогда не следует за курсором Глобальное отключение следования. Само не восстанавливается.
 var CurrnoFollowToCursor = 1; 	// глобальная переменная для сохранения состояния
 var followPause = 10 * 1000; 	// пауза следования карты за курсором, когда карту подвинули руками, микросекунд
-var savePositionEvery = 15 * 1000; 	// будем сохранять положение каждые микросекунд локально в куку
+var savePositionEvery = 10 * 1000; 	// будем сохранять положение каждые микросекунд локально в куку
 var followPaused; 	// объект таймера, который восстанавливает следование курсору
 var velocityVectorLengthInMn = <?php echo $velocityVectorLengthInMn;?>; 	// длинной в сколько минут пути рисуется линия скорости
 // Окружности дистанции
@@ -590,13 +625,13 @@ var depthInData = <?php echo $depthInData;?>;	// параметры показа
 var drivedPolyLineOptions;
 var currentRoute; 	// L.layerGroup, по объекту Editable которого щёлкнули. Типа, текущий.
 {let weight;
-if(L.Browser.mobile && L.Browser.touch) weight = 10; 	// мобильный браузер
-else weight = 7; 	// стационарный браузер
+if(L.Browser.mobile && L.Browser.touch) weight = 13; 	// мобильный браузер
+else weight = 9; 	// стационарный браузер
 drivedPolyLineOptions = { options: {
 		showMeasurements: true,	// включить показ расстояний
 		//color: '#FDFF00',
 		weight: weight,
-		opacity: 0.5,
+		opacity: 0.7,
 	},
 	feature: {type: 'Feature',
 		properties: { 	// типа, оно будет JSONLayer
@@ -640,6 +675,13 @@ DisplayAISswitch.checked = true;	// Показывать цели AIS. Всег�
 // Подготовленные картинки для случая off-line
 const mob_markerImg = '<?php echo $mob_markerImg; ?>';
 
+// Кластеризация точек
+var superclusterRadius = 40;	// px
+var lastSuperClusterUpdatePosition = [[0,0],0];	// [<LatLng>,<zoom>] точка и масштаб последнего пересчёта supercluster
+
+
+
+// Поехали
 // Инициализируем список карт
 if(!showMapsList.length) showMapsToggle(true);	// покажем в списке карт все карты, если нет избранных
 else showMapsToggle();	// покажем только избранные, поскольку изначально не показывается ничего
@@ -708,8 +750,7 @@ L.control.scale({
 	position: 'bottomleft',
 	maxWidth: 200,
 	imperial: false
-}
-).addTo(map);
+}).addTo(map);
 
 // control для записывания в clipboard
 var copyToClipboard = new L.Control.CopyToClipboard({ 	// класс определён в galadrielmap.js
@@ -786,10 +827,18 @@ map.on('zoomend', function(event) {
 	if(map.hasLayer(centerMark)) centerMarkUpdate();	// нарисуем круги дистанции крестика в центре
 });
 <?php if($trackDir OR $routeDir) {?>
-map.on('moveend', updateClasters); 	// кластеризация точек POI, показывает кластеры в области просмотра
+map.on('moveend',  function(event) {
+	// кластеризация точек POI, показывает кластеры в области просмотра
+	let zoom = map.getZoom();
+	let pos = map.getCenter();
+	// Если не было зумирования и центр сдвинулся мало - не будем перепоказывать supercluster
+	if((zoom == lastSuperClusterUpdatePosition[1]) && (map.distance(pos,lastSuperClusterUpdatePosition[0]) <= superclusterRadius*(40075016.686 * Math.abs(Math.cos(pos.lat*(Math.PI/180))))/Math.pow(2, zoom+8))) return;
+	updateClasters();
+	lastSuperClusterUpdatePosition[0] = pos;
+	lastSuperClusterUpdatePosition[1] = zoom;
+});
 <?php }?>    
 map.on("layeradd", function(event) {
-	//alert(tileGrid);
 	if(tileGrid) tileGrid.bringToFront(); 	// выведем наверх слой с сеткой
 });
 
@@ -1679,17 +1728,37 @@ var currentTrackShowedFlag = false; 	// флаг, не показывается 
 var currentWaitTrackUpdateProcess;	// процесс ослеживания наличия текущего (пишущегося) трека
 var currentTrackUpdateProcess;	// процесс обновления текущего трека
 
+// Это надо запускать вне зависимости от, скажем, наличия связи с сервисом координат
+// потому что оно обращается к отдельным сервисам, которые могут и должны жить своей жизнью. 
 if(currTrackSwitch.checked){	// Текущий трек всегда показывается
-	if(currentTrackName && currentTrackServerURI){	// есть текущий трек и указано, откуда взять обновления
-		currentTrackUpdateProcess = setInterval(currentTrackUpdate,3000);	// раз в 3 секунды
-		console.log('Update track startet on startup with',currentTrackName,'track');
-	}
-	else{
-		currentWaitTrackUpdateProcess = setInterval(loggingCheck,10000);	// раз в 10 секунд
-		console.log('Logging check started on startup');
-	}
+	if(currentTrackName) startCurrentTrackUpdateProcess();	// есть текущий трек
+	else startCurrentWaitTrackUpdateProcess();
 }
 
+function startCurrentTrackUpdateProcess(){
+// указано, откуда взять обновления
+if(!currentTrackServerURI) return;
+if(currentTrackUpdateProcess) return;	// оно уже запущено
+if(currentWaitTrackUpdateProcess) {
+	clearInterval(currentWaitTrackUpdateProcess);	// остановим слежение за наличием пишущегося трека 	
+	currentWaitTrackUpdateProcess = null;
+	console.log('[startCurrentTrackUpdateProcess]  Logging check stopped');
+}
+currentTrackUpdateProcess = setInterval(currentTrackUpdate,3000);	// раз в 3 секунды слежение за треком: получение обновления и показ
+console.log('[startCurrentTrackUpdateProcess] Update track started with',currentTrackName,'track');
+}; // end function startCurrentTrackUpdateProcess
+
+function startCurrentWaitTrackUpdateProcess(){
+// указано, откуда взять обновления, иначе бессмысленно следить за фактом записи трека
+if(!currentTrackServerURI) return;
+//if(!currTrackSwitch.checked) return;	// Текущий трек всегда показывается Думаю, здесь очень неявно применение этого условия
+if(currentWaitTrackUpdateProcess) return;	// оно уже запущено
+console.log('[startCurrentWaitTrackUpdateProcess]  Track update stopped because no logging now');
+if(currentTrackUpdateProcess) clearInterval(currentTrackUpdateProcess);	
+currentTrackUpdateProcess = null;
+currentWaitTrackUpdateProcess = setInterval(loggingCheck,10000);	// раз в 10 секунд слежение за наличием текущего трека
+console.log('[startCurrentWaitTrackUpdateProcess] Logging check started');
+}; // end function startCurrentWaitTrackUpdateProcess
 
 function currentTrackUpdate(){
 /*
@@ -1703,17 +1772,22 @@ if(currentTrackShowedFlag !== false) { 	// Текущий трек некогд�
 		updateCurrTrack(); 	//  - обновим,  galadrielmap.js
 		currentTrackShowedFlag = true;
 	}
+	else if(currentTrackShowedFlag == 'error'){
+		//console.log('[currentTrackUpdate] Не удалось загрузить файл текущего пути');
+		deSelectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack);
+	}
 	else { 
 		if(currentTrackShowedFlag != 'loading') currentTrackShowedFlag = false;
 	}
 }
-else { 	 //console.log("[currentTrackUpdate] текущий трек ещё не был загружен", currentTrackName);
+else { 	// console.log("[currentTrackUpdate] текущий трек ещё не был загружен", currentTrackName);
 	//console.log('[currentTrackUpdate] document.getElementById(currentTrackName):',document.getElementById(currentTrackName));
-	//console.log(tracks.querySelector('li[title="Current Track"]'));
 	currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
+	// Будем показывать путь, если указано "Текущий путь всегда показывается".
+	console.log('[currentTrackUpdate] Запускаем показ текущего пути');
 	selectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно. galadrielmap.js
 }
-//console.log('Обновлён трек','currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
+//console.log('[currentTrackUpdate] Обновлён трек','currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
 } // end function currentTrackUpdate
 
 // Сохранение переменных
