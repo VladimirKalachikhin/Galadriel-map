@@ -1529,18 +1529,18 @@ function flyByString(stringPos){
 /* Получает строку предположительно с координатами, и перемещает туда центр карты */
 //console.log('goToPositionButton',goToPositionButton.value,'goToPositionField',goToPositionField.value);
 if(!stringPos) stringPos = map.getCenter().lat+' '+map.getCenter().lng; 	// map -- глобально определённая карта
-//console.log('stringPos',stringPos);
+console.log('[flyByString] stringPos=',stringPos);
 let error;
 try {
     var position = new Coordinates(stringPos); 	// https://github.com/otto-dev/coordinate-parser
-	//console.log(position);
+	//console.log('[flyByString] position:',position);
 	const lat=position.getLatitude();
 	const lon=position.getLongitude();
 	map.setView(L.latLng([lat,lon])); 	// подвинем карту в указанное место
 	let xhr = new XMLHttpRequest();
 	const url = encodeURI('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lon);
 	xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
-	//xhr.setRequestHeader('Referer',url); 	// nominatim.org требует?
+	xhr.setRequestHeader('Referer',url); 	// nominatim.org требует?
 	xhr.send();
 	xhr.onreadystatechange = function() { // 
 		if (this.readyState != 4) return; 	// запрос ещё не завершился
@@ -1550,11 +1550,12 @@ try {
 		updGeocodeList(nominatim);
 	}	
 } catch (error) { 	// строка - не координаты
-	//console.log(stringPos,error);
+	//console.log('[flyByString] stringPos=',stringPos,error);
 	let xhr = new XMLHttpRequest();
-	const url = encodeURI('https://nominatim.openstreetmap.org/search/'+stringPos+'?format=jsonv2'); 	// прямое геокодирование
+	//const url = encodeURI('https://nominatim.openstreetmap.org/search/'+stringPos+'?format=jsonv2'); 	// прямое геокодирование
+	const url = encodeURI('https://nominatim.openstreetmap.org/search?q='+stringPos+'&format=jsonv2'); 	// прямое геокодирование
 	xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
-	//xhr.setRequestHeader('Referer',url); 	// nominatim.org требует?
+	xhr.setRequestHeader('Referer',url); 	// nominatim.org требует? Теперь, .... требует.
 	xhr.send();
 	xhr.onreadystatechange = function() { // 
 		if (this.readyState != 4) return; 	// запрос ещё не завершился
