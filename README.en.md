@@ -205,7 +205,7 @@ When deviating from the course the visual and sound alarm fired:
 ![Course alarm](screenshots/s16.jpeg)<br>
 
 The presence of the touch screen is assumed, and mode is switched by a tap to the next data type button on the screen.  
-For some devices with JavaScript you may set up some hardware keys to switch mode, magnetic or true course and opening alarm menu. Use <img src="img/settings.png" alt="Settings button" width="24px"> button on bottom of alarm menu to set up it. Default keys is:
+For some devices with JavaScript you may set up some hardware keys to switch mode, magnetic or true course and opening alarm menu. Use <img src="img/settings1.svg" alt="Settings button" width="24px"> button on bottom of alarm menu to set up it. Default keys is:
 
 * ArrowDown for next mode
 * ArrowUp for previous mode
