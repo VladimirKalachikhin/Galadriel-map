@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.9.1';
+$versionTXT = '2.9.2';
 /* 
 2.9.0	wind sign
 2.8.0	distance circles
@@ -360,7 +360,7 @@ foreach($trackInfo as $trackName) {
 				</div>
 				<span style=""><?php echo $routePosTXT;?></span><br>
 				<input id='goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:11rem;font-size:150%;'>			
-				<button id='goToPositionButton' onClick='flyByString(this.value);' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
+				<button id='goToPositionButton' onClick='flyByString(goToPositionField.value);' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
 			</div>
 			<div  style='width:98%;height:12rem;overflow:auto;margin:0.3rem 0;'>
 				<ul id='geocodedList' class='commonList'>
