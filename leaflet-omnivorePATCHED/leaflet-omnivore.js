@@ -551,7 +551,7 @@ else { 	// это индивидуальная точка
 			direction: 'top', 
 			offset: [-16,0],
 			className: 'wpTooltip', 	// css class
-			opacity: 0.75,
+			opacity: 0.65,
 			pane: 'overlayPane',
 			zIndexOffset: -600
 		});
