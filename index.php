@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.9.2';
+$versionTXT = '2.9.3';
 /* 
 2.9.0	wind sign
 2.8.0	distance circles
@@ -52,6 +52,7 @@ if( $tileCachePath) { 	// если мы знаем про GaladrielCache
 		include($name);
 		if($humanName){	// из описания источника
 			$mapsInfo[$mapName] = $humanName[$appLocale];	// $appLocale - из internationalisation
+			if(!$mapsInfo[$mapName]) $mapsInfo[$mapName] = $humanName['en'];
 		}
 		if(!$mapsInfo[$mapName]) $mapsInfo[$mapName] = $mapName;
 	}
