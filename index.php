@@ -1386,7 +1386,7 @@ velocityVector.setLatLng( cursor.getLatLng() );// положение указа�
 if(gpsdData.track == null || gpsdData.track == undefined) {
 	if(gpsdData.heading !== undefined) {	// зато есть курс
 		positionCursor.invoke('setRotationAngle',gpsdData.heading); // повернём все маркеры
-		courseDisplay.innerHTML = Math.round(gpsdData.heading); // покажем направление на приборной панели
+		courseDisplay.innerHTML = "&nbsp;"+Math.round(gpsdData.heading)+"°"; // покажем направление на приборной панели
 		// Заменим подписи
 		dashboardCourseTXTlabel.innerHTML = dashboardHeadingTXT;
 		dashboardCourseAltTXTlabel.innerHTML = dashboardHeadingAltTXT
@@ -1395,14 +1395,14 @@ if(gpsdData.track == null || gpsdData.track == undefined) {
 		if(gpsdData.magvar !== undefined) {		// если есть склонение -- он истинный курс
 			let heading = gpsdData.mheading + gpsdData.magvar;
 			positionCursor.invoke('setRotationAngle',heading); // повернём все маркеры
-			courseDisplay.innerHTML = Math.round(heading); // покажем направление на приборной панели
+			courseDisplay.innerHTML = "&nbsp;"+Math.round(heading)+"°"; // покажем направление на приборной панели
 			// Заменим подписи
 			dashboardCourseTXTlabel.innerHTML = dashboardHeadingTXT
 			dashboardCourseAltTXT.innerHTML = dashboardHeadingAltTXT
 		}
 		else {
 			positionCursor.invoke('setRotationAngle',gpsdData.mheading); // повернём все маркеры
-			courseDisplay.innerHTML = Math.round(gpsdData.mheading); // покажем направление на приборной панели
+			courseDisplay.innerHTML = "&nbsp;"+Math.round(gpsdData.mheading+"°"); // покажем направление на приборной панели
 			// Заменим подписи
 			dashboardCourseTXTlabel.innerHTML = dashboardMHeadingTXT
 			dashboardCourseAltTXT.innerHTML = dashboardMHeadingAltTXT
@@ -1420,7 +1420,7 @@ else {
 	if(gpsdData.heading !== undefined) cursor.setRotationAngle(gpsdData.heading);
 	else if((gpsdData.mheading !== undefined) && (gpsdData.magvar !== undefined)) cursor.setRotationAngle(gpsdData.mheading + gpsdData.magvar);
 	else cursor.setRotationAngle(gpsdData.track); // повернём маркер
-	courseDisplay.innerHTML = Math.round(gpsdData.track); // покажем направление на приборной панели
+	courseDisplay.innerHTML = "&nbsp;"+Math.round(gpsdData.track)+"°"; // покажем направление на приборной панели
 	// Заменим подписи, вдруг до этого не было путевого угла
 	dashboardCourseTXTlabel.innerHTML = dashboardCourseTXT
 	dashboardCourseAltTXTlabel.innerHTML = dashboardCourseAltTXT
