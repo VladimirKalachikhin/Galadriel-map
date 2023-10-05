@@ -732,6 +732,7 @@ return matches ? decodeURIComponent(matches[1]) : undefined;
 		</a>
 		<a href="<?php echo $_SERVER['PHP_SELF'];?>?menu=<?php if(!$menu) echo '1';?>" style="text-decoration:none;">
 			<button class='mid_symbol' style='width:14%;vertical-align:middle;'>
+					<?php// А у нас клиент точно умеет svg? ?>
 					<img src='img/menu.png' alt='menu'>
 			</button>
 		</a>
