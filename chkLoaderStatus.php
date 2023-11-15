@@ -1,4 +1,5 @@
-<?php ob_start(); 	// попробуем перехватить любой вывод скрипта
+<?php
+ob_start(); 	// попробуем перехватить любой вывод скрипта
 /*
  Получаем список выполняющихся заданий на скачивание
 $jobsDir -- tileproxy params.php
@@ -10,7 +11,7 @@ if($jobsDir[0]!='/') $jobsDir = "$tileCachePath/$jobsDir";	//  сделаем п
 if($jobsInWorkDir[0]!='/') $jobsInWorkDir = "$tileCachePath/$jobsInWorkDir";	//  сделаем путь абсолютным
 if($jobsDir[0]!='/') $jobsDir = "$tileCachePath/$jobsDir";
 
-if($_REQUEST['restartLoader']) {
+if((int)$_REQUEST['restartLoader']) {
 	exec("$phpCLIexec $tileCachePath/loaderSched.php > /dev/null 2>&1 &");
 	sleep(1);
 }

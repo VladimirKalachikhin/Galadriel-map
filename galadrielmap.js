@@ -1,5 +1,6 @@
 "use strict"
 /* Функции
+listPopulate(listObject,dirURI,chkCurrent=false,withExt=true,onComplete=undefined)
 getCookie(name)		возвращает cookie с именем name, если есть, если нет, то undefined
 doSavePosition() 	Сохранение положения, списка показываемых карт, маршрутов и используемых параметров
 
@@ -101,6 +102,49 @@ const index = document.getElementsByTagName('script').length - 1; 	// это т�
 var galadrielmapScript = scripts[index];
 //console.log(galadrielmapScript);
 */
+
+function listPopulate(listObject,dirURI,chkCurrent=false,withExt=true,onComplete=undefined){
+/*
+*/
+fetch(`listPopulate.php?dirname=${dirURI}`)	// запросим список файлов 
+.then((response) => {
+    return response.json();
+})
+.then(data => {
+	//console.log('[listPopulate] data:',data);
+	if(data){
+		if(chkCurrent) currentTrackName = data.currentTrackName.substring(0, data.currentTrackName.lastIndexOf('.')) || data.currentTrackName;	// глобальная переменная
+		if(data.filelist.length){
+			const templateLi = listObject.querySelector('li[class="template"]');	// почему-то 'li[hidden]' не работает.
+			listObject.querySelectorAll('li').forEach(li => {	// удалим из списка что там есть. delete использовать нельзя, потому что delete не уничтожает объекты, вопреки своему названию.
+				if(li!=templateLi) {
+					//console.log(li);
+					li.remove();
+					li = null;
+				}
+			});
+			data.filelist.forEach(fileName => {
+				if(!withExt) fileName = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+				let newLI = templateLi.cloneNode(true);
+				newLI.classList.remove("template");
+				newLI.id = fileName;
+				newLI.innerText = fileName;
+				newLI.hidden=false;
+				listObject.append(newLI);
+				if(chkCurrent && fileName == currentTrackName) {
+					// Сделаем текущим и запустим слежение
+					doCurrentTrackName(fileName);	// обязательно после append, ибо вне дерева элементы не ищутся. JavaScript -- коллекция нелепиц.
+				}
+			});
+		};
+	};
+	//console.log('[listPopulate] listObject:',listObject,'onComplete:',onComplete);
+	if(onComplete) onComplete();	// здесь надо }).then(что?=>{if(onComplete) onComplete();}) ?
+})
+.catch( (err) => {	// сюда придёт любая ошибка после fetch
+	console.log(`Error get ${dirURI} files list:`,err.message);
+});
+} // end function listPopulate
 
 function getCookie(name) {
 // возвращает cookie с именем name, если есть, если нет, то undefined
@@ -1705,6 +1749,7 @@ xhr.onreadystatechange = function() { //
 			newTrackLI.id = newTrackName;
 			newTrackLI.innerText = newTrackName;
 			newTrackLI.hidden=false;
+			newTrackLI.classList.remove("template");
 			//console.log(newTrackName,newTrackLI);
 			trackList.append(newTrackLI);
 			doCurrentTrackName(newTrackName);	// обязательно после append, ибо вне дерева элементы не ищутся. JavaScript -- коллекция нелепиц.

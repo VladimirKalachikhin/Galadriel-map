@@ -109,9 +109,7 @@ if($gpxloggerRun and !$currentTrackName) {
 // Получаем список имён маршрутов
 $routeInfo = array();
 if($routeDir) {
-	$routeInfo = glob("$routeDir/*.gpx"); 	// routeDir - из файла params.php
-	$routeInfo = array_merge($routeInfo,glob("$routeDir/*.kml"));
-	$routeInfo = array_merge($routeInfo,glob("$routeDir/*.csv"));
+	$routeInfo = glob("$routeDir/*{gpx,kml,csv}", GLOB_BRACE); 	// routeDir - из файла params.php
 	array_walk($routeInfo,function (&$name,$ind) {
 			//$name=basename($name); 	// 
 			$name=end(explode('/',$name)); 	// basename не работает с неанглийскими буквами!!!!
@@ -375,9 +373,10 @@ foreach($trackInfo as $trackName) {
 				<br>
 				<button onClick="
 						saveGPX();
-						currentRoute = null;
-						routeSaveName.value = '';
-						routeSaveDescr.value = '';" 
+						// routeSaveName - единственное хранилище имени редактируемого файла?
+						//currentRoute = null;
+						//routeSaveName.value = '';
+						//routeSaveDescr.value = '';" 
 					type='submit' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
@@ -396,6 +395,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 <?php
 }
 ?>
+					<li hidden class="template" onClick='{selectTrack(event.currentTarget,routeList,routeDisplayed,displayRoute)}' id='routeLiTemplate'></li>
 			</ul>
 		</div>
 		<!-- MOB -->
@@ -776,6 +776,22 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		editorEnabled = true;	// разрешим редактирования
 		routeCreateButton.disabled=false; 	// - сделать доступной кнопку Начать
 		pointsControlsEnable();	// включим кнопки точек
+		break;
+	case 'routes':	// треки
+		// обновим список маршрутов, асинхронно
+		listPopulate(routeList,routeDirURI,false,true,function(){
+			const routeListLi = routeList.querySelectorAll('li');
+			routeDisplayed.querySelectorAll('li').forEach(function (displayedLi){
+				//console.log('displayedLi:',displayedLi.id);
+				for(const li of routeListLi){
+					//console.log('\trouteList li',li.id);
+					if(displayedLi.id==li.id){
+						li.remove();	// method removes the element from the DOM. Объект остаётся в коллекции routeListLi? Похоже, да, хотя не должен? Тогда он будет убит сборщиком мусора только после смерти routeListLi
+						break;
+					};
+				};
+			});
+		});
 		break;
 	case 'MOB': 	// человек за бортом
 		if(!map.hasLayer(mobMarker)) MOBalarm();
@@ -1383,7 +1399,7 @@ else {
 // Направление
 //console.log('Index gpsdData',gpsdData.track);
 velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
-if(gpsdData.track == null || gpsdData.track == undefined) {
+if(gpsdData.track == null || gpsdData.track == undefined) {	// no course over ground, нет путевого угла
 	if(gpsdData.heading !== undefined) {	// зато есть курс
 		positionCursor.invoke('setRotationAngle',gpsdData.heading); // повернём все маркеры
 		courseDisplay.innerHTML = "&nbsp;"+Math.round(gpsdData.heading)+"°"; // покажем направление на приборной панели
@@ -1414,12 +1430,12 @@ if(gpsdData.track == null || gpsdData.track == undefined) {
 		velocityVector.setRotationAngle(0); // повернём указатель скорости
 	}
 }
-else {
-	velocityVector.setRotationAngle(gpsdData.track); // повернём указатель скорости
+else {	// course over ground present, путевой угол есть
+	velocityVector.setRotationAngle(gpsdData.track); // повернём указатель скорости в путевой угол
 	// gpsdData.heading есть, только если данные от SignalK, а если от gpsd -- никогда нет
-	if(gpsdData.heading !== undefined) cursor.setRotationAngle(gpsdData.heading);
-	else if((gpsdData.mheading !== undefined) && (gpsdData.magvar !== undefined)) cursor.setRotationAngle(gpsdData.mheading + gpsdData.magvar);
-	else cursor.setRotationAngle(gpsdData.track); // повернём маркер
+	if(gpsdData.heading !== undefined) cursor.setRotationAngle(gpsdData.heading); // повернём маркер в курс
+	else if((gpsdData.mheading !== undefined) && (gpsdData.magvar !== undefined)) cursor.setRotationAngle(gpsdData.mheading + gpsdData.magvar); // повернём маркер в магнитный курс
+	else cursor.setRotationAngle(gpsdData.track); // повернём маркер в путевой угол
 	courseDisplay.innerHTML = "&nbsp;"+Math.round(gpsdData.track)+"°"; // покажем направление на приборной панели
 	// Заменим подписи, вдруг до этого не было путевого угла
 	dashboardCourseTXTlabel.innerHTML = dashboardCourseTXT
