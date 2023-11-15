@@ -1,277 +1,276 @@
-[In English](README.en.md) 
+[Русское описание](README.md)  
 # GaladrielMap [![License: CC BY-SA 4.0](screenshots/CC_BY-SA_4.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
-Простой картплоттер (электронно-картографическая система, ЭКС), предназначенный для любительского использования на маломерных судах, в домах на колёсах и внедорожных автомобилях.  
-Приложение может быть размещено на слабом сервере типа  RaspberryPi, NAS или сетевом маршрутизаторе и предполагает использование на достаточно производительных клиентских устройствах, преимущественно мобильных. Желательно применять планшет с большим экраном, однако пользоваться с телефона тоже можно. На клиентском устройстве требуется только наличие браузера -- никаких приложений устанавливать не нужно.
-<div style='float:right;'><a href='https://vk.com/club212992298'>Сообщество ВКонтакте</a>
+This is a server-based chart plotter navigation software for pleasure crafts, motorhomes, and off-road cars. The application can be placed on a weak server such as RaspberryPi, NAS or router and used on full clients such as tablets and smartphones. Only browser need.
+<div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
 ## v. 2.9
- ![screen](screenshots/s10.jpeg)<br>
-Технически это веб-приложение -- просмотрщик тайловых онлайн карт. При использовании с  [GaladrielCache](https://hub.mos.ru/v.kalachihin/GaladrielCache) становится возможным предварительное скачивание и последующий просмотр карт без подключения к сети Интернет.  
-Предполагается, что приложение функционирует в локальной  бортовой сети катера, яхты или автомобиля, поэтому никакого разграничения доступа к функциям не предусмотрено.
-Автор пользуется GaladrielMap на своей яхте Galadriel, где в качестве сервера применяется [wi-fi маршрутизатор под управлением OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) .   
+![screen](screenshots/s10.jpeg)<br>
+Technically this an online tiles map viewer. With [GaladrielCache](https://hub.mos.ru/v.kalachihin/GaladrielCache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
-**Внимание! Автор не несёт никакой ответственности за последствия использования GaladrielMap для навигации! Не гарантируется также, что какая-либо информация, представляемая приложением, верна, включая пространственное положение, скорость, глубину и любые другие характеристики.** 
+**The author is not responsible for the consequences of using the GaladrielMap for navigation. It is not guaranteed that any of the information on the screen is correct, including but not limited to spatial position, speed, depth, and direction of movement.**
 
-Приложение GaladrielMap создано на основе  замечательных проектов многих, без сомнения, выдающихся авторов, поэтому необходимо вручную установить большое количество [зависимостей](#зависимости-и-благодарности).  
-
-## Возможности:
-1. [Конфигурируемые пользователем локальные или сетевые карты](#карты)
-2. [Отображение положения](#отображение-положения)
-3. [Запись пути](#текущий-путь)
-4. [Отображение маршрутов](#отображение-маршрутов), путевых точек и точек достопримечательностей
-5. [Создание и редактирование маршрута](#создание-и-редактирование-маршрута)
-6. [Ввод и получение координат](#ввод-и-получение-координат)
-7. [Прогноз погоды](#прогноз-погоды) от  [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
-8. [Отображение информации AIS](#отображение-информации-ais)
-9. [Обнаружение столкновений](#обнаружение-столкновений)
-10. [Поддержка netAIS](#поддержка-netais)
-11. [Режим "Человек за бортом!"](#человек-за-бортом)
-12. Отдельная [приборная панель](#приборная-панель), оптимизированная для устройств с экраном на "электронных чернилах" (E-Ink)
-13. [Управление скачиванием карт](#загрузчик-galadrielcache)
-14. Русский и английский интерфейс
-
-* [Работает в OpenWRT](#работа-в-openwrt)
-* [Работает в VenusOS](#работа-в-venusos)
-
- [Поддержка](#поддержка)
+The GaladrielMap created with use a lot of famous projects, so don't forget to install [dependenses](#dependences-and-thanks).  
 
 
-## Совместимость
-Требуется Linux (OpenWRT, VenusOS) и PHP7 на сервере и более-менее современный браузер на клиентском устройстве.
+## Features
+1. [Online or offline user-defined maps](#maps)
+2. [Positioning](#positioning) with GNSS receivers
+3. [Tracking](#tracking)
+4. [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
+5. [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
+6. [Exchange coordinates](#exchange-coordinates) via clipboard
+7. [Weather forecast](#weather-forecast) from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
+8. [Display AIS info](display-ais-info)
+9. [Collision detection](#collision-detection)
+10. [netAIS support](#netais)
+11. [A Man OverBoard feature](a-man-overboard)
+12. Optimised for E-Ink screens [Dashboard](#dashboard)
+13. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
+14. English or Russian interface, dependent of browser language settings
 
 
-## Демо
-~~Полнофункциональная [демонстрация](http://130.61.159.53/map/). Иногда там плавает виртуальный кораблик.~~  
-К сожалению, Oracle Inc оказались жуликами, поэтому демо не работает.
+* [Work on OpenWRT](#work-in-openwrt)
+* [Work on VenusOS](#work-in-venusos)
 
-## Готовые образы машин
-[Имется](https://github.com/VladimirKalachikhin/GaladrielMap-Demo-image/blob/master/README.ru-RU.md) настроенный и готовый к запуску образ виртуальной машины в общепринятом формате, а также загрузочный образ для Raspberry Pi, также настроенный и готовый к работе с первого запуска. Образы содержат GaladrielMap, GaladrielCache, netAIS, gpsd, gpxlogger и всё остальное, что необходимо для функционирования полноценного бортового сервера.
+ [Support](#support)
 
-## Установка и конфигурирование:
-Требуется веб-сервер под управлением Linux с поддержкой php < 8. Скопируйте приложение и установите указанные ниже зависимости в желаемое место на веб-сервере.  
-Укажите пути и другие параметры в _params.php_  
-Более подробные инструкции имеются в каталоге _emergencykit/_
 
-## Аварийный набор
-Однако, всё, что необходимо для установки приложения, включая зависимости, находится в архиве в каталоге  _emergencykit/_. Нужно просто распаковать.  
-Можно скачать комплект без поддержки векторных тайлов (без шрифтов, значков и библиотек) и без иллюстраций к этому тексту -- его размер менее 3MB, или полный комплект -- размером более 10MB.
+## Compatibility
+PHP7, Linux, OpenWRT, VenusOS. Modern browsers include mobile.
 
-## Зависимости и благодарности
-* [Leaflet](https://leafletjs.com/) < 1.8, установленная в каталог _leaflet/_ 
-* [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) установленный в каталог _coordinate-parserPATCHED/_ 
-* [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) установленная как _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
-* [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) установленная в каталог _Leaflet.Editable/_ 
-* [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) установленная как _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
-* [Leaflet Measure Path](https://github.com/ProminentEdge/leaflet-measure-path) установленная в каталог _leaflet-measure-path/_ 
-* [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) установленный в каталог _leaflet-sidebar-v2/_ 
-* [supercluster](https://github.com/mapbox/supercluster) установленный как _supercluster/dist/supercluster.js_
-* [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) в каталоге _gpsdPROXY/_ 
-* [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) установленная в каталог _mapbox-gl-js/dist/_ 
-* [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) установленная как _mapbox-gl-leaflet/leaflet-mapbox-gl.js_
-* [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) в _gpsdPROXY/_ directory
-* [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) установленная в каталог _polycolor/_  
-* [value2color](https://github.com/VladimirKalachikhin/value2color) установленная в каталог _value2color/_
-* [long-press-event](https://github.com/john-doherty/long-press-event) как _long-press-event/dist/long-press-event.min.js_
 
-Для установки зависимостей нужно сделать локальную копию каждого проекта в каталоге приложения так, как это описано на сайте проекта, а потом, при необходимости, откорректировать пути в _index.php_
+## Demo
+~~Full feature [live demo](http://130.61.159.53/map/). Sometimes there floating a virtual sailboat.~~ 
+Unfortunately, the Oracle Inc. turned out to be a crook, so the demo does not work.
 
-## Ещё благодарности
-* [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) за leaflet-omnivore. Этот продукт вдохновил на обширные усовершенствования.
-* [Metrize Icons by Alessio Atzeni](https://icon-icons.com/pack/Metrize-Icons/1130) за использованные значки.
-* [Typicons by Stephen Hutchings](https://icon-icons.com/pack/Typicons/1144) за использованные значки.
-* [Map Icons Collection](https://mapicons.mapsmarker.com/) за использованные значки.
+
+## Ready to use images
+[Available](https://github.com/VladimirKalachikhin/GaladrielMap-Demo-image/blob/master/README.md) ready to use virtual machine disk image and Raspberry Pi bootable image. It's a fully configured Linux system with GaladrielMap, GaladrielCache, netAIS, gpsd, gpxlogger, etc. for test and builds own onboard server. 
+
+
+## Install&configure:
+You must have a web server under Linux with web server and php <8 support. Just copy app, dependences and set paths.  
+Paths and other are set and describe in _params.php_  
+More detailed instructions are available in _emergencykit/_ directory.
+
+
+## Emergency kit
+All you need to install, including dependences, are in _emergencykit/_.  See README.txt how to install.
+You may download full pack -- more 10MB, or without vector tiles support and screenshots pack -- less them 3MB.
+
+
+## Dependences and thanks
+* [Leaflet](https://leafletjs.com/) < 1.8 in _leaflet/_ directory
+* [Coordinate Parser](https://github.com/servant-of-god/coordinate-parser) in _coordinate-parserPATCHED/_ directory
+* [L.TileLayer.Mercator](https://github.com/ScanEx/L.TileLayer.Mercator) as _L.TileLayer.Mercator/src/L.TileLayer.Mercator.js_
+* [Leaflet.Editable](https://github.com/Leaflet/Leaflet.Editable) in _Leaflet.Editable/_ directory
+* [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) as _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
+* [Leaflet Measure Path](https://github.com/ProminentEdge/leaflet-measure-path) in _leaflet-measure-path/_ directory
+* [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) in _leaflet-sidebar-v2/_ directory
+* [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) in _mapbox-gl-js/dist/_ directory
+* [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) as _mapbox-gl-leaflet/leaflet-mapbox-gl.js_
+* [supercluster](https://github.com/mapbox/supercluster) as _supercluster/dist/supercluster.js_
+* [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) in _gpsdPROXY/_ directory
+* [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) in _polycolor/_ directory  
+* [value2color](https://github.com/VladimirKalachikhin/value2color) in _value2color/_ directory  
+* [long-press-event](https://github.com/john-doherty/long-press-event) as _long-press-event/dist/long-press-event.min.js_
+
+Create a local copy of dependences and/or edit _index.php_
+
+
+## More thanks
+* [leaflet-omnivore](https://github.com/mapbox/leaflet-omnivore) for leaflet-omnivore. This patched to show markers, non well-formed gpx files and more.
+* [Metrize Icons by Alessio Atzeni](https://icon-icons.com/pack/Metrize-Icons/1130) for icons.
+* [Typicons by Stephen Hutchings](https://icon-icons.com/pack/Typicons/1144) for icons.
+* [Map Icons Collection](https://mapicons.mapsmarker.com/) for icons.
 * [On/Off FlipSwitch](https://proto.io/freebies/onoff/)
-* [leaflet-tracksymbol](https://github.com/lethexa/leaflet-tracksymbol) на основе которого сделано отображение данных AIS
-* [openmaptiles](https://github.com/openmaptiles/fonts) за Open Font Glyphs for GL Styles
-* [GitHub MAPBOX project](https://github.com/mapbox) за навигационные значки
-* [OpenMapTiles](https://github.com/openmaptiles) за Mapbox GL basemap style
-* [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) , откуда позаимствованы идеи и немножко кода
+* [leaflet-tracksymbol](https://github.com/lethexa/leaflet-tracksymbol) which became the basis for display AIS data
+* [openmaptiles](https://github.com/openmaptiles/fonts) for Open Font Glyphs for GL Styles
+* [GitHub MAPBOX project](https://github.com/mapbox) for navigation ui resources
+* [OpenMapTiles](https://github.com/openmaptiles) for Mapbox GL basemap style
+* [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) for ideas
 
-## Карты
-В GaladrielMap используются [тайловые карты](https://wiki.openstreetmap.org/wiki/Tiles) в разграфке, принятой для [OSM](https://wiki.openstreetmap.org). Основной формат -- растровые тайлы, но могут быть использованы и векторные тайлы в формате [Mapbox](https://www.mapbox.com/).  
-![stacked maps](screenshots/s1_ru.jpeg)<br>
-В сочетании с [GaladrielCache](https://hub.mos.ru/v.kalachihin/GaladrielCache) (что предполагается по-умолчанию) одновременно может быть показано любой число карт, наложенных друг на друга (география + гидрография + погода, например) из сети Интернет и/или из локального хранилища. При этом возможна трансформация растровых тайлов "на лету", для, например, замены сплошного цвета на прозрачный, что делает полезным наложение исходно непрозрачной карты:  
-![transparented stacked maps](screenshots/s17_ru.jpeg)<br>
 
-Конфигурация карт определяется пользоватетем и описана в документации к [GaladrielCache](https://hub.mos.ru/v.kalachihin/GaladrielCache). Как минимум, среди карт уже есть [Open Sea Map](http://www.openseamap.org/) и [Open Topo Map](https://opentopomap.org/about).  
-Для удобства переключения между несколькими часто используемыми картами можно выделить их долгим нажатием (или жестом вправо) в полном списке карт, и перейти к списку избранных карт.
+## Maps
+The GaladrielMap applies [OSM-style tiles map](https://wiki.openstreetmap.org/wiki/Tiles), both raster and vector. It can be one OSM- or mapbox-like on-line map or with [GaladrielCache](https://hub.mos.ru/v.kalachihin/GaladrielCache) any number of stacked maps, online and offline.  
+![stacked maps](screenshots/s1.jpeg)<br>
+The map source is set in the  _params.php_, and if it is [GaladrielCache](https://hub.mos.ru/v.kalachihin/GaladrielCache) (default), you have available any number of user-defined map sources. How to define a new map -- described in [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) project.  
+At least, it include  
+[Open Sea Map](http://www.openseamap.org/)  
+[Open Topo Map](https://opentopomap.org/about)  
+maps.  
+The right way is to select a little lot of favourite maps (by long-click or right-swap) from all maps in map list. This makes it easy to switch between them. 
 
-### Векторные тайлы
-GaladrielMap имеет некоторую поддержку векторных тайлов в формате [Mapbox](https://www.mapbox.com/). Такие карты могут отображаться.  
-Описывающий карту файл[Mapbox style](https://docs.mapbox.com/mapbox-gl-js/style-spec/) должен находиться в каталоге `$mapSourcesDir` GaladrielCache, и называться также, как файл источника карты, но с расширением **.json**. В файле Mapbox style можно использовать значки и шрифты (Sprites and glyphs) из каталога _styles/_ .
+### Mapbox-style vector tiles maps
+GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox style file](https://docs.mapbox.com/mapbox-gl-js/style-spec/) must be placed on `$mapSourcesDir` directory of the [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) with **{mapname}.json** name. (See [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) docs.) Sprites and glyphs you can find in _styles/_ directory.
 
-## Отображение положения
-GaladrielMap получает координаты, скорость, направление от работающего на сервере сервиса [gpsd](https://gpsd.io/).  
- ![Positioning](screenshots/s2_ru.jpeg)<br>
- Установка и конфигурирование gpsd описаны в [документации к gpsd](https://gpsd.io/). Обычно никакой настройки не требуется: достаточно просто подсоединить приёмник ГПС в гнездо usb, и координаты сразу начнут отображаться в GaladrielMap.
 
-Кроме того, GaladrielMap может получать координаты от VenusOS или Signal K, локально или по сети. Если GaladrielMap не может подключиться к **gpsd**, предпринимается попытка обнаружить Signal K, а затем VenusOS и получить данные оттуда.
- 
- Если координаты имеются -- карта **всегда** позиционируется на экране в соответсвии с текущим положением. Это поведение можно временно отключить в меню настроек <img src="img/settings1.svg" alt="Settings" width="24px">.  
- Также следование за курсором отключается, если открыты панели <img src="img/route.svg" alt="Route" width="24px"> и <img src="img/download1.svg" alt="Loader" width="24px">.   
-Курсор положения указывает **курс** судна, а вектор скорости -- его **путевой угол**, если оба параметра сообщаются источником данных. Если есть что-то одно, то курсор и вектор скорости имеют то направление, которое указано в панели <img src="img/speed1.svg" alt="Loader" width="24px">
+## Positioning
+ ![Positioning](screenshots/s2.jpeg)<br>
+ GaladrielMap gets realtime spatial data and other info via [gpsd](https://gpsd.io/). Usually enough plug a GNSS receiver to the server.  
+How to install and configure gpsd see [gpsd pages](https://gpsd.io/).  
+Also, GaladrielMap can get data from VenusOS or Signal K - localy or via LAN. If GaladrielMap don't find **gpsd**, it it tries to discover Signal K and then VenusOS on LAN and takes the data from there.
 
-## Текущий путь
-GaladrielMap может показывать текущий путь по мере его записи.  
-Для записи текущего пути на сервере используется приложение `gpxlogger`  из комплекта gpsd-clients, имеющегося в дистрибутивах, но устанавливаемого отдельно. Конфигурирование `gpxlogger` описано в документации к [gpsd](https://gpsd.io/).  Записью пути включается на вкладке <img src="img/track.svg" alt="Пути" width="24px">.  
-Вместо `gpxlogger` можно использовать любую другую работающую на сервере программу, записывающую текущий путь в формате gpx. Она указывается в файле настройки _params.php_. Даже если средство записи текущего пути не указано в _params.php_, текущий путь всё равно будет обновляться на экране по мере записи, если имя записываемого файла будет соответствовать имени "текущего пути", как это указано в _params.php_.
-Если запись текущего пути внезапно прервалась, и на диске остался некорректный файл gpx, его можно поправить, запустив
-```
-php chkGPXfiles.php
-```
-Текущий путь записывается в папку _tracks_ (в папку, указанную в переменной $trackDir конфигурационного файла _params.php_).
+Map **always** sets to current position. This behavior can be temporarily disabled on the <img src="img/settings1.svg" alt="Settings" width="24px"> menu. Following the cursor is disabled if <img src="img/route.svg" alt="Route" width="24px"> or <img src="img/download1.svg" alt="Loader" width="24px"> menu are open.  
+The position cursor indicates **heading**, and velocity vector indicates **course**, if both parameters are available from a data source. If there is one, then they show the same, and what exactly is indicated on the <img src="img/speed1.svg" alt="Loader" width="24px"> dashboard.
 
-## Отображение маршрутов
-GaladrielMap показывает пути и маршруты а также точки достопримечательностей (POI), записанные в форматах gpx, kml и csv:  
+## Tracking
+GaladrielMap uses `gpxlogger` app from the gpsd-clients packet to log track on your server. Control `gpxlogger` are in <img src="img/track.svg" alt="Handle tracks" width="24px"> tab.  
+GaladrielMap displays the current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
+Run _chkGPXfiles.php_ in cli to repair non-well-formed gpx files for other applications.  
+Tracks placed in _tracks_ directory on the server as it described in _params.php_.  
+Installation and configuring the `gpxlogger` describe in  [gpsd](https://gpsd.io/) documentation. You may use any other server-side logger for tracking in gpx format, set up it in _params.php_. If not - the logged track will still be updated if its name will be recognized as "current track" (see _params.php_).  
+
+## Routes and POIs
  ![Display routes and POIs](screenshots/s5.jpeg)<br>
- Файлы располагаются на сервере в папке _route_ (как она указана в файле конфигурации _params.php_). Откройте панель <img src="img/poi.svg" alt="POI" width="24px">.  
-Если в пути gpx записана глубина, она может быть показана цветом линии пути, в соответствии с настройками в _params.php_
- 
+ GaladrielMap display tracks, routes and PointOfInterest on gpx, kml and csv formats. Place you routes and POIs files to _route_ directory on the server as it directory described in _params.php_. Open <img src="img/poi.svg" alt="POI" width="24px"> tab.  
+If there is depth in the gpx track, it can be shown by color along line (see _params.php_).
+
 ### CSV
-Текстовый файл в формате Comma-Separated Values -- самый простой способ заранее подготовить список интересующих точек (POI) для предстоящего путешествия. Для создания такого файла нужен только текстовый редактор, хотя удобней будет любой табличный процессор.  
-Первой строкой в csv файле должны быть наименования колонок. GaladrielMap понимает следующие наименования:  
-`"number","name","comment","desc","symb","url","lat","lon"`  
-как это рекомендуется в [документации к _gpsbabel_](https://www.gpsbabel.org/htmldoc-1.7.0/fmt_unicsv.html),
-хотя минимально-полезный набор состоит из  
-`"name","latitude","longitude"`  
-В файле возможны и другие колонки, но информация из них, скорее всего, на карте показана не будет.  
-Широту и долготу можно указывать почти в любом формате, как в градусах, минутах и секундах -- 61°04'50"N, например, так и в десятичных градусах.  
-Примером реального использования файла csv для обмена информацией о маринах и природных стоянках на озере Сайма в Финляндии может быть начинание [SaimaaPOI](https://github.com/VladimirKalachikhin/Saimaa-POI). Там же имеется файл csv с точками фотографирования и с ссылками на фотографии.  
-Файл с путевыми точками надо положить в папку _route_ на сервере (в папку, указанную в переменной $routeDir конфигурационного файла _params.php_). Следует избегать совпадений имён файлов в папках _route_ и _tracks_.
+Comma-Separated Values text file - the simplest way of cooking personal POI for your trip. Only text editor needed. But, to avoid mistakes, any spreadsheet recommended.  
+The first line in the CSV file must be field names. Good choice is a   `"number","name","description","type","link","latitude","longitude"`  
+as the [_gpsbabel_ doc](https://www.gpsbabel.org/htmldoc-1.7.0/fmt_unicsv.html) recommends.  
+Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
+A real example of using CSV to store information about ports and piers on Lake Saimaa in Finland - [SaimaaPOI](https://github.com/VladimirKalachikhin/Saimaa-POI). File with geospatial photolinks on CSV format - is a good example too.  
+Place your CSV to _route_ directory on the server as it directory described in _params.php_. Avoid setting file names in _route_ same as names in _tracks_ directory.
 
-## Создание и редактирование маршрута
-Планирование маршрута происходит на клиентском устройстве, при этом имеется возможностью сохранить маршрут на сервере в формате gpx.  
- ![Creating a route](screenshots/s3_ru.jpeg)<br>
-Инструменты для планирования и редактирования маршрута и путевых точек находятся на панели <img src="img/route.svg" alt="Маршрут" width="24px">. Созданный маршрут автоматически сохраняется на клиентском устройстве (и на выключенном), а на сервер сохраняется нажатием кнопки.  
-Этот инструмент может быть использован и для редактирования существующего маршрута в формате gpx, загруженного с сервера через панель <img src="img/poi.svg" alt="Маршруты" width="24px"> . Если редактируемый маршрут показывается ещё на каком-то устройстве, то после сохранения на сервере он сразу отобразится на этом устройстве в изменённом виде.  
-Это может быть полезно, если нужно из тёплой рубки уточнить маршрут находящемуся под ветром и дождём рулевому.  
-Однако, инструмент имеет только самую базовую поддержку gpx, ограниченную возможностями формата GeoJSON, в который программа переводит все загружаемые пути, маршруты и путевые точки. Поэтому никакие свойства узлов путей и маршрутов, кроме координат, не поддерживаются (включая, и особенно, отметку времени узлов пути, а также любимые GARMIN &lt;extensions&gt;, где хранится, в частности, глубина), и будут утеряны при сохранении. Поэтому следует быть осторожным при редактировании сторонних файлов gpx.  
-Также следует проявлять осторожность (и отключить возможность автоматического обновления маршрутов в  _params.php_), если существует возможность неадекватного редактирования маршрута со стороны детей или гостей.
 
- При наличии Интернет можно искать объекты по географическому наименованию или почтовому адресу, и наоборот -- получить ближайшее к координатам центра экрана географическое название или адрес. Для этого воспользуйтесь текстовым полем ввода.
+## Creating and edit a route
+ ![Creating a route](screenshots/s3.jpeg)<br>
+Open <img src="img/route.svg" alt="Handle route" width="24px"> tab to navigational plotting feature. You can create and edit a route and waypoints on the local device, and/or save it to server to _route_ directory.  
+ This feature includes a base gpx route editing tool. You can edit any gpx route from the server in the same way as local route, and save it under the same or new name. Displaying edited routes update automatically on all connected devices.  
+ Good case for use -- navigational plotting by the navigator in a dry and warm booth for the steersman on the rain and wind.  
+ But it is only a base gpx route editor. Gpx &lt;metadata&gt; not supported, and point &lt;extensions&gt; (GARMIN like it) not supported too. Be careful to edit and save exists gpx.  
+ Also be careful with danger of unauthorized edit routes from guests and childrens. Disable the auto-update routes via _params.php_.  
  
-## Ввод и получение координат
-Для получения текущего положения нажмите на цифры координат на панели <img src="img/speed1.svg" alt="Приборная панель" width="24px"> . Координаты будут скопированы в буфер обмена. Можно вставить их в sms, мессенджер или письмо.  
-Аналогично, координаты маркированной точки на карте могут быть получены нажатим на наименование точки в всплывающем окне этой точки.
+For route planning, it is useful to find coordinates by geographical name or postal address, if there is an Internet connection, of course. And vice versa -- getting the nearest address for the screen centre. Use the input field for it.
 
-Получить координаты произвольной точки на карте можно, открыв панель <img src="img/route.svg" alt="Маршрут" width="24px">. Координаты перекрестия будут отображаться в текстовом поле. Если же, наоборот, ввести в это поле какие-либо координаты (широту и долготу, почти в любом формате), и нажать кнопку рядом -- карта переместиться так, что перекрестие будет указывать в эту точку. Кнопки над текстовым полем помогут ввести знаки градусов и минут.
- 
-## Прогноз погоды
-Прогноз погоды от [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
+
+## Exchange coordinates
+To get current position to clipboard to share it via other apps - tap on Position on <img src="img/speed1.svg" alt="Dashboard" width="24px"> tab.  
+Also, tap on POI name on point's popup to get a position of this point.  
+To get coordinates of any point - open <img src="img/route.svg" alt="Handle route" width="24px"> tab. Coordinates of crosshair will be in the input text field.  
+To fly map by coordinates type they of any format to this field and press button.
+
+
+## Weather forecast
  ![Weather forecast](screenshots/s8.jpeg)<br>
- На трое суток, с интервалом в 6 часов. Доступны сила ветра, давление, температура, осадки и волнение моря в любых сочетаниях.
- 
-## Отображение информации AIS 
- ![AIS info](screenshots/s9.jpeg)<br>
- Сбор данных AIS осуществляется от [gpsd](https://gpsd.io/) через [gpsdPROXY](https://hub.mos.ru/v.kalachihin/gpsdPROXY), или напрямую из среды [Signal K](https://signalk.org/). Демону **gpsd** может понадобится некоторая настройка для получения данных от приёмопередатчика AIS. Если же имеется только usb приёмник AIS -- никакой настройки обычно не требуется.  
-Получение информации AIS по умолчанию отключено. Его можно включить, раскомментировав строку с переменной $aisServerURI в файле _params.php_. Временно отключить отображение информации AIS можно переключателем в меню <img src="img/settings1.svg" alt="Settings" width="24px">.
+If there is an Internet connection you can get the weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/).
 
-Поскольку для получения информации AIS от **gpsd** необходим [gpsdPROXY](https://hub.mos.ru/v.kalachihin/gpsdPROXY) -- установите соответствующие значения переменных $gpsdHost и $gpsdPort в файле _params.php_
- 
-## Обнаружение столкновений
+
+## Display AIS info
+![AIS info](screenshots/s9-1.jpeg)<br>
+The GaladrielMap displayed AIS data via [gpsdPROXY](https://hub.mos.ru/v.kalachihin/gpsdPROXY) from [gpsd](https://gpsd.io/) or directly from [Signal K](https://signalk.org/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
+Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. To temporarily disable displaying AIS data use switch in <img src="img/settings1.svg" alt="Settings" width="24px"> menu.  
+As displaying AIS data from gpsd need gpsdPROXY, you MUST use gpsdPROXY as position data service. Set up $gpsdHost and $gpsdPort variables in _params.php_ to this.
+
+## Collision detection
 ![collision indicate](screenshots/s11.png)<br>  
-Картплоттер отображает информацию об опасности столкновений, вычисляемую gpsdPROXY. Потенциально опасные цели AIS подсвечиваются, и вокруг курсора собственного положения размещаются стрелочки, указывающие на опасный объект.  
-Не следует чрезмерно полагаться на систему обнаружения столкновений. Помните, что **никакая информация, выданная или не выданная системой обнаружения столкновений, не может служить основанием для действия или бездействия судоводителя.** Будте внимательны.  
+The GaladrielMap shows information on possible collisions calculated by the gpsdPROXY. Potentially dangerous objects are highlighted and their direction is indicated by an arrow.  
+Do not rely too much on the collision detection system. Remember that **no information issued or not issued by the collision detection system can be the basis for the actions or inaction of the navigator.** Be careful.
 
-## Поддержка netAIS
-[netAIS](https://hub.mos.ru/v.kalachihin/netAIS) -- сервис обмена информацией о местоположении через интернет. Обмен идёт внутри приватных групп, никаких централизованных серверов не нужно.  
+## netAIS support
 ![netAIS](screenshots/s13.jpeg)<br>
-GaladrielMap поддерживает все возможности сервиса, отображая и нестандартные статусы и текстовые сообщения.
- 
-## Человек за бортом
-![Control Loader](screenshots/s14_ru.jpeg)<br>
-Нажатие на кнопку <img src="img/mob.svg" alt="MOB button" width="24px"> включает режим "Человек за бортом!" При этом активируется запись маршрута, ставится маркер в точке нажатия на кнопку и на карте рисуется линия от текущего положения к точке маркера. Информация сохраняется на сервере. На открывшейся панели отображается направление и расстояние до маркера.  
-Имеется возможность установить ещё маркеры и передвинуть существующие. Линия от текущего положения протягивается к последнему установленному маркеру или к тому, на который нажали.  
-Информация "Человек за бортом!" и все её изменения распространяется на все подключенные компьютеры, и может быть изменена с любого из них.  
-Для завершения режима "Человек за бортом!" нужно предварительно нажать на серую точку слева от кнопки.
+The [netAIS](https://hub.mos.ru/v.kalachihin/netAIS) is the local service to exchange position information inside of a private group via internet.  
+GaladrielMap displayed full netAIS info, include text messages.  
+For example, three members of the same private group see each other on its screens.
 
-## Приборная панель
- _dashboard.php_ -- отдельное приложение, предназначенное для показа некоторых имеющихся приборов на очень слабых и/или медленных клиентских устройствах. Например, на читалке электронных книг с E-ink экраном. Требуется только браузер:
+
+## A Man OverBoard
+![A Man OverBoard](screenshots/s14.jpeg)<br>
+Sets marker, stretches the line to and indicates distance and direction to MOB just by open tab.  
+Tap to <img src="img/mob.svg" alt="MOB button" width="24px"> opens MOB tab and start MOB mode. Track logging turned on, positions the MOB markers saved to the server. You may add new markers and dragging markers to a new position. Tap to marker to select it for stretches the direction line to. Tap on indication of MOB position copies it to clipboard.  
+MOB information spreading to all connected devices and may edit from any of this.  
+To finalize MOB mode tap to the dot left of the "Terminate" button first.  
+
+
+## Dashboard
+_dashboard.php_ - the separate app to display some instruments attached to gpsd, on weak (and/or old) devices, such as e-ink readers, for example.  
+Instruments from Signal K not displayed.  
 ![Dashboard velocity](screenshots/s6.jpeg)<br>
 ![Dashboard heading](screenshots/s7.jpeg)<br>
 
-[~~Демонстрация~~](http://130.61.159.53/map/dashboard.php) не работает, потому что Oracle Inc. оказались жуликами.
+[~~Live demo~~](http://130.61.159.53/map/dashboard.php)  
+Unfortunately, the Oracle Inc. turned out to be a crook, so the demo does not work.
 
-Изображение на экране оптимизировано для различных разрешений и размеров экранов -- от самых маленьких до самых больших. Показывается истинная скорость, истинный или магнитный курс и глубина. Разумеется, соответствующие приборы должны быть подключены к [gpsd](https://gpsd.io/). При наличии только приёмника геопозиционирования доступны истинный курс и скорость.   генеральное направление всегда отображается серой маркой у края экрана.
-Может быть запущено несколько экземпляров веб-приложения, отображающих разную информацию -- в разных окнах или на разных устройствах.
-Существует возможность назначить визуальную и звуковую сигнализацию на некоторые параметры.  
-![Dashboard alarm](screenshots/s12.jpeg)<br>
-Необходимо указать в настройках браузера разрешение воспроизводить звук. Сигнализация назначается отдельно на каждом клиентском устройстве, и сработает, только если устройство активно. Будьте внимательны!  
-Если установлена сигнализация об отклонении от курса, то у края основного экрана всегда присутствуют отметки, точно указывающие требуемый курс (треугольник) и текущий курс (штрих): 
+The screen image optimized to different screen resolutions and should look good from little to big screens. Displayed velocity, depth and true and magnetic heading. You can use two or more devices to display different info. At the border of the screen is always visible the mark with general direction.  
+The Dashboard allows you to set a visual and sound signal for dangerous events, such as shallow or speed.  
+![Set alarm events](screenshots/s12.jpeg)<br>
+Set up your browser to allow sound signal.  
+The signal settings are local for every showing device, and it is triggered only if the device work. Be careful!  
+If the course alarm is set, the set and current direction are displayed at the border of the screen as triangle and dash marks:  
 ![Course alarm marks](screenshots/s15.jpeg)<br>
-При достижении указанного отклонения от курса включается сигнализация:
+When deviating from the course the visual and sound alarm fired:
 ![Course alarm](screenshots/s16.jpeg)<br>
-По взаимному положению отметок текущего и требуемого курса можно оценить требуемое воздействие для выправления курса.
 
-Предполагается, что клиентское устройство оснащено чувствительным к нажатию экраном, и управление приложением происходит нажатиями на экран.  
-Выбор основного отображаемого параметра осуществляется средней кнопкой в нижней части экрана.  
-При наличии поддержки javascript на некоторых клиентских устройствах можно настроить некоторые аппаратные клавиши для переключения режимов, вызова меню оповещений и переключения между истинным и магнитным курсом. Настройка аппаратных клавиш находится внизу окна оповещений. Нажмите <img src="img/settings1.svg" alt="Settings button" width="24px">.   
-По-умолчанию используются:
+The presence of the touch screen is assumed, and mode is switched by a tap to the next data type button on the screen.  
+For some devices with JavaScript you may set up some hardware keys to switch mode, magnetic or true course and opening alarm menu. Use <img src="img/settings1.svg" alt="Settings button" width="24px"> button on bottom of alarm menu to set up it. Default keys is:
 
-* Стрелка вниз для следующего режима
-* Стрелка вверх для предыдущего режима
-* Правая клавиша Alt для вызова меню оповещений
-* Клавиша M (латинская M) для переключения между истинным и магнитным курсом
+* ArrowDown for next mode
+* ArrowUp for previous mode
+* AltRight for alarm menu
+* KeyM for magnetic course switch
  
-Это приложение не использует никакого хитрого javascript и никаких замысловатых стилей, однако, если хочется видеть что-то, кроме скорости, настоятельно рекомендуется использовать [gpsdPROXY](https://hub.mos.ru/v.kalachihin/gpsdPROXY) как источник данных.
+No fanciful javascript, no fanciful css.  
+Highly recommended to use [gpsdPROXY](https://hub.mos.ru/v.kalachihin/gpsdPROXY) if you want to see data other them velocity.
 
-## Загрузчик GaladrielCache   
-![Control Loader](screenshots/s4_ru.jpeg)<br>
-Указывается регион для загрузки, путём ввода номеров тайлов на панели или нажатием на номер тайла на карте, после чего по нажатию кнопки подтверждения сформированное задание передаётся на сервер и там запускается загрузчик.  
-Загружаться будут все показываемые карт начиная от указанных тайлов и до тайлов максимального масштаба. Максимальный масштаб задаётся в кофигурационном файле.  
-Загрузчик работает автономно, и переживёт выключение сервера -- после включения он запустится автоматически и будет работать до тех пор, пока не скачает всё указанное. Не указывайте пол-планеты: места на диске не хватит!  
-Чтобы видеть, какие участки карты уже есть в кеше -- можно включить показ схемы покрытия.
 
-## Работа в OpenWRT
-На мощных компьютерах (типа Raspberry Pi) под управлением OpenWRT установка и конфигурирование GaladrielMap осуществляется так же, как на любых других компьтерах под управлением Linux.  
-Для установки на маршрутизаторы/точки доступа может потребоваться специальная прошивка (например, [MT7620A based router OpenWRT firmware ](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware/blob/master/README.ru-RU.md)) из-за ограниченности ресурсов.
+## The GaladrielCache Loader
+![Control Loader](screenshots/s4.jpeg)<br>
+Choose a region by specifying tile numbers by hand in the panel or by tap on tile number on the map. After tap the Ok button to  start loader.  
+All displayed maps will be loaded from the current zoom to the maximum zoom. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
+For see of loaded tiles use coverage switch. 
 
-### Дополнительная кофигурация
-В OpenWRT есть только один полноценный пользователь: _root_. Однако, при использовании (по крайней мере) php-fpm, веб-сервер по умолчанию запускается от пользователя _nobody_. Из-за этого некоторые функции GaladrielMap, в частности -- обеспечивающие устойчивость к потре связи и электричества -- работать не будут. Нужно, чтобы веб-сервер тоже запускался от _root_.  
-Для этого:  
-Измените файл `/etc/php7-fpm.d/www.conf`:  
+## Work in OpenWRT
+On powerful computers (Raspbery Pi, yes) on OpenWRT installation and startup of GaladrielMap are performed in the same way as on common Linux.  
+On routers usually need custom firmware if the capacity of the built-in drive is insufficient. For example, [MT7620A based router OpenWRT firmware ](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) for run GaladrielMap.
+### System configuration
+There is only one full user in the OpenWRT - _root_. But if you (at least) use php-fpm, the web server is running from _nobody_ by default. Therefore, some functions of GaladrielMap, such as fail-safe, will not work. Is necessary that the web server also works from root. 
+For this:  
+Edit `/etc/php7-fpm.d/www.conf`:  
 ```
 ;user = nobody
 user = root
 ```
-Измените файд `/etc/init.d/php7-fpm`:
+Edit `/etc/init.d/php7-fpm`:
 ```
 #PROG="/usr/bin/php-fpm"
 PROG="/usr/bin/php-fpm -R"
 ```
-Прегрузитесь.
+Reboot
 
-## Работа в VenusOS
-GaladrielMap работает под управлением VenusOS по крайней мере начиная с версии v2.80~38 и во всяком случае на Raspberry Pi. Работоспособность на устройствах Victron Energy не проверялась.  
-Для того, чтобы запустить GaladrielMap под VenusOS, нужно сделать следующее:
+## Work in VenusOS
+The GaladrielMap mostly can work in VenusOS v2.80~38 or above. Or get data from it in LAN. To do this, you need:
 
-* установить php-cli . Откройте на устройстве ssh и выполните:
+* install php-cli. Run in ssh console:  
 
 ```
 opkg update  
 opkg install php-cli  
 ```
 
-* включить сервис "MQTT on LAN". Откройте панель управления (web или на устройстве), и перейдите в меню Settings -> Services -> MQTT on LAN (SSL). Там выберите "Включить".
-*  разумеется, требуется достаточное количество i-nodes на карте SD для хранения тайлов.
+* enable "MQTT on LAN" feature. On VenusOS web remote console go Settings -> Services -> MQTT on LAN (SSL) and Enable.
+* Have enough i-nodes on SD card for tiles.
 
-### Ограничения
-* в VenusOS нет данных о глубине и нет данных AIS
-* в VenusOS нет сервиса записи пути
-* в VenusOS нет приложения tor, поэтому для функционирования netAIS и преодоления защиты от скачивания понадобится tor на другой машине
-* данные в VenusOS не являются вполне достоверными, и должны использоваться с осторожностью
-* Возможно, нужны те же изменения конфигурации, что и для OpenWRT.
- 
-## Поддержка
-[Сообщество ВКонтакте](https://vk.com/club212992298)
+### limitations
+* VenusOS does not provide depth and AIS services.
+* VenusOS does not provide track log service.
+* VenusOS does not provide Tor service, so to avoid the tile loader ban and for netAIS raise the Tor on other computer.
+* The data provided by VenusOS are not reliable enough, so be careful.
+* It may be necessary to configure the system as described for OpenWRT.
 
-### Платно
-[Индивидуальная консультация](https://kwork.ru/training-consulting/20093293/konsultatsii-po-ustanovke-i-ispolzovaniyu-galadrielmap).  
 
-Можно заказать загрузочный образ требуемого размера для Raspberry Pi на основе Raspbian, OpenWRT или VenusOS, содержащий полностью сконфигурированную и готовую к использованию программу GaladrielMap. Обращайтесь на [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)   
-Возможна запись этого образа на флэш-карту требуемого размера с последующей пересылкой бумажной почтой. Обращайтесь на [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)
+## Support
 
-Также можно заказать установку и конфигурирование GaladrielMap на маршрутизатор типа [MT7620A based router](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) или другой. Возможна сборка специализированной прошивки. Обращайтесь на [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com)   
+[Discussions](https://github.com/VladimirKalachikhin/Galadriel-map/discussions)
 
-Вы можете сделать пожертвование через [ЮМани](https://sobe.ru/na/galadrielmap).
+The forum will be more lively if you make a donation at [ЮMoney](https://sobe.ru/na/galadrielmap)
+
+### On paid
+[Personal consulting](https://kwork.ru/it-support/20093939/galadrielmap-installation-configuration-and-usage-consulting)  
+
+Available Raspberry Pi bootable image with Raspbian, OpenWRT or VenusOS. Image include GaladrielMap with GaladrielCache and netAIS (except VenusOS, this not have workable netAIS) and ready to use. You can also order burn image to SD card the capacity you need. Contact  [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com) 
+
+It is possible to order WiFi router/internet access point with OpenWRT (such as [MT7620A based router](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) or other) with fully configured and ready to use GaladrielMap. Contact  [galadrielmap@gmail.com](mailto:galadrielmap@gmail.com) 
+
