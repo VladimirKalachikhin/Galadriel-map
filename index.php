@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.9.4';
+$versionTXT = '2.9.5';
 /* 
 2.9.4	update route list with panel open
 2.9.0	wind sign
@@ -1029,23 +1029,23 @@ let windSymbolMarker = L.marker([],{
 // Местоположение
 // маркеры
 var GpsCursor = L.icon({
-	iconUrl: './img/gpscursor.png',
+	iconUrl: 'img/gpscursor.png',
 	iconSize:     [120, 120], // size of the icon
 	iconAnchor:   [60, 60], // point of the icon which will correspond to marker's location
 });
 
 // курсор
 var NoGpsCursor = L.icon({	// этот значёк может показываться и при пропаже связи с сервером, а в этом случае загрузить картинку не удастся. Но таскать с собой картинку заранее, как для MOB -- наверно, слишком накладно. Поэтому -- стилем.
-	iconUrl: './img/gpscursor.png',
+	iconUrl: 'img/gpscursor.png',
 	iconSize:     [120, 120], // size of the icon
 	iconAnchor:   [60, 60], // point of the icon which will correspond to marker's location
 	className: "NoGpsCursorIcon"	// galadrielmap.css
 });
 var velocityCursor = L.icon({
-	iconUrl: './img/1x1.png',
+	iconUrl: 'img/1x1.png',
 });
 var NoCursor = L.icon({
-	iconUrl: './img/1x1.png',
+	iconUrl: 'img/1x1.png',
 	iconSize: [0, 0], // size of the icon
 });
 var cursor = L.marker(startCenter, {
@@ -1054,7 +1054,7 @@ var cursor = L.marker(startCenter, {
 	rotationOrigin: "50% 50%", 	// вертим маркер вокруг центра
 	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
 	zIndexOffset: -500
-});
+}).addTo(map).remove();	// .addTo(map) приводит к скачиванию картинки icon в этот момент, после чего она уже кеширована. А для того, чтобы маркер не показывался, когда не надо - его сразу удаляем из слоя map
 // указатель скорости
 var velocityVector = L.marker(cursor.getLatLng(), {
 	icon: velocityCursor,
@@ -1062,7 +1062,7 @@ var velocityVector = L.marker(cursor.getLatLng(), {
 	opacity: 0.1,
 	pane: 'overlayPane',	// расположим маркер над тайлами, но ниже всего остального
 	zIndexOffset: -501
-});
+}).addTo(map).remove();	// .addTo(map) приводит к скачиванию картинки icon в этот момент, после чего она уже кеширована. А для того, чтобы маркер не показывался, когда не надо - его сразу удаляем из слоя map
 velocityVectorLengthInMnDisplay.innerHTML = velocityVectorLengthInMn; 	// нарисуем цену вектора скорости на панели управления
 // Точность ГПС
 let GNSScircle = L.circle(cursor.getLatLng(), {

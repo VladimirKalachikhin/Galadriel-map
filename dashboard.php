@@ -6,7 +6,7 @@ W   281.25|          |        |          |E 101.25
 WSW 258.75|          |        |          |ESE 123.75
 SW  236.25|SSW 213.75|S 191.25|SSE 168.75|SE 146.25
 */
-$versionTXT = '2.1.1';
+$versionTXT = '2.1.2';
 /*
 2.1.1	try to start gpsdPROXY if no data
 2.0.2	MOB info support
@@ -183,7 +183,9 @@ else {
 //echo "depthAlarm=$depthAlarm; minDepthValue=$minDepthValue; minSpeedAlarm=$minSpeedAlarm; minSpeedValue=$minSpeedValue; maxSpeedAlarm=$maxSpeedAlarm; maxSpeedValue=$maxSpeedValue;<br>\n";
 //echo "toHeadingMagnetic=$toHeadingMagnetic;<br>\n";
 
-if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') $gpsdProxyHost = $_SERVER['HTTP_HOST'];
+// А назачем это было сдеано? Ведь в этом случае $gpsdProxyHost будет от клиента
+// а вызывать GPSDproxy нужно от сервера.
+//if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') $gpsdProxyHost = $_SERVER['HTTP_HOST'];
 //echo "$gpsdProxyHost:$gpsdProxyPort<br>\n";
 list($tpv,$mob) = askGPSDproxy($gpsdProxyHost,$gpsdProxyPort); 	// требуемые данные в плоском массиве, MOB - своё положение, точка MOB; 
 //echo "Ответ:<pre>"; print_r($tpv); print_r($mob); echo "</pre>";
