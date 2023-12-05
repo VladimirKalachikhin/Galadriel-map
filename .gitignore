@@ -1,3 +1,4 @@
+.gitignore
 info.php
 *~
 test*
@@ -20,4 +21,8 @@ styles
 mapbox*
 distr
 emergencykit
+long-press-event*
+polycolor
+gpsdPROXY
+value2color
 
