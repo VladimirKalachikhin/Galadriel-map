@@ -1,5 +1,5 @@
 [In English](README.md) 
-# GaladrielMap [![License: CC BY-SA 4.0](screenshots/CC_BY-SA_4.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
+# GaladrielMap [![License: CC BY-NC-SA 4.0](screenshots/Cc-by-nc-sa_icon.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en)
 Простой картплоттер (электронно-картографическая система, ЭКС), предназначенный для любительского использования на маломерных судах, в домах на колёсах и внедорожных автомобилях.  
 Приложение может быть размещено на слабом сервере типа  RaspberryPi, NAS или сетевом маршрутизаторе и предполагает использование на достаточно производительных клиентских устройствах, преимущественно мобильных. Желательно применять планшет с большим экраном, однако пользоваться с телефона тоже можно. На клиентском устройстве требуется только наличие браузера -- никаких приложений устанавливать не нужно.
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Форум</a>
