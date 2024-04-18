@@ -1009,7 +1009,7 @@ xmlns="http://www.w3.org/2000/svg">
 <defs>
 	<line id="bLine" x1="0" y1="2.5" x2="70" y2="2.5" />
 	<line id="w2.5" x1="3" y1="2.5" x2="10" y2="13" />
-	<polyline  id="w5" points="0,2.5 10,2.5 25,25"  fill="none"\>
+	<polyline  id="w5" points="0,2.5 10,2.5 25,25"  fill="none"/>
 	<g id="w25">
 		<polygon points="10,5 22.5,25 34.5,5" stroke-width="0" />
 		<line x1="0" y1="2.5" x2="34.5" y2="2.5" />
@@ -1541,6 +1541,11 @@ for(let vehicle in aisData){	// vehicle == mmsi
 	}
 
 	vehicles[vehicle].addData(aisData[vehicle]); 	// обновим данные
+	// Здесь, видимо, не нужно передавать aisData[vehicle] "по значению", как в GaladrielMapSK
+	// потому что здесь aisData -- это локальная переменная, которая заводится снова при каждом
+	// приёме данных, а предыдущая сохраняется в контексте, потому что на неё есть ссылка.
+	// В этом случае проблема с addData и/или L.trackSymbol, если она есть, не проявляется.
+	//vehicles[vehicle].addData(JSON.parse(JSON.stringify(aisData[vehicle]))); 	// обновим данные
 	//console.log(vehicles[vehicle].getLatLng());
 	//console.log(vehicles[vehicle]);
 
