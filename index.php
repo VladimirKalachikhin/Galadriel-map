@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.9.5';
+$versionTXT = '2.9.6';
 /* 
 2.9.4	update route list with panel open
 2.9.0	wind sign
@@ -1807,7 +1807,7 @@ else { 	// console.log("[currentTrackUpdate] текущий трек ещё не
 	//console.log('[currentTrackUpdate] document.getElementById(currentTrackName):',document.getElementById(currentTrackName));
 	currentTrackShowedFlag = 'loading'; 	// укажем, что трек сейчас загружается
 	// Будем показывать путь, если указано "Текущий путь всегда показывается".
-	console.log('[currentTrackUpdate] Запускаем показ текущего пути');
+	//console.log('[currentTrackUpdate] Запускаем показ текущего пути');
 	selectTrack(document.getElementById(currentTrackName),trackList,trackDisplayed,displayTrack); 	// загрузим трек асинхронно. galadrielmap.js
 }
 //console.log('[currentTrackUpdate] Обновлён трек','currentTrackName='+currentTrackName,'currentTrackShowedFlag=',currentTrackShowedFlag);
