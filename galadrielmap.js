@@ -749,7 +749,7 @@ xhr.onreadystatechange = function() { //
 	if (this.status != 200) return; 	// что-то не то с сервером
 	//console.log('[chkLoaderStatus] this.response=',this.response);
 	let {loaderRun,jobsInfo} = JSON.parse(this.response);
-	//console.log('[chkLoaderStatus]',loaderRun,jobsInfo,JSON.stringify(jobsInfo));
+	console.log('[chkLoaderStatus]',loaderRun,jobsInfo,JSON.stringify(jobsInfo));
 	
 	dwnldJobList.innerHTML = '';
 	//loaderIndicator.innerText='\u2B24 ';
@@ -757,8 +757,7 @@ xhr.onreadystatechange = function() { //
 	//if(jobsInfo.length && !loaderRun){	// есть задания, но загрузчик не запущен
 		loaderIndicator.style.color='red';
 		//loaderIndicator.innerText='\u2639';
-		loaderIndicator.onclick=chkLoaderStatus(true);
-
+		loaderIndicator.onclick=function (){chkLoaderStatus(1);};
 		let liS = '';
 		for(let jobName in jobsInfo){
 			liS += `<li  ><span>${jobName} </span><span style='font-size:75%;'>${jobsInfo[jobName]}%</span></li>`;
