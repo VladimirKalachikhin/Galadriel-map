@@ -749,7 +749,7 @@ xhr.onreadystatechange = function() { //
 	if (this.status != 200) return; 	// что-то не то с сервером
 	//console.log('[chkLoaderStatus] this.response=',this.response);
 	let {loaderRun,jobsInfo} = JSON.parse(this.response);
-	console.log('[chkLoaderStatus]',loaderRun,jobsInfo,JSON.stringify(jobsInfo));
+	//console.log('[chkLoaderStatus]',loaderRun,jobsInfo,JSON.stringify(jobsInfo));
 	
 	dwnldJobList.innerHTML = '';
 	//loaderIndicator.innerText='\u2B24 ';

@@ -25,14 +25,15 @@ $outpuFileName = '';
 //file_put_contents($trackDir."/logging_started_by_cron","Запущено, \n_REQUEST[startLogging]={$_REQUEST['startLogging']}\n_REQUEST[stopLogging]={$_REQUEST['stopLogging']}");
 
 $status=(int)gpxloggerRun();	// поскольку неизвестно, что содержится в строке global $gpxlogger, нужно определить PID именно этого процесса
-echo "\n[logging.php] start status=$status;\n";
+//echo "\n[logging.php] start status=$status;\n";
+//error_log("[logging.php] start status=$status;");
 //error_log("[logging.php] start status=$status;");
 if($status) { 	// fcommon.php $gpxlogger работает
 	if($_REQUEST['stopLogging']) { 	
 		exec("kill $status");
 		$status=(int)gpxloggerRun(); 	// оно могло и не убиться
-		if($status) echo "Unable to stop logging\n";
-		else echo "Stoped logging\n";
+		if($status) error_log("[logging.php] Unable to stop logging");
+		else error_log("[logging.php] Stoped logging\n");
 		exec("crontab -l | grep -v '".__FILE__."'  | crontab -"); 	// удалим себя из cron
 	}
 	else { 	// вернём имя последнего трека. Однако, запись трека может быть криво запущена
@@ -50,9 +51,9 @@ if($status) { 	// fcommon.php $gpxlogger работает
 				if(date_diff(new DateTime("now"), $date)->days >= $newTrackEveryDays){
 					exec("kill $status");
 					$status=(int)gpxloggerRun(); 	// оно могло и не убиться
-					if($status) echo "Unable to stop logging\n";
+					if($status) error_log("[logging.php] Unable to stop logging");
 					else {
-						echo "Restarting logging after $newTrackEveryDays days\n";
+						error_log("[logging.php] Restarting logging after $newTrackEveryDays days");
 						list($status,$outpuFileName) = startGPXlogger(); 
 						$outpuFileName = pathinfo($outpuFileName)['filename'];	
 					}
@@ -65,7 +66,7 @@ else {
 	if($_REQUEST['startLogging']) { 	
 		list($status,$outpuFileName) = startGPXlogger(); 	
 		$outpuFileName = pathinfo($outpuFileName)['filename'];	
-		//error_log("[logging.php] startLogging status=$status; outpuFileName=$outpuFileName;");
+		error_log("[logging.php] startLogging status=$status; outpuFileName=$outpuFileName;");
 	}
 	elseif($_REQUEST['stopLogging']) { 	
 		exec("crontab -l | grep -v '".__FILE__."'  | crontab -"); 	// удалим себя из cron
@@ -100,10 +101,11 @@ $outpuFileName = date('Y-m-d_His').'.gpx';
 $fullOutpuFileName = $trackDir.'/'.$outpuFileName; 	
 $gpxlgr = str_replace(array('&logfile','&host'),array($fullOutpuFileName,$_SERVER['HTTP_HOST']),$gpxlogger);
 //echo "Logger start as:<br>$gpxlgr<br>\n";
-$LoggerPid = exec("$gpxlgr > /dev/null 2>&1 & echo $!"); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+$LoggerPid = exec("$gpxlgr > /dev/null 2>&1 & echo $!",$output,$result_code); 	// exec не будет ждать завершения: & - daemonise; echo $! - return daemon's PID
+//error_log("[logging.php] [startGPXlogger] Logger start as: $gpxlgr  Result:".implode(' ',$output).", result_code=$result_code; LoggerPid=$LoggerPid;");
 $status=(int)gpxloggerRun(); 	// оно могло и не запуститься
 if($status) {
-	echo "Started logging track to $outpuFileName\n";
+	//error_log("[logging.php] [startGPXlogger] Started logging track to $outpuFileName");
 	// положим запуск в крон, чтобы возобновить запись лога после перезагрузки
 	//echo '(crontab -l ; echo "* * * * * '.$phpCLIexec.' '.__FILE__."\n".'") | crontab -'."\n";
 	exec("crontab -l | grep -v '".__FILE__."'  | crontab -"); 	// удалим себя из cron
@@ -112,7 +114,7 @@ if($status) {
 	//file_put_contents($trackDir."/logging_started_by_cron","запись в crontab завершилась с $res");
 	return array($status,$outpuFileName);
 }
-else echo "Unable to start logging\n";
+else //error_log("[logging.php] [startGPXlogger] Unable to start logging");
 return array(0,'');
 }; // end function startGPXlogger()
 
