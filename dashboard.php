@@ -902,7 +902,7 @@ function askGPSDproxy($host='localhost',$port=3838){
 /*
 В $gpsdData данные по устройствам, в результирующем массиве - без конкретного устройства
 */
-global $dataTypes,$phpCLIexec,$gpsdPROXYpath;
+global $dataTypes,$phpCLIexec,$gpsdPROXYpath;	// params.php
 
 $gpsd  = @stream_socket_client('tcp://'.$host.':'.$port,$errno,$errstr); // открыть сокет 
 $res = @fwrite($gpsd, "\n\n"); 	// gpsdPROXY не пришлёт VERSION при открытии соединения

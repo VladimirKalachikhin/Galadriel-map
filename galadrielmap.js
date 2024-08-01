@@ -2030,7 +2030,7 @@ else {
 } // end function windSwitchToggler
 
 function windSymbolUpdate(TPVdata){
-/**/
+/* Ветер определяется естественно - относительно носа судна */
 //console.log('[windSymbolUpdate] useTrueWind=',useTrueWind);
 if(useTrueWind){	// options.js указано использовать истинный ветер
 	//console.log('[windSymbolUpdate] wspeedt=',TPVdata.wspeedt,'wanglet=',TPVdata.wanglet,'track=',TPVdata.track);
@@ -2043,8 +2043,8 @@ if(useTrueWind){	// options.js указано использовать исти�
 }
 else {	// указано использовать вымпельный ветер
 	//console.log('[windSymbolUpdate] heading=',TPVdata.heading,'wind dir=',TPVdata.wangler+TPVdata.heading,'wspeedr=',TPVdata.wspeedr);
-	if(TPVdata.wspeedr && TPVdata.wangler){
-		let dir = TPVdata.wangler + (TPVdata.heading || TPVdata.track) - 90;	// картинка-то у нас горизонтальна
+	if(TPVdata.wspeedr && TPVdata.wangler && (TPVdata.heading ?? TPVdata.track)){	//
+		let dir = TPVdata.wangler + (TPVdata.heading ?? TPVdata.track) - 90;	// картинка-то у нас горизонтальна
 		if(dir >= 360) dir -= 360;
 		realWindSymbolUpdate(dir,TPVdata.wspeedr);
 	}

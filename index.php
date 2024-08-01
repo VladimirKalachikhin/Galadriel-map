@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.9.7';
+$versionTXT = '2.9.8';
 /* 
 2.9.4	update route list with panel open
 2.9.0	wind sign
@@ -23,13 +23,8 @@ exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
 // Интернационализация
 // требуется, чтобы языки были перечислены в порядке убывания предпочтения, так что берём первый
 $appLocale = explode('-',explode(';',explode(',',$_SERVER['HTTP_ACCEPT_LANGUAGE'])[0])[0])[0];	
-if(file_exists("internationalisation/$appLocale.php")) {
-	require_once("internationalisation/$appLocale.php");
-}
-else {
-	$appLocale = 'en';
-	require_once('internationalisation/en.php');
-}
+if(!file_exists("internationalisation/$appLocale.php")) $appLocale = 'en';
+require_once("internationalisation/$appLocale.php");
 //require_once('internationalisation/en.php');
 
 // Системная локаль
@@ -126,7 +121,7 @@ $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_
 
 ?>
 <!DOCTYPE html >
-<html lang="ru">
+<html lang=<?php echo '"'.$appLocale.'"';?>>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<meta http-equiv="Content-Script-Type" content="text/javascript">
@@ -179,6 +174,14 @@ html, body, #mapid {
    </style>
 </head>
 <body>
+<?php /* ?>
+<div id='infoBox' style='font-size: 90%; position: absolute;'>
+</div>
+<script>
+//alert(window.outerWidth+' '+window.outerHeight);
+infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
+</script>
+<?php */ ?>
 <div id="sidebar" class="leaflet-sidebar collapsed">
 	<!-- Nav tabs -->
 	<div class="leaflet-sidebar-tabs">
@@ -190,21 +193,13 @@ html, body, #mapid {
 			<li id="routesTab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
 		</ul>
 		<ul role="tablist" id="settingsList">
-			<li id="MOBtab"><a href="#MOB" role="tab"><img src="img/mob.svg" alt="activate MOB" width="70%"></a></li>
+			<li id="MOBtab" style="margin-bottom:1.5em;"><a href="#MOB" role="tab"><img src="img/mob.svg" alt="activate MOB" width="70%"></a></li>
 			<li <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
 			<li><a href="#settings" role="tab"><img src="img/settings1.svg" alt="settings" width="70%"></a></li>
 		</ul>
 	</div>
 	<!-- Tab panes -->
 	<div class="leaflet-sidebar-content" id='tabPanes'>
-<?php /* ?>
-<div id='infoBox' style='font-size: 90%; position: absolute;'>
-</div>
-<script>
-//alert(window.outerWidth+' '+window.outerHeight);
-infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
-</script>
-<?php */ ?>
 		<!-- Карты -->
 		<div class="leaflet-sidebar-pane" id="home" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
@@ -425,7 +420,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						</div>
 				</div>
 			</div>
-			<div style="position: absolute; bottom: 1rem;width:90%;text-align: center;"> <?php// Отбой ?>
+			<div style="position: absolute; bottom: 1rem;width:90%;text-align: center;"> <?php // Отбой ?>
 				<button onClick='delMOBmarker();' id='delMOBmarkerButton' style="width:80%;margin:1rem 0;font-size:75%;" disabled ><span style=""><?php echo $removeMarkerTXT; ?></span></button>
 				<div>
 				<a style="position:relative;left:-1rem;font-size:100%;color:gray;" onClick='
@@ -1187,11 +1182,13 @@ spatialWebSocket.onmessage = function(event) {
 	let data;
 	try{
 		data = JSON.parse(event.data);
+		if(!data) throw Error('inbound empty');
+		if(typeof data !== 'object')  throw Error('inbound not a object: '+data);
 	}
 	catch(error){
 		console.log('spatialWebSocket: Parsing inbound data',error.message);
 		return;
-	}
+	};
 	lastDataUpdate = Date.now();	// какое-то обновление данных пришло.
 	switch(data.class){
 	case 'VERSION':
