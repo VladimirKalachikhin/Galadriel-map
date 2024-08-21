@@ -12,8 +12,9 @@
 // путь в файловой системе к демону, собирающему информацию от gpsd. Демон имеет собственные настройки и зависимости!
 // The Data collection daemon. Daemon has its own config file!
 $gpsdPROXYpath = 'gpsdPROXY';	// file system path
-// путь в файловой системе к программе кеширования тайлов GaladrielCache
-$tileCachePath = '/home/www-data/tileproxy'; 	// path to GaladrielCache tile cache/proxy app location, if present, in filesystem. Comment this if no GaladrielCache. 
+// Адрес gpsdPROXY. gpsdPROXY url.
+//$gpsdProxyHost = ;	// Required, if $gpsdPROXYpath is not set. If $gpsdPROXYpath is set, then get it from gpsdPROXY's params.php
+//$gpsdProxyPort = ;
 // путь в файловой системе к папке с записью пути (треку), от расположения GaladrielMap или абсолютный
 $trackDir = 'track'; 	// track files directory, if present, in filesystem
 // путь в файловой системе к папке с проложенными маршрутами и навигационными точками. Или абсолютный.
@@ -21,11 +22,13 @@ $routeDir = 'route'; 	// route & POI files directory, if present, in filesystem
 
 // Службы Services
 // 	Источник карты Map source
-// url источника карты: в интернет или GaladrielCache
+// url источника карты: в интернет (только растровые тайлы) или GaladrielCache
 $tileCacheURI = "/tileproxy/tiles.php?z={z}&x={x}&y={y}&r={map}"; 	// uri of the map service, for example Galadriel tile cache/proxy service. In case GaladrielCache {map} is a map name in GaladrielCache app.
-//$tileCacheURI = "/tileproxy/tiles/{map}/{z}/{x}/{y}.{ext}"; 	// uri of the map service, for example Galadriel tile cache/proxy service. In case GaladrielCache {map} is a map name in GaladrielCache app.
-//$tileCacheURI = "http://mt2.google.com/vt/lyrs=s,m&hl=ru&x={x}&y={y}&z={z}"; 	//   uri of the map service - if no use GaladrielCache. Comment the $tileCachePath on this case.
-//$tileCacheURI = 'http://a.tile.opentopomap.org/{z}/{x}/{y}.png'; 	//  uri of the map service - if no use GaladrielCache. Comment the $tileCachePath on this case.
+//$tileCacheURI = "/tileproxy/tiles/{map}/{z}/{x}/{y}.{ext}"; 	//
+//$tileCacheURI = "http://mt2.google.com/vt/lyrs=s,m&hl=ru&x={x}&y={y}&z={z}"; 	//
+//$tileCacheURI = 'http://a.tile.opentopomap.org/{z}/{x}/{y}.png'; 	//
+//	Управление GaladrielCache, если используется GaladrielCache.
+$tileCacheControlURI = "/tileproxy/cacheControl.php";	// uri of GaladrielCache control interface
 
 // если время последнего определения положения отличается от текущего на столько секунд -- положение показывается как устаревшее (серый курсор)
 $PosFreshBefore = 5; 	// seconds. The position is considered correct no longer than this time. If the position older - cursor is grey.
@@ -90,7 +93,5 @@ $useTrueWind = false;	// Use true wind instead relative
 $phpCLIexec = 'php'; 	// php-cli executed name on your OS
 
 //  поскольку params.php загружается отнюдь не только в index, все параметры должны быть здесь
-// Параметры тайлового кеша Settings of a tile cache/proxy app
-if( $tileCachePath) require_once("$tileCachePath/params.php");
-require_once($gpsdPROXYpath.'/params.php'); 	// 
+if($gpsdPROXYpath) require_once($gpsdPROXYpath.'/params.php'); 	// 
 ?>

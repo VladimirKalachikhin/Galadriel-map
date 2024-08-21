@@ -909,7 +909,7 @@ $res = @fwrite($gpsd, "\n\n"); 	// gpsdPROXY не пришлёт VERSION при 
 //echo "res=$res; ";var_dump($gpsd);echo "<br>\n";
 if(($res === FALSE) or !$gpsd) {
 	// start gpsdPROXY
-	exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
+	if($gpsdPROXYpath) exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
 	return "no GPSD: $errstr";
 }
 //echo "Socket to gpsd opened, handshaking<br>\n";
