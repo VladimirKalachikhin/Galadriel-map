@@ -4,9 +4,9 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.9
+## v. 2.10
 ![screen](screenshots/s10.jpeg)<br>
-Technically this an online tiles map viewer. With [GaladrielCache](https://hub.mos.ru/v.kalachihin/GaladrielCache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
+Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
 **The author is not responsible for the consequences of using the GaladrielMap for navigation. It is not guaranteed that any of the information on the screen is correct, including but not limited to spatial position, speed, depth, and direction of movement.**
 
@@ -93,9 +93,9 @@ Create a local copy of dependences and/or edit _index.php_
 
 
 ## Maps
-The GaladrielMap applies [OSM-style tiles map](https://wiki.openstreetmap.org/wiki/Tiles), both raster and vector. It can be one OSM- or mapbox-like on-line map or with [GaladrielCache](https://hub.mos.ru/v.kalachihin/GaladrielCache) any number of stacked maps, online and offline.  
+The GaladrielMap applies [OSM-style tiles map](https://wiki.openstreetmap.org/wiki/Tiles), both raster and vector. It can be one OSM- or mapbox-like on-line map or with [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) any number of stacked maps, online and offline.  
 ![stacked maps](screenshots/s1.jpeg)<br>
-The map source is set in the  _params.php_, and if it is [GaladrielCache](https://hub.mos.ru/v.kalachihin/GaladrielCache) (default), you have available any number of user-defined map sources. How to define a new map -- described in [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) project.  
+The map source is set in the  _params.php_, and if it is [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) (default), you have available any number of user-defined map sources. How to define a new map -- described in [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) project.  
 At least, it include  
 [Open Sea Map](http://www.openseamap.org/)  
 [Open Topo Map](https://opentopomap.org/about)  
@@ -161,7 +161,7 @@ If there is an Internet connection you can get the weather forecast from [Thomas
 
 ## Display AIS info
 ![AIS info](screenshots/s9-1.jpeg)<br>
-The GaladrielMap displayed AIS data via [gpsdPROXY](https://hub.mos.ru/v.kalachihin/gpsdPROXY) from [gpsd](https://gpsd.io/) or directly from [Signal K](https://signalk.org/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
+The GaladrielMap displayed AIS data via [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) from [gpsd](https://gpsd.io/) or directly from [Signal K](https://signalk.org/). The gpsd may need additional set up to get AIS flow from AIC transmitters, but usually no need for additional set up to get data from the AIS receiver.  
 Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. To temporarily disable displaying AIS data use switch in <img src="img/settings1.svg" alt="Settings" width="24px"> menu.  
 As displaying AIS data from gpsd need gpsdPROXY, you MUST use gpsdPROXY as position data service. Set up $gpsdHost and $gpsdPort variables in _params.php_ to this.
 
@@ -172,7 +172,7 @@ Do not rely too much on the collision detection system. Remember that **no infor
 
 ## netAIS support
 ![netAIS](screenshots/s13.jpeg)<br>
-The [netAIS](https://hub.mos.ru/v.kalachihin/netAIS) is the local service to exchange position information inside of a private group via internet.  
+The [netAIS](https://github.com/VladimirKalachikhin/netAIS) is the local service to exchange position information inside of a private group via internet.  
 GaladrielMap displayed full netAIS info, include text messages.  
 For example, three members of the same private group see each other on its screens.
 
@@ -213,7 +213,7 @@ For some devices with JavaScript you may set up some hardware keys to switch mod
 * KeyM for magnetic course switch
  
 No fanciful javascript, no fanciful css.  
-Highly recommended to use [gpsdPROXY](https://hub.mos.ru/v.kalachihin/gpsdPROXY) if you want to see data other them velocity.
+Highly recommended to use [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) if you want to see data other them velocity.
 
 
 ## The GaladrielCache Loader

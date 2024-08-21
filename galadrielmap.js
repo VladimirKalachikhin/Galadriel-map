@@ -226,7 +226,7 @@ removeMap(node.id);
 
 function displayMap(mapname) {
 /* Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
- Делает запрос к askMapParm.php для получения параметров карты
+ Делает запрос к tileproxy/cacheControl.php для получения параметров карты
  Если в параметрах карты есть проекция, и она EPSG3395, 
  или в имени карты есть EPSG3395 - делает слой в проекции с пересчётом с помощью L.tileLayer.Mercator
 */
@@ -234,14 +234,14 @@ mapname=mapname.trim(mapname);
 // Всегда будем спрашивать параметры карты
 let mapParm = new Array(); 	// переменная для параметров карты
 const xhr = new XMLHttpRequest();
-xhr.open('GET', 'askMapParm.php?mapname='+mapname, false); 	// Подготовим синхронный запрос
+xhr.open('GET', tileCacheControlURI+'?getMapInfo='+mapname, false); 	// Подготовим синхронный запрос
 xhr.send();
 if (xhr.status == 200) { 	// Успешно
 	try {
 		mapParm = JSON.parse(xhr.responseText); 	// параметры карты
 		//alert('Получены параметры карты \n'+tileCacheURIthis);
 	}
-	catch(err) { 	// у карты не было параметров. Например, мы не используем GaladrielCache.
+	catch(err) { 	// 
 		return;
 	}
 }
@@ -682,12 +682,13 @@ function createDwnldJob() {
 /* Собирает задания на загрузку: для каждой карты кладёт на сервер csv с номерами тайлов текущего масштаба.
 Считается, что номера тайлов указываются на сфере */
 //alert('submit '+mapDisplayed.children.length+' maps');
-var tileXs = dwnldJob.getElementsByClassName("tileX");
-var tileYs = dwnldJob.getElementsByClassName("tileY");
-var zoom = dwnldJobZoom.innerText;
-var XYs = '', XYsE = '', xhr = [];
-for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
-	var mapname = mapDisplayed.children[i].id; 	// 
+let tileXs = dwnldJob.getElementsByClassName("tileX");
+let tileYs = dwnldJob.getElementsByClassName("tileY");
+let zoom = dwnldJobZoom.innerText;
+let XYs = '', XYsE = '', xhr = [];
+for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
+	let mapname = mapDisplayed.children[i].id; 	// 
+	let uri;
 	if(mapname.indexOf('EPSG3395')==-1) {	// карта - на сфере, пишем тайлы как есть
 		if(!XYs.length) {
 			for (var k = 0; k < tileXs.length; k++) {
@@ -695,7 +696,7 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 			}
 		}
 		//console.log(XYs);
-		var uri = 'loaderJob.php?jobname='+mapname+'.'+zoom+'&xys='+XYs;
+		uri = tileCacheControlURI+'?loaderJob='+mapname+'.'+zoom+'&xys='+XYs;
 	}
 	else {	// карта - на эллипсоиде, пишем тайлы на один ниже
 		if(!XYsE.length) {
@@ -714,7 +715,7 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 			}
 		}
 		//console.log(XYsE);
-		var uri = 'loaderJob.php?jobname='+mapname+'.'+zoom+'&xys='+XYsE;
+		uri = tileCacheControlURI+'?loaderJob='+mapname+'.'+zoom+'&xys='+XYsE;
 	}
 	//console.log(uri);
 	//continue;
@@ -724,9 +725,8 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 	xhr[i].onreadystatechange = function() { // 
 		if (this.readyState != 4) return; 	// запрос ещё не завершился
 		if (this.status != 200) return; 	// что-то не то с сервером
-		let responseText = this.responseText.split(';');
-		//console.log('[createDwnldJob] responseText:',this.responseText);
-		if(responseText[0] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
+		let response = JSON.parse(this.response);
+		if(response && response['status'] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
 			loaderIndicator.style.color='green';
 			//loaderIndicator.innerText='\u263A';
 		}
@@ -734,15 +734,17 @@ for (var i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 			loaderIndicator.style.color='red';
 			//loaderIndicator.innerText='\u2639';
 		}
-		dwnldJobList.innerHTML += '<li>' + responseText[1] + '</li>\n';
+		if(response && response['jobName']) dwnldJobList.innerHTML += '<li>' + response['jobName'] + '</li>\n';
 	}
 }
 } 	// end function createDwnldJob
 
-function chkLoaderStatus(restartLoader=0) {
+function chkLoaderStatus(restartLoader=false) {
 /*  */
 let xhr = new XMLHttpRequest();
-xhr.open('GET', encodeURI('chkLoaderStatus.php?restartLoader='+restartLoader), true); 	// Подготовим асинхронный запрос
+let url = tileCacheControlURI+'?loaderStatus';
+if(restartLoader) url += '&restartLoader';
+xhr.open('GET', encodeURI(url), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился

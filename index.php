@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.9.8';
+$versionTXT = '2.10.0';
 /* 
 2.9.4	update route list with panel open
 2.9.0	wind sign
@@ -18,7 +18,7 @@ $versionTXT = '2.9.8';
 2.3.5	With depth coloring along gpx.
 */
 // start gpsdPROXY
-exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
+if($gpsdPROXYpath) exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
 
 // Интернационализация
 // требуется, чтобы языки были перечислены в порядке убывания предпочтения, так что берём первый
@@ -38,20 +38,25 @@ if($locale =='C') {	// будем менять локаль, только есл
 }
 
 $mapsInfo = array();
-if( $tileCachePath) { 	// если мы знаем про GaladrielCache
-// Получаем список имён карт
-	if($mapSourcesDir[0]=='/') $fullMapSourcesDir = $mapSourcesDir;	// если путь абсолютный (и в unix, конечно) $mapSourcesDir - из конфига GaladrielCache
-	else  $fullMapSourcesDir = "$tileCachePath/$mapSourcesDir"; 	// сделаем путь абсолютным
-	foreach(glob("$fullMapSourcesDir/*.php") as $name) {
-		$mapName=explode('.php',end(explode('/',$name)))[0]; 	// basename не работает с неанглийскими буквами!!!!
-		$humanName = array();
-		include($name);
-		if($humanName){	// из описания источника
-			$mapsInfo[$mapName] = $humanName[$appLocale];	// $appLocale - из internationalisation
-			if(!$mapsInfo[$mapName]) $mapsInfo[$mapName] = $humanName['en'];
-		}
-		if(!$mapsInfo[$mapName]) $mapsInfo[$mapName] = $mapName;
-	}
+if($tileCacheControlURI){	// мы знаем про GaladrielCache
+	if(substr($tileCacheControlURI,0,4)!=='http'){	// всё на одном сервере
+		$str = "{$_SERVER['REQUEST_SCHEME']}://{$_SERVER['SERVER_NAME']}:{$_SERVER['SERVER_PORT']}";
+		if(substr($tileCacheControlURI,0,1)!=='/') {
+			$str .= substr($_SERVER['REQUEST_URI'],0,strrpos($_SERVER['REQUEST_URI'],'/')+1);
+		};
+		$tileCacheControlURI = $str . $tileCacheControlURI;
+		//echo("str=$str; tileCacheControlURI=$tileCacheControlURI;");
+	};
+	$mapList = json_decode(file_get_contents("$tileCacheControlURI?getMapList"),true);
+	//echo "<pre>"; print_r($mapList); echo "</pre>";
+	if($mapList){
+		foreach($mapList as $mapName => $mapHumanNames) {
+			//echo "mapName=$mapName;<br>\n";
+			// $appLocale - из internationalisation
+			if($mapHumanNames[$appLocale]) $mapsInfo[$mapName] = $mapHumanNames[$appLocale];
+			else $mapsInfo[$mapName] = $mapHumanNames['en'];	// там заведомо есть
+		};
+	};
 	asort($mapsInfo,SORT_LOCALE_STRING);
 }
 //echo "mapsInfo:<pre>"; print_r($mapsInfo); echo "</pre>";
@@ -186,7 +191,7 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 	<!-- Nav tabs -->
 	<div class="leaflet-sidebar-tabs">
 		<ul role="tablist" id="featuresList">
-			<li id="homeTab" <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
+			<li id="homeTab" <?php if(!$tileCacheControlURI) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
 			<li id="dashboardTab"><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
 			<li id="tracksTab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
 			<li id="measureTab" ><a href="#measure" role="tab"><img src="img/route.svg" alt="Create route" width="70%"></a></li>
@@ -194,7 +199,7 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 		</ul>
 		<ul role="tablist" id="settingsList">
 			<li id="MOBtab" style="margin-bottom:1.5em;"><a href="#MOB" role="tab"><img src="img/mob.svg" alt="activate MOB" width="70%"></a></li>
-			<li <?php if(!$tileCachePath) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
+			<li <?php if(!$tileCacheControlURI) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
 			<li><a href="#settings" role="tab"><img src="img/settings1.svg" alt="settings" width="70%"></a></li>
 		</ul>
 	</div>
@@ -572,6 +577,7 @@ var showMapsTogglerTXT = [<?php echo $showMapsTogglerTXT; ?>];	// подписи
 var showMapsList = JSON.parse(getCookie('GaladrielshowMapsList')) || [];	// массив названий избранных карт
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте. Типа - кеш объектов.
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
+var tileCacheControlURI = '<?php echo $tileCacheControlURI;?>'; // адрес управляющего интерфейса GaladrielCache
 var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Присваивается в javascriptOpen в параметрах карты. Или ещё где-нибудь.
 var startCenter = JSON.parse(getCookie('GaladrielMapPosition')); 	// getCookie from galadrielmap.js
 if(! startCenter) startCenter = L.latLng([55.754,37.62]); 	// начальная точка
@@ -679,47 +685,6 @@ var lastSuperClusterUpdatePosition = [[0,0],0];	// [<LatLng>,<zoom>] точка 
 
 
 // Поехали
-// Инициализируем список карт
-if(!showMapsList.length) showMapsToggle(true);	// покажем в списке карт все карты, если нет избранных
-else showMapsToggle();	// покажем только избранные, поскольку изначально не показывается ничего
-
-// чего не сделаешь, если двойное нажатие не работает нигде, а на длительное в Google Chrome
-// и иже с ним навешана всякая фигня, и непросто навешана, а с запрещением всего остального
-function longressListener(e){
-e.preventDefault();
-//console.log(e.target);
-if(showMapsToggler.innerHTML == showMapsTogglerTXT[0]) return;	// текущий режим - "избранные карты", в нём не работаем
-if(showMapsList.includes(e.target.id)){	// это избранная карта
-	const n = showMapsList.indexOf(e.target.id);
-	showMapsList.splice(n,1);	// вырежем имя из массива
-	e.target.classList.remove("showedMapName");
-}
-else {
-	showMapsList.push(e.target.id);
-	e.target.classList.add("showedMapName");
-}
-event.stopImmediatePropagation();	// прекратим всплытие и обломим все имеющиеся обработчики. Вдруг фигня, навешенная скотским Google, перестанет работать.
-//console.log('[longressListener] Список избранных карт:',showMapsList);
-} // end function long-pressListener
-
-let touchstartX, touchstartY;
-function handleSwipe(event){
-let touchendX=event.changedTouches[0].screenX; 
-let touchendY=event.changedTouches[0].screenY; 
-//alert(`handleSwipe touchstartY=${touchstartY}, touchendY=${touchendY}`);
-if((touchendX > touchstartX+10) && (Math.abs(touchendY-touchstartY)<10)){	// вправо горизонтально
-	//alert('handleSwipe горизонтальный жест');
-	longressListener(event);
-}
-} // end function handleSwipe()
-
-for(let mapLi of mapList.children){	// назначим обработчик длинного нажатия на каждое название карты, потому что его можно назначить только так
-	mapLi.addEventListener('long-press', longressListener); 
-	// а также обработчики свайпа, ибо в мобильных Chrome вообще всё через жопу
-	mapLi.addEventListener('touchstart',function(e){touchstartX=e.changedTouches[0].screenX; touchstartY=e.changedTouches[0].screenY;});
-	mapLi.addEventListener('touchend',handleSwipe);
-}
-
 // Определим карту
 var map = L.map('mapid', {
 	center: startCenter,
@@ -855,8 +820,50 @@ map.on("layeradd", function(event) {
 	if(tileGrid) tileGrid.bringToFront(); 	// выведем наверх слой с сеткой
 });
 
+<?php if($tileCacheControlURI) { // если работаем через GaladrielCache?>
+
+// Инициализируем список карт
+if(!showMapsList.length) showMapsToggle(true);	// покажем в списке карт все карты, если нет избранных
+else showMapsToggle();	// покажем только избранные, поскольку изначально не показывается ничего
+
+// чего не сделаешь, если двойное нажатие не работает нигде, а на длительное в Google Chrome
+// и иже с ним навешана всякая фигня, и непросто навешана, а с запрещением всего остального
+function longressListener(e){
+e.preventDefault();
+//console.log(e.target);
+if(showMapsToggler.innerHTML == showMapsTogglerTXT[0]) return;	// текущий режим - "избранные карты", в нём не работаем
+if(showMapsList.includes(e.target.id)){	// это избранная карта
+	const n = showMapsList.indexOf(e.target.id);
+	showMapsList.splice(n,1);	// вырежем имя из массива
+	e.target.classList.remove("showedMapName");
+}
+else {
+	showMapsList.push(e.target.id);
+	e.target.classList.add("showedMapName");
+}
+event.stopImmediatePropagation();	// прекратим всплытие и обломим все имеющиеся обработчики. Вдруг фигня, навешенная скотским Google, перестанет работать.
+//console.log('[longressListener] Список избранных карт:',showMapsList);
+}; // end function long-pressListener
+
+let touchstartX, touchstartY;
+function handleSwipe(event){
+let touchendX=event.changedTouches[0].screenX; 
+let touchendY=event.changedTouches[0].screenY; 
+//alert(`handleSwipe touchstartY=${touchstartY}, touchendY=${touchendY}`);
+if((touchendX > touchstartX+10) && (Math.abs(touchendY-touchstartY)<10)){	// вправо горизонтально
+	//alert('handleSwipe горизонтальный жест');
+	longressListener(event);
+}
+}; // end function handleSwipe()
+
+for(let mapLi of mapList.children){	// назначим обработчик длинного нажатия на каждое название карты, потому что его можно назначить только так
+	mapLi.addEventListener('long-press', longressListener); 
+	// а также обработчики свайпа, ибо в мобильных Chrome вообще всё через жопу
+	mapLi.addEventListener('touchstart',function(e){touchstartX=e.changedTouches[0].screenX; touchstartY=e.changedTouches[0].screenY;});
+	mapLi.addEventListener('touchend',handleSwipe);
+}
+
 // Восстановим слои
-<?php if( $tileCachePath) { // если работаем через GaladrielCache?>
 var layers = JSON.parse(getCookie('GaladrielMaps')); 	// getCookie from galadrielmap.js
 // Занесём слои на карту
 if(layers) layers.reverse().forEach(function(layerName){ 	// потому что они там были для красоты последним слоем вверх
@@ -868,8 +875,8 @@ if(layers) layers.reverse().forEach(function(layerName){ 	// потому что
 else selectMap(document.getElementById(defaultMap)); 	// покажкм defaultMap
 coverage();	// Восстановим показ карты покрытия. Хотя состояние переключателя карты покрытия не сохраняется, firefox сохраняет состояние переключателя при простой перезагрузке страницы.
 <?php }
-else {?>
-displayMap('default');
+else {	// мы не знаем про GaladrielCache ?>
+L.tileLayer(tileCacheURI, {"minZoom":4,"maxZoom":18}).addTo(map);
 <?php }?>
 
 // Сетка
