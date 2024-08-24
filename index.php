@@ -1152,7 +1152,9 @@ else mobMarker = L.layerGroup().addLayer(toMOBline);
 
 // Realtime периодическое получение внешних данных
 <?php
-if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') $gpsdProxyHost = $_SERVER['HTTP_HOST'];
+if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') {
+	$gpsdProxyHost = $_SERVER['SERVER_NAME'];	// засада в том, что $_SERVER['HTTP_HOST'] не содержит порта только в том случае, если порт стандартный. В остальных случаях там есть порт.
+}
 ?>
 let subscribe = ['TPV','AIS','ALARM'];
 
