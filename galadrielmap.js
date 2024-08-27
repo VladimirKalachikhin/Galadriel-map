@@ -249,6 +249,15 @@ else return;
 // javascript в загружаемом источнике на открытие карты
 //console.log('[displayMap] mapParm:',mapParm);
 if(mapParm['data'] && mapParm['data']['javascriptOpen']) eval(mapParm['data']['javascriptOpen']);
+let minNativeZoom,maxNativeZoom;
+if(mapParm.minZoom>3){
+	minNativeZoom = mapParm.minZoom;
+	mapParm.minZoom = 3;
+};
+if(mapParm.maxZoom<16){
+	maxNativeZoom = mapParm.maxZoom;
+	mapParm.maxZoom += 1;
+};
 // Загружаемая карта - многослойная?
 if(Array.isArray(additionalTileCachePath)) { 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Например, Weather.php
 	let currZoom; 
@@ -268,8 +277,7 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 		//console.log(tileCacheURIthis);
 		//console.log('mapname=',mapname,savedLayers[mapname]);
 		if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
-			//alert('on Ellipsoide')
-			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom}));
+			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {"minZoom":mapParm.minZoom,"maxZoom":mapParm.maxZoom,"minNativeZoom":minNativeZoom,"maxNativeZoom":maxNativeZoom}));
 		}
 		else if(mapParm['mapboxStyle']) { 	// векторные тайлы, mapboxStyle добавляется в askMapParm.php, и содержит uri стиля
 			if(typeof L.mapboxGL !== 'undefined'){
@@ -281,10 +289,10 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 				if(!loadScriptSync("mapbox-gl-js/dist/mapbox-gl.js")) return;
 				if(!loadScriptSync("mapbox-gl-leaflet/leaflet-mapbox-gl.js")) return;
 			}
-			savedLayers[mapname].addLayer(L.mapboxGL({style: mapParm['mapboxStyle'],minZoom:mapParm.minZoom}));
+			savedLayers[mapname].addLayer(L.mapboxGL({"style": mapParm['mapboxStyle'],"minZoom":mapParm.minZoom}));
 		}
 		else {
-			savedLayers[mapname].addLayer(L.tileLayer(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom}));
+			savedLayers[mapname].addLayer(L.tileLayer(tileCacheURIthis, {"minZoom":mapParm.minZoom,"maxZoom":mapParm.maxZoom,"minNativeZoom":minNativeZoom,"maxNativeZoom":maxNativeZoom}));
 		}
 	}
 }
@@ -294,7 +302,7 @@ else {
 	if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
 	//console.log(tileCacheURIthis);
 	if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {"minZoom":mapParm.minZoom,"maxZoom":mapParm.maxZoom,"minNativeZoom":minNativeZoom,"maxNativeZoom":maxNativeZoom});
 	}
 	else if(mapParm['mapboxStyle']) { 	// векторные тайлы, mapboxStyle добавляется в askMapParm.php, и содержит uri стиля
 		//console.log("[displayMap] typeof L.mapboxGL=",typeof L.mapboxGL,L.mapboxGL);
@@ -308,10 +316,10 @@ else {
 			if(!(mapboxLeafletscript=loadScriptSync("mapbox-gl-leaflet/leaflet-mapbox-gl.js"))) return;
 			//console.log("[displayMap] функции загружены");
 		}
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.mapboxGL({style:mapParm['mapboxStyle'],minZoom:mapParm.minZoom});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.mapboxGL({"style":mapParm['mapboxStyle'],"minZoom":mapParm.minZoom});
 	}
 	else {
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer(tileCacheURIthis, {minZoom:mapParm.minZoom,maxZoom:mapParm.maxZoom});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer(tileCacheURIthis, {"minZoom":mapParm.minZoom,"maxZoom":mapParm.maxZoom,"minNativeZoom":minNativeZoom,"maxNativeZoom":maxNativeZoom});
 	}
 }
 //console.log(savedLayers[mapname]);
@@ -696,7 +704,7 @@ for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 			}
 		}
 		//console.log(XYs);
-		uri = tileCacheControlURI+'?loaderJob='+mapname+'.'+zoom+'&xys='+XYs;
+		uri = tileCacheControlURI+'?loaderJob='+mapname+'.'+zoom+'&xys='+XYs+'&infinitely';
 	}
 	else {	// карта - на эллипсоиде, пишем тайлы на один ниже
 		if(!XYsE.length) {
@@ -715,9 +723,9 @@ for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 			}
 		}
 		//console.log(XYsE);
-		uri = tileCacheControlURI+'?loaderJob='+mapname+'.'+zoom+'&xys='+XYsE;
+		uri = tileCacheControlURI+'?loaderJob='+mapname+'.'+zoom+'&xys='+XYsE+'&infinitely';
 	}
-	//console.log(uri);
+	//console.log('[createDwnldJob] uri=',uri);
 	//continue;
 	xhr[i] = new XMLHttpRequest();
 	xhr[i].open('GET', encodeURI(uri), true); 	// Подготовим асинхронный запрос
@@ -729,10 +737,12 @@ for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 		if(response && response['status'] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
 			loaderIndicator.style.color='green';
 			//loaderIndicator.innerText='\u263A';
+			loaderIndicator.onclick=function (){chkLoaderStatus('stop');};
 		}
 		else {
 			loaderIndicator.style.color='red';
 			//loaderIndicator.innerText='\u2639';
+			loaderIndicator.onclick=function (){chkLoaderStatus('start');};
 		}
 		if(response && response['jobName']) dwnldJobList.innerHTML += '<li>' + response['jobName'] + '</li>\n';
 	}
@@ -743,7 +753,8 @@ function chkLoaderStatus(restartLoader=false) {
 /*  */
 let xhr = new XMLHttpRequest();
 let url = tileCacheControlURI+'?loaderStatus';
-if(restartLoader) url += '&restartLoader';
+if(restartLoader=='start') url += '&restartLoader&infinitely';
+else if(restartLoader=='stop') url += '&stopLoader';
 xhr.open('GET', encodeURI(url), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
@@ -759,7 +770,7 @@ xhr.onreadystatechange = function() { //
 	//if(jobsInfo.length && !loaderRun){	// есть задания, но загрузчик не запущен
 		loaderIndicator.style.color='red';
 		//loaderIndicator.innerText='\u2639';
-		loaderIndicator.onclick=function (){chkLoaderStatus(1);};
+		loaderIndicator.onclick=function (){chkLoaderStatus('start');};
 		let liS = '';
 		for(let jobName in jobsInfo){
 			liS += `<li  ><span>${jobName} </span><span style='font-size:75%;'>${jobsInfo[jobName]}%</span></li>`;
@@ -769,6 +780,7 @@ xhr.onreadystatechange = function() { //
 	else if(loaderRun){	// загрузчик запущен
 		loaderIndicator.style.color='green';
 		//loaderIndicator.innerText='\u263A';
+		loaderIndicator.onclick=function (){chkLoaderStatus('stop');};
 
 		let liS = '';
 		for(let jobName in jobsInfo){
@@ -778,6 +790,7 @@ xhr.onreadystatechange = function() { //
 	}
 	else {	// загрузчик не должен быть запущен
 		loaderIndicator.style.color='gray';
+		loaderIndicator.onclick=null;
 		//loaderIndicator.innerText=' ';
 	}
 }
