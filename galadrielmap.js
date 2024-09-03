@@ -80,7 +80,8 @@ realWindSymbolUpdate(direction=0,speed=0)
 
 loadScriptSync(scriptURL)	Синхронная загрузка javascriptbearing(latlng1, latlng2)
 
-bearing(latlng1, latlng2) {
+bearing(latlng1, latlng2)
+tileNum2degree(zoom,xtile,ytile) Tile numbers to lon./lat. left top corner
 
 atou(b64)		ASCII to Unicode (decode Base64 to original data)
 utoa(data)		Unicode to ASCII (encode data to Base64)
@@ -239,7 +240,6 @@ xhr.send();
 if (xhr.status == 200) { 	// Успешно
 	try {
 		mapParm = JSON.parse(xhr.responseText); 	// параметры карты
-		//alert('Получены параметры карты \n'+tileCacheURIthis);
 	}
 	catch(err) { 	// 
 		return;
@@ -258,6 +258,28 @@ if(mapParm.maxZoom<16){
 	maxNativeZoom = mapParm.maxZoom;
 	mapParm.maxZoom += 1;
 };
+if(mapParm['bounds']) {
+	mapParm['bounds'] = [mapParm['bounds']['leftTop'],mapParm['bounds']['rightBottom']];
+	if(mapParm['bounds'][0]['lng']>0 && mapParm['bounds'][1]['lng']<=0){	// граница переходит антимередиан
+		// Caution: if the area crosses the antimeridian (often confused with the International Date Line), you must specify corners outside the [-180, 180] degrees longitude range.
+		mapParm['bounds'][0]['lng'] -= 360;
+		mapParm['bounds'][1]['lng'] += 360;
+	};
+};
+console.log('[displayMap] mapParm[bounds]:',mapParm['bounds']);
+let layerParm = {
+	"minZoom":mapParm.minZoom,
+	"maxZoom":mapParm.maxZoom,
+	"minNativeZoom":minNativeZoom,
+	"maxNativeZoom":maxNativeZoom,
+	//"bounds": mapParm['bounds']
+};
+let vectorLayerParm = {
+	"style": mapParm['mapboxStyle'],
+	"minZoom":mapParm.minZoom,
+	"bounds": mapParm['bounds']
+};
+//console.log('[displayMap] layerParm:',layerParm);
 // Загружаемая карта - многослойная?
 if(Array.isArray(additionalTileCachePath)) { 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Например, Weather.php
 	let currZoom; 
@@ -268,7 +290,7 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 	}
 	savedLayers[mapname]=L.layerGroup();
 	if(currZoom) savedLayers[mapname].options.zoom = currZoom;
-	// Потому что в javascript при закрытии карты могут указать dditionalTileCachePath = []; (как, собственно, и было в Weather) и тогда после закрытия такой карты открыть другую не получится
+	// Потому что в javascript при закрытии карты могут указать aditionalTileCachePath = []; (как, собственно, и было в Weather) и тогда после закрытия такой карты открыть другую не получится
 	if(!additionalTileCachePath.length) additionalTileCachePath.push('');
 	for(let addPath of additionalTileCachePath) {
 		let mapnameThis = mapname+addPath; 	// 
@@ -277,7 +299,7 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 		//console.log(tileCacheURIthis);
 		//console.log('mapname=',mapname,savedLayers[mapname]);
 		if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
-			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, {"minZoom":mapParm.minZoom,"maxZoom":mapParm.maxZoom,"minNativeZoom":minNativeZoom,"maxNativeZoom":maxNativeZoom}));
+			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, layerParm));
 		}
 		else if(mapParm['mapboxStyle']) { 	// векторные тайлы, mapboxStyle добавляется в askMapParm.php, и содержит uri стиля
 			if(typeof L.mapboxGL !== 'undefined'){
@@ -289,10 +311,10 @@ if(Array.isArray(additionalTileCachePath)) { 	// глобальная перем
 				if(!loadScriptSync("mapbox-gl-js/dist/mapbox-gl.js")) return;
 				if(!loadScriptSync("mapbox-gl-leaflet/leaflet-mapbox-gl.js")) return;
 			}
-			savedLayers[mapname].addLayer(L.mapboxGL({"style": mapParm['mapboxStyle'],"minZoom":mapParm.minZoom}));
+			savedLayers[mapname].addLayer(L.mapboxGL(vectorLayerParm));
 		}
 		else {
-			savedLayers[mapname].addLayer(L.tileLayer(tileCacheURIthis, {"minZoom":mapParm.minZoom,"maxZoom":mapParm.maxZoom,"minNativeZoom":minNativeZoom,"maxNativeZoom":maxNativeZoom}));
+			savedLayers[mapname].addLayer(L.tileLayer(tileCacheURIthis, layerParm));
 		}
 	}
 }
@@ -302,7 +324,7 @@ else {
 	if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
 	//console.log(tileCacheURIthis);
 	if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, {"minZoom":mapParm.minZoom,"maxZoom":mapParm.maxZoom,"minNativeZoom":minNativeZoom,"maxNativeZoom":maxNativeZoom});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, layerParm);
 	}
 	else if(mapParm['mapboxStyle']) { 	// векторные тайлы, mapboxStyle добавляется в askMapParm.php, и содержит uri стиля
 		//console.log("[displayMap] typeof L.mapboxGL=",typeof L.mapboxGL,L.mapboxGL);
@@ -316,10 +338,10 @@ else {
 			if(!(mapboxLeafletscript=loadScriptSync("mapbox-gl-leaflet/leaflet-mapbox-gl.js"))) return;
 			//console.log("[displayMap] функции загружены");
 		}
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.mapboxGL({"style":mapParm['mapboxStyle'],"minZoom":mapParm.minZoom});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.mapboxGL(vectorLayerParm);
 	}
 	else {
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer(tileCacheURIthis, {"minZoom":mapParm.minZoom,"maxZoom":mapParm.maxZoom,"minNativeZoom":minNativeZoom,"maxNativeZoom":maxNativeZoom});
+		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer(tileCacheURIthis, layerParm);
 	}
 }
 //console.log(savedLayers[mapname]);
@@ -736,11 +758,13 @@ for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 		let response = JSON.parse(this.response);
 		if(response && response['status'] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
 			loaderIndicator.style.color='green';
+			loaderIndicator.style.cursor='pointer';
 			//loaderIndicator.innerText='\u263A';
 			loaderIndicator.onclick=function (){chkLoaderStatus('stop');};
 		}
 		else {
 			loaderIndicator.style.color='red';
+			loaderIndicator.style.cursor='pointer';
 			//loaderIndicator.innerText='\u2639';
 			loaderIndicator.onclick=function (){chkLoaderStatus('start');};
 		}
@@ -753,8 +777,15 @@ function chkLoaderStatus(restartLoader=false) {
 /*  */
 let xhr = new XMLHttpRequest();
 let url = tileCacheControlURI+'?loaderStatus';
-if(restartLoader=='start') url += '&restartLoader&infinitely';
-else if(restartLoader=='stop') url += '&stopLoader';
+dwnldJobList.innerHTML = '';
+if(restartLoader=='start') {
+	url += '&restartLoader&infinitely';
+	dwnldJobList.innerHTML = 'Send (re)start loader<br>';
+}
+else if(restartLoader=='stop') {
+	url += '&stopLoader';
+	dwnldJobList.innerHTML = 'Send stop loader<br>';
+};
 xhr.open('GET', encodeURI(url), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
@@ -764,21 +795,22 @@ xhr.onreadystatechange = function() { //
 	let {loaderRun,jobsInfo} = JSON.parse(this.response);
 	//console.log('[chkLoaderStatus]',loaderRun,jobsInfo,JSON.stringify(jobsInfo));
 	
-	dwnldJobList.innerHTML = '';
 	//loaderIndicator.innerText='\u2B24 ';
 	if((JSON.stringify(jobsInfo)!=='[]') && !loaderRun){	// есть задания, но загрузчик не запущен. Менее через жопу выяснить, не пуст ли объект в этом кривом языке нельзя. При том, что в PHP оно всегда array.
 	//if(jobsInfo.length && !loaderRun){	// есть задания, но загрузчик не запущен
 		loaderIndicator.style.color='red';
+		loaderIndicator.style.cursor='pointer';
 		//loaderIndicator.innerText='\u2639';
 		loaderIndicator.onclick=function (){chkLoaderStatus('start');};
 		let liS = '';
 		for(let jobName in jobsInfo){
 			liS += `<li  ><span>${jobName} </span><span style='font-size:75%;'>${jobsInfo[jobName]}%</span></li>`;
 		}
-		dwnldJobList.innerHTML = liS;
+		dwnldJobList.innerHTML += liS;
 	}
 	else if(loaderRun){	// загрузчик запущен
 		loaderIndicator.style.color='green';
+		loaderIndicator.style.cursor='pointer';
 		//loaderIndicator.innerText='\u263A';
 		loaderIndicator.onclick=function (){chkLoaderStatus('stop');};
 
@@ -786,14 +818,15 @@ xhr.onreadystatechange = function() { //
 		for(let jobName in jobsInfo){
 			liS += `<li  ><span>${jobName} &nbsp; </span><span style='font-size:115%;'>${jobsInfo[jobName]}%</span></li>`;
 		}
-		dwnldJobList.innerHTML = liS;
+		dwnldJobList.innerHTML += liS;
 	}
 	else {	// загрузчик не должен быть запущен
 		loaderIndicator.style.color='gray';
+		loaderIndicator.style.cursor='default';
 		loaderIndicator.onclick=null;
 		//loaderIndicator.innerText=' ';
 	}
-}
+}; // end function onreadystatechange
 } // end function chkLoaderStatus
 
 
@@ -1587,15 +1620,15 @@ function flyByString(stringPos){
 /* Получает строку предположительно с координатами, и перемещает туда центр карты */
 //console.log('goToPositionButton',goToPositionButton.value,'goToPositionField',goToPositionField.value);
 if(!stringPos) stringPos = map.getCenter().lat+' '+map.getCenter().lng; 	// map -- глобально определённая карта
-console.log('[flyByString] stringPos=',stringPos);
+//console.log('[flyByString] stringPos=',stringPos);
 let error;
 try {
-    var position = new Coordinates(stringPos); 	// https://github.com/otto-dev/coordinate-parser
+    var position = new Coordinates(stringPos); 	// Разберём строку как координаты https://github.com/otto-dev/coordinate-parser
 	//console.log('[flyByString] position:',position);
 	const lat=position.getLatitude();
 	const lon=position.getLongitude();
 	map.setView(L.latLng([lat,lon])); 	// подвинем карту в указанное место
-	let xhr = new XMLHttpRequest();
+	let xhr = new XMLHttpRequest();	// Запросим сервис геокодирования на предмет - что у нас в этом месте
 	const url = encodeURI('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lon);
 	xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
 	xhr.setRequestHeader('Referer',url); 	// nominatim.org требует?
@@ -1607,23 +1640,44 @@ try {
 		//console.log(nominatim);
 		updGeocodeList(nominatim);
 	}	
-} catch (error) { 	// строка - не координаты
+} catch (error) { 	// coordinate-parser обломался, строка - не координаты.
 	//console.log('[flyByString] stringPos=',stringPos,error);
-	let xhr = new XMLHttpRequest();
-	//const url = encodeURI('https://nominatim.openstreetmap.org/search/'+stringPos+'?format=jsonv2'); 	// прямое геокодирование
-	const url = encodeURI('https://nominatim.openstreetmap.org/search?q='+stringPos+'&format=jsonv2'); 	// прямое геокодирование
-	xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
-	xhr.setRequestHeader('Referer',url); 	// nominatim.org требует? Теперь, .... требует.
-	xhr.send();
-	xhr.onreadystatechange = function() { // 
-		if (this.readyState != 4) return; 	// запрос ещё не завершился
-		if (this.status != 200) return; 	// что-то не то с сервером
-		const nominatim = JSON.parse(this.response);
-		//console.log(nominatim);
-		updGeocodeList(nominatim);
+	// А не номер тайла ли там?
+	const digits = stringPos.trim().match(/(?<!-|\.)\d+(?!\.)/g);	// вытащим неотрицательные целые числа из строки. Выражение неправильное, оно возвращает вторые и далеее цифры после запятой. Но так бывает редко ;-)
+	//console.log('[flyByString] digits:',digits);
+	let x,y,z;
+	if (digits && digits.length == 3 && ((digits.join().length+11) > stringPos.trim().length)) {	// если чисел три, и добавление разумного количества разделителей и пробелов делает строку результата больше исходной. А иначе - это адрес с цифрами.
+		digits.map(Number);	// преобразуем строки в числа (оно и так, но так модно и прилично. Так ChatGPT говорит.)
+		[z,x,y] = digits;
+		let maxTileNum = Math.pow(2, z) - 1;
+		if (x > maxTileNum || y > maxTileNum) {
+			[x,y,z] = digits;
+			maxTileNum = Math.pow(2, z) - 1;
+			if (x > maxTileNum || y > maxTileNum) [z,x,y] = [null,null,null];
+		};
+	};
+	if(z && x && y){	// это похоже на номер тайла, переместимся к этому тайлу
+		console.log('[flyByString] z,x,y:',z,x,y);
+		map.setZoom(z);
+		map.panTo(tileNum2degree(z,x,y));
 	}
-}
-} // end function flyByString
+	else {	// это просто строка, возможно, с адресом, сделаем запрос к геосервису
+		let xhr = new XMLHttpRequest();
+		//const url = encodeURI('https://nominatim.openstreetmap.org/search/'+stringPos+'?format=jsonv2'); 	// прямое геокодирование
+		const url = encodeURI('https://nominatim.openstreetmap.org/search?q='+stringPos+'&format=jsonv2'); 	// прямое геокодирование
+		xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
+		xhr.setRequestHeader('Referer',url); 	// nominatim.org требует? Теперь, .... требует.
+		xhr.send();
+		xhr.onreadystatechange = function() { // 
+			if (this.readyState != 4) return; 	// запрос ещё не завершился
+			if (this.status != 200) return; 	// что-то не то с сервером
+			const nominatim = JSON.parse(this.response);
+			//console.log(nominatim);
+			updGeocodeList(nominatim);
+		};
+	};
+};
+}; // end function flyByString
 
 function updGeocodeList(nominatim){
 if(!Array.isArray(nominatim)) nominatim = [nominatim];
@@ -2168,6 +2222,16 @@ if(bearing >= 360) bearing = bearing-360;
 return bearing;
 } // end function bearing
 
+function tileNum2degree(zoom,xtile,ytile) {
+/* Tile numbers to lon./lat. left top corner
+// http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
+*/
+const n = Math.pow(2, zoom)
+const lon_deg = xtile / n * 360.0 - 180.0;
+const nn = Math.PI - (2 * Math.PI * ytile) / Math.pow(2, zoom);
+const lat_deg = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(nn) - Math.exp(-nn)));
+return {'lat': lat_deg,'lng': lon_deg};
+}
 
 /**
 Эти казлы так и ниасилили юникод в JavaScript. Багу более 15 лет.
