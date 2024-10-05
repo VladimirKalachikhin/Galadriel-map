@@ -353,7 +353,7 @@ ul { /* нужно, чтобы стили работали */
 .okButton {
 	width:2rem;
 	padding:0.2rem;
-	margin:0 1rem;
+	margin:0 0.5rem;
 }
 
 .showedMapName {

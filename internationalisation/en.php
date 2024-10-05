@@ -1,4 +1,5 @@
 <?php
+// https://www.iban.com/country-codes
 $homeHeaderTXT = 'Maps';
 $showMapsTogglerTXT = "'All maps','Selected maps'";
 $dashboardHeaderTXT = 'Speed&heading';

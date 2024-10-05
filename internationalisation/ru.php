@@ -1,4 +1,5 @@
 <?php
+// https://www.iban.com/country-codes
 $homeHeaderTXT = 'Карты';
 $showMapsTogglerTXT = "'Все карты','Избранные карты'";
 $dashboardHeaderTXT = 'Скорость и направление';

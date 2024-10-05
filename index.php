@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.10.2';
+$versionTXT = '2.10.3';
 /* 
 2.9.4	update route list with panel open
 2.9.0	wind sign
@@ -22,7 +22,7 @@ if($gpsdPROXYpath) exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>
 
 // Интернационализация
 // требуется, чтобы языки были перечислены в порядке убывания предпочтения, так что берём первый
-$appLocale = explode('-',explode(';',explode(',',$_SERVER['HTTP_ACCEPT_LANGUAGE'])[0])[0])[0];	
+$appLocale = strtolower(explode('-',explode(';',explode(',',$_SERVER['HTTP_ACCEPT_LANGUAGE'])[0])[0])[0]);	
 if(!file_exists("internationalisation/$appLocale.php")) $appLocale = 'en';
 require_once("internationalisation/$appLocale.php");
 //require_once('internationalisation/en.php');
@@ -359,7 +359,7 @@ foreach($trackInfo as $trackName) {
 					<button onClick='goToPositionField.value += "″";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0rem 0 0;"><span style="font-weight: bold; font-size:150%;">″</span></button><br>
 				</div>
 				<span style=""><?php echo $routePosTXT;?></span><br>
-				<input id='goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:11rem;font-size:150%;'>			
+				<input id='goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:70%;font-size:150%;'>			
 				<button id='goToPositionButton' onClick='flyByString(goToPositionField.value);' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
 			</div>
 			<div  style='width:98%;height:12rem;overflow:auto;margin:0.3rem 0;'>
@@ -468,8 +468,8 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 							</div>
 						</div>
 				<div style="width:95%;">
-					<button type='reset' style="margin:0 1.75rem 0 0;width:4rem;padding:0.2rem;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px" ></button>
-					<button type='submit' style="margin:0 0 0 1.75rem;width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
+					<button type='reset' style="width:4rem;padding:0.2rem;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px" ></button>
+					<button type='submit' style="width:4rem;padding:0.2rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 				</div>
 			</form>
 			<div style="font-size:120%;margin:1rem 0;">
