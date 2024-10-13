@@ -239,11 +239,12 @@ xhr.open('GET', tileCacheControlURI+'?getMapInfo='+mapname, false); 	// Подг
 xhr.send();
 if (xhr.status == 200) { 	// Успешно
 	try {
+		//console.log('[displayMap] xhr.responseText:',xhr.responseText);
 		mapParm = JSON.parse(xhr.responseText); 	// параметры карты
 	}
 	catch(err) { 	// 
 		return;
-	}
+	};
 }
 else return;
 // javascript в загружаемом источнике на открытие карты
@@ -260,6 +261,7 @@ if(mapParm.maxZoom<16){
 };
 if(mapParm['bounds']) {
 	mapParm['bounds'] = [mapParm['bounds']['leftTop'],mapParm['bounds']['rightBottom']];
+	//console.log('[displayMap] mapParm:',mapParm);
 	if(mapParm['bounds'][0]['lng']>0 && mapParm['bounds'][1]['lng']<=0){	// граница переходит антимередиан
 		// Caution: if the area crosses the antimeridian (often confused with the International Date Line), you must specify corners outside the [-180, 180] degrees longitude range.
 		mapParm['bounds'][0]['lng'] -= 360;
@@ -760,12 +762,14 @@ for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 			loaderIndicator.style.color='green';
 			loaderIndicator.style.cursor='pointer';
 			//loaderIndicator.innerText='\u263A';
+			loaderIndicator.title=downloadLoaderIndicatorOnTXT;
 			loaderIndicator.onclick=function (){chkLoaderStatus('stop');};
 		}
 		else {
 			loaderIndicator.style.color='red';
 			loaderIndicator.style.cursor='pointer';
 			//loaderIndicator.innerText='\u2639';
+			loaderIndicator.title=downloadLoaderIndicatorOffTXT;
 			loaderIndicator.onclick=function (){chkLoaderStatus('start');};
 		}
 		if(response && response['jobName']) dwnldJobList.innerHTML += '<li>' + response['jobName'] + '</li>\n';
@@ -801,6 +805,7 @@ xhr.onreadystatechange = function() { //
 		loaderIndicator.style.color='red';
 		loaderIndicator.style.cursor='pointer';
 		//loaderIndicator.innerText='\u2639';
+		loaderIndicator.title=downloadLoaderIndicatorOffTXT;
 		loaderIndicator.onclick=function (){chkLoaderStatus('start');};
 		let liS = '';
 		for(let jobName in jobsInfo){
@@ -812,6 +817,7 @@ xhr.onreadystatechange = function() { //
 		loaderIndicator.style.color='green';
 		loaderIndicator.style.cursor='pointer';
 		//loaderIndicator.innerText='\u263A';
+		loaderIndicator.title=downloadLoaderIndicatorOnTXT;
 		loaderIndicator.onclick=function (){chkLoaderStatus('stop');};
 
 		let liS = '';
@@ -824,6 +830,7 @@ xhr.onreadystatechange = function() { //
 		loaderIndicator.style.color='gray';
 		loaderIndicator.style.cursor='default';
 		loaderIndicator.onclick=null;
+		loaderIndicator.title='';
 		//loaderIndicator.innerText=' ';
 	}
 }; // end function onreadystatechange

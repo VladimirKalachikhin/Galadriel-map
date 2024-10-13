@@ -7,8 +7,9 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.10.3';
+$versionTXT = '2.10.4';
 /* 
+2.10.4	with Norwegian localisation
 2.9.4	update route list with panel open
 2.9.0	wind sign
 2.8.0	distance circles
@@ -21,11 +22,21 @@ $versionTXT = '2.10.3';
 if($gpsdPROXYpath) exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
 
 // Интернационализация
-// требуется, чтобы языки были перечислены в порядке убывания предпочтения, так что берём первый
-$appLocale = strtolower(explode('-',explode(';',explode(',',$_SERVER['HTTP_ACCEPT_LANGUAGE'])[0])[0])[0]);	
-if(!file_exists("internationalisation/$appLocale.php")) $appLocale = 'en';
-require_once("internationalisation/$appLocale.php");
-//require_once('internationalisation/en.php');
+// требуется, чтобы языки были перечислены в порядке убывания предпочтения
+//$inStr = 'nb-NO,nb;q=0.9,no-NO;q=0.8,no;q=0.6,nn-NO;q=0.5,nn;q=0.4,en-US;q=0.3,en;q=0.1';
+//$appLocales = array_map( function ($l) {return explode(';',$l)[0];},explode(',',$inStr));
+$appLocales = array_map( function ($l) {return explode(';',$l)[0];},explode(',',$_SERVER['HTTP_ACCEPT_LANGUAGE']));
+// Здесь игнорируются двойные локали (en-US), поэтому американскую локализацию сделать нельзя. Удмуртскую тоже.
+$appLocales = array_unique(array_map( function ($l) {return explode('-',$l)[0];},$appLocales));
+//echo "<pre>";print_r($appLocales);echo"</pre>";
+foreach($appLocales as $appLocale){	// в порядке убывания предпочтения попробуем загрузить файл интернационализации
+	$res = @include("internationalisation/$appLocale.php");
+	if($res) break;
+};
+if(!$res) {
+	$appLocale = 'en';
+	@include("internationalisation/en.php");
+}
 
 // Системная локаль
 $locale = setlocale(LC_ALL, 0);	// получим системную локаль
@@ -474,7 +485,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 			</form>
 			<div style="font-size:120%;margin:1rem 0;">
 				<h3>
-					<span id="loaderIndicator" style="font-size:75%;vertical-align:top;color:gray;">&#x2B24; </span><?php echo $downloadJobListTXT;?>:
+					<span id="loaderIndicator" title="" style="font-size:75%;vertical-align:top;color:gray;">&#x2B24; </span><?php echo $downloadJobListTXT;?>:
 				</h3>
 				<ul id="dwnldJobList" style="margin:0;">
 				</ul>
@@ -483,7 +494,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 		<!-- Настройки -->
 		<div class="leaflet-sidebar-pane" id="settings">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $settingsHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div style="margin: 1rem 1rem;"> <?php// Следование за курсором ?>
+			<div style="margin: 0.7em 1em;"> <?php// Следование за курсором ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="followSwitch" onChange="noFollowToCursor=!noFollowToCursor; CurrnoFollowToCursor=noFollowToCursor;" checked>
 					<label class="onoffswitch-label" for="followSwitch">
@@ -493,7 +504,8 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</div>
 				<span style="font-size:120%"><?php echo $settingsCursorTXT;?></span>
 			</div>
-			<div style="margin: 1rem 1rem;"> <?php // Текущий трек всегда показывается ?>
+			<br>
+			<div style="margin: 0.7em 1em;"> <?php // Текущий трек всегда показывается ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="currTrackSwitch" onChange="loggingWait();" checked>
 					<label class="onoffswitch-label" for="currTrackSwitch">
@@ -503,7 +515,8 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</div>
 				<span style="font-size:120%"><?php echo $settingsTrackTXT;?></span>
 			</div>
-			<div style="margin: 1rem 1rem;"> <?php// Выбранные маршруты всегда показываются ?>
+			<br>
+			<div style="margin: 0.7em 1em;"> <?php// Выбранные маршруты всегда показываются ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="SelectedRoutesSwitch" onChange="">
 					<label class="onoffswitch-label" for="SelectedRoutesSwitch">
@@ -513,7 +526,8 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</div>
 				<span style="font-size:120%"><?php echo $settingsRoutesAlwaysTXT;?></span>
 			</div>
-			<div style="margin: 1rem 1rem;"> <?php// Показывать окружности дистанции ?>
+			<br>
+			<div style="margin: 0.7em 1em;"> <?php// Показывать окружности дистанции ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="distCirclesSwitch" onChange="distCirclesToggler();">
 					<label class="onoffswitch-label" for="distCirclesSwitch">
@@ -523,7 +537,8 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</div>
 				<span style="font-size:120%"><?php echo $settingsdistCirclesTXT;?></span>
 			</div>
-			<div style="margin: 1rem 1rem;"> <!-- Показывать символ ветра -->
+			<br>
+			<div style="margin: 0.7em 1em;"> <!-- Показывать символ ветра -->
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="windSwitch"  onChange="windSwitchToggler();">
 					<label class="onoffswitch-label" for="windSwitch">
@@ -531,10 +546,10 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span style="font-size:120%" id="settingsdistWindTXT"><?php echo $settingsdistWindTXT;?></span>
+				<span style="font-size:120%;" id="settingsdistWindTXT"><?php echo $settingsdistWindTXT;?> &nbsp; </span>
 			</div>
-			<br><br>
-			<div style="margin: 1rem 1rem;"> <?php // Показ целей AIS ?>
+			<br>
+			<div style="margin: 3em 1em 0.1em;"> <?php // Показ целей AIS ?>
 				<div class="onoffswitch" style="float:right;margin: 0 auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="DisplayAISswitch" onChange="watchAISswitching();">
 					<label class="onoffswitch-label" for="DisplayAISswitch">
@@ -542,10 +557,10 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span style="font-size:120%;vertical-align:middle;"><?php echo $DisplayAIS_TXT;?></span>
+				<span style="font-size:120%;"><?php echo $DisplayAIS_TXT;?></span>
 			</div>
-			<br><br>
-			<div style="margin: 1rem 1rem;"> <?php // максимальная скорость обновления ?>
+			<br>
+			<div style="margin: 3em 1em 0.1em;"> <?php // максимальная скорость обновления ?>
 				<div style="float:right;margin: 1rem auto;">
 					<input id='minWATCHintervalInput' type="text" pattern="[0-9]*" title="<?php echo $realTXT;?>" size='4' style='width:3rem;font-size:175%;'
 					 onChange="minWATCHinterval=parseFloat(this.value);
@@ -555,7 +570,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 					"
 					>
 				</div>
-				<span style="font-size:120%;vertical-align:middle;"><?php echo $minWATCHintervalTXT;?></span>
+				<span style="font-size:120%;"><?php echo $minWATCHintervalTXT;?></span>
 			</div>
 		</div>
 	</div>
@@ -572,7 +587,10 @@ var appLocale = '<?php echo $appLocale; ?>';
 var mapboxGLscript = null;	// скрипт Mapbox GL, загружается при открытии соответствующей карты. Эти глобальные переменные ни нафиг не нужны, но если грузить скрипты Mapbox GL где-то в глубине -- при закрытии карты возникает мутная ошибка.
 var mapboxLeafletscript = null;	// скрипт mapbox-gl-leaflet
 // Карта
-var defaultMap = 'OpenTopoMap'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
+var defaultMap = '<?php echo $defaultMap;?>'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
+if(! defaultMap) defaultMap = 'OpenTopoMap';
+var defaultCenter = <?php echo $defaultCenter ? $defaultCenter : 'undefined';?>; 	// начальная точка, {lat: 99, lng: 99}
+if(! defaultCenter) defaultCenter = {"lat": 55.754, "lng": 37.62}; 	
 var showMapsTogglerTXT = [<?php echo $showMapsTogglerTXT; ?>];	// подписи на кнопке все/избранные карты
 var showMapsList = JSON.parse(getCookie('GaladrielshowMapsList')) || [];	// массив названий избранных карт
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте. Типа - кеш объектов.
@@ -580,7 +598,7 @@ var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источни�
 var tileCacheControlURI = '<?php echo $tileCacheControlURI;?>'; // адрес управляющего интерфейса GaladrielCache
 var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Присваивается в javascriptOpen в параметрах карты. Или ещё где-нибудь.
 var startCenter = JSON.parse(getCookie('GaladrielMapPosition')); 	// getCookie from galadrielmap.js
-if(! startCenter) startCenter = L.latLng([55.754,37.62]); 	// начальная точка
+if(! startCenter) startCenter = defaultCenter; 	// начальная точка
 var startZoom = JSON.parse(getCookie('GaladrielMapZoom')); 	// getCookie from galadrielmap.js
 if(! startZoom) startZoom = 12; 	// начальный масштаб
 var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
@@ -610,6 +628,8 @@ var AISshipTypeTXT = {
 }
 // Loader
 var downJob = false; 	// флаг - не создаётся ли задание на скачивание
+var downloadLoaderIndicatorOnTXT = '<?php echo $downloadLoaderIndicatorOnTXT; ?>';
+var downloadLoaderIndicatorOffTXT = '<?php echo $downloadLoaderIndicatorOffTXT; ?>';
 // Пути и маршруты
 var editorEnabled = false;	// семафор, что можно использовать редактирования
 // Путь

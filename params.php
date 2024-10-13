@@ -29,6 +29,10 @@ $tileCacheURI = "/tileproxy/tiles.php?z={z}&x={x}&y={y}&r={map}"; 	// uri of the
 //$tileCacheURI = 'http://a.tile.opentopomap.org/{z}/{x}/{y}.png'; 	//
 //	Управление GaladrielCache, если используется GaladrielCache.
 $tileCacheControlURI = "/tileproxy/cacheControl.php";	// uri of GaladrielCache control interface
+// Карта, которая показывается, если нечего показывать.
+$defaultMap = 'OpenTopoMap';	// GaladrielCache map to display then no map selected
+// Начальная точка, если никакой точки не указано, строка json
+$defaultCenter = '{"lat": 55.754, "lng": 37.62}';	// map center when no coordinates sets, json string
 
 // если время последнего определения положения отличается от текущего на столько секунд -- положение показывается как устаревшее (серый курсор)
 $PosFreshBefore = 5; 	// seconds. The position is considered correct no longer than this time. If the position older - cursor is grey.
