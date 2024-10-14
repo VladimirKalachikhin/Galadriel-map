@@ -29,7 +29,7 @@
 11. [Режим "Человек за бортом!"](#человек-за-бортом)
 12. Отдельная [приборная панель](#приборная-панель), оптимизированная для устройств с экраном на "электронных чернилах" (E-Ink)
 13. [Управление скачиванием карт](#загрузчик-galadrielcache)
-14. Русский и английский интерфейс
+14. Интерфейс на русском и других языках
 
 * [Работает в OpenWRT](#работа-в-openwrt)
 * [Работает в VenusOS](#работа-в-venusos)
@@ -87,6 +87,7 @@
 * [GitHub MAPBOX project](https://github.com/mapbox) за навигационные значки
 * [OpenMapTiles](https://github.com/openmaptiles) за Mapbox GL basemap style
 * [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) , откуда позаимствованы идеи и немножко кода
+* Mastiff за перевод на норвежский язык
 
 ## Карты
 В GaladrielMap используются [тайловые карты](https://wiki.openstreetmap.org/wiki/Tiles) в разграфке, принятой для [OSM](https://wiki.openstreetmap.org). Основной формат -- растровые тайлы, но могут быть использованы и векторные тайлы в формате [Mapbox](https://www.mapbox.com/).  

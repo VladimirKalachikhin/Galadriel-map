@@ -27,7 +27,7 @@ if($gpsdPROXYpath) exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>
 //$appLocales = array_map( function ($l) {return explode(';',$l)[0];},explode(',',$inStr));
 $appLocales = array_map( function ($l) {return explode(';',$l)[0];},explode(',',$_SERVER['HTTP_ACCEPT_LANGUAGE']));
 // Здесь игнорируются двойные локали (en-US), поэтому американскую локализацию сделать нельзя. Удмуртскую тоже.
-$appLocales = array_unique(array_map( function ($l) {return explode('-',$l)[0];},$appLocales));
+$appLocales = array_unique(array_map( function ($l) {return strtolower(explode('-',$l)[0]);},$appLocales));
 //echo "<pre>";print_r($appLocales);echo"</pre>";
 foreach($appLocales as $appLocale){	// в порядке убывания предпочтения попробуем загрузить файл интернационализации
 	$res = @include("internationalisation/$appLocale.php");

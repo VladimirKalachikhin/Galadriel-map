@@ -27,7 +27,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 11. [A Man OverBoard feature](a-man-overboard)
 12. Optimised for E-Ink screens [Dashboard](#dashboard)
 13. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
-14. English or Russian interface, dependent of browser language settings
+14. English or some other languages interface, dependent of browser language settings
 
 
 * [Work on OpenWRT](#work-in-openwrt)
@@ -90,6 +90,7 @@ Create a local copy of dependences and/or edit _index.php_
 * [GitHub MAPBOX project](https://github.com/mapbox) for navigation ui resources
 * [OpenMapTiles](https://github.com/openmaptiles) for Mapbox GL basemap style
 * [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) for ideas
+* Mastiff to Norwegian localisation
 
 
 ## Maps
