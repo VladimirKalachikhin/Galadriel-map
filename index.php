@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.10.4';
+$versionTXT = '2.10.5';
 /* 
 2.10.4	with Norwegian localisation
 2.9.4	update route list with panel open
@@ -983,7 +983,12 @@ map.on('editable:drawing:end',	function(event) {
 	routeCreateButton.checked=false;
 });
 map.on('editable:vertex:dragstart',	function(event) {
-	window.navigator.vibrate(200); // Вибрировать 200ms
+	// Придурки из Mozilla сделали Error при вызове этой функции из десктопного браузера, когда как
+	// в https://developer.mozilla.org/en-US/docs/Web/API/Navigator/vibrate ясно сказано:
+	// "If the device doesn't support vibration, this method has no effect. "
+	// И до какого-то момента так всё и было.
+	// Короче, они это отключили, но никому не сказали: https://github.com/mdn/content/issues/34703
+	if(typeof window.navigator.vibrate === 'function') window.navigator.vibrate(200); // Вибрировать 200ms
 });
 
 // Круги дистанции
