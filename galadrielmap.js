@@ -268,7 +268,7 @@ if(mapParm['bounds']) {
 		mapParm['bounds'][1]['lng'] += 360;
 	};
 };
-console.log('[displayMap] mapParm[bounds]:',mapParm['bounds']);
+//console.log('[displayMap] mapParm[bounds]:',mapParm['bounds']);
 let layerParm = {
 	"minZoom":mapParm.minZoom,
 	"maxZoom":mapParm.maxZoom,
