@@ -39,6 +39,8 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 ## Compatibility
 PHP7, Linux, OpenWRT, VenusOS. Modern browsers include mobile.
 
+## Restrictions
+http, not https
 
 ## Demo
 ~~Full feature [live demo](http://130.61.159.53/map/). Sometimes there floating a virtual sailboat.~~ 

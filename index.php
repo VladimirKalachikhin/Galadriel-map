@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.10.5';
+$versionTXT = '2.10.6';
 /* 
 2.10.4	with Norwegian localisation
 2.9.4	update route list with panel open
@@ -51,15 +51,23 @@ if($locale =='C') {	// будем менять локаль, только есл
 $mapsInfo = array();
 if($tileCacheControlURI){	// мы знаем про GaladrielCache
 	if(substr($tileCacheControlURI,0,4)!=='http'){	// всё на одном сервере
-		$str = "{$_SERVER['REQUEST_SCHEME']}://{$_SERVER['SERVER_NAME']}:{$_SERVER['SERVER_PORT']}";
+		// $_SERVER['HTTP_HOST'] не содержит порта только в том случае, если порт стандартный. В остальных случаях там есть порт.
+		// SERVER_NAME - это не http addres, а левое имя по результату переадресаций. Как в OpenWRT, например.
+		$host = explode(':',$_SERVER['HTTP_HOST'])[0];
+		$str = "{$_SERVER['REQUEST_SCHEME']}://$host:{$_SERVER['SERVER_PORT']}";
 		if(substr($tileCacheControlURI,0,1)!=='/') {
 			$str .= substr($_SERVER['REQUEST_URI'],0,strrpos($_SERVER['REQUEST_URI'],'/')+1);
 		};
 		$tileCacheControlURI = $str . $tileCacheControlURI;
 		//echo("str=$str; tileCacheControlURI=$tileCacheControlURI;");
 	};
-	$mapList = json_decode(file_get_contents("$tileCacheControlURI?getMapList"),true);
-	//echo "<pre>"; print_r($mapList); echo "</pre>";
+	$opts['ssl']=array(
+		"verify_peer"=>FALSE,
+		"verify_peer_name"=>FALSE
+	);
+	$context = stream_context_create($opts); 	// таким образом, $opts всегда есть
+	$mapList = json_decode(file_get_contents("$tileCacheControlURI?getMapList",false,$context),true);
+	//echo "mapList:"; echo "<pre>"; print_r($mapList); echo "</pre>";
 	if($mapList){
 		foreach($mapList as $mapName => $mapHumanNames) {
 			//echo "mapName=$mapName;<br>\n";
@@ -121,7 +129,12 @@ if($gpxloggerRun and !$currentTrackName) {
 // Получаем список имён маршрутов
 $routeInfo = array();
 if($routeDir) {
-	$routeInfo = glob("$routeDir/*{gpx,kml,csv}", GLOB_BRACE); 	// routeDir - из файла params.php
+	// Оказывается, функциональность GLOB_BRACE есть не везде. В частности, в OpenWRT - нет.
+	//echo "GLOB_BRACE=".GLOB_BRACE."<br>";
+	//$routeInfo = glob("$routeDir/*{gpx,kml,csv}", 1024); 	// routeDir - из файла params.php
+	$routeInfo = glob("$routeDir/*.gpx"); 	// routeDir - из файла params.php
+	$routeInfo = array_merge($routeInfo,glob("$routeDir/*.kml"));
+	$routeInfo = array_merge($routeInfo,glob("$routeDir/*.csv"));
 	array_walk($routeInfo,function (&$name,$ind) {
 			//$name=basename($name); 	// 
 			$name=end(explode('/',$name)); 	// basename не работает с неанглийскими буквами!!!!
@@ -892,7 +905,7 @@ if(layers) layers.reverse().forEach(function(layerName){ 	// потому что
 		const node = document.getElementById(layerName);	
 		if(node) selectMap(node);
 	});
-else selectMap(document.getElementById(defaultMap)); 	// покажкм defaultMap
+else if(document.getElementById(defaultMap)) selectMap(document.getElementById(defaultMap)); 	// покажкм defaultMap
 coverage();	// Восстановим показ карты покрытия. Хотя состояние переключателя карты покрытия не сохраняется, firefox сохраняет состояние переключателя при простой перезагрузке страницы.
 <?php }
 else {	// мы не знаем про GaladrielCache ?>
@@ -1178,7 +1191,9 @@ else mobMarker = L.layerGroup().addLayer(toMOBline);
 // Realtime периодическое получение внешних данных
 <?php
 if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') {
-	$gpsdProxyHost = $_SERVER['SERVER_NAME'];	// засада в том, что $_SERVER['HTTP_HOST'] не содержит порта только в том случае, если порт стандартный. В остальных случаях там есть порт.
+	// засада в том, что $_SERVER['HTTP_HOST'] не содержит порта только в том случае, если порт стандартный. В остальных случаях там есть порт.
+	// А ещё большая засада в том, что SERVER_NAME - это не http addres, а левое имя по результату переадресаций. Как в OpenWRT, например.
+	$gpsdProxyHost = explode(':',$_SERVER['HTTP_HOST'])[0];	
 }
 ?>
 let subscribe = ['TPV','AIS','ALARM'];

@@ -11,9 +11,9 @@ $dashboardKiloMeterMesTXT = 'km.';
 $dashboardCourseTXT = "Beholden kurs";
 $dashboardCourseAltTXT = "Course over ground";
 $dashboardHeadingTXT = 'Kurs';
-$dashboardHeadingAltTXT = 'Course';
+$dashboardHeadingAltTXT = 'Heading';
 $dashboardMHeadingTXT = "Magnetisk kurs";
-$dashboardMHeadingAltTXT = "Magnetic course";
+$dashboardMHeadingAltTXT = "Magnetic heading";
 $dashboardPosTXT = 'Posisjon';
 $dashboardPosAltTXT = 'Latitude &nbsp; Longitude';
 $dashboardSpeedZoomTXT = 'Hastighetsvektor - distanse over';
@@ -172,5 +172,5 @@ $relBearingTXT = "'forut',
 'akterut',
 'aktenfor tvers om babord',
 'babord',	
-'forenom tvers om styrbord'";
+'aktenfor tvers om styrbord'";
 ?>
