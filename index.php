@@ -7,7 +7,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.10.6';
+$versionTXT = '2.10.7';
 /* 
 2.10.4	with Norwegian localisation
 2.9.4	update route list with panel open
@@ -58,15 +58,11 @@ if($tileCacheControlURI){	// мы знаем про GaladrielCache
 		if(substr($tileCacheControlURI,0,1)!=='/') {
 			$str .= substr($_SERVER['REQUEST_URI'],0,strrpos($_SERVER['REQUEST_URI'],'/')+1);
 		};
+		$mapList = json_decode(file_get_contents("http://localhost$tileCacheControlURI?getMapList",false),true);
 		$tileCacheControlURI = $str . $tileCacheControlURI;
 		//echo("str=$str; tileCacheControlURI=$tileCacheControlURI;");
-	};
-	$opts['ssl']=array(
-		"verify_peer"=>FALSE,
-		"verify_peer_name"=>FALSE
-	);
-	$context = stream_context_create($opts); 	// таким образом, $opts всегда есть
-	$mapList = json_decode(file_get_contents("$tileCacheControlURI?getMapList",false,$context),true);
+	}
+	else	$mapList = json_decode(file_get_contents("$tileCacheControlURI?getMapList",false),true);
 	//echo "mapList:"; echo "<pre>"; print_r($mapList); echo "</pre>";
 	if($mapList){
 		foreach($mapList as $mapName => $mapHumanNames) {
@@ -476,7 +472,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span style='font-size:120%;'><?php echo $coverTXT;?></span> <span id='cover_zoom' style='font-size:150%;font-weight:bold;'></span>
 					</div>
 				</div>
-				<span id='coverMap' style='font-size:150%;'></span> 
+				<span id='coverMap' style='font-size:150%;'></span>
 			</div>
 			<h2 style=''><?php echo $downloadZoomTXT;?>: <span id='dwnldJobZoom'></span></h2>
 			<form id="dwnldJob" style="font-size:120%;margin:0;height:50%;" onSubmit="createDwnldJob(); return false;" onreset="dwnldJobZoom.innerHTML=map.getZoom(); downJob=false; tileGrid.redraw();">

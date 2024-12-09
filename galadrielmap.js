@@ -192,16 +192,16 @@ document.cookie = "GaladrielshowMapsList="+JSON.stringify(showMapsList)+"; expir
 } // end function doSavePosition
 
 // Функции выбора - удаления карт
-function selectMap(node) { 	
+async function selectMap(node) { 	
 // Выбор карты из списка имеющихся. Получим объект
+mapDisplayed.insertBefore(node,mapDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.classList.remove("showedMapName");
 node.hidden = false;
-mapDisplayed.insertBefore(node,mapDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.onclick = function(event){deSelectMap(event.currentTarget);};
 displayMap(node.id);
 }
 
-function deSelectMap(node) {
+async function deSelectMap(node) {
 // Прекращение показа карты, и возврат её в список имеющихся. Получим объект
 //alert(node);
 let li = null;
@@ -225,7 +225,7 @@ else {	// текущий режим - "все карты"
 removeMap(node.id);
 }
 
-function displayMap(mapname) {
+async function displayMap(mapname) {
 /* Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
  Делает запрос к tileproxy/cacheControl.php для получения параметров карты
  Если в параметрах карты есть проекция, и она EPSG3395, 
@@ -366,7 +366,7 @@ if(mapParm['data'] && mapParm['data']['javascriptClose']) savedLayers[mapname].o
 savedLayers[mapname].addTo(map);
 } // end function displayMap
 
-function removeMap(mapname) {
+async function removeMap(mapname) {
 mapname=mapname.trim();
 if(!savedLayers[mapname]) return;	// например, в списке есть трек, но gpx был кривой, и слой не был создан
 if(savedLayers[mapname].options.javascriptClose) eval(savedLayers[mapname].options.javascriptClose);
