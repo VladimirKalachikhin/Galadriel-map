@@ -13,6 +13,12 @@ $name = trim(urldecode($_REQUEST['name']));
 //error_log("Name: ".html_entity_decode($name));
 //error_log($gpx);
 if(pathinfo($name,PATHINFO_EXTENSION) != 'gpx') $name = "$name.gpx";
-file_put_contents("$routeDir/$name",$gpx); 	// 
-echo "$name saved!";
+if($gpx){
+	file_put_contents("$routeDir/$name",$gpx); 	// 
+	echo "$name saved!";
+}
+else {
+	unlink("$routeDir/$name");
+	echo "$name deleted!";
+};
 ?>

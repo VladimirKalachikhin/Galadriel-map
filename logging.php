@@ -62,7 +62,7 @@ if($status) { 	// fcommon.php $gpxlogger работает
 		}
 	}
 }
-else {
+else { 	// fcommon.php $gpxlogger не работает
 	if($_REQUEST['startLogging']) { 	
 		list($status,$outpuFileName) = startGPXlogger(); 	
 		$outpuFileName = pathinfo($outpuFileName)['filename'];	
@@ -76,18 +76,24 @@ else {
 		$lastTrackName = getLastTrackName();
 		if($lastTrackName){
 			$lastTrackName = $trackDir.'/'.$lastTrackName;
-			echo "[logging.php] gpxlogger не запущен, последний трек: $lastTrackName\n";
-			if(substr(trim(tailCustom($lastTrackName,10)),-6)!=='</gpx>'){
-				echo "gpxlogger не запущен, а последний трек $lastTrackName не является завершённым, запускаем запись трека\n";
-				list($status,$outpuFileName) = startGPXlogger(); 	
-				$outpuFileName = pathinfo($outpuFileName)['filename'];	
+			$str = file_get_contents($lastTrackName,false,null,0,300);	// возьмём первые 300 то0ли байт, то-ли символов... Они всё сломали.
+			if(strpos($str,'gpx') !== false){	// это, видимо, файл gpx
+				echo "[logging.php] gpxlogger не запущен, последний трек: $lastTrackName\n";
+				if(substr(trim(tailCustom($lastTrackName,10)),-6)!=='</gpx>'){
+					echo "gpxlogger не запущен, а последний трек $lastTrackName не является завершённым, запускаем запись трека\n";
+					list($status,$outpuFileName) = startGPXlogger(); 	
+					$outpuFileName = pathinfo($outpuFileName)['filename'];	
+				}
+				else {
+					exec("crontab -l | grep -v '".__FILE__."'  | crontab -"); 	// удалим себя из cron
+				};
 			}
-			else {
+			else {	// это кривой файл, стало быть, запись трека запускается криво, и не надо пытаться её запускать
 				exec("crontab -l | grep -v '".__FILE__."'  | crontab -"); 	// удалим себя из cron
-			}
-		}
-	}
-}
+			};
+		};
+	};
+};
 ob_end_clean(); 			// очистим, если что попало в буфер
 header('Content-Type: application/json;charset=utf-8;');
 echo json_encode(array($status,$outpuFileName));

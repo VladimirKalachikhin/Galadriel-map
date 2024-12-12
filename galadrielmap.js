@@ -184,7 +184,7 @@ openedNames = JSON.stringify(openedNames);
 document.cookie = "GaladrielRoutes="+openedNames+"; expires="+expires+"; path=/; samesite=Lax";
 // Сохранение переключателей и параметров
 document.cookie = "GaladrielcurrTrackSwitch="+Number(currTrackSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель currTrackSwitch
-document.cookie = "GaladrielloggingSwitch="+Number(loggingSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель loggingSwitch, включение записи трека. Сохраняется, чтобы знать, что именно этот клиент включил запись.
+if(typeof loggingSwitch !== 'undefined') document.cookie = "GaladrielloggingSwitch="+Number(loggingSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель loggingSwitch, включение записи трека. Сохраняется, чтобы знать, что именно этот клиент включил запись.
 document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель SelectedRoutesSwitch
 document.cookie = "GaladrielminWATCHinterval="+minWATCHinterval+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 document.cookie = "GaladrielshowMapsList="+JSON.stringify(showMapsList)+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
@@ -474,7 +474,7 @@ else {
 	var options = {featureNameNode : trackNameNode};
 	var xhr = new XMLHttpRequest();
 	//console.log('[displayTrack] Загружаем новый файл trackName=',trackDirURI+'/'+trackName+'.gpx');
-	xhr.open('GET', encodeURI(trackDirURI+'/'+trackName+'.gpx'), true); 	// Подготовим асинхронный запрос
+	xhr.open('GET', trackDirURI+encodeURI('/'+trackName+'.gpx'), true); 	// В этом грёбаном языке специальная грёбаная функция для получения правильного url портит [], которые являются частью ipv6
 	xhr.overrideMimeType( "application/gpx+xml; charset=UTF-8" ); 	// тупые уроды из Mozilla считают, что если не указан mime type ответа -- то он text/xml. Файлы они, очевидно, не скачивают.
 	xhr.send();
 	xhr.onreadystatechange = function() { // trackName - внешняя
@@ -547,7 +547,7 @@ function updateCurrTrack() {
 // в формате GeoJSON
 //console.log('[updateCurrTrack]',currentTrackServerURI,currentTrackName);
 var xhr = new XMLHttpRequest();
-xhr.open('GET', encodeURI(currentTrackServerURI+'?currTrackName='+currentTrackName), true); 	// Подготовим асинхронный запрос
+xhr.open('GET', currentTrackServerURI+encodeURI('?currTrackName='+currentTrackName), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
@@ -588,7 +588,7 @@ xhr.onreadystatechange = function() { //
 	else { 	// лог не пишется
 		if(typeof loggingIndicator != 'undefined'){
 			// лампочка и переключатель в интерфейсе
-			if(loggingSwitch.checked){ 	// этот клиент сказал писать трек, состояние loggingSwitch восстанавливается из куки в index.php
+			if((typeof loggingSwitch !== 'undefined') && loggingSwitch.checked){ 	// этот клиент сказал писать трек, состояние loggingSwitch восстанавливается из куки в index.php
 				loggingIndicator.style.color='red';
 				loggingIndicator.innerText='\u2B24';
 				loggingRun();	// попытаемся запустить запись трека
@@ -728,7 +728,7 @@ for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 			}
 		}
 		//console.log(XYs);
-		uri = tileCacheControlURI+'?loaderJob='+mapname+'.'+zoom+'&xys='+XYs+'&infinitely';
+		uri = '?loaderJob='+mapname+'.'+zoom+'&xys='+XYs+'&infinitely';
 	}
 	else {	// карта - на эллипсоиде, пишем тайлы на один ниже
 		if(!XYsE.length) {
@@ -747,12 +747,12 @@ for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 			}
 		}
 		//console.log(XYsE);
-		uri = tileCacheControlURI+'?loaderJob='+mapname+'.'+zoom+'&xys='+XYsE+'&infinitely';
+		uri = '?loaderJob='+mapname+'.'+zoom+'&xys='+XYsE+'&infinitely';
 	}
 	//console.log('[createDwnldJob] uri=',uri);
 	//continue;
 	xhr[i] = new XMLHttpRequest();
-	xhr[i].open('GET', encodeURI(uri), true); 	// Подготовим асинхронный запрос
+	xhr[i].open('GET', tileCacheControlURI+encodeURI(uri), true); 	// Подготовим асинхронный запрос
 	xhr[i].send();
 	xhr[i].onreadystatechange = function() { // 
 		if (this.readyState != 4) return; 	// запрос ещё не завершился
@@ -780,7 +780,7 @@ for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 function chkLoaderStatus(restartLoader=false) {
 /*  */
 let xhr = new XMLHttpRequest();
-let url = tileCacheControlURI+'?loaderStatus';
+let url = '?loaderStatus';
 dwnldJobList.innerHTML = '';
 if(restartLoader=='start') {
 	url += '&restartLoader&infinitely';
@@ -790,7 +790,7 @@ else if(restartLoader=='stop') {
 	url += '&stopLoader';
 	dwnldJobList.innerHTML = 'Send stop loader<br>';
 };
-xhr.open('GET', encodeURI(url), true); 	// Подготовим асинхронный запрос
+xhr.open('GET', tileCacheControlURI+encodeURI(url), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился
@@ -1242,45 +1242,52 @@ let pointsFeatureCollection = collectSuperclasterPoints(currentRoute); 	//
 //console.log('[saveGPX] pointsFeatureCollection:',pointsFeatureCollection);
 
 let route = currentRoute.toGeoJSON(); 	// сделаем объект geoJSON. Очевидно, это новый объект?
-if(!('properties' in route)) route.properties = {};
-//route.properties.fileName = fileName;	// имя файла. А нафига?
-if(routeSaveDescr.value.trim()) route.properties.desc = routeSaveDescr.value;	// общий комментарий
-route.properties.time = new Date().toISOString();
-route.properties.xmlns = "http://www.topografix.com/GPX/1/1";
-route.properties['xmlns:gpxx'] = "http://www8.garmin.com/xmlschemas/GpxExtensions/v3";
-route.properties['xmlns:xsi'] = "http://www.w3.org/2001/XMLSchema-instance";
-route.properties['xsi:schemaLocation'] = "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd https://www8.garmin.com/xmlschemas/GpxExtensions/v3 https://www8.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd";
-for(let key in currentRoute.properties) {	//
-	if(typeof route.properties[key] === 'undefined') route.properties[key] = currentRoute.properties[key];
-}
-//console.log('[saveGPX] currentRoute:',currentRoute);
-//console.log('[saveGPX] route as geoJSON:',route);
+console.log('[saveGPX] route:',route);
+if(route.features.length){	// какие-то объекты есть
+	if(!('properties' in route)) route.properties = {};
+	//route.properties.fileName = fileName;	// имя файла. А нафига?
+	if(routeSaveDescr.value.trim()) route.properties.desc = routeSaveDescr.value;	// общий комментарий
+	route.properties.time = new Date().toISOString();
+	route.properties.xmlns = "http://www.topografix.com/GPX/1/1";
+	route.properties['xmlns:gpxx'] = "http://www8.garmin.com/xmlschemas/GpxExtensions/v3";
+	route.properties['xmlns:xsi'] = "http://www.w3.org/2001/XMLSchema-instance";
+	route.properties['xsi:schemaLocation'] = "http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd https://www8.garmin.com/xmlschemas/GpxExtensions/v3 https://www8.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd";
+	for(let key in currentRoute.properties) {	//
+		if(typeof route.properties[key] === 'undefined') route.properties[key] = currentRoute.properties[key];
+	}
+	//console.log('[saveGPX] currentRoute:',currentRoute);
+	//console.log('[saveGPX] route as geoJSON:',route);
 
-// теперь выкинем точки, которые есть в supercluster, а потом добавим все точки из supercluster
-// потому что при текущем масштабе некоторые точки из supercluster могли отображаться как точки,
-// а не как значки supercluster
-if(pointsFeatureCollection.length) { 	// это был supercluster, поэтому в geoJSON неизвестно, сколько оригинальных точек, а не все. Но у нас с собой было...
-	// выкинем все точки, присутствующие в pointsFeatureCollection
-	let pointsFeatureCollectionStrings = pointsFeatureCollection.map(function (point){
-																		// а вот тут убъём все сохранённые маркеры
-																		// из-за того, что JSON.stringify нельзя
-																		// заставить что-то сделать с циклической структурой
-																		point.properties.marker = undefined;
-																		return JSON.stringify(point);
-																	});
-	route.features = route.features.filter(function(feature){	
-		// не сами кластеры, не точки, и точки, не входящие в pointsFeatureCollection
-		return (!feature.properties.cluster) && ((feature.geometry.type !== 'Point') || (! pointsFeatureCollectionStrings.includes(JSON.stringify(feature))));
-	});
-	//console.log('[saveGPX] JSON.stringify(route.features)',JSON.stringify(route.features));
-	// нифига не понятно, почему layer.supercluster.points -- это geoJSON? Видимо, потому, что
-	// в supercluster исходно загружаются не объекты leaflet, а GeoJSON Feature objects. 
-	route.features = route.features.concat(pointsFeatureCollection); 	// теперь положим туда точки, ранее взятые в superclaster'е
-}
-//console.log('[saveGPX] route as geoJSON after:',route);
+	// теперь выкинем точки, которые есть в supercluster, а потом добавим все точки из supercluster
+	// потому что при текущем масштабе некоторые точки из supercluster могли отображаться как точки,
+	// а не как значки supercluster
+	if(pointsFeatureCollection.length) { 	// это был supercluster, поэтому в geoJSON неизвестно, сколько оригинальных точек, а не все. Но у нас с собой было...
+		// выкинем все точки, присутствующие в pointsFeatureCollection
+		let pointsFeatureCollectionStrings = pointsFeatureCollection.map(function (point){
+																			// а вот тут убъём все сохранённые маркеры
+																			// из-за того, что JSON.stringify нельзя
+																			// заставить что-то сделать с циклической структурой
+																			point.properties.marker = undefined;
+																			return JSON.stringify(point);
+																		});
+		route.features = route.features.filter(function(feature){	
+			// не сами кластеры, не точки, и точки, не входящие в pointsFeatureCollection
+			return (!feature.properties.cluster) && ((feature.geometry.type !== 'Point') || (! pointsFeatureCollectionStrings.includes(JSON.stringify(feature))));
+		});
+		//console.log('[saveGPX] JSON.stringify(route.features)',JSON.stringify(route.features));
+		// нифига не понятно, почему layer.supercluster.points -- это geoJSON? Видимо, потому, что
+		// в supercluster исходно загружаются не объекты leaflet, а GeoJSON Feature objects. 
+		route.features = route.features.concat(pointsFeatureCollection); 	// теперь положим туда точки, ранее взятые в superclaster'е
+	}
+	//console.log('[saveGPX] route as geoJSON after:',route);
 
-route = toGPX(route); 	// сделаем gpx 
-//console.log('[saveGPX] route as gpx:',route);
+	route = toGPX(route); 	// сделаем gpx 
+	//console.log('[saveGPX] route as gpx:',route);
+}
+else {	// никаких объектов нет
+	route = '';
+	currentRoute = null;
+};
 
 var xhr = new XMLHttpRequest();
 xhr.open('POST', 'saveGPX.php', true); 	// Подготовим асинхронный запрос
@@ -1797,7 +1804,7 @@ function loggingCheck(logging='logging.php') {
 */
 //console.log('[loggingCheck] started');
 let xhr = new XMLHttpRequest();
-xhr.open('GET', encodeURI(logging), true); 	// Подготовим асинхронный запрос
+xhr.open('GET', logging, true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился
@@ -1916,7 +1923,7 @@ currentMOBmarker.feature = { 	// укажем признак "текущий м�
 mobMarker.addLayer(currentMOBmarker);
 if(!map.hasLayer(mobMarker)) mobMarker.addTo(map); 	// выставим маркер
 
-if(loggingIndicator !== undefined && !loggingSwitch.checked) {
+if((typeof loggingIndicator !== 'undefined') && !loggingSwitch.checked) {
 	loggingSwitch.checked = true;
 	loggingRun(); 	// хотя в loggingSwitch стоит onChange="loggingRun();" изменение loggingSwitch.checked = true; не приводит к срабатыванию обработчика
 }
@@ -2002,15 +2009,17 @@ for(let feature of mobMarkerJSON.features){
 //console.log('[sendMOBtoServer] Sending to server upData.MOB:',upData.MOB);
 //console.log('[sendMOBtoServer] upData=',JSON.stringify(upData.MOB));
 //console.log('[sendMOBtoServer] spatialWebSocket.readyState:',spatialWebSocket.readyState);
-if(spatialWebSocket.readyState == 1) {
+
+if(spatialWebSocket.readyState == 1) {	// при этом в index.php в spatialWebSocket.onopen эта функция вызывается сразу по открытию соединения с gpsdPROXY, так что если есть gpsdPROXY - данные станут общими.
 	spatialWebSocket.send('?UPDATE={"updates":['+JSON.stringify(upData.MOB)+']};'); 	// отдадим данные MOB для передачи на сервер через глобальный сокет для передачи координат. Он есть, иначе -- нет координат и нет проблем.
-}
+};
 // Посадим куку
 mobMarkerJSON = JSON.stringify(mobMarkerJSON);
 const expires =  new Date();
 expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
 document.cookie = "GaladrielMapMOB="+mobMarkerJSON+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 } // end function sendMOBtoServer
+
 
 // Круги дистанции
 function distCirclesUpdate(distCircles){
@@ -2270,7 +2279,7 @@ upData - данные для отправки
 if(upData) {
 	if(dataUrl.includes('?')) dataUrl += '&upData=';
 	else dataUrl += '?upData=';
-	dataUrl += encodeURI(JSON.stringify(upData));
+	dataUrl += encodeURIComponent(JSON.stringify(upData));
 }
 fetch(dataUrl)
 .then((response) => {

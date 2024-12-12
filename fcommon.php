@@ -63,7 +63,7 @@ function gpxloggerRun($retFileName=false){
 Возвращает его PID, или, если указано $retFileName=true, имя пишущегося файла
 */
 global $gpxlogger, $busyboxPresent;
-// Это не будет работать в системах, где вызывмется одно, а реально запускается другое.
+// Это не будет работать в системах, где вызывается одно, а реально запускается другое.
 // Например, вместо указанного php  запускается /usr/bin/php или даже /usr/bin/real_php
 $gpxlg = substr($gpxlogger,0,strpos($gpxlogger,'&logfile'));
 $name = trim(substr($gpxlg,0,strpos($gpxlg,'-')));	// будем считать именем запущенной программы всё до первого символа -

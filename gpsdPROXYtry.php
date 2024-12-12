@@ -1,4 +1,5 @@
 <?php
+/* Для запуска gpsdPROXY с клиента */
 ob_start(); 	// попробуем перехватить любой вывод скрипта
 require('params.php'); 	// пути и параметры
 // start gpsdPROXY

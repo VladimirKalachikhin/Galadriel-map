@@ -18,6 +18,13 @@ $versionTXT = '2.10.7';
 2.5.0	Shows the heading with the cursor, and the course with the velocity vector. Specially for gpsd 3.24.1
 2.3.5	With depth coloring along gpx.
 */
+// Авторизация
+$privileged = true;
+if($grantsAddrList){
+	require_once('fNetGrants.php');
+	$privileged=chkPrivileged();
+	//echo "privileged=$privileged<br>\n";
+};
 // start gpsdPROXY
 if($gpsdPROXYpath) exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
 
@@ -48,13 +55,20 @@ if($locale =='C') {	// будем менять локаль, только есл
 	//echo "set locale from $locale to $res <br>\n";
 }
 
+// засада в том, что $_SERVER['HTTP_HOST'] не содержит порта только в том случае, если порт стандартный. В остальных случаях там есть порт.
+// А ещё большая засада в том, что SERVER_NAME - это не http addres, а левое имя по результату переадресаций. Как в OpenWRT, например.
+if(substr_count($_SERVER['HTTP_HOST'],':')>1){	// ipv6 address
+	$HTTP_HOST = substr($_SERVER['HTTP_HOST'],0,strrpos($_SERVER['HTTP_HOST'],']')+1);
+}
+else $HTTP_HOST = explode(':',$_SERVER['HTTP_HOST'])[0];	// ipv4 address
+
+if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') {
+	$gpsdProxyHost = $HTTP_HOST;
+}
 $mapsInfo = array();
 if($tileCacheControlURI){	// мы знаем про GaladrielCache
 	if(substr($tileCacheControlURI,0,4)!=='http'){	// всё на одном сервере
-		// $_SERVER['HTTP_HOST'] не содержит порта только в том случае, если порт стандартный. В остальных случаях там есть порт.
-		// SERVER_NAME - это не http addres, а левое имя по результату переадресаций. Как в OpenWRT, например.
-		$host = explode(':',$_SERVER['HTTP_HOST'])[0];
-		$str = "{$_SERVER['REQUEST_SCHEME']}://$host:{$_SERVER['SERVER_PORT']}";
+		$str = "{$_SERVER['REQUEST_SCHEME']}://$HTTP_HOST:{$_SERVER['SERVER_PORT']}";
 		if(substr($tileCacheControlURI,0,1)!=='/') {
 			$str .= substr($_SERVER['REQUEST_URI'],0,strrpos($_SERVER['REQUEST_URI'],'/')+1);
 		};
@@ -104,12 +118,17 @@ if($trackDir) {
 	// Текущий трек -- именно последний, есди он не завершён, а не последний не завершённый.
 	$currentTrackName = getLastTrackName($trackInfo);	// fcommon.php вообще, getLastTrackName возвращает имя с расширением, но мы дали ему список имён уже без расширения
 	if($currentTrackName) {	// там может не быть ни одного трека
-		if(trim(tailCustom("$trackDir/$currentTrackName.gpx")) == '</gpx>'){ 	// echo "трек завершён<br>\n"; // fcommon.php
-			$currentTrackName = '';
+		$str = file_get_contents("$trackDir/$currentTrackName.gpx",false,null,0,300);	// возьмём первые 300 то0ли байт, то-ли символов... Они всё сломали.
+		if(strpos($str,'gpx') !== false){	// это, видимо, файл gpx
+			if(trim(tailCustom("$trackDir/$currentTrackName.gpx")) == '</gpx>'){ 	// echo "трек завершён<br>\n"; // fcommon.php
+				$currentTrackName = '';
+			}
+			else $currentTrackName = pathinfo($currentTrackName)['filename'];
 		}
-		else $currentTrackName = pathinfo($currentTrackName)['filename'];
-	}
-}
+		else $currentTrackName = '';
+	};
+	//echo "currentTrackName=$currentTrackName;<br>\n";
+};
 // Проверим состояние записи трека и получим имя записываемого файла
 // Здесь можно получить имя файла записывающегося пути,
 // но проверка в целом не абсолютно надёжна
@@ -219,7 +238,9 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 		</ul>
 		<ul role="tablist" id="settingsList">
 			<li id="MOBtab" style="margin-bottom:1.5em;"><a href="#MOB" role="tab"><img src="img/mob.svg" alt="activate MOB" width="70%"></a></li>
+<?php if($privileged){	// для пользователя со всеми правами ?>
 			<li <?php if(!$tileCacheControlURI) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
+<?php }; // для пользователя со всеми правами ?>	
 			<li><a href="#settings" role="tab"><img src="img/settings1.svg" alt="settings" width="70%"></a></li>
 		</ul>
 	</div>
@@ -279,7 +300,8 @@ foreach($mapsInfo as $mapName => $humanName) {
 		<!-- Треки -->
 		<div class="leaflet-sidebar-pane" id="tracks">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-<?php if($gpxlogger){ // если запись пути осуществляется gpxlogger'ом ?>
+<?php if($privileged){	// для пользователя со всеми правами ?>
+<?php 	if($gpxlogger){ // если запись пути осуществляется gpxlogger'ом ?>
 			<div style="margin: 1rem;">
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="loggingSwitch" onChange="loggingRun();" <?php //if($gpxloggerRun) echo "checked"; // а вдруг не этот экземпляр клиента потребовал включить запись трека? ?>>
@@ -292,6 +314,7 @@ foreach($mapsInfo as $mapName => $humanName) {
 					<span id="loggingIndicator" style="font-size:100%;<?php if($gpxloggerRun) echo"color:green;"; ?>"><?php if($gpxloggerRun) echo '&#x2B24;'; ?></span> <?php echo $loggingTXT;?>
 				</div>
 			</div>
+<?php 	} ?>
 <?php } ?>
 			<ul id="trackDisplayed" class='commonList'>
 			</ul>
@@ -386,7 +409,8 @@ foreach($trackInfo as $trackName) {
 				<ul id='geocodedList' class='commonList'>
 				</ul>
 			</div>
-			<?php // Сохранение маршрута ?>
+<?php if($privileged){	// для пользователя со всеми правами ?>
+			<!-- Сохранение маршрута -->
 			<div style="width:95%; padding: 1rem 0; text-align: center;">
 				<h3><?php echo $routeSaveTitle;?></h3>
 				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:90%;font-size:150%;'>
@@ -401,7 +425,8 @@ foreach($trackInfo as $trackName) {
 					type='submit' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
-			</div>			
+			</div>		
+<?php }; // для пользователя со всеми правами ?>	
 		</div>
 		<!-- Места и маршруты -->
 		<div class="leaflet-sidebar-pane" id="routes">
@@ -456,6 +481,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</div>
 			</div>
 		</div>
+<?php if($privileged){	// для пользователя со всеми правами ?>
 		<!-- Загрузчик -->
 		<div class="leaflet-sidebar-pane" id="download" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
@@ -500,6 +526,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</ul>
 			</div>
 		</div>
+<?php }; // для пользователя со всеми правами ?>	
 		<!-- Настройки -->
 		<div class="leaflet-sidebar-pane" id="settings">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $settingsHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
@@ -767,7 +794,7 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		routeCreateButton.disabled=false; 	// - сделать доступной кнопку Начать
 		pointsControlsEnable();	// включим кнопки точек
 		break;
-	case 'routes':	// треки
+	case 'routes':	// маршруты
 		// обновим список маршрутов, асинхронно
 		listPopulate(routeList,routeDirURI,false,true,function(){
 			const routeListLi = routeList.querySelectorAll('li');
@@ -797,7 +824,7 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 });
 sidebar.on("closing", function(){
 	//console.log('sidebar closing',map.editTools.drawing(),currentRoute);
-	tileGrid.remove(); 	// удалить с карты тайловую сетку
+	if((typeof tileGrid !== 'undefined') && (tileGrid instanceof L.GridLayer)) tileGrid.remove(); 	// удалить с карты тайловую сетку
 	if(CurrnoFollowToCursor !== 1) noFollowToCursor = CurrnoFollowToCursor; 	// восстановим признак следования за курсором
 	CurrnoFollowToCursor = 1;
 	centerMarkOff(); 	// выключить крестик в середине
@@ -805,8 +832,10 @@ sidebar.on("closing", function(){
 	else {
 		editorEnabled=false; 	// если нет редактируемых слоёв -- запретим включать редактирования
 		currentRoute = null;
-		routeSaveName.value = '';
-		routeSaveDescr.value = '';
+		if(typeof routeSaveName !== 'undefined'){
+			routeSaveName.value = '';
+			routeSaveDescr.value = '';
+		};
 	}
 });
 // end controls
@@ -846,7 +875,7 @@ map.on('moveend',  function(event) {
 });
 <?php }?>    
 map.on("layeradd", function(event) {
-	if(tileGrid) tileGrid.bringToFront(); 	// выведем наверх слой с сеткой
+	if((typeof tileGrid !== 'undefined') && (tileGrid instanceof L.GridLayer)) tileGrid.bringToFront(); 	// выведем наверх слой с сеткой
 });
 
 <?php if($tileCacheControlURI) { // если работаем через GaladrielCache?>
@@ -902,12 +931,14 @@ if(layers) layers.reverse().forEach(function(layerName){ 	// потому что
 		if(node) selectMap(node);
 	});
 else if(document.getElementById(defaultMap)) selectMap(document.getElementById(defaultMap)); 	// покажкм defaultMap
+<?php if($privileged){	// для пользователя со всеми правами ?>
 coverage();	// Восстановим показ карты покрытия. Хотя состояние переключателя карты покрытия не сохраняется, firefox сохраняет состояние переключателя при простой перезагрузке страницы.
-<?php }
-else {	// мы не знаем про GaladrielCache ?>
+<?php }; // для пользователя со всеми правами ?>	
+<?php } else {	// мы не знаем про GaladrielCache ?>
 L.tileLayer(tileCacheURI, {"minZoom":4,"maxZoom":18}).addTo(map);
 <?php }?>
 
+<?php if($privileged){	// для пользователя со всеми правами ?>
 // Сетка
 var tileGrid = new L.GridLayer();
 tileGrid.on('tileload',chkColoreSelectedTile);	// подсветить тайлы, указанные в dwnldJob
@@ -923,6 +954,7 @@ tileGrid.createTile = function (coords) {
 }
 if( !downJob) dwnldJobZoom.innerText = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
 cover_zoom.innerText = map.getZoom()+8;
+<?php }; // для пользователя со всеми правами ?>	
 
 // Восстановим показываемые из gpx пути
 if(SelectedRoutesSwitch.checked) {
@@ -1185,13 +1217,6 @@ else mobMarker = L.layerGroup().addLayer(toMOBline);
 
 
 // Realtime периодическое получение внешних данных
-<?php
-if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') {
-	// засада в том, что $_SERVER['HTTP_HOST'] не содержит порта только в том случае, если порт стандартный. В остальных случаях там есть порт.
-	// А ещё большая засада в том, что SERVER_NAME - это не http addres, а левое имя по результату переадресаций. Как в OpenWRT, например.
-	$gpsdProxyHost = explode(':',$_SERVER['HTTP_HOST'])[0];	
-}
-?>
 let subscribe = ['TPV','AIS','ALARM'];
 
 var spatialWebSocket; // будет глобальным сокетом
@@ -1201,9 +1226,10 @@ var lastPositionUpdate=0;	// момент последнего обновлен�
 
 function spatialWebSocketStart(){
 /**/
-let checkDataFreshInterval;	// объект периодического запуска проверки свежести данных
+let checkDataFreshInterval;	// объект периодического запуска проверки свежести данных.	Оказывается, я, ..., использую "замыкания". Но это не нарочно, просто я хотел ограничить область видимиости.
 if(!DisplayAISswitch.checked) subscribe = subscribe.filter(i=>i!='AIS');
 
+console.log('gpsdProxyHost:',"ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>");
 spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>"); 	// должен быть глобальным, ибо к нему отовсюду обращаются
 
 spatialWebSocket.onopen = function(e) {
@@ -1211,7 +1237,7 @@ spatialWebSocket.onopen = function(e) {
 	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
 		sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер, на всякий случай -- вдруг там не знают
 	}
-	// Проверка актуальности координат если, скажем, нет связи с сервером.
+	// Запуск проверки актуальности координат если, скажем, нет связи с сервером.
 	checkDataFreshInterval = setInterval(function (){
 		if((Date.now()-lastDataUpdate)>PosFreshBefore){
 			console.log('The latest TPV data was received too long ago, trying to reconnect for checking.');
@@ -1787,7 +1813,7 @@ for(const name of changedRouteNames){
 // покажет положение даже при отсутствии сервиса координат.
 
 // Установим переключатель в сохранённое состояние
-loggingSwitch.checked = Boolean(+getCookie('GaladrielloggingSwitch')); 	// getCookie from galadrielmap.js
+if(typeof loggingSwitch !== 'undefined') loggingSwitch.checked = Boolean(+getCookie('GaladrielloggingSwitch')); 	// getCookie from galadrielmap.js
 
 var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.
 var currentWaitTrackUpdateProcess;	// процесс ослеживания наличия текущего (пишущегося) трека

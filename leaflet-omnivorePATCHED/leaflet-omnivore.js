@@ -412,7 +412,7 @@ featuresLayer.options.style = function(geoJsonFeature){ 	// A Function defining 
 		style.color = '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6);
 		// поскольку параметры из drivedPolyLineOptions применяются позже... А почему они позже?
 		if(geoJsonFeature.properties && geoJsonFeature.properties.isRoute){
-			style.dashArray = `0,${drivedPolyLineOptions.options.weight+2}`;	// где я в этом месте достану ширину рисуемой линии, если она ещё не задана? А drivedPolyLineOptions для этого и предназначено.
+			style.dashArray = `0,${drivedPolyLineOptions.options.weight+2}`;	// [длина, толщина] Если длина 0, то будут кружочки. где я в этом месте достану ширину рисуемой линии, если она ещё не задана? А drivedPolyLineOptions для этого и предназначено.
 			//style.lineCap = "bitt";
 		}
 	}

@@ -20,6 +20,25 @@ $trackDir = 'track'; 	// track files directory, if present, in filesystem
 // путь в файловой системе к папке с проложенными маршрутами и навигационными точками. Или абсолютный.
 $routeDir = 'route'; 	// route & POI files directory, if present, in filesystem
 
+// Список адресов, обращение с которых позволяет иметь полные (белый список, white list)
+// или ограниченные (чёрный список, black list) возможности.
+// Отсутствие этой переменной означает полные возможности у всех.
+// Формат списка: 
+// перечень ip, шаблон адреса (1.2.3.*), подсеть (1.2.3/24 или 1.2.3.4/255.255.255.0), диапазон адресов (1.2.3.0-1.2.3.255)
+// Возможны как ipn4, так и ipv6 адреса, но для ipv6 можно указать только подсеть.
+// A list of addresses that can be accessed with full (whitelist)
+// or limited (blacklist) capabilities.
+// The absence of this variable means full capabilities for everyone.
+// List format:
+// list of ip, wildcard (1.2.3.*), subnet (1.2.3/24 or 1.2.3.4/255.255.255.0), span of ip (1.2.3.0-1.2.3.255)
+// Both ipn4 and ipv6 addresses are possible, but for ipv6, you can only specify a subnet.
+$grantsAddrList = array(
+'whitelist',
+array(
+	'127.0.0.0','192.168.10.2-192.168.10.100','192.168.10.102','201:bca7:4b06:ebb0:ef2e:8fb1:5513:d49c'
+)
+);
+
 // Службы Services
 // 	Источник карты Map source
 // url источника карты: в интернет (только растровые тайлы) или GaladrielCache
