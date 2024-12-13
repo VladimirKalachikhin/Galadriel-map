@@ -410,11 +410,22 @@ featuresLayer.options.style = function(geoJsonFeature){ 	// A Function defining 
 	}
 	else {
 		style.color = '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6);
+		style.opacity = 0.7;	// если применять на суше, то непрозрачная линия ложится на тропу, и непонятно. Слегка прозрачная решает проблему.
+		//console.log('style.color:',style.color);
 		// поскольку параметры из drivedPolyLineOptions применяются позже... А почему они позже?
 		if(geoJsonFeature.properties && geoJsonFeature.properties.isRoute){
 			style.dashArray = `0,${drivedPolyLineOptions.options.weight+2}`;	// [длина, толщина] Если длина 0, то будут кружочки. где я в этом месте достану ширину рисуемой линии, если она ещё не задана? А drivedPolyLineOptions для этого и предназначено.
 			//style.lineCap = "bitt";
 		}
+		else {
+			featuresLayer.setText('   >   ', {repeat: true, 
+											offset: '0.6ch',	// сдвиг вправо от линии на половину ширины символа (плюс поправочка) размером font-size. ch - Предварительная мера (ширина) глифа "0" шрифта элемента
+											attributes: {fill: style.color,
+														'font-size': '1.5rem',
+														'font-weight': 'bold'
+														}
+											});	// Leaflet.TextPath
+		};
 	}
 	return style;
 	};	// end featuresLayer.options.style = function
@@ -867,7 +878,17 @@ if(options.featureNameNode) { 	// li с именем файла, из котор
 	options.featureNameNode.style.backgroundColor = '#'+('000000' + color.toString(16)).slice(-6);
 }
 featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
-featuresLayer.options.style = function(geoJsonFeature){return{color: '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6)};}; 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
+featuresLayer.options.style = function(geoJsonFeature){ 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
+	const color = '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6);
+	featuresLayer.setText('   >   ', {repeat: true, 
+									offset: '0.6ch',	// сдвиг вправо от линии на половину ширины символа (плюс поправочка) размером font-size. ch - Предварительная мера (ширина) глифа "0" шрифта элемента
+									attributes: {fill: color,
+												'font-size': '1.5rem',
+												'font-weight': 'bold'
+												}
+									});	// Leaflet.TextPath
+	return{color: color, opacity: 0.7};
+	};	// end featuresLayer.options.style = function
 addData(featuresLayer, Features); 	// добавим и покажем всё остальное
 if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
 if(Points.length) {

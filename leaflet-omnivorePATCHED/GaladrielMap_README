@@ -1,7 +1,8 @@
 Не изменяйте имя этого каталога и вложенных каталогов! Эти имена прописаны в galadrielmap.js
 Don't change this directory name and included directory names! It's hardcoded in galadrielmap.js
 
-supercluster.js required!
+supercluster.js is required!
+leaflet.textpath.js is required!
 
 arrayHasOnly	galadrielmap.js
 

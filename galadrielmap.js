@@ -773,9 +773,9 @@ for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждог
 			loaderIndicator.onclick=function (){chkLoaderStatus('start');};
 		}
 		if(response && response['jobName']) dwnldJobList.innerHTML += '<li>' + response['jobName'] + '</li>\n';
-	}
-}
-} 	// end function createDwnldJob
+	};
+};
+}; 	// end function createDwnldJob
 
 function chkLoaderStatus(restartLoader=false) {
 /*  */
@@ -1812,15 +1812,9 @@ xhr.onreadystatechange = function() { //
 	//console.log('[loggingCheck] this.response=',this.response);
 	let status = JSON.parse(this.response);
 	if(status[0]) { 	// состояние gpxlogger после выполнения logging.php, 1 или 0 - запущен успешно
-		loggingIndicator.style.color='green';
-		loggingIndicator.innerText='\u2B24';
 		// Новый текущий трек
 		const newTrackName = status[1].substring(0, status[1].lastIndexOf('.')) || status[1]; 	// имя нового текущего (пишущийся сейчас) трека -- имя файла без расширения		
 		//console.log(status,'[loggingCheck] Новый текущий трек newTrackName=',newTrackName);
-		if(!newTrackName) {	// не было возвращено имени, хотя запись трека работае. Возможно, кто-то запустил запись в какой-то не наш каталог.
-			loggingSwitch.disabled = true;	// отключим переключатель, и не будем нигде включать - пусть жмут Shift-Reload
-			return; 
-		}
 		let newTrackLI = document.getElementById(newTrackName); 	// его всегда нет? Нет, он вполне может быть, если, например, запись запустил не этот клиент
 		//console.log(newTrackLI);
 		if(!newTrackLI) {
@@ -1838,7 +1832,15 @@ xhr.onreadystatechange = function() { //
 		}
 		else { 	// иначе он и так текущий. Авотхрен.
 			if(newTrackName !== currentTrackName) doCurrentTrackName(newTrackName);	// 
-		}
+		};
+		if(typeof loggingSwitch !== 'undefined'){
+			loggingIndicator.style.color='green';
+			loggingIndicator.innerText='\u2B24';
+			if(!newTrackName) {	// не было возвращено имени, хотя запись трека работае. Возможно, кто-то запустил запись в какой-то не наш каталог.
+				loggingSwitch.disabled = true;	// отключим переключатель, и не будем нигде включать - пусть жмут Shift-Reload
+				return; 
+			};
+		};
 		// запустим слежение за логом, если ещё не
 		// Но слежение за логом должно быть запущено, только если трек показывается
 		// но startCurrentTrackUpdateProcess периодически запускает currentTrackUpdate
@@ -1849,13 +1851,15 @@ xhr.onreadystatechange = function() { //
 		}
 	}
 	else {
-		if(loggingSwitch.checked){
-			loggingIndicator.style.color='red';
-			loggingIndicator.innerText='\u2B24';
-		}
-		else {
-			loggingIndicator.innerText='';
-		}
+		if(typeof loggingSwitch !== 'undefined'){
+			if(loggingSwitch.checked){
+				loggingIndicator.style.color='red';
+				loggingIndicator.innerText='\u2B24';
+			}
+			else {
+				loggingIndicator.innerText='';
+			};
+		};
 	}
 return;
 }; // end xhr.onreadystatechange

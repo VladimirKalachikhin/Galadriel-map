@@ -202,6 +202,8 @@ $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_
 	
 	<script src="long-press-event/dist/long-press-event.min.js"></script>
 	
+	<script src="Leaflet.TextPath/leaflet.textpath.js"></script>
+	
 	<link rel="stylesheet" href="galadrielmap.css" type="text/css"> <!-- замена стилей -->
 	<script src="galadrielmap.js"></script>
    <title>GaladrielMap <?php echo $versionTXT;?></title>
@@ -483,7 +485,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 		</div>
 <?php if($privileged){	// для пользователя со всеми правами ?>
 		<!-- Загрузчик -->
-		<div class="leaflet-sidebar-pane" id="download" style="height:100%;">
+		<div class="leaflet-sidebar-pane" id="downloadPane" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<div style="margin: 1rem 0 0.5 0;height:5rem;">
 				<div style="margin:0 0 0.5rem 0">
@@ -814,7 +816,7 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		if(!map.hasLayer(mobMarker)) MOBalarm();
 		else if(!map.hasLayer(cursor)) centerMarkOn(); 	// включить крестик в середине
 		break;
-	case 'download':
+	case 'downloadPane':
 		chkLoaderStatus();	// проверим загрузки
 		tileGrid.addTo(map); 	// добавить на карту тайловую сетку
 		if(CurrnoFollowToCursor === 1)CurrnoFollowToCursor = noFollowToCursor;  // запомним состояние глобального признака следования за курсором, если ещё не запоминали
@@ -857,8 +859,10 @@ map.on('movestart zoomstart', function(event) { 	// карту начали дв
 });
 map.on('zoomend', function(event) {
 	let zoom = event.target.getZoom();
+<?php if($privileged){	// для пользователя со всеми правами ?>
 	if(!downJob) dwnldJobZoom.innerHTML = zoom;
 	cover_zoom.innerHTML = zoom+8;
+<?php }	// для пользователя со всеми правами ?>
 	if(distCirclesSwitch.checked) distCirclesUpdate(distCircles);	// нарисуем круги дистанции
 	if(map.hasLayer(centerMark)) centerMarkUpdate();	// нарисуем круги дистанции крестика в центре
 });
@@ -1229,7 +1233,7 @@ function spatialWebSocketStart(){
 let checkDataFreshInterval;	// объект периодического запуска проверки свежести данных.	Оказывается, я, ..., использую "замыкания". Но это не нарочно, просто я хотел ограничить область видимиости.
 if(!DisplayAISswitch.checked) subscribe = subscribe.filter(i=>i!='AIS');
 
-console.log('gpsdProxyHost:',"ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>");
+//console.log('gpsdProxyHost:',"ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>");
 spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>"); 	// должен быть глобальным, ибо к нему отовсюду обращаются
 
 spatialWebSocket.onopen = function(e) {
