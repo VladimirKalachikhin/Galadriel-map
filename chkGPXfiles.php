@@ -15,6 +15,8 @@ cd /www-data/www/GaladrielMap/
 /usr/bin/php-cli chkGPXfiles.php all
 
 */
+ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+//ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 chdir(__DIR__); // задаем каталог выполнение скрипта
 
 require_once('fcommon.php');

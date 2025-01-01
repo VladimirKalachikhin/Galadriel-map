@@ -1,4 +1,6 @@
 <?php
+ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+//ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 require_once('fcommon.php');
 require_once('params.php'); 	// пути и параметры
 //url службы записи пути. Если не установлена -- обновления пишущегося пути не происходит
@@ -7,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.10.7';
+$versionTXT = '2.19.0';
 /* 
 2.10.4	with Norwegian localisation
 2.9.4	update route list with panel open
@@ -61,10 +63,29 @@ if(substr_count($_SERVER['HTTP_HOST'],':')>1){	// ipv6 address
 	$HTTP_HOST = substr($_SERVER['HTTP_HOST'],0,strrpos($_SERVER['HTTP_HOST'],']')+1);
 }
 else $HTTP_HOST = explode(':',$_SERVER['HTTP_HOST'])[0];	// ipv4 address
+//echo "HTTP_HOST=$HTTP_HOST; <br>\n";
 
-if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') {
+if(!$gpsdProxyHost and $gpsdProxyHosts){	// не указан свой gpsdProxyHost, но указан $gpsdPROXYpath.'/params.php
+	$minLev = PHP_INT_MAX; $minLevInd = PHP_INT_MAX;
+	foreach($gpsdProxyHosts as $i => $gpsdProxyHost){
+		$lev = levenshtein($HTTP_HOST, $gpsdProxyHost[0]);
+		//echo "lev=$lev<br>\n";
+		if($lev<$minLev){
+			$minLev = $lev;
+			$minLevInd = $i;
+		}
+	};
+	//echo "minLev=$minLev; minLevInd=$minLevInd;<br>\n";
+	$gpsdProxyHost = $gpsdProxyHosts[$minLevInd][0];
+	$gpsdProxyPort = $gpsdProxyHosts[$minLevInd][1];
+};
+//echo "gpsdProxyHost=$gpsdProxyHost; gpsdProxyPort=$gpsdProxyPort;<br>\n";
+//$gpsdProxyHost = null; $gpsdProxyPort = null;
+
+if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0' or $gpsdProxyHost=='[::1]' or $gpsdProxyHost=='[::]') {
 	$gpsdProxyHost = $HTTP_HOST;
 }
+//echo "gpsdProxyHost=$gpsdProxyHost; gpsdProxyPort=$gpsdProxyPort;<br>\n";
 $mapsInfo = array();
 if($tileCacheControlURI){	// мы знаем про GaladrielCache
 	if(substr($tileCacheControlURI,0,4)!=='http'){	// всё на одном сервере
@@ -232,16 +253,24 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 	<!-- Nav tabs -->
 	<div class="leaflet-sidebar-tabs">
 		<ul role="tablist" id="featuresList">
-			<li id="homeTab" <?php if(!$tileCacheControlURI) echo 'class="disabled"';?>><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
+<?php if($tileCacheControlURI){ ?>
+			<li id="homeTab"><a href="#home" role="tab"><img src="img/maps.svg" alt="menu" width="70%"></a></li>
+<?php }; ?>
+<?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 			<li id="dashboardTab"><a href="#dashboard" role="tab"><img src="img/speed1.svg" alt="dashboard" width="70%"></a></li>
-			<li id="tracksTab" <?php if(!$trackDir) echo 'class="disabled"';?>><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
+<?php }; ?>
+<?php if($trackDir){ ?>
+			<li id="tracksTab"><a href="#tracks" role="tab"><img src="img/track.svg" alt="tracks" width="70%"></a></li>
+<?php }; ?>
 			<li id="measureTab" ><a href="#measure" role="tab"><img src="img/route.svg" alt="Create route" width="70%"></a></li>
-			<li id="routesTab" <?php if(!$routeDir) echo 'class="disabled"';?>><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
+<?php if($routeDir){ ?>
+			<li id="routesTab"><a href="#routes" role="tab"><img src="img/poi.svg" alt="Routes and POI" width="70%"></a></li>
+<?php }; ?>
 		</ul>
 		<ul role="tablist" id="settingsList">
 			<li id="MOBtab" style="margin-bottom:1.5em;"><a href="#MOB" role="tab"><img src="img/mob.svg" alt="activate MOB" width="70%"></a></li>
-<?php if($privileged){	// для пользователя со всеми правами ?>
-			<li <?php if(!$tileCacheControlURI) echo 'class="disabled"';?>><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
+<?php if($privileged and $tileCacheControlURI){	// для пользователя со всеми правами ?>
+			<li><a href="#download" role="tab"><img src="img/download1.svg" alt="download map" width="70%"></a></li>
 <?php }; // для пользователя со всеми правами ?>	
 			<li><a href="#settings" role="tab"><img src="img/settings1.svg" alt="settings" width="70%"></a></li>
 		</ul>
@@ -267,6 +296,7 @@ foreach($mapsInfo as $mapName => $humanName) {
 			</div>
 			<button id="showMapsToggler" onClick='showMapsToggle();' style="width:90%;height:1.5rem;margin-bottom:1rem;"><?php echo trim(explode(',',$showMapsTogglerTXT)[1],"'"); // установим режим "все карты", не смотря на то, что сейчас не показывается ни одной. При старте клиента будет вызван showMapsToggle, который переключит режим и покажет избранные именно для этого клиента?></button>			
 		</div>
+<?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 		<!-- Приборы -->
 		<div class="leaflet-sidebar-pane" id="dashboard" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $dashboardHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
@@ -299,11 +329,12 @@ foreach($mapsInfo as $mapName => $humanName) {
 				<?php echo $dashboardSpeedZoomTXT;?> <span id='velocityVectorLengthInMnDisplay'></span> <?php echo $dashboardSpeedZoomMesTXT;?>.
 			</div>
 		</div>
+<?php }; ?>
 		<!-- Треки -->
 		<div class="leaflet-sidebar-pane" id="tracks">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-<?php if($privileged){	// для пользователя со всеми правами ?>
-<?php 	if($gpxlogger){ // если запись пути осуществляется gpxlogger'ом ?>
+<?php if($gpxlogger){ // если запись пути осуществляется gpxlogger'ом ?>
+<?php 	if($privileged){	// для пользователя со всеми правами ?>
 			<div style="margin: 1rem;">
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="loggingSwitch" onChange="loggingRun();" <?php //if($gpxloggerRun) echo "checked"; // а вдруг не этот экземпляр клиента потребовал включить запись трека? ?>>
@@ -312,12 +343,12 @@ foreach($mapsInfo as $mapName => $humanName) {
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
+			</div>
+<?php 	}; ?>
 				<div style="padding:1rem 0 0 0;font-size:120%">
 					<span id="loggingIndicator" style="font-size:100%;<?php if($gpxloggerRun) echo"color:green;"; ?>"><?php if($gpxloggerRun) echo '&#x2B24;'; ?></span> <?php echo $loggingTXT;?>
 				</div>
-			</div>
-<?php 	} ?>
-<?php } ?>
+<?php }; ?>
 			<ul id="trackDisplayed" class='commonList'>
 			</ul>
 			<ul id="trackList" class='commonList'>
@@ -412,7 +443,7 @@ foreach($trackInfo as $trackName) {
 				</ul>
 			</div>
 <?php if($privileged){	// для пользователя со всеми правами ?>
-			<!-- Сохранение маршрута -->
+			<?php // Сохранение маршрута ?>
 			<div style="width:95%; padding: 1rem 0; text-align: center;">
 				<h3><?php echo $routeSaveTitle;?></h3>
 				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:90%;font-size:150%;'>
@@ -427,7 +458,7 @@ foreach($trackInfo as $trackName) {
 					type='submit' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
 				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
-			</div>		
+			</div>			
 <?php }; // для пользователя со всеми правами ?>	
 		</div>
 		<!-- Места и маршруты -->
@@ -485,7 +516,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 		</div>
 <?php if($privileged){	// для пользователя со всеми правами ?>
 		<!-- Загрузчик -->
-		<div class="leaflet-sidebar-pane" id="downloadPane" style="height:100%;">
+		<div class="leaflet-sidebar-pane" id="download" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<div style="margin: 1rem 0 0.5 0;height:5rem;">
 				<div style="margin:0 0 0.5rem 0">
@@ -587,6 +618,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				<span style="font-size:120%;" id="settingsdistWindTXT"><?php echo $settingsdistWindTXT;?> &nbsp; </span>
 			</div>
 			<br>
+<?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 			<div style="margin: 3em 1em 0.1em;"> <?php // Показ целей AIS ?>
 				<div class="onoffswitch" style="float:right;margin: 0 auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="DisplayAISswitch" onChange="watchAISswitching();">
@@ -610,6 +642,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</div>
 				<span style="font-size:120%;"><?php echo $minWATCHintervalTXT;?></span>
 			</div>
+<?php }; ?>
 		</div>
 	</div>
 </div>
@@ -641,11 +674,13 @@ var startZoom = JSON.parse(getCookie('GaladrielMapZoom')); 	// getCookie from ga
 if(! startZoom) startZoom = 12; 	// начальный масштаб
 var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
 // ГПС
+<?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 var minWATCHinterval=JSON.parse(getCookie('GaladrielminWATCHinterval'));	// Минимальный интервал, сек., с которым будут приходить данные от gpsdPROXY. Если 0 -- то по мере их получения от датчиков
 if(!minWATCHinterval) minWATCHinterval = 0;
 minWATCHintervalInput.value = minWATCHinterval;
 var PosFreshBefore = <?php echo $PosFreshBefore * 1000;?>; 	// время в милисекундах, через которое положение считается протухшим
 if(PosFreshBefore < (2*minWATCHinterval*1000+1000)) PosFreshBefore = 2*minWATCHinterval*1000+1000;
+<?php }; ?>
 var followToCursor = true; 	// карта следует за курсором Обеспечивает только паузу следования при перемещениях и масштабировании карты руками
 var noFollowToCursor = false; 	// карта никогда не следует за курсором Глобальное отключение следования. Само не восстанавливается.
 var CurrnoFollowToCursor = 1; 	// глобальная переменная для сохранения состояния
@@ -731,7 +766,9 @@ var currentMOBmarker;
 var relBearingTXT = [<?php echo $relBearingTXT; // internationalisation ?>]
 // main output data
 var upData = {};
+<?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 DisplayAISswitch.checked = true;	// Показывать цели AIS. Всегда?
+<?php }; ?>
 
 // Подготовленные картинки для случая off-line
 const mob_markerImg = '<?php echo $mob_markerImg; ?>';
@@ -813,8 +850,9 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		});
 		break;
 	case 'MOB': 	// человек за бортом
+		//console.log('map.hasLayer(mobMarker)=',map.hasLayer(mobMarker),mobMarker);
 		if(!map.hasLayer(mobMarker)) MOBalarm();
-		else if(!map.hasLayer(cursor)) centerMarkOn(); 	// включить крестик в середине
+		else if(typeof cursor === 'undefined' || !map.hasLayer(cursor)) centerMarkOn(); 	// включить крестик в середине
 		break;
 	case 'downloadPane':
 		chkLoaderStatus();	// проверим загрузки
@@ -1106,6 +1144,7 @@ var GpsCursor = L.icon({
 	iconAnchor:   [60, 60], // point of the icon which will correspond to marker's location
 });
 
+<?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 // курсор
 var NoGpsCursor = L.icon({	// этот значёк может показываться и при пропаже связи с сервером, а в этом случае загрузить картинку не удастся. Но таскать с собой картинку заранее, как для MOB -- наверно, слишком накладно. Поэтому -- стилем.
 	iconUrl: 'img/gpscursor.png',
@@ -1170,6 +1209,7 @@ if(DisplayAISswitch.checked) collisionDirectionsCursor.addTo(positionCursor);	//
 /*//////////////////////////// for collision test purpose //////////////////////////////////
 var collisisonAreas = L.layerGroup(); 	// для тестовых целей collisionDetector
 ///////////////////////////// for collision test purpose /////////////////////////////////*/
+<?php }; ?>
 
 // MOB marker
 var mobIcon = L.icon({ 	// 
@@ -1194,29 +1234,67 @@ var toMOBline = L.polyline([], {
 // восстановим маркеры
 var mobMarker = getCookie('GaladrielMapMOB'); 	// getCookie from galadrielmap.js
 if(mobMarker) {
-	// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
-	mobMarker = L.geoJSON(JSON.parse(mobMarker));
-	mobMarker.eachLayer(function (layer) {
-		if(layer instanceof L.Marker)	{
-			layer.setIcon(mobIcon);
-			currentMOBmarker = layer; 	// последний станет текущим
-		}
-		else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
-	});
-	mobMarker.addLayer(toMOBline);
-	mobMarker.addTo(map);
-	mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable. 
-		if(layer instanceof L.Marker)	{	
-			layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
-			layer.on('dragend', function(event){
-				//console.log("New MOB marker from server data dragged end, send to server new coordinates",currentMOBmarker);
-				sendMOBtoServer(); 
-			}); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
-		}
-	});
-}
-else mobMarker = L.layerGroup().addLayer(toMOBline);
-//var mobMarker = L.layerGroup().addLayer(toMOBline);
+	let mobMarkerJSON;
+	try{
+		mobMarkerJSON = JSON.parse(mobMarker);
+	}
+	catch(err){
+		console.log('GaladrielMapMOB cookie is bad, JSON.parse error:',err.text);
+	};
+	//console.log('from cookie:',mobMarkerJSON);	// L.geoJSON не сохраняет левые поля из geoJSON
+	if((typeof mobMarkerJSON === "object") && mobMarkerJSON.features && (typeof mobMarkerJSON.features === "object")){
+		let pt = false
+		for(let feature of mobMarkerJSON.features){
+			if(feature.geometry.type != 'Point') continue;
+			if((typeof feature.geometry.coordinates === "object") && feature.geometry.coordinates.length != 0){
+				pt=true;
+				break;
+			};
+		};
+		if(pt){	// В куке - объект geojson с точкой с координатами
+			// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
+			mobMarker = L.geoJSON(mobMarkerJSON);
+			if(mobMarkerJSON.properties && mobMarkerJSON.properties.timestamp){	// штатно не, но могут быть куки от предыдущих версий
+				mobMarker.feature = {properties: {'timestamp': mobMarkerJSON.properties.timestamp}};
+			}
+			else mobMarker.feature = {properties: {'timestamp': null}};
+			mobMarker.eachLayer(function (layer) {
+				if(layer instanceof L.Marker)	{
+					layer.setIcon(mobIcon);
+					currentMOBmarker = layer; 	// последний станет текущим
+				}
+				else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
+			});
+			mobMarker.addLayer(toMOBline);
+			mobMarker.addTo(map);
+			mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable. 
+				if(layer instanceof L.Marker)	{	
+					layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
+					layer.on('dragend', mobMarkerDragendFunction); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
+					layer.on('click', mobMarkerClickFunction); 	// текущим будет маркер, по которому кликнули
+				}
+			});
+			//console.log('mobMarker from cookie:',mobMarker);
+		};
+	};
+};
+if((typeof mobMarker !== "object") || !(mobMarker instanceof L.LayerGroup)) {
+	mobMarker = L.layerGroup().addLayer(toMOBline);
+	mobMarker.feature = {properties: {}};
+};
+
+function mobMarkerDragendFunction(event){
+console.log("MOB dragged end, send to server new coordinates",mobMarker);
+mobMarker.feature.properties.timestamp = Date.now();
+sendMOBtoServer(); 
+}; // end function mobMarkerDragendFunction
+function mobMarkerClickFunction(event){
+currentMOBmarker = event.target;
+clearCurrentStatus(); 	// удалим признак current у всех маркеров
+currentMOBmarker.feature.properties.current = true;
+mobMarker.feature.properties.timestamp = Date.now();
+sendMOBtoServer(); 
+}; // end function mobMarkerClickFunction
 
 
 
@@ -1228,6 +1306,7 @@ var lastDataUpdate=0;	// момент последнего получения д
 var PosFreshBeforeMultiplexor=30;	// через сколько интервалов PosFreshBefore убирать курсор совсем
 var lastPositionUpdate=0;	// момент последнего обновления координат
 
+<?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 function spatialWebSocketStart(){
 /**/
 let checkDataFreshInterval;	// объект периодического запуска проверки свежести данных.	Оказывается, я, ..., использую "замыкания". Но это не нарочно, просто я хотел ограничить область видимиости.
@@ -1238,8 +1317,11 @@ spatialWebSocket = new WebSocket("ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort
 
 spatialWebSocket.onopen = function(e) {
 	console.log("[spatialWebSocket open] Connection established");
-	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
+	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB - MOB есть
 		sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер, на всякий случай -- вдруг там не знают
+	}
+	else if(mobMarker.feature.properties.timestamp){ 	// если есть timestamp - MOB был, но сейчас нет
+		sendMOBtoServer(false); 	// отдадим данные MOB для передачи на сервер, на всякий случай -- вдруг там не знают
 	}
 	// Запуск проверки актуальности координат если, скажем, нет связи с сервером.
 	checkDataFreshInterval = setInterval(function (){
@@ -1267,14 +1349,14 @@ spatialWebSocket.onmessage = function(event) {
 	lastDataUpdate = Date.now();	// какое-то обновление данных пришло.
 	switch(data.class){
 	case 'VERSION':
-		console.log('spatialWebSocket: Handshaiking with gpsd begin: VERSION recieved. Sending WATCH');
+		console.log('spatialWebSocke.onmessaget: Handshaiking with gpsd begin: VERSION recieved. Sending WATCH');
 		spatialWebSocket.send('?WATCH={"enable":true,"json":true,"subscribe":"'+subscribe.join()+'","minPeriod":"'+minWATCHinterval+'"};');
 		break;
 	case 'DEVICES':
-		console.log('spatialWebSocket: Handshaiking with gpsd proceed: DEVICES recieved');
+		console.log('spatialWebSocket.onmessage: Handshaiking with gpsd proceed: DEVICES recieved');
 		break;
 	case 'WATCH':
-		console.log('spatialWebSocket: Handshaiking with gpsd complit: WATCH recieved.');
+		console.log('spatialWebSocket.onmessage: Handshaiking with gpsd complit: WATCH recieved.');
 		break;
 	case 'POLL':
 		break;
@@ -1340,7 +1422,7 @@ spatialWebSocket.onerror = function(error) {
 }; // end function spatialWebSocketStart
 
 function spatialWebSocketStop(message=''){
-	console.log('Stop recieve TPV',);
+	console.log('Stop recieve TPV',message);
 	spatialWebSocket.close(1000,message);
 } // end function spatialWebSocketStop
 
@@ -1402,6 +1484,7 @@ else {
 }; // end function watchAISswitching
 
 spatialWebSocketStart(); 	// запускам периодическую функцию получать TPV
+<?php }; ?>
 
 // Обработчики сообщений
 // Позиционирование
@@ -1420,7 +1503,7 @@ else {
 // Положение неизвестно
 //console.log('Index gpsdData',gpsdData.lon,gpsdData.lat);
 if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
-	console.log('No spatial info in GPSD data',gpsdData);
+	console.log('[realtimeTPVupdate] No spatial info in GPSD data',gpsdData);
 	//console.log('lastPositionUpdate=',lastPositionUpdate,'PosFreshBefore*PosFreshBeforeMultiplexor=',PosFreshBefore*PosFreshBeforeMultiplexor,Date.now()-lastPositionUpdate);
 	if((Date.now()-lastPositionUpdate)>PosFreshBefore*PosFreshBeforeMultiplexor) {	// обычно PosFreshBefore -- 3-5 секунд
 		positionCursor.remove(); 	// уберём курсор (layerGroup) с карты
@@ -1436,7 +1519,7 @@ if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData
 	depthDial.innerHTML = '';
 	//MOBtab.className='disabled'; 	// если нет курсора (координат) -- невозможно включить режим MOB. Это плохая идея.
 	return;
-}
+};
 // Свежее ли положение известно
 lastPositionUpdate = Date.now();
 //MOBtab.className=''; 	// координаты появились -- можно включить режим MOB
@@ -1643,7 +1726,7 @@ if(MOBdata.status === false) { 	// режим MOB надо выключить
 	}
 }
 else { 	//console.log('режим MOB есть, пришли новые данные');
-	//console.log('Index data.MOB',data.MOB);
+	//console.log('Index MOBdata',MOBdata);
 	// создадим GeoJSON
 	let mobMarkerJSON = {"type":"FeatureCollection",
 						"features":[]
@@ -1665,6 +1748,7 @@ else { 	//console.log('режим MOB есть, пришли новые данн
 	mobMarker.remove(); 	// убрать мультислой-маркер с карты
 	mobMarker = null; 	// ритуальное действие. Возможно, оно воздействует на сборщик мусора, и приведёт к быстрому реальному удалению объекта, но это ни откуда не следует.
 	mobMarker = L.geoJSON(mobMarkerJSON); 	// создадим новый объект
+	mobMarker.feature = {properties: {'timestamp': MOBdata.timestamp}};
 	mobMarker.eachLayer(function (layer) {
 		if(layer instanceof L.Marker)	{
 			layer.setIcon(mobIcon);
@@ -1684,14 +1768,12 @@ else { 	//console.log('режим MOB есть, пришли новые данн
 	mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable
 		if(layer instanceof L.Marker)	{	
 			layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
-			layer.on('dragend', function(event){
-				//console.log("New MOB marker from server data dragged end, send to server new coordinates",currentMOBmarker);
-				sendMOBtoServer(); 
-			}); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
+			layer.on('dragend', mobMarkerDragendFunction); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
+			layer.on('click', mobMarkerClickFunction); 	// текущим будет маркер, по которому кликнули
 		}
 	});
 }
-//console.log(mobMarker);
+//console.log('[realtimeMOBupdate] mobMarker from server',mobMarker);
 } // end function realtimeMOBupdate
 
 // Обнаружение столкновений
@@ -1817,7 +1899,9 @@ for(const name of changedRouteNames){
 // покажет положение даже при отсутствии сервиса координат.
 
 // Установим переключатель в сохранённое состояние
-if(typeof loggingSwitch !== 'undefined') loggingSwitch.checked = Boolean(+getCookie('GaladrielloggingSwitch')); 	// getCookie from galadrielmap.js
+<?php if($privileged){	// для пользователя со всеми правами ?>
+loggingSwitch.checked = Boolean(+getCookie('GaladrielloggingSwitch')); 	// getCookie from galadrielmap.js
+<?php };	// для пользователя со всеми правами ?>
 
 var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.
 var currentWaitTrackUpdateProcess;	// процесс ослеживания наличия текущего (пишущегося) трека

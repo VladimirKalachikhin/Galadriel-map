@@ -1,5 +1,7 @@
 <?php
 /* Для запуска gpsdPROXY с клиента */
+ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+//ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 ob_start(); 	// попробуем перехватить любой вывод скрипта
 require('params.php'); 	// пути и параметры
 // start gpsdPROXY

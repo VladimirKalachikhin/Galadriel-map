@@ -186,7 +186,7 @@ document.cookie = "GaladrielRoutes="+openedNames+"; expires="+expires+"; path=/;
 document.cookie = "GaladrielcurrTrackSwitch="+Number(currTrackSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель currTrackSwitch
 if(typeof loggingSwitch !== 'undefined') document.cookie = "GaladrielloggingSwitch="+Number(loggingSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель loggingSwitch, включение записи трека. Сохраняется, чтобы знать, что именно этот клиент включил запись.
 document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель SelectedRoutesSwitch
-document.cookie = "GaladrielminWATCHinterval="+minWATCHinterval+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
+if(typeof minWATCHinterval !== 'undefined') document.cookie = "GaladrielminWATCHinterval="+minWATCHinterval+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 document.cookie = "GaladrielshowMapsList="+JSON.stringify(showMapsList)+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 //console.log('Position, layers and options saved');
 } // end function doSavePosition
@@ -596,16 +596,17 @@ xhr.onreadystatechange = function() { //
 			else {
 				loggingIndicator.style.color='';
 				loggingIndicator.innerText='';
+				loggingIndicator.style.color=null;
 				if(currentWaitTrackUpdateProcess){
 					clearInterval(currentWaitTrackUpdateProcess);	
 					console.log('[updateCurrTrack] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
-				}
+				};
 				if(currTrackSwitch.checked) startCurrentWaitTrackUpdateProcess();	// Текущий трек всегда показывается
-			}
-		}
-	}
-}
-} // end function updateCurrTrack
+			};
+		};
+	};
+};
+}; // end function updateCurrTrack
 
 // Загрузчик и подготовка задания
 function XYentryFields(element){
@@ -826,7 +827,7 @@ xhr.onreadystatechange = function() { //
 		}
 		dwnldJobList.innerHTML += liS;
 	}
-	else {	// загрузчик не должен быть запущен
+	else {	// загрузчик не запущен и нет заданий - загрузчик не должен быть запущен
 		loaderIndicator.style.color='gray';
 		loaderIndicator.style.cursor='default';
 		loaderIndicator.onclick=null;
@@ -1777,23 +1778,50 @@ else {
 }
 } // end function loggingWait
 
-function loggingRun() {
-/* запускает/останавливает запись трека по кнопке в интерфейсе */
+function loggingRun(run='') {
+/* запускает/останавливает запись трека по кнопке в интерфейсе 
+или просто вызовом
+*/
+if(typeof loggingIndicator === 'undefined') return	// loggingRun может быть запущен откуда-нибудь
+//console.log('[loggingRun] run=',run);
 let logging = 'logging.php';
-if(loggingSwitch.checked) {	// Запись пути
-	logging += '?startLogging=1';
-}
-else {
-	logging += '?stopLogging=1';
-	if(currentTrackName) doNotCurrentTrackName(currentTrackName);
-	console.log('[loggingRun] Logging stop by user');
-	console.log('[loggingRun]  Update track stopped because no logging now');
-	if(currentWaitTrackUpdateProcess){
-		clearInterval(currentWaitTrackUpdateProcess);	
-		console.log('[loggingRun] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
-	}
-	if(currTrackSwitch.checked) startCurrentWaitTrackUpdateProcess();	// Текущий трек всегда показывается
-}
+switch(run){
+case 'start':
+	if(!loggingIndicator.innerText || loggingIndicator.style.color != 'green'){	// запись не ведётся, или была включена, но не включилась
+		logging += '?startLogging=1';
+	};
+	break;
+case 'stop':
+	if(loggingIndicator.innerText){	// запись была включена
+		logging += '?stopLogging=1';
+		if(currentTrackName) doNotCurrentTrackName(currentTrackName);
+		console.log('[loggingRun]  Update track stopped because no logging now');
+		if(currentWaitTrackUpdateProcess){
+			clearInterval(currentWaitTrackUpdateProcess);	
+			console.log('[loggingRun] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
+		}
+		if(currTrackSwitch.checked) startCurrentWaitTrackUpdateProcess();	// Текущий трек всегда показывается
+	};
+	break;
+default:
+	if(typeof loggingSwitch !== 'undefined'){	// для пользователя со всеми правами
+		if(loggingSwitch.checked) {	// Запись пути
+			logging += '?startLogging=1';
+		}
+		else {
+			logging += '?stopLogging=1';
+			if(currentTrackName) doNotCurrentTrackName(currentTrackName);
+			console.log('[loggingRun] Logging stop by user');
+			console.log('[loggingRun]  Update track stopped because no logging now');
+			if(currentWaitTrackUpdateProcess){
+				clearInterval(currentWaitTrackUpdateProcess);	
+				console.log('[loggingRun] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
+			}
+			if(currTrackSwitch.checked) startCurrentWaitTrackUpdateProcess();	// Текущий трек всегда показывается
+		};
+	};
+};
+//console.log('[loggingRun] logging=',logging);
 loggingCheck(logging);
 } // end function loggingRun
 
@@ -1833,12 +1861,14 @@ xhr.onreadystatechange = function() { //
 		else { 	// иначе он и так текущий. Авотхрен.
 			if(newTrackName !== currentTrackName) doCurrentTrackName(newTrackName);	// 
 		};
-		if(typeof loggingSwitch !== 'undefined'){
+		if(typeof loggingIndicator !== 'undefined'){	// если запись пути осуществляется gpxlogger'ом 
 			loggingIndicator.style.color='green';
 			loggingIndicator.innerText='\u2B24';
-			if(!newTrackName) {	// не было возвращено имени, хотя запись трека работае. Возможно, кто-то запустил запись в какой-то не наш каталог.
-				loggingSwitch.disabled = true;	// отключим переключатель, и не будем нигде включать - пусть жмут Shift-Reload
-				return; 
+			if(typeof loggingSwitch !== 'undefined'){	// для пользователя со всеми правами
+				if(!newTrackName) {	// не было возвращено имени, хотя запись трека работае. Возможно, кто-то запустил запись в какой-то не наш каталог.
+					loggingSwitch.disabled = true;	// отключим переключатель, и не будем нигде включать - пусть жмут Shift-Reload
+					return; 
+				};
 			};
 		};
 		// запустим слежение за логом, если ещё не
@@ -1851,8 +1881,8 @@ xhr.onreadystatechange = function() { //
 		}
 	}
 	else {
-		if(typeof loggingSwitch !== 'undefined'){
-			if(loggingSwitch.checked){
+		if(typeof loggingIndicator !== 'undefined'){
+			if((typeof loggingSwitch !== 'undefined') && loggingSwitch.checked){
 				loggingIndicator.style.color='red';
 				loggingIndicator.innerText='\u2B24';
 			}
@@ -1895,7 +1925,7 @@ function MOBalarm() {
 //
 // Global: map, cursor, currentMOBmarker, centerMark
 let latlng;
-if(map.hasLayer(cursor)) latlng = cursor.getLatLng(); 	// координаты известны и показываются, хотя, возможно, устаревшие
+if(typeof cursor !== 'undefined' && map.hasLayer(cursor)) latlng = cursor.getLatLng(); 	// координаты известны и показываются, хотя, возможно, устаревшие
 else {
 	// если даже нет координат -- дадим возможность ставить маркер в центре карты
 	centerMarkOn(); 	// включить крестик в середине
@@ -1908,33 +1938,33 @@ currentMOBmarker = L.marker(latlng, { 	// маркер для этой точк�
 	icon: mobIcon,
 	draggable: true,
 });
-currentMOBmarker.on('click', function(ev){
-	currentMOBmarker = ev.target;
-	clearCurrentStatus(); 	// удалим признак current у всех маркеров
-	currentMOBmarker.feature.properties.current = true;
-	sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
-}); 	// текущим будет маркер, по которому кликнули
-currentMOBmarker.on('dragend', function(event){
-	//console.log("MOB marker dragged end, send to server new coordinates",currentMOBmarker);
-	sendMOBtoServer(); 
-}); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
+currentMOBmarker.on('click', mobMarkerClickFunction); 	// текущим будет маркер, по которому кликнули
+currentMOBmarker.on('dragend', mobMarkerDragendFunction); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
 clearCurrentStatus(); 	// удалим признак current у всех маркеров
 currentMOBmarker.feature = { 	// укажем признак "текущий маркер" как GeoJson свойство
 	type: 'Feature',
-	properties: {current: true},
+	properties: {"current": true}
 };
 //console.log('[MOBalarm] currentMOBmarker:',currentMOBmarker);
 mobMarker.addLayer(currentMOBmarker);
+if(!mobMarker.feature){
+	mobMarker.feature = {
+		properties: {},
+	};
+};
+mobMarker.feature.properties.timestamp = Date.now();
+//console.log('[MOBalarm] mobMarker:',mobMarker);
 if(!map.hasLayer(mobMarker)) mobMarker.addTo(map); 	// выставим маркер
 
-if((typeof loggingIndicator !== 'undefined') && !loggingSwitch.checked) {
-	loggingSwitch.checked = true;
-	loggingRun(); 	// хотя в loggingSwitch стоит onChange="loggingRun();" изменение loggingSwitch.checked = true; не приводит к срабатыванию обработчика
+if(typeof loggingIndicator !== 'undefined') {
+	if((typeof loggingSwitch !== 'undefined')  && !loggingSwitch.checked){	// для пользователя со всеми правами
+		loggingSwitch.checked = true;
+	};
+	loggingRun('start'); 	// хотя в loggingSwitch стоит onChange="loggingRun();" изменение loggingSwitch.checked = true; не приводит к срабатыванию обработчика
 }
 if(mobMarker.getLayers().length > 2) delMOBmarkerButton.disabled = false;
 
 sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
-
 return true;
 } // end function MOBalarm
 
@@ -1953,6 +1983,7 @@ function MOBclose() {
 mobMarker.remove(); 	// убрать мультислой-маркер с карты
 mobMarker.clearLayers(); 	// очистить мультислой от маркеров
 mobMarker.addLayer(toMOBline); 	// вернём туда линию
+mobMarker.feature.properties.timestamp = Date.now();
 sendMOBtoServer(false); 	// передадим на сервер, что режим MOB прекращён
 document.cookie = "GaladrielMapMOB=; expires=0; path=/; samesite=Lax"; 	// удалим куку
 azimuthMOBdisplay.innerHTML = '&nbsp;';
@@ -1985,6 +2016,7 @@ for(let i=layers.length-1; i>=0; i--){ 	// мы не знаем, где там �
 }
 //currentMOBmarker = layers[layers.length-1]; 	// последний маркер в mobMarker, но в layers их же прежнее число
 if(layers.length < 3) delMOBmarkerButton.disabled = true; // т.е., там линия и один маркер
+mobMarker.feature.properties.timestamp = Date.now();
 sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
 } // end function delMOBmarker
 
@@ -1993,13 +2025,19 @@ function sendMOBtoServer(status=true){
 /* Кладёт данные MOB в массив, который передаётся на сервер 
 mobMarker -- это Leaflet LayerGroup, т.е. там исчерпывающая информация
 */
-//console.log("sendMOBtoServer status=",status);
+//console.log("sendMOBtoServer status=",status,mobMarker);
+if(typeof spatialWebSocket !== "object") return;
 upData.MOB = {};
 upData.MOB.class = 'MOB';
 upData.MOB.status = status; 	// 
 upData.MOB.points = [];
 //upData.MOB.LineString = {};
 let mobMarkerJSON = mobMarker.toGeoJSON(); 	//
+if(!mobMarkerJSON.properties){	// вообще-то, toGeoJSON должна сохранять левые поля, но она делает это как-то иногда...
+	mobMarkerJSON.properties = {};
+};
+mobMarkerJSON.properties.timestamp = mobMarker.feature.properties.timestamp;
+//console.log('[sendMOBtoServer] mobMarkerJSON:',mobMarkerJSON);
 for(let feature of mobMarkerJSON.features){
 	switch(feature.geometry.type){
 	case "Point":
@@ -2008,8 +2046,9 @@ for(let feature of mobMarkerJSON.features){
 	case "LineString":
 		//upData.MOB.LineString.coordinates = feature.geometry.coordinates;	// линия только одна
 		break;
-	}
-}
+	};
+};
+upData.MOB.timestamp = mobMarkerJSON.properties.timestamp;
 //console.log('[sendMOBtoServer] Sending to server upData.MOB:',upData.MOB);
 //console.log('[sendMOBtoServer] upData=',JSON.stringify(upData.MOB));
 //console.log('[sendMOBtoServer] spatialWebSocket.readyState:',spatialWebSocket.readyState);
@@ -2022,7 +2061,7 @@ mobMarkerJSON = JSON.stringify(mobMarkerJSON);
 const expires =  new Date();
 expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
 document.cookie = "GaladrielMapMOB="+mobMarkerJSON+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
-} // end function sendMOBtoServer
+}; // end function sendMOBtoServer
 
 
 // Круги дистанции

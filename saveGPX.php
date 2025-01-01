@@ -1,5 +1,7 @@
 <?php
 /* Вызывается для сохранения gpx */
+ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+//ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 require('params.php'); 	// пути и параметры
 
 if(!$routeDir) {

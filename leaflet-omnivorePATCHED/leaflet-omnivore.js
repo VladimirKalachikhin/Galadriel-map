@@ -353,7 +353,21 @@ if(options && options.featureNameNode) { 	// li с именем файла, из
 	options.featureNameNode.style.backgroundColor = '#'+('000000' + color.toString(16)).slice(-6);
 }
 
-featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
+featuresLayer.options.onEachFeature = function (feature, layer){ 	// функция, вызываемая для каждой feature при её создании
+	//console.log('[featuresLayer.options.onEachFeature] feature',feature);
+	//console.log('[featuresLayer.options.onEachFeature] layer',layer);
+	getPopUpToLine(feature, layer);
+	if(!options.featureNameNode.classList.contains('currentTrackName')){	// лепить стрелочки на линию, только если это не текущий трек, который всё время перерисовывается. Ибо чёта стрелочки затратно...
+		layer.setText('          >          ', 
+					{repeat: true, 
+					offset: '0.6ch',	// сдвиг вправо от линии на половину ширины символа (плюс поправочка) размером font-size. ch - Предварительная мера (ширина) глифа "0" шрифта элемента
+					attributes: {fill: options.featureNameNode.style.backgroundColor,
+								'font-size': '1.5rem',
+								'font-weight': 'bold'
+								}
+					});	// Leaflet.TextPath
+	};
+};
 featuresLayer.options.style = function(geoJsonFeature){ 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
 	// вот тут надо вычислить цвета и указать рендерер
 	let style = {};
@@ -418,13 +432,6 @@ featuresLayer.options.style = function(geoJsonFeature){ 	// A Function defining 
 			//style.lineCap = "bitt";
 		}
 		else {
-			featuresLayer.setText('   >   ', {repeat: true, 
-											offset: '0.6ch',	// сдвиг вправо от линии на половину ширины символа (плюс поправочка) размером font-size. ch - Предварительная мера (ширина) глифа "0" шрифта элемента
-											attributes: {fill: style.color,
-														'font-size': '1.5rem',
-														'font-weight': 'bold'
-														}
-											});	// Leaflet.TextPath
 		};
 	}
 	return style;
@@ -877,18 +884,25 @@ else featuresLayer.options.color = color; 	//  цвет линий
 if(options.featureNameNode) { 	// li с именем файла, из которого делаем layer
 	options.featureNameNode.style.backgroundColor = '#'+('000000' + color.toString(16)).slice(-6);
 }
-featuresLayer.options.onEachFeature = getPopUpToLine; 	// функция, вызываемая для каждой feature при её создании
+featuresLayer.options.onEachFeature = function (feature, layer){ 	// функция, вызываемая для каждой feature при её создании
+	//console.log('[featuresLayer.options.onEachFeature] feature',feature);
+	//console.log('KML [featuresLayer.options.onEachFeature] layer',layer);
+	getPopUpToLine(feature, layer);
+	if(!options.featureNameNode.classList.contains('currentTrackName')){	// лепить стрелочки на линию, только если это не текущий трек, который всё время перерисовывается. Ибо чёта стрелочки затратно...
+		layer.setText('          >          ', 
+			{repeat: true, 
+			offset: '0.6ch',	// сдвиг вправо от линии на половину ширины символа (плюс поправочка) размером font-size. ch - Предварительная мера (ширина) глифа "0" шрифта элемента
+			attributes: {fill: options.featureNameNode.style.backgroundColor,
+						'font-size': '1.5rem',
+						'font-weight': 'bold'
+						}
+			});	// Leaflet.TextPath
+	};
+};
 featuresLayer.options.style = function(geoJsonFeature){ 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
 	const color = '#'+('000000' + featuresLayer.options.color.toString(16)).slice(-6);
-	featuresLayer.setText('   >   ', {repeat: true, 
-									offset: '0.6ch',	// сдвиг вправо от линии на половину ширины символа (плюс поправочка) размером font-size. ch - Предварительная мера (ширина) глифа "0" шрифта элемента
-									attributes: {fill: color,
-												'font-size': '1.5rem',
-												'font-weight': 'bold'
-												}
-									});	// Leaflet.TextPath
 	return{color: color, opacity: 0.7};
-	};	// end featuresLayer.options.style = function
+};	// end featuresLayer.options.style = function
 addData(featuresLayer, Features); 	// добавим и покажем всё остальное
 if(! layer.hasLayer(featuresLayer)) layer.addLayer(featuresLayer);
 if(Points.length) {

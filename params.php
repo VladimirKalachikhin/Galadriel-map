@@ -12,9 +12,10 @@
 // путь в файловой системе к демону, собирающему информацию от gpsd. Демон имеет собственные настройки и зависимости!
 // The Data collection daemon. Daemon has its own config file!
 $gpsdPROXYpath = 'gpsdPROXY';	// file system path
-// Адрес gpsdPROXY. gpsdPROXY url.
-//$gpsdProxyHost = ;	// Required, if $gpsdPROXYpath is not set. If $gpsdPROXYpath is set, then get it from gpsdPROXY's params.php
-//$gpsdProxyPort = ;
+// Адрес gpsdPROXY, если не указан $gpsdPROXYpath. gpsdPROXY url, if no $gpsdPROXYpath present.
+// Если не указано, то не будет координат и другой динамической информации.
+//$gpsdProxyHost = ;	// If undefined - no spatial and other data presents. If $gpsdPROXYpath is set, then get it from gpsdPROXY's params.php
+//$gpsdProxyPort = ;	// Required, if $gpsdProxyHost is defined
 // путь в файловой системе к папке с записью пути (треку), от расположения GaladrielMap или абсолютный
 $trackDir = 'track'; 	// track files directory, if present, in filesystem
 // путь в файловой системе к папке с проложенными маршрутами и навигационными точками. Или абсолютный.
@@ -73,11 +74,11 @@ $newTrackEveryDays = 1;	// After how many days to start a new file.
 //		It is mandatory to specify full paths if you want the path recording to resume after
 //		accidentally shutting down the server. You can find out the full path to the command 
 //		using a spell "which"		
-$gpxlogger = "/usr/local/bin/gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. &logfile replaced by log filename
+//$gpxlogger = "/usr/local/bin/gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. &logfile replaced by log filename
 //$gpxlogger = "gpxlogger -e shm -r --garmin -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// sins 3.24.1 - logging depth as Garmin extension. will listen to the local gpsd using shared memory, reconnect, interval, minmove. &logfile replaced by log filename
 //$gpxlogger = "gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile &host:2947"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. &logfile replaced by log filename, &host replaced by host name 
 //$gpxlogger = "gpxlogger -e sockets -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// 
-//$gpxlogger = "gpxlogger -e dbus -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// 
+$gpxlogger = "gpxlogger -e dbus -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// 
 
 // Показ глубины вдоль gpx. Display depth along the gpx.
 // display	boolean	Показывать ли глубину вдоль линии пути из файлов gpx, если она там есть.

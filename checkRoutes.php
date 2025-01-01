@@ -1,6 +1,9 @@
 <?php
-ob_start(); 	// попробуем перехватить любой вывод скрипта
 session_start();
+ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+//ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
+
+ob_start(); 	// попробуем перехватить любой вывод скрипта
 require('params.php'); 	// пути и параметры
 
 $fresh = 60*60*24; 	//sec. The file was modified not later than this ago

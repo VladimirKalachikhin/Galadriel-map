@@ -33,7 +33,7 @@ if($status) { 	// fcommon.php $gpxlogger работает
 		exec("kill $status");
 		$status=(int)gpxloggerRun(); 	// оно могло и не убиться
 		if($status) error_log("[logging.php] Unable to stop logging");
-		else error_log("[logging.php] Stoped logging\n");
+		else error_log("[logging.php] Stoped logging ");
 		exec("crontab -l | grep -v '".__FILE__."'  | crontab -"); 	// удалим себя из cron
 	}
 	else { 	// вернём имя последнего трека. Однако, запись трека может быть криво запущена

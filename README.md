@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.10
+## v. 2.19
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -14,7 +14,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 
 
 ## Features
-1. [Online or offline user-defined maps](#maps)
+1. [Online and offline user-defined maps](#maps)
 2. [Positioning](#positioning) with GNSS receivers
 3. [Tracking](#tracking)
 4. [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
@@ -24,10 +24,11 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 8. [Display AIS info](display-ais-info)
 9. [Collision detection](#collision-detection)
 10. [netAIS support](#netais)
-11. [A Man OverBoard feature](a-man-overboard)
-12. Optimised for E-Ink screens [Dashboard](#dashboard)
-13. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
-14. English or some other languages interface, dependent of browser language settings
+11. [A Man OverBoard feature](#a-man-overboard)
+12. [Authorisation](#authorisation)
+13. Optimised for E-Ink screens [Dashboard](#dashboard)
+14. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
+15. English or some other languages interface, dependent of browser language settings
 
 
 * [Work on OpenWRT](#work-in-openwrt)
@@ -77,6 +78,7 @@ You may download full pack -- more 10MB, or without vector tiles support and scr
 * [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) in _polycolor/_ directory  
 * [value2color](https://github.com/VladimirKalachikhin/value2color) in _value2color/_ directory  
 * [long-press-event](https://github.com/john-doherty/long-press-event) as _long-press-event/dist/long-press-event.min.js_
+* [Leaflet.TextPath](https://github.com/makinacorpus/Leaflet.TextPath/) as _Leaflet.TextPath/leaflet.textpath.js_
 
 Create a local copy of dependences and/or edit _index.php_
 
@@ -179,7 +181,6 @@ The [netAIS](https://github.com/VladimirKalachikhin/netAIS) is the local service
 GaladrielMap displayed full netAIS info, include text messages.  
 For example, three members of the same private group see each other on its screens.
 
-
 ## A Man OverBoard
 ![A Man OverBoard](screenshots/s14.jpeg)<br>
 Sets marker, stretches the line to and indicates distance and direction to MOB just by open tab.  
@@ -187,6 +188,9 @@ Tap to <img src="img/mob.svg" alt="MOB button" width="24px"> opens MOB tab and s
 MOB information spreading to all connected devices and may edit from any of this.  
 To finalize MOB mode tap to the dot left of the "Terminate" button first.  
 
+## Authorisation
+A simple authorization system is designed to divide users into those who have access to all features and those whose possibilities are limited. The limitations are that there is no access to the functions that modify the data on the server, except for the MOB mode activation.  
+You can specify a list of addresses or/and subnets from which full access is allowed (white list) or, conversely, a list of addresses and subnets from which full access is prohibited (black list). See `params.php` for details.
 
 ## Dashboard
 _dashboard.php_ - the separate app to display some instruments attached to gpsd, on weak (and/or old) devices, such as e-ink readers, for example.  
@@ -194,7 +198,7 @@ Instruments from Signal K not displayed.
 ![Dashboard velocity](screenshots/s6.jpeg)<br>
 ![Dashboard heading](screenshots/s7.jpeg)<br>
 
-[~~Live demo~~](http://130.61.159.53/map/dashboard.php)  
+~~[Live demo](http://130.61.159.53/map/dashboard.php)~~  
 Unfortunately, the Oracle Inc. turned out to be a crook, so the demo does not work.
 
 The screen image optimized to different screen resolutions and should look good from little to big screens. Displayed velocity, depth and true and magnetic heading. You can use two or more devices to display different info. At the border of the screen is always visible the mark with general direction.  

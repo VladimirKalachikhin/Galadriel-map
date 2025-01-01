@@ -3,6 +3,8 @@
 и отдаёт список файлов {gpx,kml,csv}
 в каталогах $trackDir или $routeDir из params.php
 */
+ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
+//ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 //ob_start(); 	// попробуем перехватить любой вывод скрипта
 require('fcommon.php');
 require('params.php'); 	// пути и параметры
