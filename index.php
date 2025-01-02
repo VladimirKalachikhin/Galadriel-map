@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.19.0';
+$versionTXT = '2.19.1';
 /* 
 2.10.4	with Norwegian localisation
 2.9.4	update route list with panel open
@@ -854,7 +854,7 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		if(!map.hasLayer(mobMarker)) MOBalarm();
 		else if(typeof cursor === 'undefined' || !map.hasLayer(cursor)) centerMarkOn(); 	// включить крестик в середине
 		break;
-	case 'downloadPane':
+	case 'download':
 		chkLoaderStatus();	// проверим загрузки
 		tileGrid.addTo(map); 	// добавить на карту тайловую сетку
 		if(CurrnoFollowToCursor === 1)CurrnoFollowToCursor = noFollowToCursor;  // запомним состояние глобального признака следования за курсором, если ещё не запоминали
