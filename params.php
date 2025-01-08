@@ -36,7 +36,7 @@ $routeDir = 'route'; 	// route & POI files directory, if present, in filesystem
 $grantsAddrList = array(
 'whitelist',
 array(
-	'127.0.0.0','192.168.10.2-192.168.10.100','192.168.10.102','201:bca7:4b06:ebb0:ef2e:8fb1:5513:d49c'
+	'127.0.0.0','192.168.10.2-192.168.10.100','192.168.10.102'
 )
 );
 

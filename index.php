@@ -814,6 +814,8 @@ var copyToClipboard = new L.Control.CopyToClipboard({ 	// класс опред�
 	position: 'bottomright'
 }); 	// на карту не добавляется
 
+// Добавим копирование содержимого goToPositionField. На него навешивается много обработчиков
+goToPositionField.addEventListener('long-press', function(e){doCopyToClipboard(goToPositionField.value);}); 	// при получении фокуса - прекратить обновление
 
 // Панель управления
 var sidebar = L.control.sidebar('sidebar',{
@@ -928,7 +930,7 @@ else showMapsToggle();	// покажем только избранные, пос
 
 // чего не сделаешь, если двойное нажатие не работает нигде, а на длительное в Google Chrome
 // и иже с ним навешана всякая фигня, и непросто навешана, а с запрещением всего остального
-function longressListener(e){
+function longPressListener(e){
 e.preventDefault();
 //console.log(e.target);
 if(showMapsToggler.innerHTML == showMapsTogglerTXT[0]) return;	// текущий режим - "избранные карты", в нём не работаем
@@ -942,7 +944,7 @@ else {
 	e.target.classList.add("showedMapName");
 }
 event.stopImmediatePropagation();	// прекратим всплытие и обломим все имеющиеся обработчики. Вдруг фигня, навешенная скотским Google, перестанет работать.
-//console.log('[longressListener] Список избранных карт:',showMapsList);
+//console.log('[longPressListener] Список избранных карт:',showMapsList);
 }; // end function long-pressListener
 
 let touchstartX, touchstartY;
@@ -952,12 +954,12 @@ let touchendY=event.changedTouches[0].screenY;
 //alert(`handleSwipe touchstartY=${touchstartY}, touchendY=${touchendY}`);
 if((touchendX > touchstartX+10) && (Math.abs(touchendY-touchstartY)<10)){	// вправо горизонтально
 	//alert('handleSwipe горизонтальный жест');
-	longressListener(event);
+	longPressListener(event);
 }
 }; // end function handleSwipe()
 
 for(let mapLi of mapList.children){	// назначим обработчик длинного нажатия на каждое название карты, потому что его можно назначить только так
-	mapLi.addEventListener('long-press', longressListener); 
+	mapLi.addEventListener('long-press', longPressListener); 
 	// а также обработчики свайпа, ибо в мобильных Chrome вообще всё через жопу
 	mapLi.addEventListener('touchstart',function(e){touchstartX=e.changedTouches[0].screenX; touchstartY=e.changedTouches[0].screenY;});
 	mapLi.addEventListener('touchend',handleSwipe);
