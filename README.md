@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.19
+## v. 2.20
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -21,7 +21,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 5. [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
 6. [Exchange coordinates](#exchange-coordinates) via clipboard
 7. [Weather forecast](#weather-forecast) from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
-8. [Display AIS info](display-ais-info)
+8. [Display AIS info](#display-ais-info)
 9. [Collision detection](#collision-detection)
 10. [netAIS support](#netais)
 11. [A Man OverBoard feature](#a-man-overboard)
@@ -187,6 +187,8 @@ Sets marker, stretches the line to and indicates distance and direction to MOB j
 Tap to <img src="img/mob.svg" alt="MOB button" width="24px"> opens MOB tab and start MOB mode. Track logging turned on, positions the MOB markers saved to the server. You may add new markers and dragging markers to a new position. Tap to marker to select it for stretches the direction line to. Tap on indication of MOB position copies it to clipboard.  
 MOB information spreading to all connected devices and may edit from any of this.  
 To finalize MOB mode tap to the dot left of the "Terminate" button first.  
+
+Also, the AIS Search and Rescue Transmitter (SART) messages AIS-MOB and AIS-EPIRB starts the MOB mode, but without enabling track recording.
 
 ## Authorisation
 A simple authorization system is designed to divide users into those who have access to all features and those whose possibilities are limited. The limitations are that there is no access to the functions that modify the data on the server, except for the MOB mode activation.  

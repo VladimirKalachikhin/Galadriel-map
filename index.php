@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.19.1';
+$versionTXT = '2.20.0';
 /* 
 2.10.4	with Norwegian localisation
 2.9.4	update route list with panel open
@@ -219,6 +219,7 @@ $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_
 	<script src="coordinate-parserPATCHED/validator.js"></script>
 	<script src="coordinate-parserPATCHED/coordinate-number.js"></script> 
 
+	<link rel="stylesheet" href="leaflet-tracksymbolPATCHED/leaflet-tracksymbol.css"/>
 	<script src="leaflet-tracksymbolPATCHED/leaflet-tracksymbol.js"></script>
 	
 	<script src="long-press-event/dist/long-press-event.min.js"></script>
@@ -1499,7 +1500,8 @@ if(gpsdData.depth) {
 	depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(gpsdData.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
 }
 else {
-	depthDial.innerHTML = '';
+	//console.log('No depth',gpsdData.depth);
+	depthDial.innerHTML = '';	// однако, если глубина периодически исчезает из-за устаревания - вся приборная панель будет неприятно дёргаться
 }
 
 // Положение неизвестно
@@ -1664,9 +1666,9 @@ let aisData = aisClass.ais;
 let vehiclesVisible = [];
 for(let vehicle in aisData){	// vehicle == mmsi
 	 vehicle = vehicle.toString();
-	//console.log(vehicle,aisData[vehicle]);
+	//console.log('[realtimeAISupdate]', vehicle,JSON.stringify(aisData[vehicle]));
 	if(vehicle.toLowerCase() == 'error') break;
-	//if(vehicle=='371255000') console.log('aisData[vehicle]:',JSON.stringify(aisData[vehicle]));
+	//if(vehicle.substring(0,2)=='97') console.log('aisData[vehicle]:',JSON.stringify(aisData[vehicle]));
 	//console.log(aisData[vehicle].lat);	console.log(aisData[vehicle].lon);
 	if((aisData[vehicle].lat === null) || (aisData[vehicle].lon === null) || (aisData[vehicle].lat === undefined) || (aisData[vehicle].lon === undefined)) continue;	// не показываем цели без координат
 
@@ -1675,16 +1677,7 @@ for(let vehicle in aisData){	// vehicle == mmsi
 		//console.log('aisData[vehicle].collisionArea',aisData[vehicle].collisionArea);
 		let defaultSymbol;
 		let noHeadingSymbol;
-		if(aisData[vehicle].netAIS) { 	// цель получена от netAIS
-			defaultSymbol = [1*0.5,0, 0.25*0.5,0.25*0.5, 0,1*0.5, -0.25*0.5,0.5*0.5, -1*0.5,0.75*0.5, -1*0.5,-0.75*0.5, -0.25*0.5,-0.5*0.5, 0,-1*0.5, 0.25*0.5,-0.25*0.5]; 	// треугольник, расстояния от центра, через которые нарисуют polyline
-			noHeadingSymbol = [1*0.35,0, 0.75*0.35,0.5*0.35, 1*0.35,1*0.35, 0.5*0.35,0.75*0.35, 0,1*0.35, -0.5*0.35,0.75*0.35, -1*0.35,1*0.35, -0.75*0.35,0.5*0.35, -1*0.35,0, -0.75*0.35,-0.5*0.35, -1*0.35,-1*0.35, -0.5*0.35,-0.75*0.35, 0,-1*0.35, 0.5*0.35,-0.75*0.35, 1*0.35,-1*0.35, 0.75*0.35,-0.5*0.35]; 	// ромбик: правый, верхний, левый, нижний ПРотив часовой от правого?
-			//console.log(aisData[vehicle]);
-		}
-		else { 	// цель получена от локального приёмника AIS
-			defaultSymbol = [0.8,0, -0.3,0.35, -0.3,-0.35]; 	// треугольник вправо, расстояния от центра, через которые нарисуют polyline
-			noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
-		}
-		vehicles[vehicle] = L.trackSymbol([aisData[vehicle].lat,aisData[vehicle].lon],{
+		let options = {
 			trackId: vehicle,
 			leaderTime: velocityVectorLengthInMn*60,
 			fill: true,
@@ -1693,9 +1686,22 @@ for(let vehicle in aisData){	// vehicle == mmsi
 			opacity: 1.0,
 			weight: 1.0,
 			defaultSymbol: defaultSymbol,
-			noHeadingSymbol: noHeadingSymbol 	// 
-		}).addTo(map);
-	}
+			noHeadingSymbol: noHeadingSymbol, 	//
+		};
+		if(aisData[vehicle].mmsi.substring(0,2)=='97'){	// это AIS-SART
+			options.sart = true;	// следует заранее указать, что оно AIS-SART, потому что косвенные признаки доступны только после .addData, а кое-какую конфигурацию надо произвести до
+		};
+		if(aisData[vehicle].netAIS) { 	// цель получена от netAIS
+			defaultSymbol = [1*0.5,0, 0.25*0.5,0.25*0.5, 0,1*0.5, -0.25*0.5,0.5*0.5, -1*0.5,0.75*0.5, -1*0.5,-0.75*0.5, -0.25*0.5,-0.5*0.5, 0,-1*0.5, 0.25*0.5,-0.25*0.5]; 	// треугольник, расстояния от центра, через которые нарисуют polyline
+			noHeadingSymbol = [1*0.35,0, 0.75*0.35,0.5*0.35, 1*0.35,1*0.35, 0.5*0.35,0.75*0.35, 0,1*0.35, -0.5*0.35,0.75*0.35, -1*0.35,1*0.35, -0.75*0.35,0.5*0.35, -1*0.35,0, -0.75*0.35,-0.5*0.35, -1*0.35,-1*0.35, -0.5*0.35,-0.75*0.35, 0,-1*0.35, 0.5*0.35,-0.75*0.35, 1*0.35,-1*0.35, 0.75*0.35,-0.5*0.35]; 	// ромбик: правый, верхний, левый, нижний ПРотив часовой от правого?
+			//console.log(aisData[vehicle]);
+		}
+		else { 	// цель получена от локального приёмника AIS
+			defaultSymbol = [0.8,0, -0.3,0.35, -0.3,-0.35]; 	// треугольник вправо, расстояния от центра, через которые нарисуют polyline
+			noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
+		};
+		vehicles[vehicle] = L.trackSymbol([aisData[vehicle].lat,aisData[vehicle].lon],options).addTo(map);
+	};
 
 	vehicles[vehicle].addData(aisData[vehicle]); 	// обновим данные
 	// Здесь, видимо, не нужно передавать aisData[vehicle] "по значению", как в GaladrielMapSK
@@ -1722,6 +1728,7 @@ for(const vehicle in vehicles){
 // MOB
 function realtimeMOBupdate(MOBdata) {
 // pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
+//console.log('Index MOBdata:',MOBdata);
 if(MOBdata.status === false) { 	// режим MOB надо выключить
 	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
 		MOBclose(); 	// пришло, что режима MOB нет -- завершим его
@@ -1744,31 +1751,64 @@ else { 	//console.log('режим MOB есть, пришли новые данн
 								"coordinates": point.coordinates
 							}
 						};
+		if(point.mmsi){
+			feature.properties.mmsi = point.mmsi;
+			feature.properties.safety_related_text = point.safety_related_text;
+		}
 		mobMarkerJSON.features.push(feature);
-	}
+	};
+	//console.log('mobMarkerJSON:',mobMarkerJSON);
 	// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
 	mobMarker.remove(); 	// убрать мультислой-маркер с карты
 	mobMarker = null; 	// ритуальное действие. Возможно, оно воздействует на сборщик мусора, и приведёт к быстрому реальному удалению объекта, но это ни откуда не следует.
 	mobMarker = L.geoJSON(mobMarkerJSON); 	// создадим новый объект
 	mobMarker.feature = {properties: {'timestamp': MOBdata.timestamp}};
+	let layerID;
 	mobMarker.eachLayer(function (layer) {
 		if(layer instanceof L.Marker)	{
+			layerID = mobMarker.getLayerId(layer);
 			layer.setIcon(mobIcon);
-			layer.on('click', function(ev){
+			layer.on('click', function(ev){ 	// текущим будет маркер, по которому кликнули
 				currentMOBmarker = ev.target;
 				clearCurrentStatus(); 	// удалим признак current у всех маркеров
 				currentMOBmarker.feature.properties.current = true;
 				sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
-			}); 	// текущим будет маркер, по которому кликнули
+			});
+			let dataStamp = '';
+			if(mobMarker.feature.properties.timestamp){
+				const d = new Date(mobMarker.feature.properties.timestamp*1000);
+				dataStamp = d.getHours()+':'+(d.getMinutes()<10?'0'+d.getMinutes():d.getMinutes());
+				//dataStamp = d.getHours()+':'+d.getMinutes();
+			}
+			let PopupContent = `
+<div>
+	<div style='width:100%;'>
+		${layer.feature.properties.mmsi||''} 
+		<img  width="24px" style="margin:0.1rem;vertical-align:middle;" src="${mob_markerImg}">
+	</div>
+	<div style='width:100%;background-color:lavender;'>
+		<span style='font-size:110%;'>${layer.feature.properties.safety_related_text||''}</span><br>
+	</div>
+	<span>${dataStamp}</span>
+</div>
+			`;
+			layer.bindPopup(PopupContent,{});
 			//console.log('Маркеры в полученной информации MOB ',layer);
 			if(layer.feature.properties.current) currentMOBmarker = layer; 	// текущим станет указанный в переданных данных
 		}
 		else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
 	});
+	if(!(currentMOBmarker instanceof L.Marker)){	// не оказалось маркера, помеченного как текущий
+		currentMOBmarker = mobMarker.getLayer(layerID);	// назначим текущим последний маркер
+	};
+	let latlng1 = cursor.getLatLng();
+	let latlng2 = currentMOBmarker.getLatLng();
+	toMOBline.setLatLngs([latlng1,latlng2]); 	// обновим линию к текущему маркеру MOB
 	mobMarker.addLayer(toMOBline);
 	mobMarker.addTo(map); 	// покажем мультислой с маркерами MOB
-	mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable
-		if(layer instanceof L.Marker)	{	
+	mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable, кроме маркеров AIS SART
+		if(layer instanceof L.Marker && !layer.feature.properties.mmsi)	{	
+			//console.log('[realtimeMOBupdate] layer:',layer);
 			layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
 			layer.on('dragend', mobMarkerDragendFunction); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
 			layer.on('click', mobMarkerClickFunction); 	// текущим будет маркер, по которому кликнули

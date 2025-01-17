@@ -80,6 +80,17 @@ L.TrackSymbol = L.Path.extend({
     //this._silSymbol = options.silouetteSymbol || [1,0.5, 0.75,1, 0,1, 0,0, 0.75,0];
     this._silSymbol = options.silouetteSymbol || [1.05,0.5, 0.8,1, 0,1, 0,0, 0.8,0];
     this.bindPopup("",{className: "vehiclePopup"}); 	// приклеим popup с указанным стилем
+	if(options.sart){	// должно быть заранее указано, что оно AIS-SART, потому что косвенные признаки доступны только после .addData, конфигурировать надо здесь.
+		// Идея показать картинку вместо Tooltip с целью имитации маркера, который здесь 
+		// ну совсем лишний, реализовалась, как обычно, через жопу. Иначе никак.
+		let TooltipContent = '<img width="24px" style="margin:0; position:relative; bottom:24px; right:12px; opacity:1 !important;" src="'+thisScript.src.substring(0, thisScript.src.lastIndexOf("/"))+'/symbols/dander.png">';
+		this.bindTooltip(TooltipContent,{
+			permanent:true,
+			direction:"top",
+			opacity:1,
+			className:"sartTooltip"
+		}); 	// приклеим tooltip
+	};
   },
 
   /**
@@ -115,7 +126,7 @@ L.TrackSymbol = L.Path.extend({
 M ${center.x+4} ${center.y-4} L ${center.x-4} ${center.y+4} 
 M ${center.x} ${center.y-4} L ${center.x} ${center.y+4} 
 M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
-  	}
+  	};
   	//console.log('[_setPath] center=',center,'pathString=',pathString);
     this._path.setAttribute('d',pathString);
   },
@@ -155,6 +166,7 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 			delete aisData.lon;
 		}
 	    L.setOptions(this, aisData); 	// остальное запишем в options
+		//console.log(this.options);
 		//console.log(this.options.mmsi);
 		//console.log(this._shiptype);
 
@@ -197,12 +209,17 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 		case 12: 	// power-driven vessel pushing ahead or towing alongside (regional use)
 			iconName = 'waterskiing.png';
 			break;
+		case 14:	// AIS-SART (active), MOB-AIS, EPIRB-AIS
+			iconName = 'dander.png';
+			break;
 		default: 	// undefined = default
 			iconName = '';
 			break;
 		}
-		//console.log("aisData['status']=",aisData['status'],thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName);
-		if(iconName) iconName = '<img width="24px" style="float:right;margin:0.1rem;" src="'+(thisScript.src.substr(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName)+'">';
+		//console.log("aisData['status']=",aisData['status'],thisScript.src.substring(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName);
+		//console.log("aisData['safety_related_text']=",aisData['safety_related_text']);
+		//console.log("this.options.safety_related_text=",this.options.safety_related_text);
+		if(iconName) iconName = '<img width="24px" style="float:right;margin:0.1rem;" src="'+(thisScript.src.substring(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName)+'">';
 		let statusText;
 		if(!aisData.status_text) statusText = AISstatusTXT[aisData.status];	// internationalisation
 		else statusText = aisData.status_text.trim();
@@ -228,22 +245,22 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 		${shiptype_text||''}
 	</div>
 	<div style='width:100%;background-color:lavender;'>
-		<span style='font-size:110%;'>${statusText||''}</span><br>
+		<span style='font-size:110%;'>${this.options.safety_related_text||''} ${statusText||''}</span><br>
 	</div>
 	<div style='width:100%;'>
 		<div style='width:40%;float:right;text-align:right;'>${speedKMH}</div>
 		<span >${this.options.destination||''}</span>
 	</div>
-${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>
-<span style='float:right;'>This on <a href='http://www.marinetraffic.com/ais/details/ships/mmsi:${this.options.mmsi}' target='_blank'>MarineTraffic.com</a></span>
-<span>${dataStamp}</span>
+${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>`;
+		if(this.options.mmsi.substring(0,2)!=='97') PopupContent += `<span style='float:right;'>This on <a href='http://www.marinetraffic.com/ais/details/ships/mmsi:${this.options.mmsi}' target='_blank'>MarineTraffic.com</a></span>`;	// это не AIS-SART
+		PopupContent += `<span>${dataStamp}</span>
 </div>
 		`;
         if(this.getPopup()){
             this.getPopup().setContent(PopupContent);
         }
         else console.log('Нет POPUP!')
-
+        
 	return this.redraw(); 	// 
 	},
 
