@@ -80,17 +80,6 @@ L.TrackSymbol = L.Path.extend({
     //this._silSymbol = options.silouetteSymbol || [1,0.5, 0.75,1, 0,1, 0,0, 0.75,0];
     this._silSymbol = options.silouetteSymbol || [1.05,0.5, 0.8,1, 0,1, 0,0, 0.8,0];
     this.bindPopup("",{className: "vehiclePopup"}); 	// приклеим popup с указанным стилем
-	if(options.sart){	// должно быть заранее указано, что оно AIS-SART, потому что косвенные признаки доступны только после .addData, конфигурировать надо здесь.
-		// Идея показать картинку вместо Tooltip с целью имитации маркера, который здесь 
-		// ну совсем лишний, реализовалась, как обычно, через жопу. Иначе никак.
-		let TooltipContent = '<img width="24px" style="margin:0; position:relative; bottom:24px; right:12px; opacity:1 !important;" src="'+thisScript.src.substring(0, thisScript.src.lastIndexOf("/"))+'/symbols/dander.png">';
-		this.bindTooltip(TooltipContent,{
-			permanent:true,
-			direction:"top",
-			opacity:1,
-			className:"sartTooltip"
-		}); 	// приклеим tooltip
-	};
   },
 
   /**
@@ -210,7 +199,33 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 			iconName = 'waterskiing.png';
 			break;
 		case 14:	// AIS-SART (active), MOB-AIS, EPIRB-AIS
-			iconName = 'dander.png';
+			//console.log("this.options.safety_related_text=",this.options.safety_related_text);
+			const cautions = ['wreck','sinking','fire','criminal','pirate','robbery','aid','medical'];
+			let words = [];
+			if(this.options.safety_related_text) words = this.options.safety_related_text.toLowerCase().split(/[^a-zA-Z]+/).filter(word => word.length > 0);	// https://dev.to/kamonwan/the-right-way-to-break-string-into-words-in-javascript-3jp6
+			words = new Set(words);
+			const caution = [...cautions].filter(word => words.has(word));
+			//console.log('[addData] :',caution);
+			switch(caution[0]){
+			case 'wreck': 
+			case 'sinking': 
+				iconName = 'shipwreck_danger.png';
+				break;
+			case 'fire': 
+				iconName = 'fire.png';
+				break;
+			case 'criminal': 
+			case 'pirate': 
+			case 'robbery': 
+				iconName = 'robbery.png';
+				break;
+			case 'aid': 
+			case 'medical': 
+				iconName = 'medical.png';
+				break;
+			default:
+				iconName = 'caution.png';
+			}
 			break;
 		default: 	// undefined = default
 			iconName = '';
@@ -218,8 +233,8 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 		}
 		//console.log("aisData['status']=",aisData['status'],thisScript.src.substring(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName);
 		//console.log("aisData['safety_related_text']=",aisData['safety_related_text']);
-		//console.log("this.options.safety_related_text=",this.options.safety_related_text);
-		if(iconName) iconName = '<img width="24px" style="float:right;margin:0.1rem;" src="'+(thisScript.src.substring(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName)+'">';
+		let iconIMG='';
+		if(iconName) iconIMG = '<img width="24px" style="float:right;margin:0.1rem;" src="'+(thisScript.src.substring(0, thisScript.src.lastIndexOf("/"))+"/symbols/"+iconName)+'">';
 		let statusText;
 		if(!aisData.status_text) statusText = AISstatusTXT[aisData.status];	// internationalisation
 		else statusText = aisData.status_text.trim();
@@ -236,7 +251,7 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 
 		let PopupContent = `
 <div>
-	${iconName}
+	${iconIMG}
 	<span style='font-size:120%';'>${this.options.shipname||''}</span><br>
 	<div style='width:100%;'>
 	${this.options.mmsi} <span style='float:right;'>${this.options.callsign||''}</span>
@@ -252,7 +267,7 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 		<span >${this.options.destination||''}</span>
 	</div>
 ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>`;
-		if(this.options.mmsi.substring(0,2)!=='97') PopupContent += `<span style='float:right;'>This on <a href='http://www.marinetraffic.com/ais/details/ships/mmsi:${this.options.mmsi}' target='_blank'>MarineTraffic.com</a></span>`;	// это не AIS-SART
+		if(this.options.mmsi && this.options.mmsi.substring(0,2)!=='97') PopupContent += `<span style='float:right;'>This on <a href='http://www.marinetraffic.com/ais/details/ships/mmsi:${this.options.mmsi}' target='_blank'>MarineTraffic.com</a></span>`;	// это не AIS-SART
 		PopupContent += `<span>${dataStamp}</span>
 </div>
 		`;
@@ -261,7 +276,23 @@ ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>`;
         }
         else console.log('Нет POPUP!')
         
-	return this.redraw(); 	// 
+		if(this.options.sart){	// AIS-SART, но не обязательно mmsi==97XXXXXXX
+	        if(!this.getTooltip()){
+				// Идея показать картинку вместо Tooltip с целью имитации маркера, который здесь 
+				// ну совсем лишний, реализовалась, как обычно, через жопу. Иначе никак.
+				this.bindTooltip('',{
+					permanent:true,
+					direction:"top",
+					opacity:1,
+					className:"sartTooltip"
+				}); 	// приклеим tooltip. .closeTooltip() не надо?
+			};
+			const TooltipContent = '<img width="24px" style="margin:0; position:relative; bottom:24px; right:12px; opacity:1 !important;" src="'+thisScript.src.substring(0, thisScript.src.lastIndexOf("/"))+'/symbols/'+iconName+'">';
+			this.getTooltip().setContent(TooltipContent); 	// .openTooltip() не надо?
+		};
+		
+		//console.log('[addData] result this:',this)
+		return this.redraw(); 	// 
 	},
 
   /**

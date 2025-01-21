@@ -1673,8 +1673,8 @@ try {
 	};
 	if(z && x && y){	// это похоже на номер тайла, переместимся к этому тайлу
 		console.log('[flyByString] z,x,y:',z,x,y);
-		map.setZoom(z);
 		map.panTo(tileNum2degree(z,x,y));
+		map.setZoom(z);
 	}
 	else {	// это просто строка, возможно, с адресом, сделаем запрос к геосервису
 		let xhr = new XMLHttpRequest();

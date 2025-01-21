@@ -1675,8 +1675,6 @@ for(let vehicle in aisData){	// vehicle == mmsi
 	if(!vehicles[vehicle]) { 	// global var, массив layers с целями
 		//console.log("[realtimeAISupdate] vehicle=",vehicle,"aisData[vehicle]:",aisData[vehicle]);
 		//console.log('aisData[vehicle].collisionArea',aisData[vehicle].collisionArea);
-		let defaultSymbol;
-		let noHeadingSymbol;
 		let options = {
 			trackId: vehicle,
 			leaderTime: velocityVectorLengthInMn*60,
@@ -1685,20 +1683,19 @@ for(let vehicle in aisData){	// vehicle == mmsi
 			stroke: true,
 			opacity: 1.0,
 			weight: 1.0,
-			defaultSymbol: defaultSymbol,
-			noHeadingSymbol: noHeadingSymbol, 	//
 		};
-		if(aisData[vehicle].mmsi.substring(0,2)=='97'){	// это AIS-SART
+		//if(aisData[vehicle].mmsi.substring(0,2)=='97'){	// это AIS-SART
+		if(aisData[vehicle].status==14){	// это AIS-SART. Будем рассматривать как AIS-SART сообщение со статусом 14, вне зависимости от mmsi. Тогда через этот статус можно сообщать об аварийной ситуаации на судне, с любым mmsi.
 			options.sart = true;	// следует заранее указать, что оно AIS-SART, потому что косвенные признаки доступны только после .addData, а кое-какую конфигурацию надо произвести до
 		};
 		if(aisData[vehicle].netAIS) { 	// цель получена от netAIS
-			defaultSymbol = [1*0.5,0, 0.25*0.5,0.25*0.5, 0,1*0.5, -0.25*0.5,0.5*0.5, -1*0.5,0.75*0.5, -1*0.5,-0.75*0.5, -0.25*0.5,-0.5*0.5, 0,-1*0.5, 0.25*0.5,-0.25*0.5]; 	// треугольник, расстояния от центра, через которые нарисуют polyline
-			noHeadingSymbol = [1*0.35,0, 0.75*0.35,0.5*0.35, 1*0.35,1*0.35, 0.5*0.35,0.75*0.35, 0,1*0.35, -0.5*0.35,0.75*0.35, -1*0.35,1*0.35, -0.75*0.35,0.5*0.35, -1*0.35,0, -0.75*0.35,-0.5*0.35, -1*0.35,-1*0.35, -0.5*0.35,-0.75*0.35, 0,-1*0.35, 0.5*0.35,-0.75*0.35, 1*0.35,-1*0.35, 0.75*0.35,-0.5*0.35]; 	// ромбик: правый, верхний, левый, нижний ПРотив часовой от правого?
-			//console.log(aisData[vehicle]);
+			options.defaultSymbol = [1*0.5,0, 0.25*0.5,0.25*0.5, 0,1*0.5, -0.25*0.5,0.5*0.5, -1*0.5,0.75*0.5, -1*0.5,-0.75*0.5, -0.25*0.5,-0.5*0.5, 0,-1*0.5, 0.25*0.5,-0.25*0.5]; 	// треугольник, расстояния от центра, через которые нарисуют polyline
+			options.noHeadingSymbol = [1*0.35,0, 0.75*0.35,0.5*0.35, 1*0.35,1*0.35, 0.5*0.35,0.75*0.35, 0,1*0.35, -0.5*0.35,0.75*0.35, -1*0.35,1*0.35, -0.75*0.35,0.5*0.35, -1*0.35,0, -0.75*0.35,-0.5*0.35, -1*0.35,-1*0.35, -0.5*0.35,-0.75*0.35, 0,-1*0.35, 0.5*0.35,-0.75*0.35, 1*0.35,-1*0.35, 0.75*0.35,-0.5*0.35]; 	// ромбик: правый, верхний, левый, нижний ПРотив часовой от правого?
+			//console.log("[realtimeAISupdate] netAIS vehicle=",vehicle,"aisData[vehicle]:",aisData[vehicle]);
 		}
 		else { 	// цель получена от локального приёмника AIS
-			defaultSymbol = [0.8,0, -0.3,0.35, -0.3,-0.35]; 	// треугольник вправо, расстояния от центра, через которые нарисуют polyline
-			noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
+			options.defaultSymbol = [0.8,0, -0.3,0.35, -0.3,-0.35]; 	// треугольник вправо, расстояния от центра, через которые нарисуют polyline
+			options.noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
 		};
 		vehicles[vehicle] = L.trackSymbol([aisData[vehicle].lat,aisData[vehicle].lon],options).addTo(map);
 	};
