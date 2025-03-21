@@ -6,7 +6,7 @@ W   281.25|          |        |          |E 101.25
 WSW 258.75|          |        |          |ESE 123.75
 SW  236.25|SSW 213.75|S 191.25|SSE 168.75|SE 146.25
 */
-$versionTXT = '2.1.2';
+$versionTXT = '2.2.0';
 /*
 2.1.1	try to start gpsdPROXY if no data
 2.0.2	MOB info support
@@ -185,10 +185,33 @@ else {
 //echo "depthAlarm=$depthAlarm; minDepthValue=$minDepthValue; minSpeedAlarm=$minSpeedAlarm; minSpeedValue=$minSpeedValue; maxSpeedAlarm=$maxSpeedAlarm; maxSpeedValue=$maxSpeedValue;<br>\n";
 //echo "toHeadingMagnetic=$toHeadingMagnetic;<br>\n";
 
-// А назачем это было сдеано? Ведь в этом случае $gpsdProxyHost будет от клиента
-// а вызывать GPSDproxy нужно от сервера.
-//if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=='0.0.0.0') $gpsdProxyHost = $_SERVER['HTTP_HOST'];
-//echo "$gpsdProxyHost:$gpsdProxyPort<br>\n";
+// засада в том, что $_SERVER['HTTP_HOST'] не содержит порта только в том случае, если порт стандартный. В остальных случаях там есть порт.
+// А ещё большая засада в том, что SERVER_NAME - это не http addres, а левое имя по результату переадресаций. Как в OpenWRT, например.
+if(substr_count($_SERVER['HTTP_HOST'],':')>1){	// ipv6 address
+	$HTTP_HOST = substr($_SERVER['HTTP_HOST'],0,strrpos($_SERVER['HTTP_HOST'],']')+1);
+}
+else $HTTP_HOST = explode(':',$_SERVER['HTTP_HOST'])[0];	// ipv4 address
+//echo "HTTP_HOST=$HTTP_HOST; <br>\n";
+
+// Не указан свой gpsdProxyHost, но указан $gpsdPROXYpath в params.php
+// тогда происходит импорт конфигурации из gpsdPROXY, где имеется список хостов, портов
+// на которых обслуживает gpsdProxy. Обычно один ipv4, и один ipv6
+if(!$gpsdProxyHost and $gpsdProxyHosts){	
+	$minLev = PHP_INT_MAX; $minLevInd = PHP_INT_MAX;
+	foreach($gpsdProxyHosts as $i => $gpsdProxyHost){
+		$lev = levenshtein($HTTP_HOST, $gpsdProxyHost[0]);
+		//echo "lev=$lev<br>\n";
+		if($lev<$minLev){
+			$minLev = $lev;
+			$minLevInd = $i;
+		}
+	};
+	//echo "minLev=$minLev; minLevInd=$minLevInd;<br>\n";
+	$gpsdProxyHost = $gpsdProxyHosts[$minLevInd][0];
+	$gpsdProxyPort = $gpsdProxyHosts[$minLevInd][1];
+};
+//echo "gpsdProxyHost=$gpsdProxyHost; gpsdProxyPort=$gpsdProxyPort;<br>\n";
+
 list($tpv,$mob) = askGPSDproxy($gpsdProxyHost,$gpsdProxyPort); 	// требуемые данные в плоском массиве, MOB - своё положение, точка MOB; 
 //echo "Ответ:<pre>"; print_r($tpv); print_r($mob); echo "</pre>";
 
@@ -961,7 +984,7 @@ do { 	//
 		//echo "Received WATCH<br>\n"; //
 		//print_r($gpsdWATCH); //
 		//echo "Sending POLL<br>\n";
-		$res = fwrite($gpsd, '?POLL={"subscribe":""TPV""};'."\n\n"); 	// запросим данные
+		$res = fwrite($gpsd, '?POLL={"subscribe":"TPV,ALARM"};'."\n\n"); 	// запросим данные
 		if($res === FALSE) { 	// gpsd умер
 			socket_close($gpsd);
 			$msg =  "Failed to send POLL to gpsdPROXY: $errstr";
@@ -975,6 +998,7 @@ do { 	//
 fclose($gpsd);
 //echo "Закрыт сокет\n";
 //echo "Все полученные от gpsdPROXY данные:<pre>"; print_r($buf); echo "</pre>";
+//echo "Полученные от gpsdPROXY данные SELF:<pre>"; print_r($buf['self']); echo "</pre>";
 $gpsdData = array();
 foreach($buf['tpv'] as $device) {
 	//echo "<br>device=<pre>"; print_r($device); echo "</pre>\n";

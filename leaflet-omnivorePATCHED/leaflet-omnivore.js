@@ -299,14 +299,8 @@ return layer;
 function gpxParse(gpx, options, layer) {
 /* 
 Создаёт layerGroup из двух слоёв, в одном - линии, в другом - точки.
-
 */
 //console.log('leaflet-omnivore [gpxParse] gpx:',gpx);
-var xml = parseXML(gpx);	// делает DOM XML, если gpx -- строка, иначе не делает ничего
-if (!xml) return windows.fire('error', {
-    error: 'Could not parse GPX'
-});
-//console.log('leaflet-omnivore [gpxParse] xml:',xml);
 if(layer) {
 	//console.log('leaflet-omnivore [gpxParse] layer:',layer,layer instanceof L.layerGroup,"getLayers" in layer);
 	if(layer instanceof L.LayerGroup) { 	// это layerGroup
@@ -320,9 +314,14 @@ if(layer) {
 }
 else {
 	var featuresLayer = L.geoJson();
-	var layer = L.layerGroup([featuresLayer]);
-}
-
+	layer = L.layerGroup([featuresLayer]);
+};
+var xml = parseXML(gpx);	// делает DOM XML, если gpx -- строка, иначе не делает ничего
+const errorNode = xml.querySelector("parsererror");
+if (errorNode) return layer.fire('error', {
+    error: 'Could not parse GPX'
+});
+//console.log('leaflet-omnivore [gpxParse] xml:',xml);
 var geojson = toGeoJSON.gpx(xml);
 //console.log('leaflet-omnivore [gpxParse] geojson:',geojson);
 
@@ -489,7 +488,8 @@ if(Points.length) {
 //console.log(layer);
 //console.log(layer.getLayers());
 return layer;
-}
+}; // end function gpxParse
+
 
 function doClastering(layer, geojson) {
 /* Кластеризует wpt в layer, если они там есть 
@@ -854,17 +854,6 @@ else { 	// такая icon ещё не получена
 
 function kmlParse(gpx, options, layer) {
 /**/
-var xml = parseXML(gpx);	// делает DOM XML, если gpx -- строка, иначе не делает ничего
-if (!xml) return layer.fire('error', {
-    error: 'Could not parse KML'
-});
-var geojson = toGeoJSON.kml(xml);
-var Points=[];
-var Features=[];
-for(var i=0; i<geojson.features.length;i++) {
-	if(geojson.features[i].geometry.type=='Point') Points.push(geojson.features[i]);
-	else Features.push(geojson.features[i]);
-}
 if(layer) {
 	if("getLayers" in layer) { 	// это layerGroup
 		var featuresLayer = layer.getLayers()[0] || L.geoJson();
@@ -877,7 +866,21 @@ if(layer) {
 else {
 	var featuresLayer = L.geoJson();
 	var layer = new L.layerGroup([featuresLayer]);
-}
+};
+
+var xml = parseXML(gpx);	// делает DOM XML, если gpx -- строка, иначе не делает ничего
+const errorNode = xml.querySelector("parsererror");
+if (errorNode) return layer.fire('error', {
+    error: 'Could not parse KML'
+});
+var geojson = toGeoJSON.kml(xml);
+var Points=[];
+var Features=[];
+for(var i=0; i<geojson.features.length;i++) {
+	if(geojson.features[i].geometry.type=='Point') Points.push(geojson.features[i]);
+	else Features.push(geojson.features[i]);
+};
+
 var color = 0xFFFFFF;
 if(typeof globalCurrentColor !== 'undefined') {	// если оно определено, то определена и функция nextColor
 	color = globalCurrentColor;
@@ -2214,7 +2217,7 @@ var toGeoJSON = (function() {
         },
         gpx: function(doc) {
         	//console.log('leaflet-omnivore [gpx:] doc:',doc);
-        	//console.log('leaflet-omnivore [gpx:] doc:',doc.querySelector('gpx').attributes);
+        	//console.log('leaflet-omnivore [gpx:] doc:',doc.querySelector('gpx'));
             let tracks = doc.getElementsByTagName('trk');
 			let routes = doc.getElementsByTagName('rte');
 			let waypoints = doc.getElementsByTagName('wpt');

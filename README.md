@@ -178,7 +178,7 @@ Do not rely too much on the collision detection system. Remember that **no infor
 ## netAIS support
 ![netAIS](screenshots/s13.jpeg)<br>
 The [netAIS](https://github.com/VladimirKalachikhin/netAIS) is the local service to exchange position information inside of a private group via internet.  
-GaladrielMap displayed full netAIS info, include text messages.  
+GaladrielMap displayed full netAIS info, include text messages, MOB and dangers.  
 For example, three members of the same private group see each other on its screens.
 
 ## A Man OverBoard
@@ -186,7 +186,7 @@ For example, three members of the same private group see each other on its scree
 Sets marker, stretches the line to and indicates distance and direction to MOB just by open tab.  
 Tap to <img src="img/mob.svg" alt="MOB button" width="24px"> opens MOB tab and start MOB mode. Track logging turned on, positions the MOB markers saved to the server. You may add new markers and dragging markers to a new position. Tap to marker to select it for stretches the direction line to. Tap on indication of MOB position copies it to clipboard.  
 MOB information spreading to all connected devices and may edit from any of this.  
-To finalize MOB mode tap to the dot left of the "Terminate" button first.  
+To finalize MOB mode tap to the dot left of the "Cancel" button first.  
 
 Also, the AIS Search and Rescue Transmitter (SART) messages AIS-MOB and AIS-EPIRB starts the MOB mode, but without enabling track recording.
 

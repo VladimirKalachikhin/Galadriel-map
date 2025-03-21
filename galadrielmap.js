@@ -66,10 +66,19 @@ loggingCheck(logging='logging.php')	включает и выключает за�
 coverage()
 
 MOBalarm()
+setMOBpopup(layer)
+createMOBpointMarker(mobMarkerJSON)
 clearCurrentStatus()	удаляет признак "текущий маркер" у всех маркеров мультислоя mobMarker
 MOBclose()
+realMOBclose()
 delMOBmarker()
+makeMOBmarkerCurrent(LMarker)
+is_currentMOBmarkerSelf()
+mobMarkerDragendFunction(event)
+mobMarkerClickFunction(event)
 sendMOBtoServer()
+MOBtoGeoJSON(MOBdata)
+GeoJSONtoMOB(mobMarkerJSON)
 
 distCirclesUpdate()	Устанавливает диаметр и подписи кругов дистанции
 distCirclesToggler() включает/выключает показ окружностей дистанции по переключателю в интерфейсе
@@ -1798,7 +1807,7 @@ case 'stop':
 		console.log('[loggingRun]  Update track stopped because no logging now');
 		if(currentWaitTrackUpdateProcess){
 			clearInterval(currentWaitTrackUpdateProcess);	
-			console.log('[loggingRun] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
+			console.log('[loggingRun] Не должно быть currentWaitTrackUpdateProcess, но он был.');
 		}
 		if(currTrackSwitch.checked) startCurrentWaitTrackUpdateProcess();	// Текущий трек всегда показывается
 	};
@@ -1815,7 +1824,7 @@ default:
 			console.log('[loggingRun]  Update track stopped because no logging now');
 			if(currentWaitTrackUpdateProcess){
 				clearInterval(currentWaitTrackUpdateProcess);	
-				console.log('[loggingRun] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
+				//console.log('[loggingRun] Не должно быть currentWaitTrackUpdateProcess, но он был. Убили, запускаем.');
 			}
 			if(currTrackSwitch.checked) startCurrentWaitTrackUpdateProcess();	// Текущий трек всегда показывается
 		};
@@ -1895,6 +1904,7 @@ return;
 }; // end xhr.onreadystatechange
 }; // end function loggingCheck
 
+
 function coverage(){
 //console.log(cowerSwitch);
 //console.log(mapDisplayed.firstElementChild);
@@ -1921,53 +1931,257 @@ return;
 } // end function coverage
 
 
-function MOBalarm() {
-//
-// Global: map, cursor, currentMOBmarker, centerMark
-let latlng;
-if(typeof cursor !== 'undefined' && map.hasLayer(cursor)) latlng = cursor.getLatLng(); 	// координаты известны и показываются, хотя, возможно, устаревшие
-else {
-	// если даже нет координат -- дадим возможность ставить маркер в центре карты
-	centerMarkOn(); 	// включить крестик в середине
-	latlng = centerMarkMarker.getLatLng();
-	locationMOBdisplay.innerHTML = latTXT+' '+Math.round(latlng.lat*10000)/10000+'<br>'+longTXT+' '+Math.round(latlng.lng*10000)/10000;	
-	//return false;	
-}
+function MOBalarm(latlng=null,MOBmarkerInfo={}) {
+/* Добавляет новую точку MOB в mobMarker (который всегда есть), или обновляет имеющуюся, 
+и делает mobMarker видимым на карте, если ещё не.
+Точка будет в текущих координатах, или указанных.
+MOBmarkerInfo - это MOB в формате gpsdPROXY
 
-currentMOBmarker = L.marker(latlng, { 	// маркер для этой точки
-	icon: mobIcon,
-	draggable: true,
-});
-currentMOBmarker.on('click', mobMarkerClickFunction); 	// текущим будет маркер, по которому кликнули
-currentMOBmarker.on('dragend', mobMarkerDragendFunction); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
-clearCurrentStatus(); 	// удалим признак current у всех маркеров
-currentMOBmarker.feature = { 	// укажем признак "текущий маркер" как GeoJson свойство
-	type: 'Feature',
-	properties: {"current": true}
-};
-//console.log('[MOBalarm] currentMOBmarker:',currentMOBmarker);
-mobMarker.addLayer(currentMOBmarker);
-if(!mobMarker.feature){
-	mobMarker.feature = {
-		properties: {},
+Концептуально делать это всё путем преобразования mobMarker в mobMarkerJSON, изменением json,
+а потом преобразованием json обратно в mobMarker с помощью createMOBpointMarker(mobMarkerJSON).
+Тогда вся сопутствующая пурга типа отметок времени и изменений интерфейса выполнится сама.
+Но исторически сложилось, что здесь делается не концептуально, а естественным образом, изменением
+непосредственно mobMarker.
+*/
+// Global: map, cursor, currentMOBmarker, centerMark
+//console.log('[MOBalarm] MOBmarkerInfo:',JSON.stringify(MOBmarkerInfo));
+if(!latlng){
+	if(map.hasLayer(cursor)) latlng = cursor.getLatLng(); 	// координаты известны и показываются, хотя, возможно, устаревшие
+	else {
+		// если даже нет координат -- дадим возможность ставить маркер в центре карты
+		centerMarkOn(); 	// включить крестик в середине
+		latlng = centerMarkMarker.getLatLng();
+		locationMOBdisplay.innerHTML = latTXT+' '+Math.round(latlng.lat*10000)/10000+'<br>'+longTXT+' '+Math.round(latlng.lng*10000)/10000;	
 	};
 };
-mobMarker.feature.properties.timestamp = Date.now();
-//console.log('[MOBalarm] mobMarker:',mobMarker);
+const selfmmsi = vesselSelf ? vesselSelf.split(':').pop() : '';
+if(!MOBmarkerInfo.mmsi) MOBmarkerInfo.mmsi = selfmmsi;
+//const sart = MOBmarkerInfo.mmsi.startsWith('972') || MOBmarkerInfo.mmsi.startsWith('974');	// это точка AIS SART
+const sart = MOBmarkerInfo.mmsi != selfmmsi;	// это точка MOB, поставленная не нами
+let thisMarkerIs;
+// для всяких SART будем обновлять точку, когда как для руками поставленных в этом экземпляре - добавлять
+// Точки от AIS SART - единственные в mobMarker с данныи mmsi, когда как точек со своим mmsi
+// может быть много. Также может быть много точек, полученных от netAIS MOB.
+if(sart){	
+	for(const layer of mobMarker.getLayers()){
+		if(layer instanceof L.Marker && (MOBmarkerInfo.mmsi == layer.feature.properties.mmsi)){	// пришло обновление именно этого маркера
+			thisMarkerIs = layer;
+			break;
+		};
+	};
+};
+// маркер для этой точки
+if(thisMarkerIs) {
+	thisMarkerIs.setLatLng(latlng);
+	thisMarkerIs.feature.properties.safety_related_text = MOBmarkerInfo.safety_related_text ? MOBmarkerInfo.safety_related_text : ''
+	mobMarker.feature.properties.timestamp = MOBmarkerInfo.timestamp ? MOBmarkerInfo.timestamp : Math.round(Date.now()/1000);
+}
+else {
+	thisMarkerIs = L.marker(latlng, {
+		"icon": mobIcon, 
+		"draggable": !sart,
+	});
+	thisMarkerIs.feature = {
+		"type": "Feature",
+		"properties": {
+			"mmsi": MOBmarkerInfo.mmsi,
+			"safety_related_text": MOBmarkerInfo.safety_related_text ? MOBmarkerInfo.safety_related_text : '',
+		},
+	};
+	thisMarkerIs.on('click', mobMarkerClickFunction);
+	if(sart) setMOBpopup(thisMarkerIs);
+	else thisMarkerIs.on('dragend', mobMarkerDragendFunction);
+	
+	mobMarker.addLayer(thisMarkerIs);
+	mobMarker.feature.properties.timestamp = Math.round(Date.now()/1000);
+};
+// Если currentMOBmarker уже есть - не следует его переназначать на маркер SART, потому что
+// он может быть вручную указанным маркером, который реально идут спасать
+if(!currentMOBmarker || !map.hasLayer(mobMarker) || !sart){
+	makeMOBmarkerCurrent(thisMarkerIs);
+};
 if(!map.hasLayer(mobMarker)) mobMarker.addTo(map); 	// выставим маркер
 
-if(typeof loggingIndicator !== 'undefined') {
-	if((typeof loggingSwitch !== 'undefined')  && !loggingSwitch.checked){	// для пользователя со всеми правами
-		loggingSwitch.checked = true;
-	};
-	loggingRun('start'); 	// хотя в loggingSwitch стоит onChange="loggingRun();" изменение loggingSwitch.checked = true; не приводит к срабатыванию обработчика
+if(!sart && (loggingIndicator !== undefined && !loggingSwitch.checked)) {	// включим запись трека, но только если это свой MOB
+	loggingSwitch.checked = true;
+	loggingRun(); 	// хотя в loggingSwitch стоит onChange="loggingRun();" изменение loggingSwitch.checked = true; не приводит к срабатыванию обработчика
 }
-if(mobMarker.getLayers().length > 2) delMOBmarkerButton.disabled = false;
 
 sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
 return true;
 } // end function MOBalarm
 
+
+function setMOBpopup(layer){
+let dataStamp = '';
+if(mobMarker.feature.properties.timestamp){
+	const d = new Date(mobMarker.feature.properties.timestamp*1000);
+	dataStamp = d.getHours()+':'+(d.getMinutes()<10?'0'+d.getMinutes():d.getMinutes());
+	//dataStamp = d.getHours()+':'+d.getMinutes();
+}
+let PopupContent = `
+<div>
+	<div style='width:100%;'>
+		${layer.feature.properties.mmsi||''} 
+		<img  width="24px" style="margin:0.1rem;vertical-align:middle;" src="${mob_markerImg}">
+	</div>
+	<div style='width:100%;background-color:lavender;'>
+		<span style='font-size:110%;'>${layer.feature.properties.safety_related_text||''}</span><br>
+	</div>
+	<span>${dataStamp}</span>
+</div>
+`;
+layer.bindPopup(PopupContent,{});	// таким образом, Popup лепится только к маркерам MOB, пришедшим извне.
+}; // end function setMOBpopup
+
+function createMOBpointMarker(mobMarkerJSON){
+/*
+Создадим mobMarker - мультислой маркеров из переданного GeoJSON,
+а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
+Возможно, нарисуем линию от текущего маркера к месторасположению, но саму линию в мультислой добавим обязательно.
+Покажем мультислой на карте.
+
+Global: mobMarker, он создаётся заново.
+*/
+mobMarker = L.geoJSON(mobMarkerJSON);
+if(!mobMarker.feature){
+	mobMarker.feature = {
+		properties: {}
+	};
+};
+// Почему-то в mobMarker timestamp - это mobMarker.feature.properties.timestamp,
+// а в mobMarkerJSON = mobMarkerJSON.properties.timestamp
+// Вроде бы, это от GeoJSON
+if(mobMarkerJSON.properties && mobMarkerJSON.properties.timestamp){	// штатно не, но могут быть куки от предыдущих версий
+	mobMarker.feature.properties.timestamp = mobMarkerJSON.properties.timestamp;
+};
+const selfmmsi = vesselSelf ? vesselSelf.split(':').pop() : '';
+let layerID;
+mobMarker.eachLayer(function (layer) {
+	if(layer instanceof L.Marker)	{
+		//const sart = layer.feature.properties.mmsi && (layer.feature.properties.mmsi.startsWith('972') || layer.feature.properties.mmsi.startsWith('974'));	// это точка AIS SART
+		const sart = layer.feature.properties.mmsi && layer.feature.properties.mmsi != selfmmsi;	// это точка MOB, поставленная не нами
+		layerID = mobMarker.getLayerId(layer);
+		layer.setIcon(mobIcon);
+		if(!layer.feature.properties) layer.feature.properties = {};
+		layer.on('click', mobMarkerClickFunction); 	// текущим будет маркер, по которому кликнули
+		if(!layer.getLatLng() || (layer.getLatLng().lat == undefined) || (layer.getLatLng().lng == undefined)){	// У этой точки нет координат. Например, это AIS MOB.
+			if(map.hasLayer(cursor)) layer.setLatLng(cursor.getLatLng()); 	// координаты известны и показываются, хотя, возможно, устаревшие - назначим точке свои координаты
+			else layer.setLatLng(map.getCenter());
+		};
+		//console.log('Маркеры в полученной информации MOB ',layer);
+		// если вообще не был назначен currentMOBmarker, или мультислой mobMarker не показывается
+		//if(!currentMOBmarker || !map.hasLayer(mobMarker)){	// Это вообще не надо, потому что мы создаём весь мультислой заново, и никакого текущего маркера вне создаваемых здесь быть не может.
+			if(layer.feature.properties.current) { 	// текущим станет указанный в переданных данных
+				//console.log('[createMOBpointMarker] Делаем текущим маркер с координатами:',layer.getLatLng());
+				makeMOBmarkerCurrent(layer);
+			}
+		//};
+		if(sart) setMOBpopup(layer);
+	}
+	// А назачем удалять линию? Затем, что она уже неактуальна. Если надо - тут же будет нарисована новая.
+	// Ещё потому, что иначе она будет просто линия, а не toMOBline, и с ней никто ничего не сможет сделать.
+	else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
+});
+toMOBline.setLatLngs([]); 	// очистим линию к текущему маркеру MOB
+mobMarker.addLayer(toMOBline);	// добавим в мультислой линию, её там нет.
+// Возможно, не нужно принудительно устанавливать текущий маркер?
+// Последний маркер станет текущим, если текущего вообще не назначали.
+// При таком условии если есть MOB SART, то, когда этот маркер снова будет показан после прекращения
+// режима MOB, линия к нему не будет проведена. Фича? Ага, но только в том случае, если 
+// в MOBclose не currentMOBmarker = null;
+if(layerID && !currentMOBmarker){
+	//console.log('[createMOBpointMarker] Назначаем текущим последний маркер с координатами:',mobMarker.getLayer(layerID).getLatLng());
+	makeMOBmarkerCurrent(mobMarker.getLayer(layerID));	// назначим текущим последний маркер
+};
+//
+//console.log('[createMOBpointMarker] mobMarker:',mobMarker);
+/*/ Перерисуем линию, если есть текущий маркер. А надо?
+if(currentMOBmarker){
+	let latlng1 = cursor.getLatLng();	// cursor-то есть всегда, но какие у него координаты, когда его нет?
+	let latlng2 = currentMOBmarker.getLatLng();
+	toMOBline.setLatLngs([latlng1,latlng2]); 	// обновим линию к текущему маркеру MOB
+};
+/*/
+mobMarker.addTo(map); 	// покажем мультислой с маркерами MOB
+
+mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable, кроме чужих маркеров
+	if(layer instanceof L.Marker && is_currentMOBmarkerSelf(layer)){	
+		layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
+		layer.on('dragend', mobMarkerDragendFunction); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
+	}
+});
+}; // end function createMOBpointMarker
+
+
+function MOBclose() {
+mobMarker.remove(); 	// убрать мультислой-маркер с карты
+//currentMOBmarker = null;
+mobMarker.clearLayers(); 	// очистить мультислой от маркеров
+toMOBline.setLatLngs([]);	// сделаем линию никакой
+mobMarker.addLayer(toMOBline); 	// вернём туда линию
+//console.log("[MOBclose] mobMarker:",mobMarker);
+document.cookie = "GaladrielMapMOB=; expires=0; path=/; samesite=Lax"; 	// удалим куку
+azimuthMOBdisplay.innerHTML = '&nbsp;';
+distanceMOBdisplay.innerHTML = '&nbsp;';
+directionMOBdisplay.innerHTML = '&nbsp;';
+locationMOBdisplay.innerHTML = '&nbsp;';
+delMOBmarkerButton.disabled = true;
+//centerMarkOff(); 	// выключить крестик в середине -- не надо, ибо при закрытии панели оно уже вызывается
+sidebar.close();	// закрыть панель
+} // end function MOBclose
+
+function realMOBclose(){
+mobMarker.feature.properties.timestamp = Math.round(Date.now()/1000);
+sendMOBtoServer(false); 	// передадим на сервер, что режим MOB прекращён
+MOBclose();
+}; // end function realMOBclose
+
+
+function delMOBmarker(){
+/* Удаляет текущий маркер MOB
+mobMarker это LayerGroup 
+Вызывается юзером
+*/
+//console.log('[delMOBmarker] currentMOBmarker before del ',currentMOBmarker);
+if(!is_currentMOBmarkerSelf() || !checkSelfMOBmarkerScount()) return;	// нельзя убрать чужой или последний свой маркер
+mobMarker.removeLayer(currentMOBmarker);
+currentMOBmarker = null;
+// Сделаем текущим первый попавшийся свой маркер, или никакого?
+let layerID;
+for(const layer of mobMarker.getLayers()){
+	if(!(layer instanceof L.Marker)) continue;
+	if(is_currentMOBmarkerSelf(layer)) {
+		makeMOBmarkerCurrent(layer);
+		break;
+	}
+	layerID = mobMarker.getLayerId(layer);
+};
+//if(!currentMOBmarker) makeMOBmarkerCurrent(mobMarker.getLayer(layerID));	// сделаем текущим последний маркер
+sendMOBtoServer(); 	// отдадим новые данные MOB для передачи на сервер
+} // end function delMOBmarker
+
+
+function makeMOBmarkerCurrent(LMarker){
+/* Global currentMOBmarker */
+if(!(LMarker instanceof L.Marker)) return;
+// Забавно, что в javascript нижеследующие операторы могут быть выполнены в любой последовательности
+// с одинаковым результатом. Но всё же расположим их в разумной.
+currentMOBmarker = LMarker;
+clearCurrentStatus(); 	// удалим признак current у всех маркеров
+currentMOBmarker.feature.properties.current = true;
+if(is_currentMOBmarkerSelf() && checkSelfMOBmarkerScount()) {
+	//console.log('Это наш маркер');
+	delMOBmarkerButton.disabled = false; // включим/выключим кнопку удаления маркера MOB
+}
+else {
+	//console.log('Это чужой или единственный маркер',checkSelfMOBmarkerScount());
+	delMOBmarkerButton.disabled = true;	// выключим кнопку удаления маркера
+};
+
+if(!mobMarker.hasLayer(currentMOBmarker)) mobMarker.addLayer(currentMOBmarker);	// можно добавить сколько угодно одних и тех же слоёв
+mobMarker.feature.properties.timestamp = Math.round(Date.now()/1000);
+}; // end function makeMOBmarkerCurrent
 
 function clearCurrentStatus() {
 /* удаляет признак "текущий маркер" у всех маркеров мультислоя mobMarker */
@@ -1979,46 +2193,63 @@ mobMarker.eachLayer(function (layer) { 	// удалим признак current �
 } // end function clearCurrentStatus
 
 
-function MOBclose() {
-mobMarker.remove(); 	// убрать мультислой-маркер с карты
-mobMarker.clearLayers(); 	// очистить мультислой от маркеров
-mobMarker.addLayer(toMOBline); 	// вернём туда линию
-mobMarker.feature.properties.timestamp = Date.now();
-sendMOBtoServer(false); 	// передадим на сервер, что режим MOB прекращён
-document.cookie = "GaladrielMapMOB=; expires=0; path=/; samesite=Lax"; 	// удалим куку
-azimuthMOBdisplay.innerHTML = '&nbsp;';
-distanceMOBdisplay.innerHTML = '&nbsp;';
-directionMOBdisplay.innerHTML = '&nbsp;';
-locationMOBdisplay.innerHTML = '&nbsp;';
-delMOBmarkerButton.disabled = true;
-//centerMarkOff(); 	// выключить крестик в середине -- не надо, ибо при закрытии панели оно уже вызывается
-sidebar.close();	// закрыть панель
-} // end function MOBclose
-
-
-function delMOBmarker(){
-/* Удаляет текущий маркер MOB
-mobMarker это LayerGroup 
+function is_currentMOBmarkerSelf(marker){
+/* Возвращает true, если текущая или указанная точка MOB поставлена нашим судном. С любого клиента. 
+В случае GaladrielMap SignalK ed. есть что-то типа своего mmsi, и идентифицируется по нему.
+В случае просто GaladrielMap mmsi есть только у gpsdPROXY, поэтому считаем, что если mmsi нет - то это мы.
 */
-let layers = mobMarker.getLayers();
-if(layers.length < 3) return; // т.е., там линия и один маркер
-mobMarker.removeLayer(currentMOBmarker);
-layers = mobMarker.getLayers(); 	// мы не знаем, какой именно маркер был удалён -- текущий мог быть любым
-//console.log(layers);
-for(let i=layers.length-1; i>=0; i--){ 	// мы не знаем, где там линия
-	if (layers[i] instanceof L.Marker) { 	// почему это здесь не работает? Может быть, потому что L.Marker? И правда...
-	//if (layers[i].options.icon) {
-		currentMOBmarker = layers[i]; 	// последний маркер в mobMarker
-		currentMOBmarker.feature.properties.current = true;
-		//console.log('New currentMOBmarker after del ',currentMOBmarker);
-		break;
+if(!marker) marker = currentMOBmarker;
+let ret;
+const selfmmsi = vesselSelf ? vesselSelf.split(':').pop() : '';
+//console.log('[is_currentMOBmarkerSelf] selfmmsi=',selfmmsi,'marker:',marker);
+if(marker.feature){	// L.Marker
+	if(marker.feature.properties.mmsi && (marker.feature.properties.mmsi !== selfmmsi)){
+		ret = false;
 	}
+	else ret = true;
 }
-//currentMOBmarker = layers[layers.length-1]; 	// последний маркер в mobMarker, но в layers их же прежнее число
-if(layers.length < 3) delMOBmarkerButton.disabled = true; // т.е., там линия и один маркер
-mobMarker.feature.properties.timestamp = Date.now();
-sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
-} // end function delMOBmarker
+else if(marker.properties){	// mobMarkerJSON
+	if(marker.properties.mmsi && (marker.properties.mmsi !== selfmmsi)){
+		ret = false;
+	}
+	else ret = true;
+};
+//console.log('[is_currentMOBmarkerSelf] return=',ret);
+return ret;
+}; // end function is_currentMOBmarkerSelf
+
+
+function checkSelfMOBmarkerScount(){
+/* Считает, имеется ли больше двух своих маркеров MOB */
+let n=0;
+for(const layer of mobMarker.getLayers()){
+	if(!(layer instanceof L.Marker)) continue;
+	if(is_currentMOBmarkerSelf(layer)) n++;
+	if(n > 1) return true;
+};
+return false;
+}; // end function delMOBmarkerButtonState
+
+
+function mobMarkerDragendFunction(event){
+//console.log("MOB dragged end, send to server new coordinates",mobMarker);
+mobMarker.feature.properties.timestamp = Math.round(Date.now()/1000);
+if(event.target.feature.properties.current == true){
+	let latlng1 = cursor.getLatLng();	// cursor-то есть всегда, но какие у него координаты, когда его нет?
+	let latlng2 = event.target.getLatLng();
+	toMOBline.setLatLngs([latlng1,latlng2]); 	// обновим линию к текущему маркеру MOB
+};
+sendMOBtoServer(); 
+}; // end function mobMarkerDragendFunction
+
+
+function mobMarkerClickFunction(event){
+//console.log("MOB click",event.target);
+if(event.target.feature.properties.current == true) return;
+makeMOBmarkerCurrent(event.target)
+//console.log("MOB click, send to server new coordinates",mobMarker);
+sendMOBtoServer(); 
+}; // end function mobMarkerClickFunction
 
 
 function sendMOBtoServer(status=true){
@@ -2026,42 +2257,91 @@ function sendMOBtoServer(status=true){
 mobMarker -- это Leaflet LayerGroup, т.е. там исчерпывающая информация
 */
 //console.log("sendMOBtoServer status=",status,mobMarker);
-if(typeof spatialWebSocket !== "object") return;
-upData.MOB = {};
-upData.MOB.class = 'MOB';
-upData.MOB.status = status; 	// 
-upData.MOB.points = [];
-//upData.MOB.LineString = {};
-let mobMarkerJSON = mobMarker.toGeoJSON(); 	//
+let mobMarkerJSON = null;
+mobMarkerJSON = mobMarker.toGeoJSON(); 	//
 if(!mobMarkerJSON.properties){	// вообще-то, toGeoJSON должна сохранять левые поля, но она делает это как-то иногда...
-	mobMarkerJSON.properties = {};
+	mobMarkerJSON.properties = {"timestamp": Math.round(new Date().getTime()/1000)};
 };
-mobMarkerJSON.properties.timestamp = mobMarker.feature.properties.timestamp;
-//console.log('[sendMOBtoServer] mobMarkerJSON:',mobMarkerJSON);
-for(let feature of mobMarkerJSON.features){
-	switch(feature.geometry.type){
-	case "Point":
-		upData.MOB.points.push({'coordinates':feature.geometry.coordinates,'current':feature.properties.current});
-		break;
-	case "LineString":
-		//upData.MOB.LineString.coordinates = feature.geometry.coordinates;	// линия только одна
-		break;
-	};
+if(mobMarker.feature.properties.timestamp) mobMarkerJSON.properties.timestamp = mobMarker.feature.properties.timestamp;
+if(status){
+	//console.log('[sendMOBtoServer] Посадим куку MOB');
+	let str = JSON.stringify(mobMarkerJSON);
+	const expires =  new Date();
+	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
+	document.cookie = "GaladrielMapMOB="+str+"; expires="+expires+"; path=/; SameSite=Lax"; 	// 
+}
+else {
+	document.cookie = 'GaladrielMapMOB=; expires=0; path=/;'; 	// удалим куку. Она уже удаляется в MOBclose
 };
-upData.MOB.timestamp = mobMarkerJSON.properties.timestamp;
+//console.log('Sending to server mobMarkerJSON',JSON.stringify(mobMarkerJSON));
+upData.MOB = GeoJSONtoMOB(mobMarkerJSON,status);	// приведение к формату gpsdPROXY
 //console.log('[sendMOBtoServer] Sending to server upData.MOB:',upData.MOB);
 //console.log('[sendMOBtoServer] upData=',JSON.stringify(upData.MOB));
 //console.log('[sendMOBtoServer] spatialWebSocket.readyState:',spatialWebSocket.readyState);
 
-if(spatialWebSocket.readyState == 1) {	// при этом в index.php в spatialWebSocket.onopen эта функция вызывается сразу по открытию соединения с gpsdPROXY, так что если есть gpsdPROXY - данные станут общими.
-	spatialWebSocket.send('?UPDATE={"updates":['+JSON.stringify(upData.MOB)+']};'); 	// отдадим данные MOB для передачи на сервер через глобальный сокет для передачи координат. Он есть, иначе -- нет координат и нет проблем.
+// отдадим данные MOB для передачи на сервер через глобальный сокет для передачи координат.
+// Он есть, иначе -- нет координат и нет проблем.
+// Его может не быть, а MOB можно поставить и без координат.
+if(spatialWebSocket && spatialWebSocket.readyState == 1) {	// при этом в index.php в spatialWebSocket.onopen эта функция вызывается сразу по открытию соединения с gpsdPROXY, так что если есть gpsdPROXY - данные станут общими.
+	spatialWebSocket.send('?UPDATE={"updates":['+JSON.stringify(upData.MOB)+']};'); 	
 };
-// Посадим куку
-mobMarkerJSON = JSON.stringify(mobMarkerJSON);
-const expires =  new Date();
-expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
-document.cookie = "GaladrielMapMOB="+mobMarkerJSON+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
 }; // end function sendMOBtoServer
+
+function MOBtoGeoJSON(MOBdata){
+/* Переделывает объект MOB из формата gpsdPROXY в mobMarkerJSON: Leaflet GeoJSON для GaladrielMap */
+//console.log('[MOBtoGeoJSON] MOBdata:',MOBdata);
+let mobMarkerJSON = {
+	"type":"FeatureCollection",
+	"features":[],
+	"properties": {
+		"timestamp": MOBdata.timestamp
+	}
+};
+for(const point of MOBdata.points){
+	const feature = {	
+		"type":"Feature",
+		"properties":{
+			"current": Boolean(point.current),
+			"mmsi": String(point.mmsi),
+			"safety_related_text": String(point.safety_related_text)
+		},
+		"geometry":{
+			"type":"Point",
+			"coordinates": point.coordinates
+		}
+	};
+	mobMarkerJSON.features.push(feature);
+};
+//console.log('[MOBtoGeoJSON] mobMarkerJSON:',mobMarkerJSON);
+return mobMarkerJSON;
+}; // end function MOBtoGeoJSON
+
+function GeoJSONtoMOB(mobMarkerJSON,status){
+/* Переделывает Leaflet GeoJSON мультислоя mobMarker в объект MOB формата gpsdPROXY */
+//console.log('[GeoJSONtoMOB] mobMarkerJSON:',mobMarkerJSON);
+let MOB={
+	"class": 'MOB',
+	"status": status,
+	"points": [],
+	"timestamp": status ? mobMarkerJSON.properties.timestamp : Math.round(new Date().getTime()/1000),
+	"source": '972'+vesselSelf.substring(3)
+};
+for(let feature of mobMarkerJSON.features){
+	switch(feature.geometry.type){
+	case "Point":
+		MOB.points.push({
+			'coordinates':feature.geometry.coordinates,
+			'current':feature.properties.current,
+			'mmsi':feature.properties.mmsi,
+			'safety_related_text':feature.properties.safety_related_text
+		});
+		break;
+	case "LineString":
+		break;
+	};
+};
+return MOB;
+}; // end function GeoJSONtoMOB
 
 
 // Круги дистанции
@@ -2142,14 +2422,15 @@ else {
 function windSwitchToggler() {
 /* включает/выключает показ символа ветра по переключателю в интерфейсе */
 if(windSwitch.checked) {
-	windSymbolMarker.addTo(positionCursor);
+	windSymbolMarker.setLatLng(cursor.getLatLng());	// хотя его может и не быть. Но если не установить координаты, может происходить ошибка в leaflet, если символ показывается до очередного обновления координат, когда они устанавливаюся для всех слоёв, включая символ ветра.
+	if(!positionCursor.hasLayer(windSymbolMarker)) windSymbolMarker.addTo(positionCursor);
 	// Посадим куку
 	const expires =  new Date();
 	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
 	document.cookie = "GaladrielWindSwitch=1; expires="+expires+"; path=/; SameSite=Lax;";
 }
 else {
-	windSymbolMarker.remove();
+	windSymbolMarker.removeFrom(positionCursor);
 	// Посадим куку
 	const expires =  new Date();
 	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц

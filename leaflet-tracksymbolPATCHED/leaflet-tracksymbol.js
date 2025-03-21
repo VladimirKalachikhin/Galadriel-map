@@ -155,7 +155,7 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 			delete aisData.lon;
 		}
 	    L.setOptions(this, aisData); 	// остальное запишем в options
-		//console.log(this.options);
+		//console.log('[addData] this.options:',this.options);
 		//console.log(this.options.mmsi);
 		//console.log(this._shiptype);
 
@@ -249,6 +249,13 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 			//dataStamp = d.getHours()+':'+d.getMinutes();
 		}
 
+		if(this.options.mmsi && this.options.mmsi.substring(0,2)=='97'){	// Если оно AIS SART
+			if(!this.options.safety_related_text){
+				if(+aisData['status']==14) this.options.safety_related_text = 'SART ACTIVE';
+				else this.options.safety_related_text = 'SART TEST';
+			};
+		};
+
 		let PopupContent = `
 <div>
 	${iconIMG}
@@ -276,6 +283,7 @@ ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>`;
         }
         else console.log('Нет POPUP!')
         
+        //console.log('leaflet-tracksymbol [addData] this.options.sart=',this.options.sart,'this.getTooltip()=',this.getTooltip());
 		if(this.options.sart){	// AIS-SART, но не обязательно mmsi==97XXXXXXX
 	        if(!this.getTooltip()){
 				// Идея показать картинку вместо Tooltip с целью имитации маркера, который здесь 
@@ -289,8 +297,13 @@ ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>`;
 			};
 			const TooltipContent = '<img width="24px" style="margin:0; position:relative; bottom:24px; right:12px; opacity:1 !important;" src="'+thisScript.src.substring(0, thisScript.src.lastIndexOf("/"))+'/symbols/'+iconName+'">';
 			this.getTooltip().setContent(TooltipContent); 	// .openTooltip() не надо?
+			this.openTooltip();
+		}
+		else{
+	        if(this.getTooltip()){
+	        	this.getTooltip()._close();	// метод closeTooltip() у самого tooltip не работает, потому что там if (this._tooltip), но такого свойства у tooltip нет? Можно ещё this.closeTooltip(tooltip)
+	        };
 		};
-		
 		//console.log('[addData] result this:',this)
 		return this.redraw(); 	// 
 	},

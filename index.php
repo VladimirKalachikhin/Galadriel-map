@@ -9,8 +9,9 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.20.1';
+$versionTXT = '2.20.2';
 /* 
+2.20.0	user authorisation & AIS SART support
 2.10.4	with Norwegian localisation
 2.9.4	update route list with panel open
 2.9.0	wind sign
@@ -27,8 +28,6 @@ if($grantsAddrList){
 	$privileged=chkPrivileged();
 	//echo "privileged=$privileged<br>\n";
 };
-// start gpsdPROXY
-if($gpsdPROXYpath) exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
 
 // Интернационализация
 // требуется, чтобы языки были перечислены в порядке убывания предпочтения
@@ -65,7 +64,10 @@ if(substr_count($_SERVER['HTTP_HOST'],':')>1){	// ipv6 address
 else $HTTP_HOST = explode(':',$_SERVER['HTTP_HOST'])[0];	// ipv4 address
 //echo "HTTP_HOST=$HTTP_HOST; <br>\n";
 
-if(!$gpsdProxyHost and $gpsdProxyHosts){	// не указан свой gpsdProxyHost, но указан $gpsdPROXYpath.'/params.php
+// Не указан свой gpsdProxyHost, но указан $gpsdPROXYpath в params.php
+// тогда происходит импорт конфигурации из gpsdPROXY, где имеется список хостов, портов
+// на которых обслуживает gpsdProxy. Обычно один ipv4, и один ipv6
+if(!$gpsdProxyHost and $gpsdProxyHosts){	
 	$minLev = PHP_INT_MAX; $minLevInd = PHP_INT_MAX;
 	foreach($gpsdProxyHosts as $i => $gpsdProxyHost){
 		$lev = levenshtein($HTTP_HOST, $gpsdProxyHost[0]);
@@ -86,6 +88,35 @@ if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=
 	$gpsdProxyHost = $HTTP_HOST;
 }
 //echo "gpsdProxyHost=$gpsdProxyHost; gpsdProxyPort=$gpsdProxyPort;<br>\n";
+
+if($gpsdPROXYpath) {	// в этом случае подкдючается ещё и params.php от gpsdPROXY 
+	// start gpsdPROXY
+	exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
+	// Характеристики судна, в основном для контроля столкновений, но mmsi необходим для netAIS
+	if($netAISconfig) {	// а это params.php от netAIS, который подключается в params.php от gpsdPROXY
+		$saveBoatInfo = $boatInfo;	// params.php
+		$boatInfo = parse_ini_file($netAISconfig,FALSE,INI_SCANNER_TYPED);
+		if($boatInfo===false) {
+			echo "\nFound netAISconfig parm in params.php, but loading netAIS boatInfo.ini false.\n";
+			$boatInfo = $saveBoatInfo;
+		}
+		else {
+			if(!$boatInfo['shipname']) $boatInfo['shipname'] = $saveBoatInfo['shipname'];
+			if(!$boatInfo['mmsi']) $boatInfo['mmsi'] = $saveBoatInfo['mmsi'];
+			if(!$boatInfo['length']) $boatInfo['length'] = $saveBoatInfo['length'];
+			if(!$boatInfo['beam']) $boatInfo['beam'] = $saveBoatInfo['beam'];
+			if(!$boatInfo['to_bow']) $boatInfo['to_bow'] = $saveBoatInfo['to_bow'];
+			if(!$boatInfo['to_stern']) $boatInfo['to_stern'] = $saveBoatInfo['to_stern'];
+			if(!$boatInfo['to_port']) $boatInfo['to_port'] = $saveBoatInfo['to_port'];
+			if(!$boatInfo['to_starboard']) $boatInfo['to_starboard'] = $saveBoatInfo['to_starboard'];
+		}
+		unset($saveBoatInfo);
+	}
+	if(!$boatInfo['shipname']) $boatInfo['shipname'] = (string)uniqid();
+	if(!$boatInfo['mmsi']) $boatInfo['mmsi'] = str_pad(substr(crc32($boatInfo['shipname']),0,9),9,'0'); 	// левый mmsi, похожий на настоящий -- для тупых, кому не всё равно (SignalK, к примеру)
+	//echo "boatInfo:"; print_r($boatInfo); echo "\n";
+};
+
 $mapsInfo = array();
 if($tileCacheControlURI){	// мы знаем про GaladrielCache
 	if(substr($tileCacheControlURI,0,4)!=='http'){	// всё на одном сервере
@@ -511,7 +542,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 					this.nextElementSibling.disabled=false;
 					this.style.color="green";
 				'>&#x2B24;</a>
-				<button onClick='MOBclose();' style="width:75%;" disabled><span style=""><?php echo $cancelMOBTXT; ?></span></button>
+				<button onClick='realMOBclose();' style="width:75%;" disabled><span style=""><?php echo $cancelMOBTXT; ?></span></button>
 				</div>
 			</div>
 		</div>
@@ -655,6 +686,7 @@ if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
 <script> "use strict";
 // Глобальные переменные
 var appLocale = '<?php echo $appLocale; ?>';
+var vesselSelf = '<?php echo $boatInfo["mmsi"]; ?>';
 // для загрузки Mapbox GL при необходимости. Из-за чего-то надо так.
 var mapboxGLscript = null;	// скрипт Mapbox GL, загружается при открытии соответствующей карты. Эти глобальные переменные ни нафиг не нужны, но если грузить скрипты Mapbox GL где-то в глубине -- при закрытии карты возникает мутная ошибка.
 var mapboxLeafletscript = null;	// скрипт mapbox-gl-leaflet
@@ -763,7 +795,7 @@ var dashboardMHeadingAltTXT = '<?php echo $dashboardMHeadingAltTXT;?>';
 var latTXT = '<?php echo $latTXT;?>';
 var longTXT = '<?php echo $longTXT;?>';	
 // MOB
-var currentMOBmarker;
+var currentMOBmarker;	// Объект L.Marker в мультислое mobMarker, являющийся "текущим". Исторически в наименованиях есть некоторое смешение: mobMarker - это не маркер, это L.Polyline.
 var relBearingTXT = [<?php echo $relBearingTXT; // internationalisation ?>]
 // main output data
 var upData = {};
@@ -1235,6 +1267,8 @@ var toMOBline = L.polyline([], {
 })
 
 // восстановим маркеры
+// mobMarker - это мультислой, содержащий сколько-то L.Marker и одну L.Polyline,
+// являющийся выражением состояния MOB
 var mobMarker = getCookie('GaladrielMapMOB'); 	// getCookie from galadrielmap.js
 if(mobMarker) {
 	let mobMarkerJSON;
@@ -1255,28 +1289,7 @@ if(mobMarker) {
 			};
 		};
 		if(pt){	// В куке - объект geojson с точкой с координатами
-			// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
-			mobMarker = L.geoJSON(mobMarkerJSON);
-			if(mobMarkerJSON.properties && mobMarkerJSON.properties.timestamp){	// штатно не, но могут быть куки от предыдущих версий
-				mobMarker.feature = {properties: {'timestamp': mobMarkerJSON.properties.timestamp}};
-			}
-			else mobMarker.feature = {properties: {'timestamp': null}};
-			mobMarker.eachLayer(function (layer) {
-				if(layer instanceof L.Marker)	{
-					layer.setIcon(mobIcon);
-					currentMOBmarker = layer; 	// последний станет текущим
-				}
-				else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
-			});
-			mobMarker.addLayer(toMOBline);
-			mobMarker.addTo(map);
-			mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable. 
-				if(layer instanceof L.Marker)	{	
-					layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
-					layer.on('dragend', mobMarkerDragendFunction); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
-					layer.on('click', mobMarkerClickFunction); 	// текущим будет маркер, по которому кликнули
-				}
-			});
+			createMOBpointMarker(mobMarkerJSON);
 			//console.log('mobMarker from cookie:',mobMarker);
 		};
 	};
@@ -1286,28 +1299,13 @@ if((typeof mobMarker !== "object") || !(mobMarker instanceof L.LayerGroup)) {
 	mobMarker.feature = {properties: {}};
 };
 
-function mobMarkerDragendFunction(event){
-console.log("MOB dragged end, send to server new coordinates",mobMarker);
-mobMarker.feature.properties.timestamp = Date.now();
-sendMOBtoServer(); 
-}; // end function mobMarkerDragendFunction
-function mobMarkerClickFunction(event){
-currentMOBmarker = event.target;
-clearCurrentStatus(); 	// удалим признак current у всех маркеров
-currentMOBmarker.feature.properties.current = true;
-mobMarker.feature.properties.timestamp = Date.now();
-sendMOBtoServer(); 
-}; // end function mobMarkerClickFunction
-
-
-
 // Realtime периодическое получение внешних данных
 let subscribe = ['TPV','AIS','ALARM'];
 
 var spatialWebSocket; // будет глобальным сокетом
-var lastDataUpdate=0;	// момент последнего получения данных
+var lastDataUpdate=0;	// момент последнего получения данных, в милисекундах	
 var PosFreshBeforeMultiplexor=30;	// через сколько интервалов PosFreshBefore убирать курсор совсем
-var lastPositionUpdate=0;	// момент последнего обновления координат
+var lastPositionUpdate=0;	// момент последнего обновления координат, в милисекундах	
 
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 function spatialWebSocketStart(){
@@ -1326,14 +1324,16 @@ spatialWebSocket.onopen = function(e) {
 	else if(mobMarker.feature.properties.timestamp){ 	// если есть timestamp - MOB был, но сейчас нет
 		sendMOBtoServer(false); 	// отдадим данные MOB для передачи на сервер, на всякий случай -- вдруг там не знают
 	}
-	// Запуск проверки актуальности координат если, скажем, нет связи с сервером.
+	// Запуск проверки актуальности всех сведений если, скажем, нет связи с сервером.
 	checkDataFreshInterval = setInterval(function (){
-		if((Date.now()-lastDataUpdate)>PosFreshBefore){
+		//console.log('[checkDataFreshInterval] running, now-lastDataUpdate = ',Date.now()-lastDataUpdate,'PosFreshBefore=',PosFreshBefore);
+		if(Date.now()-lastDataUpdate>PosFreshBefore){
 			console.log('The latest TPV data was received too long ago, trying to reconnect for checking.');
 			spatialWebSocket.close(1000,'The latest data was received too long ago');
 		}
 	},PosFreshBefore);
 	//
+	windSwitchToggler();	// (если) добавим символ ветра в курсор
 }; // end spatialWebSocket.onopen
 
 spatialWebSocket.onmessage = function(event) {
@@ -1349,7 +1349,7 @@ spatialWebSocket.onmessage = function(event) {
 		console.log('spatialWebSocket: Parsing inbound data',error.message);
 		return;
 	};
-	lastDataUpdate = Date.now();	// какое-то обновление данных пришло.
+	lastDataUpdate = Date.now();	// какое-то обновление данных пришло, timestamp in microsec.
 	switch(data.class){
 	case 'VERSION':
 		console.log('spatialWebSocke.onmessaget: Handshaiking with gpsd begin: VERSION recieved. Sending WATCH');
@@ -1394,30 +1394,22 @@ spatialWebSocket.onmessage = function(event) {
 spatialWebSocket.onclose = function(event) {
 	console.log(`spatialWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
 	window.setTimeout(spatialWebSocketStart, 3000); 	// перезапустим сокет через  секунд. В каком контексте здесь вызывается callback -- мне осталось непонятным, поэтому сокет ваще глобален
-	//console.log('lastDataUpdate=',lastDataUpdate,'PosFreshBefore=',PosFreshBefore,Date.now()-lastDataUpdate);
-	if((Date.now()-lastDataUpdate)>PosFreshBefore*PosFreshBeforeMultiplexor) {	// обычно PosFreshBefore -- 3-5 секунд
+	//console.log('[spatialWebSocket.onclose] Date.now()-lastDataUpdate=',Date.now()-lastDataUpdate,'PosFreshBefore*PosFreshBeforeMultiplexor=',PosFreshBefore*PosFreshBeforeMultiplexor);
+	if((Date.now()-lastDataUpdate)>(PosFreshBefore*PosFreshBeforeMultiplexor)) {	// обычно PosFreshBefore -- 3-5 секунд
 		positionCursor.remove(); 	// уберём курсор (layerGroup) с карты
-		for(const vehicle in vehicles){	// уберём цели AIS с карты
-			vehicles[vehicle].remove();
-			vehicles[vehicle] = null;
-			delete vehicles[vehicle];
-		}
-		collisisonDetected.clearLayers();	// очистим слой 
-		collisisonDetected.remove();
-		collisionDirectionsCursor.clearLayers();
-		collisionDirectionsCursor.remove();
+		clearInterval(checkDataFreshInterval);	// остановить периодическую проверку свежести.
 	}
 	else cursor.setIcon(NoGpsCursor)	// заменим курсор (значёк) на серый
+	windSymbolMarker.removeFrom(positionCursor);
 	velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
 	courseDisplay.innerHTML = '&nbsp;';
 	locationDisplay.innerHTML = '&nbsp;';
 	depthDial.innerHTML = '';
 	//MOBtab.className='disabled'; 	// если нет курсора (координат) -- невозможно включить режим MOB. Это плохая идея.
-	clearInterval(checkDataFreshInterval);	// остановить периодическую проверку свежести
 }; // end spatialWebSocket.onclose
 
 spatialWebSocket.onerror = function(error) {
-	console.log(`[spatialWebSocket error] ${error.message}`);
+	console.log(`[spatialWebSocket error] ${error.message}, lastDataUpdate=`,lastDataUpdate);
 	fetch('gpsdPROXYtry.php');	// если сервер перегрузился, там не запущен gpsdPROXY.
 }; // end spatialWebSocket.onerror
 
@@ -1486,17 +1478,19 @@ else {
 }
 }; // end function watchAISswitching
 
+
 spatialWebSocketStart(); 	// запускам периодическую функцию получать TPV
 <?php }; ?>
+
 
 // Обработчики сообщений
 // Позиционирование
 function realtimeTPVupdate(gpsdData) {
-//console.log('Index gpsdData',gpsdData);
-//console.log('Index gpsdData.MOB',gpsdData.MOB);
+//console.log('[realtimeTPVupdate] Index gpsdData',gpsdData);
+//console.log('[realtimeTPVupdate] Index gpsdData.MOB',gpsdData.MOB);
 // Глубина
 if(gpsdData.depth) {
-	//console.log('Index gpsdData',gpsdData.depth);
+	//console.log('[realtimeTPVupdate] Index gpsdData',gpsdData.depth);
 	depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(gpsdData.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
 }
 else {
@@ -1505,10 +1499,10 @@ else {
 }
 
 // Положение неизвестно
-//console.log('Index gpsdData',gpsdData.lon,gpsdData.lat);
+//console.log('[realtimeTPVupdate] Index gpsdData',gpsdData.lon,gpsdData.lat);
 if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
 	console.log('[realtimeTPVupdate] No spatial info in GPSD data',gpsdData);
-	//console.log('lastPositionUpdate=',lastPositionUpdate,'PosFreshBefore*PosFreshBeforeMultiplexor=',PosFreshBefore*PosFreshBeforeMultiplexor,Date.now()-lastPositionUpdate);
+	//console.log('[realtimeTPVupdate] Date.now()-lastPositionUpdate=',Date.now()-lastPositionUpdate,'PosFreshBefore*PosFreshBeforeMultiplexor=',PosFreshBefore*PosFreshBeforeMultiplexor);
 	if((Date.now()-lastPositionUpdate)>PosFreshBefore*PosFreshBeforeMultiplexor) {	// обычно PosFreshBefore -- 3-5 секунд
 		positionCursor.remove(); 	// уберём курсор (layerGroup) с карты
 		collisisonDetected.clearLayers();	// очистим слой 
@@ -1517,20 +1511,24 @@ if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData
 		collisionDirectionsCursor.remove();
 	}
 	else cursor.setIcon(NoGpsCursor)	// заменим курсор (значёк) на серый
-	velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
-	courseDisplay.innerHTML = '&nbsp;';
-	locationDisplay.innerHTML = '&nbsp;';
-	depthDial.innerHTML = '';
+	//velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
+	//courseDisplay.innerHTML = '&nbsp;';
+	//locationDisplay.innerHTML = '&nbsp;';
+	//depthDial.innerHTML = '';
 	//MOBtab.className='disabled'; 	// если нет курсора (координат) -- невозможно включить режим MOB. Это плохая идея.
-	return;
+	return;	// могут быть другие величины, например - глубина. Поэтому глубина показывается выше, а всё, что ниже - требует координат.
+}
+else {
+	// Свежее ли положение известно
+	lastPositionUpdate = Date.now();
+	//MOBtab.className=''; 	// координаты появились -- можно включить режим MOB
+	positionCursor.invoke('setLatLng',[gpsdData.lat,gpsdData.lon]); // установим координаты всех маркеров
+	if(!map.hasLayer(positionCursor)) positionCursor.addTo(map); 	// добавить курсор на карту
 };
-// Свежее ли положение известно
-lastPositionUpdate = Date.now();
-//MOBtab.className=''; 	// координаты появились -- можно включить режим MOB
-positionCursor.invoke('setLatLng',[gpsdData.lat,gpsdData.lon]); // установим координаты всех маркеров
 if(distCirclesSwitch.checked) distCirclesUpdate(distCircles);	// нарисуем круги дистанции
 var positionTime = new Date(gpsdData.time);
 var now = new Date();
+// Хотя оба времени - объекта, операция разности, видимо, определена, поэтому работает.
 //console.log('gpsdData.time:',gpsdData.time,'now',now,'now-positionTime',(now-positionTime)/1000);
 if((now-positionTime) > PosFreshBefore) cursor.setIcon(NoGpsCursor); 	// свежее положение было определено раньше, чем PosFreshBefore милисекунд назад
 else cursor.setIcon(GpsCursor);
@@ -1633,23 +1631,25 @@ followSwitch.checked = !noFollowToCursor; 	// выставим переключ�
 // MOB
 if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB 
 	//console.log(mobMarker.getLayers());
-	let latlng1 = cursor.getLatLng();
-	let latlng2 = currentMOBmarker.getLatLng();
-	toMOBline.setLatLngs([latlng1,latlng2]); 	// обновим линию к текущему маркеру MOB
-	// информация о MOB на панели
-	const azimuth = bearing(latlng1, latlng2);
-	azimuthMOBdisplay.innerHTML = Math.round(azimuth);
-	distanceMOBdisplay.innerHTML = Math.round(latlng1.distanceTo(latlng2));
-	locationMOBdisplay.innerHTML = '<?php echo $latTXT?> '+Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+'<br><?php echo $longTXT?> '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000;	
-	let heading = gpsdData.track || gpsdData.heading || gpsdData.mheading;	// для словесного определения направления - всё равно
-	if(heading) {
-		let relBearing = azimuth-heading+22.5;	// половина от 45 против часовой стрелке
-		if(relBearing<0) relBearing = 360+relBearing;
-		relBearing = Math.floor(relBearing/45); 	// курсовой угол (relative bearing) / 45 градусов -- номер сектора, против часовой стрелки
-		if(relBearing>7) relBearing = 0;
-		directionMOBdisplay.innerHTML = relBearingTXT[relBearing];
-	}
-}
+	if(mobMarker.hasLayer(currentMOBmarker) ){	// Если это чужой MOB, то currentMOBmarker может не показываться или быть не указан
+		let latlng1 = cursor.getLatLng();
+		let latlng2 = currentMOBmarker.getLatLng();
+		toMOBline.setLatLngs([latlng1,latlng2]); 	// обновим линию к текущему маркеру MOB
+		// информация о MOB на панели
+		const azimuth = bearing(latlng1, latlng2);
+		azimuthMOBdisplay.innerHTML = Math.round(azimuth);
+		distanceMOBdisplay.innerHTML = Math.round(latlng1.distanceTo(latlng2));
+		locationMOBdisplay.innerHTML = '<?php echo $latTXT?> '+Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+'<br><?php echo $longTXT?> '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000;	
+		let heading = gpsdData.track || gpsdData.heading || gpsdData.mheading;	// для словесного определения направления - всё равно
+		if(heading) {
+			let relBearing = azimuth-heading+22.5;	// половина от 45 против часовой стрелке
+			if(relBearing<0) relBearing = 360+relBearing;
+			relBearing = Math.floor(relBearing/45); 	// курсовой угол (relative bearing) / 45 градусов -- номер сектора, против часовой стрелки
+			if(relBearing>7) relBearing = 0;
+			directionMOBdisplay.innerHTML = relBearingTXT[relBearing];
+		};
+	};
+};
 
 //displayCollisionAreas(gpsdData.collisionArea);	///////// for collision test purpose /////////
 
@@ -1684,10 +1684,6 @@ for(let vehicle in aisData){	// vehicle == mmsi
 			opacity: 1.0,
 			weight: 1.0,
 		};
-		//if(aisData[vehicle].mmsi.substring(0,2)=='97'){	// это AIS-SART
-		if(aisData[vehicle].status==14){	// это AIS-SART. Будем рассматривать как AIS-SART сообщение со статусом 14, вне зависимости от mmsi. Тогда через этот статус можно сообщать об аварийной ситуаации на судне, с любым mmsi.
-			options.sart = true;	// следует заранее указать, что оно AIS-SART, потому что косвенные признаки доступны только после .addData, а кое-какую конфигурацию надо произвести до
-		};
 		if(aisData[vehicle].netAIS) { 	// цель получена от netAIS
 			options.defaultSymbol = [1*0.5,0, 0.25*0.5,0.25*0.5, 0,1*0.5, -0.25*0.5,0.5*0.5, -1*0.5,0.75*0.5, -1*0.5,-0.75*0.5, -0.25*0.5,-0.5*0.5, 0,-1*0.5, 0.25*0.5,-0.25*0.5]; 	// треугольник, расстояния от центра, через которые нарисуют polyline
 			options.noHeadingSymbol = [1*0.35,0, 0.75*0.35,0.5*0.35, 1*0.35,1*0.35, 0.5*0.35,0.75*0.35, 0,1*0.35, -0.5*0.35,0.75*0.35, -1*0.35,1*0.35, -0.75*0.35,0.5*0.35, -1*0.35,0, -0.75*0.35,-0.5*0.35, -1*0.35,-1*0.35, -0.5*0.35,-0.75*0.35, 0,-1*0.35, 0.5*0.35,-0.75*0.35, 1*0.35,-1*0.35, 0.75*0.35,-0.5*0.35]; 	// ромбик: правый, верхний, левый, нижний ПРотив часовой от правого?
@@ -1698,7 +1694,11 @@ for(let vehicle in aisData){	// vehicle == mmsi
 			options.noHeadingSymbol = [0.35,0, 0,0.35, -0.35,0, 0,-0.35]; 	// ромбик
 		};
 		vehicles[vehicle] = L.trackSymbol([aisData[vehicle].lat,aisData[vehicle].lon],options).addTo(map);
+		//console.log('[realtimeAISupdate] vehicles[vehicle]:',vehicles[vehicle]);
 	};
+	//if(aisData[vehicle].mmsi.substring(0,2)=='97'){	// это AIS-SART
+	if(aisData[vehicle].status==14)	aisData[vehicle].sart=true;	// .sart отдельно потому, что непонятно, по каким признакам устаналивать, что это sart. В данном случае - только по признаку status==14
+	else aisData[vehicle].sart=false;
 
 	vehicles[vehicle].addData(aisData[vehicle]); 	// обновим данные
 	// Здесь, видимо, не нужно передавать aisData[vehicle] "по значению", как в GaladrielMapSK
@@ -1724,94 +1724,24 @@ for(const vehicle in vehicles){
 
 // MOB
 function realtimeMOBupdate(MOBdata) {
+// MOBdata - в формате gpsdPROXY
 // pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
-//console.log('Index MOBdata:',MOBdata);
+//console.log('[realtimeMOBupdate] MOBdata:',MOBdata);
 if(MOBdata.status === false) { 	// режим MOB надо выключить
-	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB
+	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB. 
 		MOBclose(); 	// пришло, что режима MOB нет -- завершим его
-	}
+	};
 }
 else { 	//console.log('режим MOB есть, пришли новые данные');
-	//console.log('Index MOBdata',MOBdata);
+	//console.log('[realtimeMOBupdate] Index MOBdata',MOBdata);
 	// создадим GeoJSON
-	let mobMarkerJSON = {"type":"FeatureCollection",
-						"features":[]
-						};
-	for(const point of MOBdata.points){
-		let feature = 	{	
-							"type":"Feature",
-							"properties":{
-								"current": point.current
-							},
-							"geometry":{
-								"type":"Point",
-								"coordinates": point.coordinates
-							}
-						};
-		if(point.mmsi){
-			feature.properties.mmsi = point.mmsi;
-			feature.properties.safety_related_text = point.safety_related_text;
-		}
-		mobMarkerJSON.features.push(feature);
-	};
-	//console.log('mobMarkerJSON:',mobMarkerJSON);
+	let mobMarkerJSON = MOBtoGeoJSON(MOBdata);	// просто преобразование форматов
+	//console.log('[realtimeMOBupdate] mobMarkerJSON:',mobMarkerJSON);
 	// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
 	mobMarker.remove(); 	// убрать мультислой-маркер с карты
 	mobMarker = null; 	// ритуальное действие. Возможно, оно воздействует на сборщик мусора, и приведёт к быстрому реальному удалению объекта, но это ни откуда не следует.
-	mobMarker = L.geoJSON(mobMarkerJSON); 	// создадим новый объект
-	mobMarker.feature = {properties: {'timestamp': MOBdata.timestamp}};
-	let layerID;
-	mobMarker.eachLayer(function (layer) {
-		if(layer instanceof L.Marker)	{
-			layerID = mobMarker.getLayerId(layer);
-			layer.setIcon(mobIcon);
-			layer.on('click', function(ev){ 	// текущим будет маркер, по которому кликнули
-				currentMOBmarker = ev.target;
-				clearCurrentStatus(); 	// удалим признак current у всех маркеров
-				currentMOBmarker.feature.properties.current = true;
-				sendMOBtoServer(); 	// отдадим данные MOB для передачи на сервер
-			});
-			let dataStamp = '';
-			if(mobMarker.feature.properties.timestamp){
-				const d = new Date(mobMarker.feature.properties.timestamp*1000);
-				dataStamp = d.getHours()+':'+(d.getMinutes()<10?'0'+d.getMinutes():d.getMinutes());
-				//dataStamp = d.getHours()+':'+d.getMinutes();
-			}
-			let PopupContent = `
-<div>
-	<div style='width:100%;'>
-		${layer.feature.properties.mmsi||''} 
-		<img  width="24px" style="margin:0.1rem;vertical-align:middle;" src="${mob_markerImg}">
-	</div>
-	<div style='width:100%;background-color:lavender;'>
-		<span style='font-size:110%;'>${layer.feature.properties.safety_related_text||''}</span><br>
-	</div>
-	<span>${dataStamp}</span>
-</div>
-			`;
-			layer.bindPopup(PopupContent,{});
-			//console.log('Маркеры в полученной информации MOB ',layer);
-			if(layer.feature.properties.current) currentMOBmarker = layer; 	// текущим станет указанный в переданных данных
-		}
-		else mobMarker.removeLayer(layer); 	// Считаем, что это toMOBline, и там больше ничего такого нет
-	});
-	if(!(currentMOBmarker instanceof L.Marker)){	// не оказалось маркера, помеченного как текущий
-		currentMOBmarker = mobMarker.getLayer(layerID);	// назначим текущим последний маркер
-	};
-	let latlng1 = cursor.getLatLng();
-	let latlng2 = currentMOBmarker.getLatLng();
-	toMOBline.setLatLngs([latlng1,latlng2]); 	// обновим линию к текущему маркеру MOB
-	mobMarker.addLayer(toMOBline);
-	mobMarker.addTo(map); 	// покажем мультислой с маркерами MOB
-	mobMarker.eachLayer(function (layer) { 	// сделаем каждый маркер draggable, кроме маркеров AIS SART
-		if(layer instanceof L.Marker && !layer.feature.properties.mmsi)	{	
-			//console.log('[realtimeMOBupdate] layer:',layer);
-			layer.dragging.enable(); 	// переключение возможно, только если маркер на карте
-			layer.on('dragend', mobMarkerDragendFunction); 	// отправим на сервер новые сведения, когда перемещение маркера закончилось. Если просто указать функцию -- в sendMOBtoServer передаётся event. Если в одну строку -- всё равно передаётся event. Что за???
-			layer.on('click', mobMarkerClickFunction); 	// текущим будет маркер, по которому кликнули
-		}
-	});
-}
+	createMOBpointMarker(mobMarkerJSON);
+};
 //console.log('[realtimeMOBupdate] mobMarker from server',mobMarker);
 } // end function realtimeMOBupdate
 
