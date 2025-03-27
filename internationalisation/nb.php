@@ -49,6 +49,8 @@ $settingsRoutesAlwaysTXT = 'Valgte ruter<br>alltid synlige';
 $settingsdistCirclesTXT = 'Vis avstandssirkler';
 $settingsdistWindTXT = 'Vis vindsymbol';
 $DisplayAIS_TXT = 'Vis AIS';
+$hideControlsSwitchTXT = "Hide controls";
+$hideControlsPositionTXT = "Location of the sensitive area on the screen";
 $minWATCHintervalTXT = 'Ikke oppdater posisjonen oftere enn, i sekunder.';
 
 $integerTXT = 'Integer';

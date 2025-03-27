@@ -49,6 +49,8 @@ $settingsRoutesAlwaysTXT = 'Выбранные маршруты <br>всегда
 $settingsdistWindTXT = "Показывать символ ветра";
 $settingsdistCirclesTXT = 'Показывать окружности дистанции';
 $DisplayAIS_TXT = 'Отображение AIS';
+$hideControlsSwitchTXT = "Скрывать элементы управления";
+$hideControlsPositionTXT = "Расположение чувствительной зоны на экране";
 $minWATCHintervalTXT = 'Обновлять положение не чаще, чем раз в, сек. ';
 
 $integerTXT = 'Целое число';

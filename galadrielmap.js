@@ -86,6 +86,7 @@ distCirclesToggler() включает/выключает показ окружн
 windSwitchToggler()
 windSymbolUpdate(TPVdata)
 realWindSymbolUpdate(direction=0,speed=0)
+restoreDisplayedRoutes()
 
 loadScriptSync(scriptURL)	Синхронная загрузка javascriptbearing(latlng1, latlng2)
 
@@ -170,33 +171,28 @@ function doSavePosition(){
 /* Сохранение положения
 global map, mapDisplayed, document, currTrackSwitch
 */
-var expires =  new Date();
-var pos = JSON.stringify(map.getCenter());
-var zoom = JSON.stringify(map.getZoom());
-expires.setTime(expires.getTime() + (60*24*60*60*1000)); 	// протухнет через два месяца
-document.cookie = "GaladrielMapPosition="+pos+"; expires="+expires+"; path=/; samesite=Lax";
-document.cookie = "GaladrielMapZoom="+zoom+"; expires="+expires+"; path=/; samesite=Lax";
-//alert('Сохранение параметров '+pos+zoom);
+let toSave = {'startCenter':map.getCenter()};
+toSave['startZoom'] = map.getZoom();
 // Сохранение показываемых карт
 let openedNames = [];
 for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
+	//console.log('mapDisplayed li',mapDisplayed.children[i]);
 	openedNames[i] = mapDisplayed.children[i].id; 	// 
 }
-openedNames = JSON.stringify(openedNames);
-document.cookie = "GaladrielMaps="+openedNames+"; expires="+expires+"; path=/; samesite=Lax";
+toSave['layers'] = openedNames;
 // Сохранение показываемых маршрутов
 openedNames = [];
 for (let i = 0; i < routeDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
 	openedNames[i] = routeDisplayed.children[i].innerHTML; 	// 
 }
-openedNames = JSON.stringify(openedNames);
-document.cookie = "GaladrielRoutes="+openedNames+"; expires="+expires+"; path=/; samesite=Lax";
+toSave['showRoutes'] = openedNames;
 // Сохранение переключателей и параметров
-document.cookie = "GaladrielcurrTrackSwitch="+Number(currTrackSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель currTrackSwitch
-if(typeof loggingSwitch !== 'undefined') document.cookie = "GaladrielloggingSwitch="+Number(loggingSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель loggingSwitch, включение записи трека. Сохраняется, чтобы знать, что именно этот клиент включил запись.
-document.cookie = "GaladrielSelectedRoutesSwitch="+Number(SelectedRoutesSwitch.checked)+"; expires="+expires+"; path=/; samesite=Lax"; 	// переключатель SelectedRoutesSwitch
-if(typeof minWATCHinterval !== 'undefined') document.cookie = "GaladrielminWATCHinterval="+minWATCHinterval+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
-document.cookie = "GaladrielshowMapsList="+JSON.stringify(showMapsList)+"; expires="+expires+"; path=/; samesite=Lax"; 	// 
+toSave['currTrackSwitch'] = currTrackSwitch.checked;
+toSave['loggingSwitch'] = loggingSwitch.checked;
+toSave['SelectedRoutesSwitch'] = SelectedRoutesSwitch.checked;
+toSave['minWATCHinterval'] = minWATCHinterval;
+toSave['showMapsList'] = showMapsList;
+storageHandler.save(toSave);
 //console.log('Position, layers and options saved');
 } // end function doSavePosition
 
@@ -1131,15 +1127,12 @@ toSave.properties = dravingLines.properties;	// на самом деле -- чи
 toSave = toGPX(toSave); 	// сделаем gpx 
 //console.log('[doSaveMeasuredPaths] Save to cookie GaladrielMapMeasuredPaths',toSave,expires.getTime()-Date.now());
 toSave = utoa(toSave);	// кодируем в Base64, потому что xml нельза сохранить в куке
-
-// если expires осталась сейчас -- кука удалится, иначе -- поставится.
-document.cookie = "GaladrielMapMeasuredPaths="+toSave+"; expires="+expires+"; path=/; samesite=Lax"; 	// если сечас и нет, чего сохранять - грохнем куки
-//console.log('[doSaveMeasuredPaths] document.cookie:',document.cookie);
+storageHandler.save('RestoreMeasuredPaths',toSave);
 } 	// end function doSaveMeasuredPaths
 
 function doRestoreMeasuredPaths() {
-/**/
-let RestoreMeasuredPaths = getCookie('GaladrielMapMeasuredPaths');
+/*Global drivedPolyLineOptions*/
+let RestoreMeasuredPaths = storageHandler.restore('RestoreMeasuredPaths'); 	// storageHandler from galadrielmap.js
 //console.log('[doRestoreMeasuredPaths] RestoreMeasuredPaths=',RestoreMeasuredPaths);
 if(RestoreMeasuredPaths) {
 	try {	// в принципе, там может быть фигня, но главное -- та же кука от старой версии приведёт к облому
@@ -2121,7 +2114,7 @@ mobMarker.clearLayers(); 	// очистить мультислой от марк
 toMOBline.setLatLngs([]);	// сделаем линию никакой
 mobMarker.addLayer(toMOBline); 	// вернём туда линию
 //console.log("[MOBclose] mobMarker:",mobMarker);
-document.cookie = "GaladrielMapMOB=; expires=0; path=/; samesite=Lax"; 	// удалим куку
+storageHandler.del('mobMarker');
 azimuthMOBdisplay.innerHTML = '&nbsp;';
 distanceMOBdisplay.innerHTML = '&nbsp;';
 directionMOBdisplay.innerHTML = '&nbsp;';
@@ -2265,13 +2258,10 @@ if(!mobMarkerJSON.properties){	// вообще-то, toGeoJSON должна со
 if(mobMarker.feature.properties.timestamp) mobMarkerJSON.properties.timestamp = mobMarker.feature.properties.timestamp;
 if(status){
 	//console.log('[sendMOBtoServer] Посадим куку MOB');
-	let str = JSON.stringify(mobMarkerJSON);
-	const expires =  new Date();
-	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
-	document.cookie = "GaladrielMapMOB="+str+"; expires="+expires+"; path=/; SameSite=Lax"; 	// 
+	storageHandler.save('mobMarker',mobMarkerJSON);
 }
 else {
-	document.cookie = 'GaladrielMapMOB=; expires=0; path=/;'; 	// удалим куку. Она уже удаляется в MOBclose
+	storageHandler.del('mobMarker');
 };
 //console.log('Sending to server mobMarkerJSON',JSON.stringify(mobMarkerJSON));
 upData.MOB = GeoJSONtoMOB(mobMarkerJSON,status);	// приведение к формату gpsdPROXY
@@ -2404,19 +2394,13 @@ function distCirclesToggler() {
 /* включает/выключает показ окружностей дистанции по переключателю в интерфейсе */
 if(distCirclesSwitch.checked) {
 	distCircles.forEach(circle => circle.addTo(positionCursor));
-	// Посадим куку
-	const expires =  new Date();
-	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
-	document.cookie = 'GaladrielMapdistCirclesSwitch=1; expires='+expires+"; path=/; samesite=Lax"; 	// 
+	storageHandler.save('distCirclesSwitch',true);
 }
 else {
 	distCircles.forEach(circle => circle.removeFrom(positionCursor));
-	// Посадим куку
-	const expires =  new Date();
-	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
-	document.cookie = 'GaladrielMapdistCirclesSwitch=0; expires='+expires+"; path=/; samesite=Lax"; 	// 
-}
-} // end function distCirclesToggler
+	storageHandler.save('distCirclesSwitch',false);
+};
+}; // end function distCirclesToggler
 
 
 function windSwitchToggler() {
@@ -2424,19 +2408,13 @@ function windSwitchToggler() {
 if(windSwitch.checked) {
 	windSymbolMarker.setLatLng(cursor.getLatLng());	// хотя его может и не быть. Но если не установить координаты, может происходить ошибка в leaflet, если символ показывается до очередного обновления координат, когда они устанавливаюся для всех слоёв, включая символ ветра.
 	if(!positionCursor.hasLayer(windSymbolMarker)) windSymbolMarker.addTo(positionCursor);
-	// Посадим куку
-	const expires =  new Date();
-	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
-	document.cookie = "GaladrielWindSwitch=1; expires="+expires+"; path=/; SameSite=Lax;";
+	storageHandler.save('WindSwitch',true);
 }
 else {
 	windSymbolMarker.removeFrom(positionCursor);
-	// Посадим куку
-	const expires =  new Date();
-	expires.setTime(expires.getTime() + (30*24*60*60*1000)); 	// протухнет через месяц
-	document.cookie = 'GaladrielWindSwitch=0; expires='+expires+"; path=/; samesite=Lax"; 	// 
-}
-} // end function windSwitchToggler
+	storageHandler.save('WindSwitch',false);
+};
+}; // end function windSwitchToggler
 
 function windSymbolUpdate(TPVdata){
 /* Ветер определяется естественно - относительно носа судна */
@@ -2510,7 +2488,145 @@ if(Math.floor((speed*10)/25)) {	// половинное перо
 windSymbolMarker.setRotationAngle(direction);
 } // end function realWindSymbolUpdate
 
+function restoreDisplayedRoutes(){
+// Восстановим показываемые маршруты и заодно согласуем списки routeList и routeDisplayed
+if(SelectedRoutesSwitch.checked) {
+	let showRoutes = storageHandler.restore('showRoutes'); 	// storageHandler from galadrielmap.js
+	if(showRoutes) {
+		showRoutes.forEach(
+			function(layerName){ 	// 
+				// однако же, возможно повторение id, раз он имя файла? Получение всех li, содержащих строку.
+				// [... выражение] просто делает из результатов выражения массив
+				// но результат querySelectorAll и так массив (в отличии от)? Авотхрен, оно тоже NodeList, хоть и статический, и методы массива там ёк
+				//const routeListLi = [... document.querySelectorAll('#routeList > li')].filter(el => el.textContent.includes(layerName));
+				//const routeListLi = [... routeList.querySelectorAll('li')].filter(el => el.textContent.includes(layerName));
+				const routeListLi = [... routeList.querySelectorAll('li')].filter(el => el.textContent == layerName);
+				if(routeListLi.length) { 	// объект с этим именем есть в списке routeList
+					const routeDisplayedLi = [... routeDisplayed.querySelectorAll('li')].filter(el => el.textContent.includes(layerName));
+					if(routeDisplayedLi.length) { 	// этот объект уже есть в списке routeDisplayed, т.е., маршрут показывается
+						routeListLi[0].remove();	// удалим его из routeList
+						routeListLi[0] = null;
+					}
+					else {	// иначе выберем объект, т.е., покажем маршрут
+						selectTrack(routeListLi[0],routeList,routeDisplayed,displayRoute)
+					};
+				};	// 	если нет -- и ладно
+			}	// end function(layerName)
+		);
+	};
+};
+}; // end function restoreDisplayedRoutes
 
+
+function hideControlsControl(hideControlPosition){
+/* Создаёт невидимый псевдо-control, по тапу по которому все указанные в controlsList control делаются невидимыми на экране
+На самом деле, тут просто style.display = 'none', потому что штатный control совсем неудобен
+для этой цели, и штатные функции leaflet неудобны в силу общего кретинизма javascript, поэтому всё примитивно.
+*/
+let doit=true;
+switch(hideControlPosition){
+case 'topleft':
+	hideControl.style.top = '0';
+	hideControl.style.bottom = null;
+	hideControl.style.right = null;
+	hideControl.style.left = '0';
+	break;
+case 'topmiddle':
+	hideControl.style.top = '0';
+	hideControl.style.bottom = null;
+	hideControl.style.right = null;
+	hideControl.style.left = 'calc(50vw - var(--control-size)/2)';
+	break;
+case 'topright':
+	hideControl.style.top = '0';
+	hideControl.style.bottom = null;
+	hideControl.style.right = '0';
+	hideControl.style.left = null;
+	break;
+case 'rightmiddle':
+	hideControl.style.top = 'calc(50vh - var(--control-size)/2)';
+	hideControl.style.bottom = null;
+	hideControl.style.right = '0';
+	hideControl.style.left = null;
+	break;
+case 'bottomright':
+	hideControl.style.top = null;
+	hideControl.style.bottom = '0';
+	hideControl.style.right = '0';
+	hideControl.style.left = null;
+	break;
+case 'bottommiddle':
+	hideControl.style.top = null;
+	hideControl.style.bottom = '0';
+	hideControl.style.right = null;
+	hideControl.style.left = 'calc(50vw - var(--control-size)/2)';
+	break;
+case 'bottomleft':
+	hideControl.style.top = null;
+	hideControl.style.bottom = '0';
+	hideControl.style.right = null;
+	hideControl.style.left = '0';
+	break;
+case 'leftmiddle':
+	hideControl.style.top = null;
+	hideControl.style.top = 'calc(50vh - var(--control-size)/2)';
+	hideControl.style.right = null;
+	hideControl.style.left = '0';
+	break;
+default:
+	doit=false;
+};
+//console.log('[hideControlsControl] hideControlPosition=',hideControlPosition,'doit=',doit);
+if(doit){
+	hideControl.style.display = 'unset';
+	// Тут нужна именованная функция, тогда не будет повторной её установки в качестве обработчика.
+	// А анонимная функция установится повторно, ибо все анонимные функции разные.
+	// Авотхрен! И именованная функция тоже устанавливается многократно, несмотря на https://developer.mozilla.org/ru/docs/Web/API/EventTarget/addEventListener
+	// Опять авотхрен! Именованная функция, определённая сдесь же - да, устанавливается многократно,
+	// ибо да - она определяется снова, и тогда - другая. Т.е., должна быть именованная функция из
+	// внешней области видимости. В данном случае - блин, глобальная.
+	//hideControl.removeEventListener('click', hideControlEventListener);
+	hideControl.addEventListener('click', hideControlEventListener);	
+};
+}; // end function hideControlsControl
+
+function hideControlEventListener(event){
+	//console.log('hideControl click:',event);
+	for(let control of controlsList){
+		//console.log('hideControl click control:',control.getContainer().style.display);
+		//if(control._map) control.remove();	// так оно удаляется из DOM, а у нас везде используются значения полей и переключателей.
+		//else control.addTo(map);
+		if(control.getContainer().style.display == 'none') control.getContainer().style.display = 'unset';
+		else control.getContainer().style.display = 'none';
+	};
+}; // end function hideControlEventListener
+
+function hideControlsToggler(target){
+/*  */
+//console.log('[hideControlsToggler] target:',target);
+if(target.value == 'onoffswitch') {
+	if(target.checked){	// возможность сокрытия включили
+		for(let radio of settings.querySelectorAll('input[type="radio"][name="hideControlPosition"]')){
+			//console.log('[hideControlsToggler] radio:',radio);
+			radio.disabled = false;
+			if(radio.checked) hideControlsControl(radio.value);
+		};
+	}
+	else{	// возможность сокрытия выключили
+		for(let radio of settings.querySelectorAll('input[type="radio"][name="hideControlPosition"]')){
+			//console.log('[hideControlsToggler] radio:',radio);
+			radio.disabled = true;
+		};
+		hideControl.removeEventListener('click', hideControlEventListener);
+		hideControl.style.display = 'none';
+	};
+	storageHandler.save('hideControlsSwitch',hideControlsSwitch.checked);
+}
+else {	// изменили расположения переключателя сокрытия
+	hideControlsControl(target.value);	// если возможность сокрытия выключена - то и сменить ничего нельзя.
+	storageHandler.save('hideControlPosition',target.value);
+};
+}; // end function hideControlsToggler
 
 
 // Общие функции
@@ -2675,6 +2791,93 @@ L.LayerGroup.include({
 		return res;
 	}
 });
+
+const storageHandler = {
+	store: {'empty':true},	// типа, флаг, что ещё не считывали из хранилища. Так проще и быстрей в этом кривом языке.
+	storage: false,
+	//storage: 'cookie',
+	save: function(key,value=null){
+	/* сохраняет key->value, но можно передать список пар одним параметром*/
+		let values = {};
+		if(typeof key == 'object') {
+			values = key;
+		}
+		else values[key] = value;
+		//console.log('[storageHandler] save',values,'to storage:',this.storage,'store:',this.store);
+		for(let key in values){
+			this.store[key] = values[key];
+		};
+		this.store.empty = false;
+		this._saveStore();
+	},
+	restore: function(key){
+		if(this.store.empty){
+			this._restoreStore();
+			this.store.empty = false;
+		};
+		return this.store[key.trim()];
+	},
+	restoreAll: function(){
+		if(this.store.empty){
+			this._restoreStore();
+			this.store.empty = false;
+		};
+		delete this.store.empty;
+		for(let varName in this.store){
+			window[varName] = this.store[varName];	// window[varName] - создаётся глобальная переменная с именем, являющимся значением varName
+		};
+		this.store.empty = false;
+	},
+	del: function(key){
+		if(this.store.empty){
+			this._restoreStore();
+			this.store.empty = false;
+		};
+		delete this.store[key.trim()];
+	},
+	_findStorage: function(){
+		try {
+			window.localStorage.setItem("__storage_test__", "__storage_test__");
+			window.localStorage.removeItem("__storage_test__");
+			this.storage='storage';
+		}
+		catch (err) {
+			this.storage='cookie';	// куки-то всегда можно, да?
+		};
+	},
+	_saveStore: function(){
+		if(!this.storage) this._findStorage();
+		switch(this.storage){
+		case 'storage':
+			window.localStorage.setItem("GaladrielMapOptions", JSON.stringify(this.store));
+			break;
+		case 'cookie':
+			let expires = new Date(Date.now() + (60*24*60*60*1000));	// протухнет через два месяца
+			expires = expires.toUTCString();
+			document.cookie = "GaladrielMapOptions="+JSON.stringify(this.store)+"; expires="+expires+"; path=/; SameSite=Lax;";
+			break;
+		default:
+			console.log('storageHandler: the parameters are not saved, there is nowhere');
+		};
+	},
+	_restoreStore: function(){
+		if(!this.storage) this._findStorage();
+		switch(this.storage){
+		case 'storage':
+			this.store = JSON.parse(window.localStorage.getItem("GaladrielMapOptions"));
+			if(!this.store)	this.store = {'empty':true};
+			break;
+		case 'cookie':
+			this.store = JSON.parse(document.cookie.match(new RegExp(
+				"(?:^|; )" + "GaladrielMapOptions".replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+			)));
+			if(!this.store)	this.store = {'empty':true};
+			break;
+		default:
+			console.log('storageHandler: no saved parameters, there is nowhere');
+		};
+	}
+}; // end storageHandler
 
 /*//////// for collision test purpose /////////
 // Функции для отладки предупреждения о столкновениях

@@ -49,6 +49,8 @@ $settingsRoutesAlwaysTXT = 'Selected routes <br>always visible';
 $settingsdistCirclesTXT = 'Show distance circles';
 $settingsdistWindTXT = "Show wind symbol";
 $DisplayAIS_TXT = 'Displaying AIS';
+$hideControlsSwitchTXT = "Hide controls";
+$hideControlsPositionTXT = "Location of the sensitive area on the screen";
 $minWATCHintervalTXT = 'Update the position not quickly than, sec.';
 
 $integerTXT = 'Integer';

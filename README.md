@@ -20,6 +20,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 4. [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
 5. [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
 6. [Exchange coordinates](#exchange-coordinates) via clipboard
+7. [Clear screen](#clear-screen)
 7. [Weather forecast](#weather-forecast) from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
 8. [Display AIS info](#display-ais-info)
 9. [Collision detection](#collision-detection)
@@ -120,12 +121,14 @@ Also, GaladrielMap can get data from VenusOS or Signal K - localy or via LAN. If
 Map **always** sets to current position. This behavior can be temporarily disabled on the <img src="img/settings1.svg" alt="Settings" width="24px"> menu. Following the cursor is disabled if <img src="img/route.svg" alt="Route" width="24px"> or <img src="img/download1.svg" alt="Loader" width="24px"> menu are open.  
 The position cursor indicates **heading**, and velocity vector indicates **course**, if both parameters are available from a data source. If there is one, then they show the same, and what exactly is indicated on the <img src="img/speed1.svg" alt="Loader" width="24px"> dashboard.
 
+
 ## Tracking
 GaladrielMap uses `gpxlogger` app from the gpsd-clients packet to log track on your server. Control `gpxlogger` are in <img src="img/track.svg" alt="Handle tracks" width="24px"> tab.  
 GaladrielMap displays the current track as a not well-formed gpx file. Other tracks may be displayed simultaneously.  
 Run _chkGPXfiles.php_ in cli to repair non-well-formed gpx files for other applications.  
 Tracks placed in _tracks_ directory on the server as it described in _params.php_.  
 Installation and configuring the `gpxlogger` describe in  [gpsd](https://gpsd.io/) documentation. You may use any other server-side logger for tracking in gpx format, set up it in _params.php_. If not - the logged track will still be updated if its name will be recognized as "current track" (see _params.php_).  
+
 
 ## Routes and POIs
  ![Display routes and POIs](screenshots/s5.jpeg)<br>
@@ -159,6 +162,10 @@ To get coordinates of any point - open <img src="img/route.svg" alt="Handle rout
 To fly map by coordinates type they of any format to this field and press button.
 
 
+## Clear screen
+In the <img src="img/settings1.svg" alt="Settings" width="24px"> menu you can assign an invisible zone on the screen, tap which will remove all controls. This can be handy for very small screens.
+
+
 ## Weather forecast
  ![Weather forecast](screenshots/s8.jpeg)<br>
 If there is an Internet connection you can get the weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/).
@@ -170,16 +177,19 @@ The GaladrielMap displayed AIS data via [gpsdPROXY](https://github.com/VladimirK
 Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. To temporarily disable displaying AIS data use switch in <img src="img/settings1.svg" alt="Settings" width="24px"> menu.  
 As displaying AIS data from gpsd need gpsdPROXY, you MUST use gpsdPROXY as position data service. Set up $gpsdHost and $gpsdPort variables in _params.php_ to this.
 
+
 ## Collision detection
 ![collision indicate](screenshots/s11.png)<br>  
 The GaladrielMap shows information on possible collisions calculated by the gpsdPROXY. Potentially dangerous objects are highlighted and their direction is indicated by an arrow.  
 Do not rely too much on the collision detection system. Remember that **no information issued or not issued by the collision detection system can be the basis for the actions or inaction of the navigator.** Be careful.
+
 
 ## netAIS support
 ![netAIS](screenshots/s13.jpeg)<br>
 The [netAIS](https://github.com/VladimirKalachikhin/netAIS) is the local service to exchange position information inside of a private group via internet.  
 GaladrielMap displayed full netAIS info, include text messages, MOB and dangers.  
 For example, three members of the same private group see each other on its screens.
+
 
 ## A Man OverBoard
 ![A Man OverBoard](screenshots/s14.jpeg)<br>
@@ -190,9 +200,11 @@ To finalize MOB mode tap to the dot left of the "Cancel" button first.
 
 Also, the AIS Search and Rescue Transmitter (SART) messages AIS-MOB and AIS-EPIRB starts the MOB mode, but without enabling track recording.
 
+
 ## Authorisation
 A simple authorization system is designed to divide users into those who have access to all features and those whose possibilities are limited. The limitations are that there is no access to the functions that modify the data on the server, except for the MOB mode activation.  
 You can specify a list of addresses or/and subnets from which full access is allowed (white list) or, conversely, a list of addresses and subnets from which full access is prohibited (black list). See `params.php` for details.
+
 
 ## Dashboard
 _dashboard.php_ - the separate app to display some instruments attached to gpsd, on weak (and/or old) devices, such as e-ink readers, for example.  
@@ -231,6 +243,7 @@ Choose a region by specifying tile numbers by hand in the panel or by tap on til
 All displayed maps will be loaded from the current zoom to the maximum zoom. The loader runs on the server, so it autonomous and robust. Loader restart after server reboot and it will work until it finishes.  
 For see of loaded tiles use coverage switch. 
 
+
 ## Work in OpenWRT
 On powerful computers (Raspbery Pi, yes) on OpenWRT installation and startup of GaladrielMap are performed in the same way as on common Linux.  
 On routers usually need custom firmware if the capacity of the built-in drive is insufficient. For example, [MT7620A based router OpenWRT firmware ](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) for run GaladrielMap.
@@ -248,6 +261,7 @@ Edit `/etc/init.d/php7-fpm`:
 PROG="/usr/bin/php-fpm -R"
 ```
 Reboot
+
 
 ## Work in VenusOS
 The GaladrielMap mostly can work in VenusOS v2.80~38 or above. Or get data from it in LAN. To do this, you need:

@@ -315,6 +315,16 @@ ul { /* нужно, чтобы стили работали */
     align-items: center;     /*Центрирование по вертикали */
     text-align: center;
 }
+/* Активная зона выключателя элементов управления */
+#hideControl {
+	--control-size: 20vmin;
+	position: fixed; 
+	width: var(--control-size);
+	height: var(--control-size);
+	z-index: 1; /*на 0 кто-то перехватывает события. А leaflet начинается с 100 */
+	display: none;
+	border: dashed fuchsia;
+}
 
 /*  */
 .leaflet-popup-content {

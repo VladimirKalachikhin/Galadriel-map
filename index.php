@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.20.2';
+$versionTXT = '2.20.3';
 /* 
 2.20.0	user authorisation & AIS SART support
 2.10.4	with Norwegian localisation
@@ -37,14 +37,12 @@ $appLocales = array_map( function ($l) {return explode(';',$l)[0];},explode(',',
 // Здесь игнорируются двойные локали (en-US), поэтому американскую локализацию сделать нельзя. Удмуртскую тоже.
 $appLocales = array_unique(array_map( function ($l) {return strtolower(explode('-',$l)[0]);},$appLocales));
 //echo "<pre>";print_r($appLocales);echo"</pre>";
+$appLocale = 'en';
+@include("internationalisation/en.php");	// считаем, что английский файл содержти полный набор, и понятен всем.
 foreach($appLocales as $appLocale){	// в порядке убывания предпочтения попробуем загрузить файл интернационализации
-	$res = @include("internationalisation/$appLocale.php");
+	$res = @include("internationalisation/$appLocale.php");	// файл на конкретном языке может иметь не все переменные, тогда остальные будут английскими.
 	if($res) break;
 };
-if(!$res) {
-	$appLocale = 'en';
-	@include("internationalisation/en.php");
-}
 
 // Системная локаль
 $locale = setlocale(LC_ALL, 0);	// получим системную локаль
@@ -369,7 +367,7 @@ foreach($mapsInfo as $mapName => $humanName) {
 <?php 	if($privileged){	// для пользователя со всеми правами ?>
 			<div style="margin: 1rem;">
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
-					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="loggingSwitch" onChange="loggingRun();" <?php //if($gpxloggerRun) echo "checked"; // а вдруг не этот экземпляр клиента потребовал включить запись трека? ?>>
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="loggingSwitch" onChange="loggingRun();">
 					<label class="onoffswitch-label" for="loggingSwitch">
 						<span class="onoffswitch-inner"></span>
 						<span class="onoffswitch-switch"></span>
@@ -619,7 +617,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 			<br>
 			<div style="margin: 0.7em 1em;"> <?php// Выбранные маршруты всегда показываются ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
-					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="SelectedRoutesSwitch" onChange="">
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="SelectedRoutesSwitch" onChange="" checked>
 					<label class="onoffswitch-label" for="SelectedRoutesSwitch">
 						<span class="onoffswitch-inner"></span>
 						<span class="onoffswitch-switch"></span>
@@ -630,7 +628,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 			<br>
 			<div style="margin: 0.7em 1em;"> <?php// Показывать окружности дистанции ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
-					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="distCirclesSwitch" onChange="distCirclesToggler();">
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="distCirclesSwitch" onChange="distCirclesToggler();" checked>
 					<label class="onoffswitch-label" for="distCirclesSwitch">
 						<span class="onoffswitch-inner"></span>
 						<span class="onoffswitch-switch"></span>
@@ -662,6 +660,33 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				<span style="font-size:120%;"><?php echo $DisplayAIS_TXT;?></span>
 			</div>
 			<br>
+<?php }; ?>
+			<div style="margin: 3em 1em 0.1em;"> <!-- Сокрытие элементов управления -->
+				<div class="onoffswitch" style="float:right;margin: 0 auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="hideControlsSwitch" value="onoffswitch" onChange="hideControlsToggler(this);">
+					<label class="onoffswitch-label" for="hideControlsSwitch">
+						<span class="onoffswitch-inner"></span>
+						<span class="onoffswitch-switch"></span>
+					</label>
+				</div>
+				<span style="font-size:120%;"><?php echo $hideControlsSwitchTXT;?></span><br><br>
+				<div>
+					<div style="float: right;"> 
+						<input style="width:1em;" type="radio" name="hideControlPosition" value="topleft" disabled onChange="hideControlsToggler(this);">
+						<input style="width:1em;" type="radio" name="hideControlPosition" value="topmiddle" disabled onChange="hideControlsToggler(this);">
+						<input style="width:1em;" type="radio" name="hideControlPosition" value="topright" disabled onChange="hideControlsToggler(this);"><br>
+						<input style="width:1em;" type="radio" name="hideControlPosition" value="leftmiddle" disabled onChange="hideControlsToggler(this);">
+						<input style="width:1em;float:right;" type="radio" name="hideControlPosition" value="rightmiddle" disabled onChange="hideControlsToggler(this);">
+						<span>&nbsp;</span><br>
+						<input style="width:1em;" type="radio" name="hideControlPosition" value="bottomleft" disabled onChange="hideControlsToggler(this);">
+						<input style="width:1em;" type="radio" name="hideControlPosition" value="bottommiddle" checked disabled onChange="hideControlsToggler(this);">
+						<input style="width:1em;" type="radio" name="hideControlPosition" value="bottomright" disabled onChange="hideControlsToggler(this);">
+					</div>
+					<span style="font-size:100%; margin:100% 0 100% 0;"><?php echo $hideControlsPositionTXT;?></span>
+				</div>
+			</div>
+			<br>
+<?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 			<div style="margin: 3em 1em 0.1em;"> <?php // максимальная скорость обновления ?>
 				<div style="float:right;margin: 1rem auto;">
 					<input id='minWATCHintervalInput' type="text" pattern="[0-9]*" title="<?php echo $realTXT;?>" size='4' style='width:3rem;font-size:175%;'
@@ -678,6 +703,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 		</div>
 	</div>
 </div>
+<div id="hideControl"></div>
 <div id="mapid" ></div>
 <?php
 if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = $collisionDistance;	// gpsdPROXY's params.php
@@ -696,19 +722,19 @@ if(! defaultMap) defaultMap = 'OpenTopoMap';
 var defaultCenter = <?php echo $defaultCenter ? $defaultCenter : 'undefined';?>; 	// начальная точка, {lat: 99, lng: 99}
 if(! defaultCenter) defaultCenter = {"lat": 55.754, "lng": 37.62}; 	
 var showMapsTogglerTXT = [<?php echo $showMapsTogglerTXT; ?>];	// подписи на кнопке все/избранные карты
-var showMapsList = JSON.parse(getCookie('GaladrielshowMapsList')) || [];	// массив названий избранных карт
+var showMapsList = storageHandler.restore('showMapsList') || [];	// массив названий избранных карт
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте. Типа - кеш объектов.
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
 var tileCacheControlURI = '<?php echo $tileCacheControlURI;?>'; // адрес управляющего интерфейса GaladrielCache
 var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Присваивается в javascriptOpen в параметрах карты. Или ещё где-нибудь.
-var startCenter = JSON.parse(getCookie('GaladrielMapPosition')); 	// getCookie from galadrielmap.js
+var startCenter = storageHandler.restore('startCenter'); 	// storageHandler from galadrielmap.js
 if(! startCenter) startCenter = defaultCenter; 	// начальная точка
-var startZoom = JSON.parse(getCookie('GaladrielMapZoom')); 	// getCookie from galadrielmap.js
+var startZoom = storageHandler.restore('startZoom'); 	// storageHandler from galadrielmap.js
 if(! startZoom) startZoom = 12; 	// начальный масштаб
 var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
 // ГПС
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
-var minWATCHinterval=JSON.parse(getCookie('GaladrielminWATCHinterval'));	// Минимальный интервал, сек., с которым будут приходить данные от gpsdPROXY. Если 0 -- то по мере их получения от датчиков
+var minWATCHinterval = storageHandler.restore('minWATCHinterval');	// Минимальный интервал, сек., с которым будут приходить данные от gpsdPROXY. Если 0 -- то по мере их получения от датчиков
 if(!minWATCHinterval) minWATCHinterval = 0;
 minWATCHintervalInput.value = minWATCHinterval;
 var PosFreshBefore = <?php echo $PosFreshBefore * 1000;?>; 	// время в милисекундах, через которое положение считается протухшим
@@ -722,8 +748,7 @@ var savePositionEvery = 10 * 1000; 	// будем сохранять полож�
 var followPaused; 	// объект таймера, который восстанавливает следование курсору
 var velocityVectorLengthInMn = <?php echo $velocityVectorLengthInMn;?>; 	// длинной в сколько минут пути рисуется линия скорости
 // Окружности дистанции
-if(getCookie('GaladrielMapdistCirclesSwitch') == undefined) distCirclesSwitch.checked = true; 	// показывать окружности дистанции
-else distCirclesSwitch.checked = Boolean(+getCookie('GaladrielMapdistCirclesSwitch')); 	// getCookie from galadrielmap.js
+distCirclesSwitch.checked = Boolean(storageHandler.restore('distCirclesSwitch')); 	// показывать окружности дистанции
 // AIS
 var vehicles = {}; 	// list of visible by AIS data vehicle objects 
 var AISstatusTXT = {
@@ -744,10 +769,8 @@ var trackDirURI = '<?php echo $trackDir;?>'; 	// адрес каталога с 
 var routeDirURI = '<?php echo $routeDir;?>'; 	// адрес каталога с маршрутами
 var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущего (пишущегося сейчас) трека
 var updateRouteServerURI = '<?php echo $updateRouteServerURI;?>'; 	// url службы динамического обновления маршрутов
-if(getCookie('GaladrielcurrTrackSwitch') == undefined) currTrackSwitch.checked = true; 	// показывать текущий трек вместе с курсором
-else currTrackSwitch.checked = Boolean(+getCookie('GaladrielcurrTrackSwitch')); 	// getCookie from galadrielmap.js
-if(getCookie('GaladrielSelectedRoutesSwitch') == undefined) SelectedRoutesSwitch.checked = false; 	// показывать выбранные маршруты
-else SelectedRoutesSwitch.checked = Boolean(+getCookie('GaladrielSelectedRoutesSwitch')); 	// getCookie from galadrielmap.js
+currTrackSwitch.checked = Boolean(storageHandler.restore('currTrackSwitch'));
+SelectedRoutesSwitch.checked = Boolean(storageHandler.restore('SelectedRoutesSwitch')); 	// показывать выбранные маршруты
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 var depthInData = <?php echo $depthInData;?>;	// параметры показа глубины вдоль пути
 // Маршрут
@@ -774,8 +797,8 @@ dravingLines.properties = {};
 var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
 var distCircles = [];	// круги дистанции, массив L.circle. Обращение к этому массиву может происходить сразу после инициализации карты.
 
-if(getCookie('GaladrielWindSwitch') === null) windSwitch.checked = true; 	// показывать символ ветра
-else windSwitch.checked = Boolean(+getCookie('GaladrielWindSwitch')); 	// getCookie from galadrielmap.js
+if(storageHandler.restore('WindSwitch') === null) windSwitch.checked = true; 	// показывать символ ветра
+else windSwitch.checked = Boolean(storageHandler.restore('WindSwitch'));
 var useTrueWind = <?php echo $useTrueWind?'true':'false';?>;
 
 // Dashboard
@@ -794,6 +817,17 @@ var dashboardMHeadingTXT = '<?php echo $dashboardMHeadingTXT;?>';
 var dashboardMHeadingAltTXT = '<?php echo $dashboardMHeadingAltTXT;?>';
 var latTXT = '<?php echo $latTXT;?>';
 var longTXT = '<?php echo $longTXT;?>';	
+var controlsList = [];	// список control для сокрытия их с экрана
+// восстановление переключателя сокрытия всего
+hideControlsSwitch.checked = Boolean(storageHandler.restore('hideControlsSwitch'));
+if(storageHandler.restore('hideControlPosition')){
+	for(let radio of settings.querySelectorAll('input[type="radio"][name="hideControlPosition"]')){
+		if(radio.value == storageHandler.restore('hideControlPosition')) {
+			radio.checked = true;
+		}
+		else  radio.checked = false;
+	};
+};
 // MOB
 var currentMOBmarker;	// Объект L.Marker в мультислое mobMarker, являющийся "текущим". Исторически в наименованиях есть некоторое смешение: mobMarker - это не маркер, это L.Polyline.
 var relBearingTXT = [<?php echo $relBearingTXT; // internationalisation ?>]
@@ -825,22 +859,23 @@ var map = L.map('mapid', {
 
 // Controls
 // Zoom в правом верхнем углу
-L.control.zoom({
+controlsList.push(L.control.zoom({
      position:'topright'
-}).addTo(map);
+}).addTo(map));
 
 // Версия и пр. в правом нижнем углу
-var info = L.control.attribution({
+controlsList.push(L.control.attribution({
 	prefix: '<a href="https://youtu.be/kwMt4rjgsJs"  target=”_blank”><i>имевший цель, но чуждый смысла</i></a>'
-}
-).addTo(map);
+}).addTo(map));
 
 // Шкала масштаба
+//controlsList.push(
 L.control.scale({
 	position: 'bottomleft',
 	maxWidth: 200,
 	imperial: false
 }).addTo(map);
+//);
 
 // control для записывания в clipboard
 var copyToClipboard = new L.Control.CopyToClipboard({ 	// класс определён в galadrielmap.js
@@ -854,6 +889,7 @@ goToPositionField.addEventListener('long-press', function(e){doCopyToClipboard(g
 var sidebar = L.control.sidebar('sidebar',{
 	container: 'sidebar',
 }).addTo(map);
+controlsList.push(sidebar);
 sidebar.on("content", function(event){ 	// Событие открытия панели с информацией о вкладке. А такого же события закрытия нет.
 	//console.log('sidebar.on "content"',event.id);
 	switch(event.id){ 	// какую вкладку открыли
@@ -913,7 +949,10 @@ sidebar.on("closing", function(){
 		};
 	}
 });
+// Сокрытие всего
+hideControlsToggler(hideControlsSwitch);	// создаёт как-бы control, делающий невидимыми все control, перечисленные в controlsList
 // end controls
+
 // Поведение карты
 map.on('movestart zoomstart', function(event) { 	// карту начали двигать руками
 	// функция отменяет следование карты за курсором, и устанавливает таймер, чтобы вернуть
@@ -999,7 +1038,7 @@ for(let mapLi of mapList.children){	// назначим обработчик д�
 }
 
 // Восстановим слои
-var layers = JSON.parse(getCookie('GaladrielMaps')); 	// getCookie from galadrielmap.js
+var layers = storageHandler.restore('layers'); 	// storageHandler from galadrielmap.js
 // Занесём слои на карту
 if(layers) layers.reverse().forEach(function(layerName){ 	// потому что они там были для красоты последним слоем вверх
 		// если, скажем, поменялось имя источника карты, а она уже показывалась со старым именем,
@@ -1034,22 +1073,7 @@ cover_zoom.innerText = map.getZoom()+8;
 <?php }; // для пользователя со всеми правами ?>	
 
 // Восстановим показываемые из gpx пути
-if(SelectedRoutesSwitch.checked) {
-	let showRoutes = JSON.parse(getCookie('GaladrielRoutes')); 	// getCookie from galadrielmap.js
-	if(showRoutes) {
-		showRoutes.forEach(
-			function(layerName){ 	// 
-				for (let i = 0; i < routeList.children.length; i++) { 	// для каждого потомка списка routeList маршрутов
-					if (routeList.children[i].innerHTML==layerName) { 	// 
-						selectTrack(routeList.children[i],routeList,routeDisplayed,displayRoute)
-						break;
-					}
-				}
-			}
-		);
-	}
-}
-
+restoreDisplayedRoutes();
 // Рисование маршрута
 dravingLines.addTo(map);
 doRestoreMeasuredPaths(); 	// восстановим из кук сохранённые на устройстве маршруты
@@ -1120,7 +1144,7 @@ for (let n=0; n<4; n++) {
 		pane: 'overlayPane',
 		zIndexOffset: -503
 	}));
-	distCircles.push(	L.circle([], {
+	distCircles.push(L.circle([0,0], {	// указать координаты необходимо, потому что Leaflet обламывается при добавлении круга в мультислой, если у круга нет координат
 		color: '#FD00DB',
 		weight: 1,
 		opacity: 0.6,
@@ -1269,7 +1293,7 @@ var toMOBline = L.polyline([], {
 // восстановим маркеры
 // mobMarker - это мультислой, содержащий сколько-то L.Marker и одну L.Polyline,
 // являющийся выражением состояния MOB
-var mobMarker = getCookie('GaladrielMapMOB'); 	// getCookie from galadrielmap.js
+var mobMarker = storageHandler.restore('mobMarker'); 	// storageHandler from galadrielmap.js
 if(mobMarker) {
 	let mobMarkerJSON;
 	try{
@@ -1869,7 +1893,7 @@ for(const name of changedRouteNames){
 
 // Установим переключатель в сохранённое состояние
 <?php if($privileged){	// для пользователя со всеми правами ?>
-loggingSwitch.checked = Boolean(+getCookie('GaladrielloggingSwitch')); 	// getCookie from galadrielmap.js
+loggingSwitch.checked = Boolean(storageHandler.restore('loggingSwitch')); 	// storageHandler from galadrielmap.js
 <?php };	// для пользователя со всеми правами ?>
 
 var currentTrackShowedFlag = false; 	// флаг, не показывается ли текущий путь. Если об этом спрашивать у Leaflet, то пока загружается трек, можно запустить его загрузку ещё раз пять.

@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.10
+## v. 2.20
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -20,14 +20,15 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 4. [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
 5. [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
 6. [Exchange coordinates](#exchange-coordinates) via clipboard
-7. [Weather forecast](#weather-forecast) from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
-8. [Display AIS info](display-ais-info)
-9. [Collision detection](#collision-detection)
-10. [netAIS support](#netais)
-11. [A Man OverBoard feature](a-man-overboard)
-12. Optimised for E-Ink screens [Dashboard](#dashboard)
-13. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
-14. English or Russian interface, dependent of browser language settings
+7. [Clear screen](#clear-screen)
+8. [Weather forecast](#weather-forecast) from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
+9. [Display AIS info](#display-ais-info)
+10. [Collision detection](#collision-detection)
+11. [netAIS support](#netais)
+12. [A Man OverBoard feature](#a-man-overboard)
+13. Optimised for E-Ink screens [Dashboard](#dashboard)
+14. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
+15. English or some other languages interface, dependent of browser language settings
 
 
 * [Work on OpenWRT](#work-in-openwrt)
@@ -154,6 +155,10 @@ To get coordinates of any point - open <img src="img/route.svg" alt="Handle rout
 To fly map by coordinates type they of any format to this field and press button.
 
 
+## Clear screen
+In the <img src="img/settings1.svg" alt="Settings" width="24px"> menu you can assign an invisible zone on the screen, tap which will remove all controls. This can be handy for very small screens.
+
+
 ## Weather forecast
  ![Weather forecast](screenshots/s8.jpeg)<br>
 If there is an Internet connection you can get the weather forecast from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/).
@@ -165,10 +170,12 @@ The GaladrielMap displayed AIS data via [gpsdPROXY](https://github.com/VladimirK
 Displaying AIS data is disabled by default, so you must enable it by uncomment string with $aisServerURI variable in _params.php_. To temporarily disable displaying AIS data use switch in <img src="img/settings1.svg" alt="Settings" width="24px"> menu.  
 As displaying AIS data from gpsd need gpsdPROXY, you MUST use gpsdPROXY as position data service. Set up $gpsdHost and $gpsdPort variables in _params.php_ to this.
 
+
 ## Collision detection
 ![collision indicate](screenshots/s11.png)<br>  
 The GaladrielMap shows information on possible collisions calculated by the gpsdPROXY. Potentially dangerous objects are highlighted and their direction is indicated by an arrow.  
 Do not rely too much on the collision detection system. Remember that **no information issued or not issued by the collision detection system can be the basis for the actions or inaction of the navigator.** Be careful.
+
 
 ## netAIS support
 ![netAIS](screenshots/s13.jpeg)<br>
@@ -182,7 +189,7 @@ For example, three members of the same private group see each other on its scree
 Sets marker, stretches the line to and indicates distance and direction to MOB just by open tab.  
 Tap to <img src="img/mob.svg" alt="MOB button" width="24px"> opens MOB tab and start MOB mode. Track logging turned on, positions the MOB markers saved to the server. You may add new markers and dragging markers to a new position. Tap to marker to select it for stretches the direction line to. Tap on indication of MOB position copies it to clipboard.  
 MOB information spreading to all connected devices and may edit from any of this.  
-To finalize MOB mode tap to the dot left of the "Terminate" button first.  
+To finalize MOB mode tap to the dot left of the "Cancel" button first.  
 
 
 ## Dashboard
