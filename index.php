@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.20.3';
+$versionTXT = '2.20.4';
 /* 
 2.20.0	user authorisation & AIS SART support
 2.10.4	with Norwegian localisation

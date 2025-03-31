@@ -2870,7 +2870,7 @@ const storageHandler = {
 		case 'cookie':
 			this.store = JSON.parse(document.cookie.match(new RegExp(
 				"(?:^|; )" + "GaladrielMapOptions".replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-			)));
+			))[1]);
 			if(!this.store)	this.store = {'empty':true};
 			break;
 		default:
