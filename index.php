@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.20.4';
+$versionTXT = '2.20.5';
 /* 
 2.20.0	user authorisation & AIS SART support
 2.10.4	with Norwegian localisation
@@ -222,7 +222,7 @@ $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" > <!--  tell the mobile browser to disable unwanted scaling of the page and set it to its actual size -->
 
     <!-- Leaflet -->
-	<link rel="stylesheet" href="leaflet/leaflet.css" type="text/css">
+	<link rel="stylesheet" href="leaflet/leaflet.css" type="text/css" />
 	<script src="leaflet/leaflet.js"></script>
 
 	<script src="polycolor/polycolorRenderer.js"></script>
@@ -255,8 +255,9 @@ $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_
 	
 	<script src="Leaflet.TextPath/leaflet.textpath.js"></script>
 	
-	<link rel="stylesheet" href="galadrielmap.css" type="text/css"> <!-- замена стилей -->
+	<link rel="stylesheet" href="galadrielmap.css" type="text/css" /> <!-- замена стилей -->
 	<script src="galadrielmap.js"></script>
+	<!-- <script src="test.js"></script> -->
    <title>GaladrielMap <?php echo $versionTXT;?></title>
    <!-- карта на весь экран -->
    <style>
@@ -271,14 +272,14 @@ html, body, #mapid {
    </style>
 </head>
 <body>
-<?php /* ?>
+<?php /*/ ?>
 <div id='infoBox' style='font-size: 90%; position: absolute;'>
 </div>
 <script>
-//alert(window.outerWidth+' '+window.outerHeight);
+alert(window.outerWidth+' '+window.outerHeight);
 infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 </script>
-<?php */ ?>
+<?php /*/ ?>
 <div id="sidebar" class="leaflet-sidebar collapsed">
 	<!-- Nav tabs -->
 	<div class="leaflet-sidebar-tabs">
@@ -593,7 +594,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 		<!-- Настройки -->
 		<div class="leaflet-sidebar-pane" id="settings">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $settingsHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div style="margin: 0.7em 1em;"> <?php// Следование за курсором ?>
+			<div style="margin: 0.7em 1em;"> <?php // Следование за курсором ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="followSwitch" onChange="noFollowToCursor=!noFollowToCursor; CurrnoFollowToCursor=noFollowToCursor;" checked>
 					<label class="onoffswitch-label" for="followSwitch">
@@ -615,7 +616,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				<span style="font-size:120%"><?php echo $settingsTrackTXT;?></span>
 			</div>
 			<br>
-			<div style="margin: 0.7em 1em;"> <?php// Выбранные маршруты всегда показываются ?>
+			<div style="margin: 0.7em 1em;"> <?php // Выбранные маршруты всегда показываются ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="SelectedRoutesSwitch" onChange="" checked>
 					<label class="onoffswitch-label" for="SelectedRoutesSwitch">
@@ -626,7 +627,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				<span style="font-size:120%"><?php echo $settingsRoutesAlwaysTXT;?></span>
 			</div>
 			<br>
-			<div style="margin: 0.7em 1em;"> <?php// Показывать окружности дистанции ?>
+			<div style="margin: 0.7em 1em;"> <?php // Показывать окружности дистанции ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="distCirclesSwitch" onChange="distCirclesToggler();" checked>
 					<label class="onoffswitch-label" for="distCirclesSwitch">

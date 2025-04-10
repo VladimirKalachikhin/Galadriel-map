@@ -1,4 +1,3 @@
-"use strict"
 /* Функции
 listPopulate(listObject,dirURI,chkCurrent=false,withExt=true,onComplete=undefined)
 getCookie(name)		возвращает cookie с именем name, если есть, если нет, то undefined
@@ -107,13 +106,13 @@ eachLayerRecursive()
 displayCollisionAreas(selfArea=null)
 ///////// for collision test purpose /////////
 */
-/*
+/*/
 // определение имени файла этого скрипта, например, чтобы знать пути на сервере
-const index = document.getElementsByTagName('script').length - 1; 	// это так, потому что эта часть сработает при загрузке скрипта, и он в этот момент - последний http://feather.elektrum.org/book/src.html
-var galadrielmapScript = scripts[index];
-//console.log(galadrielmapScript);
-*/
-
+const i = document.getElementsByTagName('script').length - 1; 	// это так, потому что эта часть сработает при загрузке скрипта, и он в этот момент - последний http://feather.elektrum.org/book/src.html
+var galadrielmapScript = scripts[i];
+console.log(i,galadrielmapScript);
+alert(galadrielmapScript.src);
+/*/
 function listPopulate(listObject,dirURI,chkCurrent=false,withExt=true,onComplete=undefined){
 /*
 */
@@ -155,7 +154,7 @@ fetch(`listPopulate.php?dirname=${dirURI}`)	// запросим список ф�
 .catch( (err) => {	// сюда придёт любая ошибка после fetch
 	console.log(`Error get ${dirURI} files list:`,err.message);
 });
-} // end function listPopulate
+}; // end function listPopulate
 
 function getCookie(name) {
 // возвращает cookie с именем name, если есть, если нет, то undefined
@@ -165,7 +164,7 @@ var matches = document.cookie.match(new RegExp(
 	)
 );
 return matches ? decodeURIComponent(matches[1]) : null;
-}
+};
 
 function doSavePosition(){
 /* Сохранение положения
@@ -188,13 +187,13 @@ for (let i = 0; i < routeDisplayed.children.length; i++) { 	// для каждо
 toSave['showRoutes'] = openedNames;
 // Сохранение переключателей и параметров
 toSave['currTrackSwitch'] = currTrackSwitch.checked;
-toSave['loggingSwitch'] = loggingSwitch.checked;
+if(typeof loggingSwitch !== 'undefined') toSave['loggingSwitch'] = loggingSwitch.checked;
 toSave['SelectedRoutesSwitch'] = SelectedRoutesSwitch.checked;
 toSave['minWATCHinterval'] = minWATCHinterval;
 toSave['showMapsList'] = showMapsList;
 storageHandler.save(toSave);
 //console.log('Position, layers and options saved');
-} // end function doSavePosition
+}; // end function doSavePosition
 
 // Функции выбора - удаления карт
 async function selectMap(node) { 	
@@ -204,7 +203,7 @@ node.classList.remove("showedMapName");
 node.hidden = false;
 node.onclick = function(event){deSelectMap(event.currentTarget);};
 displayMap(node.id);
-}
+}; // end function selectMap
 
 async function deSelectMap(node) {
 // Прекращение показа карты, и возврат её в список имеющихся. Получим объект
@@ -228,7 +227,7 @@ else {	// текущий режим - "все карты"
 	if(showMapsList.includes(node.id)) node.classList.add("showedMapName");
 }
 removeMap(node.id);
-}
+}; // end function deSelectMap
 
 async function displayMap(mapname) {
 /* Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
@@ -369,7 +368,7 @@ if(! savedLayers[mapname].options.zoom) {
 if(mapParm['data'] && mapParm['data']['javascriptClose']) savedLayers[mapname].options.javascriptClose = mapParm['data']['javascriptClose'];
 // Наконец, покажем
 savedLayers[mapname].addTo(map);
-} // end function displayMap
+}; // end function displayMap
 
 async function removeMap(mapname) {
 mapname=mapname.trim();
@@ -381,7 +380,7 @@ if(savedLayers[mapname].options.zoom) {
 }
 savedLayers[mapname].remove(); 	// удалим слой с карты
 //savedLayers[mapname] = null; 	// удалим сам слой. Но это не надо, ибо включение/выключение отображения слоёв должно быть быстро, и обычно их не надо повторно получать с сервера
-} // end function removeMap
+}; // end function removeMap
 
 function showMapsToggle(all=false){
 /*	переключает показ всех или выбранных карт в списке карт */
@@ -407,7 +406,7 @@ else {	// текущий режим - "все карты" - покажем то�
 	}
 	showMapsToggler.innerHTML = showMapsTogglerTXT[0];	// сменим режим на "избранные карты"
 }
-} // end function showMapsToggle
+}; // end function showMapsToggle
 
 
 // Функции выбора - удаления треков
@@ -428,7 +427,7 @@ if(node.title.toLowerCase().indexOf("current")!= -1) {	// текущий тре�
 }
 //console.log('[selectTrack] node.title=',node.title,currentTrackShowedFlag);
 displayTrack(node); 	// создадим трек
-} // end function selectTrack
+}; // end function selectTrack
 
 function deSelectTrack(node,trackList,trackDisplayed,displayTrack) {
 /* Прекращение показа трека, и возврат его в список имеющихся. Получим объект
@@ -462,7 +461,7 @@ trackList.insertBefore(node,li); 	// перенесём перед тем, на 
 //console.log(node);
 node.onclick = function(event){selectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
 removeMap(node.innerHTML);
-}
+}; // end function deSelectTrack
 
 function displayTrack(trackNameNode) {
 /* рисует трек с именем в trackNameNode
@@ -507,12 +506,12 @@ else {
 		}
 		else {
 			savedLayers[trackName] = omnivore.gpx.parse(this.responseText,options); 	// responseXML иногда почему-то кривой
-		}
+		};
 		//console.log(savedLayers[trackName]);
 		savedLayers[trackName].addTo(map); 	// нарисуем его на карте
-	}
-}
-} // end function displayTrack
+	};
+};
+}; // end function displayTrack
 
 function displayRoute(routeNameNode) {
 /* рисует маршрут или места с именем routeName 
@@ -544,7 +543,7 @@ else {
 		savedLayers[routeName].addTo(map);
 	}
 }
-} // end function displayRoute
+}; // end function displayRoute
 
 function updateCurrTrack() {
 // Получим GeoJSON - ломаную из скольких-то последних путевых точек, или false, если с последнего
@@ -652,7 +651,7 @@ for (var k = 0; k < tileXs.length; k++) {
 	}
 }
 if( !downJob) dwnldJobZoom.innerHTML = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
-} // end function XYentryFields
+}; // end function XYentryFields
 
 function loaderListPopulate(element){
 /* Заполнение списка тайлов для загрузки путём клика по тайлу 
@@ -681,8 +680,8 @@ else {	// кликнутого тайла, вероятно, нет в спис�
 	lastX.value = x;
 	lastY.value = y;
 	XYentryFields(lastY);
-}
-} // end function loaderListPopulate
+};
+}; // end function loaderListPopulate
 
 function coloreSelectedTiles(){
 const zoom = parseInt(dwnldJobZoom.innerText);
@@ -696,7 +695,8 @@ for (var k = 0; k < tileXs.length; k++) {
 		if(tile) tile.classList.add('selectedTile');
 	}
 }
-} // end function coloreSelectedTiles
+}; // end function coloreSelectedTiles
+
 function chkColoreSelectedTile(tileEvent){
 const zoom = parseInt(dwnldJobZoom.innerText);
 //console.log('zoom=',zoom,'z=',tileEvent.coords.z);
@@ -714,7 +714,7 @@ for (var k = 0; k < tileXs.length; k++) {
 	}
 }
 if( !downJob) dwnldJobZoom.innerHTML = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
-} // end function chkColoreSelectedTile
+}; // end function chkColoreSelectedTile
 
 function createDwnldJob() {
 /* Собирает задания на загрузку: для каждой карты кладёт на сервер csv с номерами тайлов текущего масштаба.
@@ -840,7 +840,7 @@ xhr.onreadystatechange = function() { //
 		//loaderIndicator.innerText=' ';
 	}
 }; // end function onreadystatechange
-} // end function chkLoaderStatus
+}; // end function chkLoaderStatus
 
 
 // Функции рисования маршрутов
@@ -850,7 +850,7 @@ for(let element of document.getElementsByName('routeControl')){
 	element.checked=false;
 	element.disabled=true;
 }   
-} // end function routeControlsDeSelect
+}; // end function routeControlsDeSelect
 
 function pointsControlsDisable(){
 for(let button of pointsButtons.querySelectorAll('button')){	// кнопки установки маркеров
@@ -871,7 +871,7 @@ function getGPXicon(gpxtype){
 /* вообще-то, здесь должно быть обращение к iconServer из leaflet-omnivore, но пока так*/
 let iconName = gpxtype+'Icon';
 return window[iconName];
-} // end function getGPXicon
+}; // end function getGPXicon
 
 function delShapes(realy,inLayer=null) {
 /* Удаляет полилинии в состоянии редактирования, если realy = true
@@ -912,7 +912,7 @@ for(let layer of inLayer.getLayers()){
 //console.log('[delShapes] needUpdateSuperclaster:',needUpdateSuperclaster);
 if(needUpdateSuperclaster) updClaster(inLayer);	// обновим один раз за все удаления
 return edEnShapesCntr;
-}	// end function delShapes
+};	// end function delShapes
 
 
 function tooggleEditRoute(e) {
@@ -1045,7 +1045,7 @@ else {
 	}
 	else pointsControlsEnable();
 }
-} // end function tooggleEditRoute
+}; // end function tooggleEditRoute
 
 function createEditableMarker(Icon){
 if(!currentRoute) currentRoute = dravingLines; 	// 
@@ -1091,7 +1091,7 @@ for(let button of pointsButtons.querySelectorAll('button')){
 routeControlsDeSelect();	// отключим все кнопки рисования линии
 routeEraseButton.disabled=false;	// включим кнопку Стереть
 if(!routeSaveName.value) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было
-} // end function createEditableMarker
+}; // end function createEditableMarker
 
 function doSaveMeasuredPaths() {
 /* сохранение в cookie отображаемых на карте маршрутов
@@ -1660,7 +1660,7 @@ try {
 } catch (error) { 	// coordinate-parser обломался, строка - не координаты.
 	//console.log('[flyByString] stringPos=',stringPos,error);
 	// А не номер тайла ли там?
-	const digits = stringPos.trim().match(/(?<!-|\.)\d+(?!\.)/g);	// вытащим неотрицательные целые числа из строки. Выражение неправильное, оно возвращает вторые и далеее цифры после запятой. Но так бывает редко ;-)
+	const digits = stringPos.trim().match(new RegExp("/(?<!-|\.)\d+(?!\.)/g"));	// вытащим неотрицательные целые числа из строки. Выражение неправильное, оно возвращает вторые и далеее цифры после запятой. Но так бывает редко ;-)
 	//console.log('[flyByString] digits:',digits);
 	let x,y,z;
 	if (digits && digits.length == 3 && ((digits.join().length+11) > stringPos.trim().length)) {	// если чисел три, и добавление разумного количества разделителей и пробелов делает строку результата больше исходной. А иначе - это адрес с цифрами.
@@ -2430,14 +2430,26 @@ if(useTrueWind){	// options.js указано использовать исти�
 }
 else {	// указано использовать вымпельный ветер
 	//console.log('[windSymbolUpdate] heading=',TPVdata.heading,'wind dir=',TPVdata.wangler+TPVdata.heading,'wspeedr=',TPVdata.wspeedr);
+	/*/ Это работает только в новых браузерах, но думаю, что слишком новых
 	if(TPVdata.wspeedr && TPVdata.wangler && (TPVdata.heading ?? TPVdata.track)){	//
 		let dir = TPVdata.wangler + (TPVdata.heading ?? TPVdata.track) - 90;	// картинка-то у нас горизонтальна
 		if(dir >= 360) dir -= 360;
 		realWindSymbolUpdate(dir,TPVdata.wspeedr);
 	}
 	else realWindSymbolUpdate();
-}
-} // end function windSymbolUpdate
+	/*/
+	// А это - работает во всех.
+	let heading;
+	if(TPVdata.heading === undefined || TPVdata.heading === null) heading = TPVdata.track;
+	else heading = TPVdata.heading;
+	if(TPVdata.wspeedr && TPVdata.wangler && heading){	//
+		let dir = TPVdata.wangler + heading - 90;	// картинка-то у нас горизонтальна
+		if(dir >= 360) dir -= 360;
+		realWindSymbolUpdate(dir,TPVdata.wspeedr);
+	}
+	else realWindSymbolUpdate();
+};
+}; // end function windSymbolUpdate
 
 function realWindSymbolUpdate(direction=0,speed=0){
 /**/
@@ -2745,9 +2757,9 @@ fetch(dataUrl)
 })
 .catch( (err) => {
 	fUpdate({'error':err.message});
-})
+});
 
-} 	// end function realtime
+}; 	// end function realtime
 
 
 
@@ -2796,6 +2808,7 @@ const storageHandler = {
 	store: {'empty':true},	// типа, флаг, что ещё не считывали из хранилища. Так проще и быстрей в этом кривом языке.
 	storage: false,
 	//storage: 'cookie',
+	//storage: 'storage',
 	save: function(key,value=null){
 	/* сохраняет key->value, но можно передать список пар одним параметром*/
 		let values = {};
@@ -2811,6 +2824,7 @@ const storageHandler = {
 		this._saveStore();
 	},
 	restore: function(key){
+		//alert('[storageHandler] restore '+key);
 		if(this.store.empty){
 			this._restoreStore();
 			this.store.empty = false;
@@ -2849,6 +2863,7 @@ const storageHandler = {
 		if(!this.storage) this._findStorage();
 		switch(this.storage){
 		case 'storage':
+			//console.log('_saveStore:',JSON.stringify(this.store));
 			window.localStorage.setItem("GaladrielMapOptions", JSON.stringify(this.store));
 			break;
 		case 'cookie':
@@ -2865,6 +2880,7 @@ const storageHandler = {
 		switch(this.storage){
 		case 'storage':
 			this.store = JSON.parse(window.localStorage.getItem("GaladrielMapOptions"));
+			//console.log('_restoreStore:',JSON.stringify(this.store));
 			if(!this.store)	this.store = {'empty':true};
 			break;
 		case 'cookie':

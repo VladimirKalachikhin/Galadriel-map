@@ -33,13 +33,14 @@ $routeDir = 'route'; 	// route & POI files directory, if present, in filesystem
 // List format:
 // list of ip, wildcard (1.2.3.*), subnet (1.2.3/24 or 1.2.3.4/255.255.255.0), span of ip (1.2.3.0-1.2.3.255)
 // Both ipn4 and ipv6 addresses are possible, but for ipv6, you can only specify a subnet.
+/*
 $grantsAddrList = array(
 'whitelist',
 array(
 	'127.0.0.0','192.168.10.2-192.168.10.100','192.168.10.102'
 )
 );
-
+*/
 // Службы Services
 // 	Источник карты Map source
 // url источника карты: в интернет (только растровые тайлы) или GaladrielCache
