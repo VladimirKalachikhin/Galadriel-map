@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.20.6';
+$versionTXT = '2.20.7';
 /* 
 2.20.0	user authorisation & AIS SART support
 2.10.4	with Norwegian localisation
@@ -865,9 +865,10 @@ controlsList.push(L.control.zoom({
 }).addTo(map));
 
 // Версия и пр. в правом нижнем углу
-controlsList.push(L.control.attribution({
+var attributionControl = L.control.attribution({// эта переменная используется в карте OpenSeaMapDepth_layer.php для показа шкалы масштаба. Как-то это так себе решение....
 	prefix: '<a href="https://youtu.be/kwMt4rjgsJs"  target=”_blank”><i>имевший цель, но чуждый смысла</i></a>'
-}).addTo(map));
+}).addTo(map);
+controlsList.push(attributionControl);
 
 // Шкала масштаба
 //controlsList.push(
@@ -891,6 +892,7 @@ var sidebar = L.control.sidebar('sidebar',{
 	container: 'sidebar',
 }).addTo(map);
 controlsList.push(sidebar);
+//console.log('controlsList:',controlsList);
 sidebar.on("content", function(event){ 	// Событие открытия панели с информацией о вкладке. А такого же события закрытия нет.
 	//console.log('sidebar.on "content"',event.id);
 	switch(event.id){ 	// какую вкладку открыли
