@@ -353,12 +353,14 @@ if(options && options.featureNameNode) { 	// li с именем файла, из
 }
 
 featuresLayer.options.onEachFeature = function (feature, layer){ 	// функция, вызываемая для каждой feature при её создании
-	//console.log('[featuresLayer.options.onEachFeature] feature',feature);
-	//console.log('[featuresLayer.options.onEachFeature] layer',layer);
 	getPopUpToLine(feature, layer);
+	//console.log('[featuresLayer.options.onEachFeature] feature:',feature);
+	//console.log('[featuresLayer.options.onEachFeature] layer:',layer);
+	//console.log('[featuresLayer.options.onEachFeature] depthInData:',depthInData,options.featureNameNode.classList.contains('currentTrackName'));
 	// Leaflet.TextPath несовместимо с polycolorRenderer, разбираться лень, поэтому стрелочки
 	// будем лепить только если нет данных о глубине или не велено глубину показывать
 	if(!(depthInData && depthInData.display && feature.properties && feature.properties.depths) && !options.featureNameNode.classList.contains('currentTrackName')){	// лепить стрелочки на линию, только если это не текущий трек, который всё время перерисовывается. Ибо чёта стрелочки затратно...
+		//console.log('Рисуем стрелочки направления движения');
 		layer.setText('          >          ', 
 					{repeat: true, 
 					offset: '0.6ch',	// сдвиг вправо от линии на половину ширины символа (плюс поправочка) размером font-size. ch - Предварительная мера (ширина) глифа "0" шрифта элемента
@@ -371,6 +373,7 @@ featuresLayer.options.onEachFeature = function (feature, layer){ 	// функц�
 	};
 	
 };
+
 featuresLayer.options.style = function(geoJsonFeature){ 	// A Function defining the Path options for styling GeoJSON lines and polygons, called internally when data is added. 
 	// вот тут надо вычислить цвета и указать рендерер
 	let style = {};

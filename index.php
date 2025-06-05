@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.20.7';
+$versionTXT = '2.20.8';
 /* 
 2.20.0	user authorisation & AIS SART support
 2.10.4	with Norwegian localisation
@@ -866,8 +866,9 @@ controlsList.push(L.control.zoom({
 
 // Версия и пр. в правом нижнем углу
 var attributionControl = L.control.attribution({// эта переменная используется в карте OpenSeaMapDepth_layer.php для показа шкалы масштаба. Как-то это так себе решение....
-	prefix: '<a href="https://youtu.be/kwMt4rjgsJs"  target=”_blank”><i>имевший цель, но чуждый смысла</i></a>'
+	prefix: ""
 }).addTo(map);
+attributionControl.addAttribution('<a href="https://youtu.be/kwMt4rjgsJs"  target=”_blank”><i>имевший цель, но чуждый смысла</i></a>');
 controlsList.push(attributionControl);
 
 // Шкала масштаба
@@ -1728,6 +1729,7 @@ for(let vehicle in aisData){	// vehicle == mmsi
 	else aisData[vehicle].sart=false;
 
 	vehicles[vehicle].addData(aisData[vehicle]); 	// обновим данные
+	//if(vehicle=='538008208') console.log('[realtimeAISupdate] Princess Margo:',vehicles[vehicle]);
 	// Здесь, видимо, не нужно передавать aisData[vehicle] "по значению", как в GaladrielMapSK
 	// потому что здесь aisData -- это локальная переменная, которая заводится снова при каждом
 	// приёме данных, а предыдущая сохраняется в контексте, потому что на неё есть ссылка.

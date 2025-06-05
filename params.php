@@ -98,6 +98,7 @@ $gpxlogger = "gpxlogger -e dbus -r -i $loggerNoFixTimeout -m $loggerMinMovie -f 
 //							Color for a depth less than minvalue. Html color string only.
 // upperMaxColor	string	Цвет для глубины, большей чем maxvalue. Только! строка с html обозначением цвета.
 //							Colour for depth, more than maxvalue. Html color string only.
+
 $depthInData = '{"display":true,
 "minvalue": 2,
 "maxvalue": 10,
