@@ -954,7 +954,7 @@ do { 	//
 	$buf = json_decode($buf,TRUE);
 	if($buf === null) { 	// прислали странное, это не gpsd?
 		@socket_close($gpsd);
-		$msg = "Recieved not JSON. Is this cgpsdPROXY?";
+		$msg = "Recieved not JSON. Is this gpsdPROXY?";
 		echo "$msg<br>\n"; 
 		return $msg;
 	}

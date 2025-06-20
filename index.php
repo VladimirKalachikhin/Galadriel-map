@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.20.8';
+$versionTXT = '2.20.9';
 /* 
 2.20.0	user authorisation & AIS SART support
 2.10.4	with Norwegian localisation
@@ -461,13 +461,14 @@ foreach($trackInfo as $trackName) {
 			<?php // Поиск места ?>
 			<div style="width:95%;">
 				<div style="margin:0;padding:0;">
+					<button onClick='goToPositionField.value = "";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;float:right;"><img src="img/no.svg" title="<?php echo $clearTXT;?>" alt="<?php echo $clearTXT;?>" width="8px" style="vertical-align:top;"></button>
 					<button onClick='goToPositionField.value += "°";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">°</span></button>
 					<button onClick='goToPositionField.value += "′";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">′</span></button>
 					<button onClick='goToPositionField.value += "″";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0rem 0 0;"><span style="font-weight: bold; font-size:150%;">″</span></button><br>
 				</div>
 				<span style=""><?php echo $routePosTXT;?></span><br>
 				<input id='goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:70%;font-size:150%;'>			
-				<button id='goToPositionButton' onClick='flyByString(goToPositionField.value);' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button><br>
+				<button id='goToPositionButton' onClick='flyByString(goToPositionField.value);' class='okButton' style="float:right;"><img src="img/ok.svg" title="<?php echo $okTXT;?>" alt="<?php echo $okTXT;?>" width="16px"></button><br>
 			</div>
 			<div  style='width:98%;height:12rem;overflow:auto;margin:0.3rem 0;'>
 				<ul id='geocodedList' class='commonList'>
@@ -486,8 +487,8 @@ foreach($trackInfo as $trackName) {
 						//currentRoute = null;
 						//routeSaveName.value = '';
 						//routeSaveDescr.value = '';" 
-					type='submit' class='okButton' style="float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" width="16px"></button>
-				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" width="16px"></button>
+					type='submit' class='okButton' style="float:right;"><img src="img/ok.svg" title="<?php echo $okTXT;?>" alt="<?php echo $okTXT;?>" width="16px"></button>
+				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;"><img src="img/no.svg" title="<?php echo $clearTXT;?>" alt="<?php echo $clearTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
 			</div>			
 <?php }; // для пользователя со всеми правами ?>	

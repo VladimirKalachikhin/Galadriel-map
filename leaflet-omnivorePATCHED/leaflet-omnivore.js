@@ -359,7 +359,11 @@ featuresLayer.options.onEachFeature = function (feature, layer){ 	// функц�
 	//console.log('[featuresLayer.options.onEachFeature] depthInData:',depthInData,options.featureNameNode.classList.contains('currentTrackName'));
 	// Leaflet.TextPath несовместимо с polycolorRenderer, разбираться лень, поэтому стрелочки
 	// будем лепить только если нет данных о глубине или не велено глубину показывать
-	if(!(depthInData && depthInData.display && feature.properties && feature.properties.depths) && !options.featureNameNode.classList.contains('currentTrackName')){	// лепить стрелочки на линию, только если это не текущий трек, который всё время перерисовывается. Ибо чёта стрелочки затратно...
+	// лепить стрелочки на линию, только если это не текущий трек, который всё время перерисовывается. Ибо чёта стрелочки затратно...
+	if(!(depthInData && depthInData.display && feature.properties && feature.properties.depths) 
+	  && 
+	!(options && options.featureNameNode && options.featureNameNode.classList && options.featureNameNode.classList.contains('currentTrackName'))
+	){	
 		//console.log('Рисуем стрелочки направления движения');
 		layer.setText('          >          ', 
 					{repeat: true, 
