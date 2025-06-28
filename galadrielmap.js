@@ -528,6 +528,11 @@ else {
 	switch(routeType) {
 	case 'gpx':
 		savedLayers[routeName] = omnivore.gpx(routeDirURI+'/'+routeName,options);
+		if(! updateRoutesInterval) {
+			// Запуск динамического обновления показываемых маршрутов,
+			// если ещё не запущен и есть адрес обновлялки
+			if(updateRouteServerURI) updateRoutesInterval = setInterval(realtime,3000,updateRouteServerURI,routeUpdate);
+		};
 		break;
 	case 'kml':
 		savedLayers[routeName] = omnivore.kml(routeDirURI+'/'+routeName,options);
@@ -1245,7 +1250,7 @@ let pointsFeatureCollection = collectSuperclasterPoints(currentRoute); 	//
 //console.log('[saveGPX] pointsFeatureCollection:',pointsFeatureCollection);
 
 let route = currentRoute.toGeoJSON(); 	// сделаем объект geoJSON. Очевидно, это новый объект?
-console.log('[saveGPX] route:',route);
+//console.log('[saveGPX] route:',route);
 if(route.features.length){	// какие-то объекты есть
 	if(!('properties' in route)) route.properties = {};
 	//route.properties.fileName = fileName;	// имя файла. А нафига?
@@ -2416,36 +2421,36 @@ else {
 };
 }; // end function windSwitchToggler
 
-function windSymbolUpdate(TPVdata){
-/* Ветер определяется естественно - относительно носа судна */
+function windSymbolUpdate(data){
+/* Ветер определяется естественно - относительно носа судна 
+Global: track,heading
+*/
 //console.log('[windSymbolUpdate] useTrueWind=',useTrueWind);
 if(useTrueWind){	// options.js указано использовать истинный ветер
-	//console.log('[windSymbolUpdate] wspeedt=',TPVdata.wspeedt,'wanglet=',TPVdata.wanglet,'track=',TPVdata.track);
-	if(TPVdata.wspeedt && TPVdata.wanglet && TPVdata.track){
-		let dir = TPVdata.wanglet + TPVdata.track - 90;	// картинка-то у нас горизонтальна
+	//console.log('[windSymbolUpdate] wspeedt=',data.wspeedt,'wanglet=',data.wanglet,'track=',track);
+	if(data.wspeedt != null && data.wanglet != null && track != null){
+		let dir = data.wanglet + track - 90;	// картинка-то у нас горизонтальна
 		if(dir >= 360) dir -= 360;
-		realWindSymbolUpdate(dir,TPVdata.wspeedt);
+		realWindSymbolUpdate(dir,data.wspeedt);
 	}
 	else realWindSymbolUpdate();
 }
 else {	// указано использовать вымпельный ветер
-	//console.log('[windSymbolUpdate] heading=',TPVdata.heading,'wind dir=',TPVdata.wangler+TPVdata.heading,'wspeedr=',TPVdata.wspeedr);
+	//console.log('[windSymbolUpdate] heading=',data.heading,'wind dir=',data.wangler+data.heading,'wspeedr=',data.wspeedr);
 	/*/ Это работает только в новых браузерах, но думаю, что слишком новых
-	if(TPVdata.wspeedr && TPVdata.wangler && (TPVdata.heading ?? TPVdata.track)){	//
-		let dir = TPVdata.wangler + (TPVdata.heading ?? TPVdata.track) - 90;	// картинка-то у нас горизонтальна
+	if(data.wspeedr && data.wangler && (heading ?? track)){	//
+		let dir = data.wangler + (heading ?? track) - 90;	// картинка-то у нас горизонтальна
 		if(dir >= 360) dir -= 360;
-		realWindSymbolUpdate(dir,TPVdata.wspeedr);
+		realWindSymbolUpdate(dir,data.wspeedr);
 	}
 	else realWindSymbolUpdate();
 	/*/
 	// А это - работает во всех.
-	let heading;
-	if(TPVdata.heading === undefined || TPVdata.heading === null) heading = TPVdata.track;
-	else heading = TPVdata.heading;
-	if(TPVdata.wspeedr && TPVdata.wangler && heading){	//
-		let dir = TPVdata.wangler + heading - 90;	// картинка-то у нас горизонтальна
+	let hdng = heading || track || mheading;
+	if(data.wspeedr != null && data.wangler != null && hdng != null){	//
+		let dir = data.wangler + hdng - 90;	// картинка-то у нас горизонтальна
 		if(dir >= 360) dir -= 360;
-		realWindSymbolUpdate(dir,TPVdata.wspeedr);
+		realWindSymbolUpdate(dir,data.wspeedr);
 	}
 	else realWindSymbolUpdate();
 };
@@ -2726,8 +2731,8 @@ function realtime(dataUrl,fUpdate,upData) {
 fUpdate - функция обновления. Все должно делаться в ней. Получает json object
 upData - данные для отправки
 */
-//console.log(dataUrl);
-//console.log('RealTime upData',upData);
+//console.log('[realtime] dataUrl=',dataUrl);
+//console.log('[realtime] upData:',upData);
 if(upData) {
 	if(dataUrl.includes('?')) dataUrl += '&upData=';
 	else dataUrl += '?upData=';
@@ -2739,7 +2744,7 @@ fetch(dataUrl)
 })
 .then(data => { 		// The Body mixin of the Fetch API represents the body of the response/request, allowing you to declare what its content type is and how it should be handled.
 	try {
-		//console.log(data);
+		//console.log('[realtime] data=', data);
 		return JSON.parse(data);
 	}
 	catch(err) {

@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.20.9';
+$versionTXT = '2.20.10';
 /* 
 2.20.0	user authorisation & AIS SART support
 2.10.4	with Norwegian localisation
@@ -736,6 +736,12 @@ if(! startZoom) startZoom = 12; 	// начальный масштаб
 var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
 // ГПС
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
+// поскольку теперь есть TPV и ATT, не вся требуемая информация поступает в одном сообщениии,
+// и требуется кое-что сохранять между поступлениями данных. Что печалит.
+var track = null;	
+var heading = null;
+var mheading = null;
+var magvar = null;
 var minWATCHinterval = storageHandler.restore('minWATCHinterval');	// Минимальный интервал, сек., с которым будут приходить данные от gpsdPROXY. Если 0 -- то по мере их получения от датчиков
 if(!minWATCHinterval) minWATCHinterval = 0;
 minWATCHintervalInput.value = minWATCHinterval;
@@ -1329,7 +1335,7 @@ if((typeof mobMarker !== "object") || !(mobMarker instanceof L.LayerGroup)) {
 };
 
 // Realtime периодическое получение внешних данных
-let subscribe = ['TPV','AIS','ALARM'];
+let subscribe = ['TPV','ATT','AIS','ALARM'];
 
 var spatialWebSocket; // будет глобальным сокетом
 var lastDataUpdate=0;	// момент последнего получения данных, в милисекундах	
@@ -1391,6 +1397,10 @@ spatialWebSocket.onmessage = function(event) {
 		console.log('spatialWebSocket.onmessage: Handshaiking with gpsd complit: WATCH recieved.');
 		break;
 	case 'POLL':
+		break;
+	case 'ATT':
+		//console.log('spatialWebSocket: ATT recieved',data);
+		realtimeATTupdate(data);
 		break;
 	case 'TPV':
 		//console.log('spatialWebSocket: TPV recieved',data);
@@ -1517,19 +1527,10 @@ spatialWebSocketStart(); 	// запускам периодическую фун�
 function realtimeTPVupdate(gpsdData) {
 //console.log('[realtimeTPVupdate] Index gpsdData',gpsdData);
 //console.log('[realtimeTPVupdate] Index gpsdData.MOB',gpsdData.MOB);
-// Глубина
-if(gpsdData.depth) {
-	//console.log('[realtimeTPVupdate] Index gpsdData',gpsdData.depth);
-	depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(gpsdData.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
-}
-else {
-	//console.log('No depth',gpsdData.depth);
-	depthDial.innerHTML = '';	// однако, если глубина периодически исчезает из-за устаревания - вся приборная панель будет неприятно дёргаться
-}
 
 // Положение неизвестно
 //console.log('[realtimeTPVupdate] Index gpsdData',gpsdData.lon,gpsdData.lat);
-if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null) || (gpsdData.lon == undefined)||(gpsdData.lat == undefined)) { 	// 
+if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null)) { 	// == null проверяет также и на undefined, поскольку в этом горбатом языке есть соглашение, что null == undefined. Надо ли так писать?
 	console.log('[realtimeTPVupdate] No spatial info in GPSD data',gpsdData);
 	//console.log('[realtimeTPVupdate] Date.now()-lastPositionUpdate=',Date.now()-lastPositionUpdate,'PosFreshBefore*PosFreshBeforeMultiplexor=',PosFreshBefore*PosFreshBeforeMultiplexor);
 	if((Date.now()-lastPositionUpdate)>PosFreshBefore*PosFreshBeforeMultiplexor) {	// обычно PosFreshBefore -- 3-5 секунд
@@ -1585,18 +1586,22 @@ else {
 
 // Направление
 //console.log('Index gpsdData',gpsdData.track);
+track = gpsdData.track || null;	
+heading = gpsdData.heading || null;
+mheading = gpsdData.mheading || null;
+magvar = gpsdData.magvar || null;
 velocityVector.setLatLng( cursor.getLatLng() );// положение указателя скорости
-if(gpsdData.track == null || gpsdData.track == undefined) {	// no course over ground, нет путевого угла
-	if(gpsdData.heading !== undefined) {	// зато есть курс
+if(gpsdData.track === null || gpsdData.track === undefined) {	// no course over ground, нет путевого угла
+	if(gpsdData.heading != null) {	// зато есть курс
 		positionCursor.invoke('setRotationAngle',gpsdData.heading); // повернём все маркеры
 		courseDisplay.innerHTML = "&nbsp;"+Math.round(gpsdData.heading)+"°"; // покажем направление на приборной панели
 		// Заменим подписи
 		dashboardCourseTXTlabel.innerHTML = dashboardHeadingTXT;
 		dashboardCourseAltTXTlabel.innerHTML = dashboardHeadingAltTXT
 	}
-	else if(gpsdData.mheading !== undefined){	// или магнитный курс
-		if(gpsdData.magvar !== undefined) {		// если есть склонение -- он истинный курс
-			let heading = gpsdData.mheading + gpsdData.magvar;
+	else if(gpsdData.mheading != null){	// или магнитный курс
+		if(gpsdData.magvar != null) {		// если есть склонение -- он истинный курс
+			heading = gpsdData.mheading + gpsdData.magvar;
 			positionCursor.invoke('setRotationAngle',heading); // повернём все маркеры
 			courseDisplay.innerHTML = "&nbsp;"+Math.round(heading)+"°"; // покажем направление на приборной панели
 			// Заменим подписи
@@ -1619,18 +1624,14 @@ if(gpsdData.track == null || gpsdData.track == undefined) {	// no course over gr
 }
 else {	// course over ground present, путевой угол есть
 	velocityVector.setRotationAngle(gpsdData.track); // повернём указатель скорости в путевой угол
-	// gpsdData.heading есть, только если данные от SignalK, а если от gpsd -- никогда нет
-	if(gpsdData.heading !== undefined) cursor.setRotationAngle(gpsdData.heading); // повернём маркер в курс
-	else if((gpsdData.mheading !== undefined) && (gpsdData.magvar !== undefined)) cursor.setRotationAngle(gpsdData.mheading + gpsdData.magvar); // повернём маркер в магнитный курс
+	if(gpsdData.heading != null) cursor.setRotationAngle(gpsdData.heading); // повернём маркер в курс
+	else if((gpsdData.mheading != null) && (gpsdData.magvar != null)) cursor.setRotationAngle(gpsdData.mheading + gpsdData.magvar); // повернём маркер в магнитный курс
 	else cursor.setRotationAngle(gpsdData.track); // повернём маркер в путевой угол
 	courseDisplay.innerHTML = "&nbsp;"+Math.round(gpsdData.track)+"°"; // покажем направление на приборной панели
 	// Заменим подписи, вдруг до этого не было путевого угла
 	dashboardCourseTXTlabel.innerHTML = dashboardCourseTXT
 	dashboardCourseAltTXTlabel.innerHTML = dashboardCourseAltTXT
 }
-// Символ ветра
-//console.log('wSVGimage:',document.getElementById('wSVGimage'));
-if(windSwitch.checked) windSymbolUpdate(gpsdData);
 
 positionCursor.addTo(map); 	// добавить курсор на карту
 
@@ -1683,6 +1684,25 @@ if(map.hasLayer(mobMarker)){ 	// если показывается мульти�
 //displayCollisionAreas(gpsdData.collisionArea);	///////// for collision test purpose /////////
 
 }; // end function realtimeTPVupdate
+
+// Приборы
+function realtimeATTupdate(data){
+/**/
+// Глубина
+if(data.depth) {
+	//console.log('[realtimeTPVupdate] Index data',data.depth);
+	depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(data.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
+}
+else {
+	//console.log('No depth',data.depth);
+	depthDial.innerHTML = '';	// однако, если глубина периодически исчезает из-за устаревания - вся приборная панель будет неприятно дёргаться
+};
+// Символ ветра
+//console.log('wSVGimage:',document.getElementById('wSVGimage'));
+if(windSwitch.checked) windSymbolUpdate(data);
+
+};	// end function realtimeATTupdate
+
 
 // Данные AIS
 function realtimeAISupdate(aisClass) {
@@ -1853,23 +1873,18 @@ collisisonDetected.setZIndex(-1000);
 //setInterval(function(){realtime(gpsanddataServerURI,realtimeTPVupdate,lat);},1000); 	// данные позиционирования. Однако, function(){} компилячится каждый оборот, что как бы неправильно.
 //setInterval(realtime,1000,gpsanddataServerURI,realtimeTPVupdate,upData); 	// данные позиционирования. Здесь компилячится при загрузке, и параметры передаются в realtime один раз. Что исключает динамические параметры. А как же передача по ссылке?
 
-//var updateRoutesInterval = setInterval(function(){realtime(updateRouteServerURI,routeUpdate);},2000);
+// Динамическое обновление показываемых маршрутов
+// запускается здесь, и работает, если уже есть показываемые маршруты,
+// и в displayRoute (galadrielmap.js) при показе gpx
 var updateRoutesInterval;
 if(updateRouteServerURI) updateRoutesInterval = setInterval(realtime,3000,updateRouteServerURI,routeUpdate);
 
-// Динамическое обновление показываемых маршрутов
 function routeUpdate(changedRouteNames) {
-/* Вызывается из-под realtime */
-//console.log('changedRouteNames:',changedRouteNames);
+/* Вызывается из-под realtime 
+*/
+//console.log('[routeUpdate] changedRouteNames:',changedRouteNames);
 if(routeDisplayed.innerHTML.trim() == "") { 	// не показывается ни одного маршрута
 	updateRoutesInterval = clearInterval(updateRoutesInterval); 	// прекратим следить за изменениями
-	routeDisplayed.addEventListener("DOMNodeInserted", function (event) { 	// добавим обработчик события изменения DOM
-		if(! updateRoutesInterval) { 	// никогда не должно быть здесь updateRoutesInterval, но оно может не успеть
-			updateRoutesInterval = setInterval(function(){realtime(updateRouteServerURI,routeUpdate);},2000); 	// запустим слежение за изменением показываемых маршрутов
-		}
-		routeDisplayed.removeEventListener("DOMNodeInserted", this); 	// удаляем обработчик
-	}
-	, false);
 	return;
 }
 /* в связи с возможностью наличия в trackDisplayed дублирующихся id --
@@ -1884,8 +1899,9 @@ for(const name of changedRouteNames){
 	savedLayers[name].remove(); 	// удалим слой с карты
 	savedLayers[name] = null; 	// обозначим, что слоя с таким именем у нас нет
 	displayRoute(node); 	// перересуем маршрут
-}
-} // end  function routeUpdate
+};
+}; // end  function routeUpdate
+
 
 // Текущий трек
 // Должен обновляться, даже если обновлялка не описана в конфиге, потому что трек может писать кто-то ещё. 
