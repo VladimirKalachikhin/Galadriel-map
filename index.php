@@ -1776,7 +1776,7 @@ for(const vehicle in vehicles){
 function realtimeMOBupdate(MOBdata) {
 // MOBdata - в формате gpsdPROXY
 // pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
-//console.log('[realtimeMOBupdate] MOBdata:',MOBdata);
+console.log('[realtimeMOBupdate] MOBdata:',MOBdata);
 if(MOBdata.status === false) { 	// режим MOB надо выключить
 	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB. 
 		MOBclose(); 	// пришло, что режима MOB нет -- завершим его
