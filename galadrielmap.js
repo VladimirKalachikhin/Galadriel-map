@@ -65,6 +65,7 @@ loggingCheck(logging='logging.php')	включает и выключает за�
 coverage()
 
 MOBalarm()
+MOBtabHighLight(on=false)
 setMOBpopup(layer)
 createMOBpointMarker(mobMarkerJSON)
 clearCurrentStatus()	удаляет признак "текущий маркер" у всех маркеров мультислоя mobMarker
@@ -2010,6 +2011,21 @@ return true;
 } // end function MOBalarm
 
 
+function MOBtabHighLight(on=false){
+/* Посветка кнопки MOB */
+//const highligting = '<img src="img/redbulletdot.svg" style="position:absolute;left:0;top:1em;width:100%;">';
+//const img = MOBtab.querySelector('img');
+//console.log('[MOBtabHighLight]',MOBtab);
+//let str = MOBtab.innerHTML;
+//str = str.replace(highligting,'');
+//str = str.replace('</a>','');
+//if(on) MOBtab.innerHTML = str+highligting+'</a>';	// Это ломает leaflet-sidebar-v2, о чём там есть комментарий.
+//else MOBtab.innerHTML = str+'</a>';
+if(on) MOBtab.style.backgroundColor = 'red';
+else MOBtab.style.backgroundColor = 'inherit';
+}; // end function MOBtabHighLight
+
+
 function setMOBpopup(layer){
 let dataStamp = '';
 if(mobMarker.feature.properties.timestamp){
@@ -2126,6 +2142,7 @@ directionMOBdisplay.innerHTML = '&nbsp;';
 locationMOBdisplay.innerHTML = '&nbsp;';
 delMOBmarkerButton.disabled = true;
 //centerMarkOff(); 	// выключить крестик в середине -- не надо, ибо при закрытии панели оно уже вызывается
+MOBtabHighLight(false);	// убрать подсветку кнопки
 sidebar.close();	// закрыть панель
 } // end function MOBclose
 
@@ -2191,7 +2208,7 @@ mobMarker.eachLayer(function (layer) { 	// удалим признак current �
 } // end function clearCurrentStatus
 
 
-function is_currentMOBmarkerSelf(marker){
+function is_currentMOBmarkerSelf(marker=null){
 /* Возвращает true, если текущая или указанная точка MOB поставлена нашим судном. С любого клиента. 
 В случае GaladrielMap SignalK ed. есть что-то типа своего mmsi, и идентифицируется по нему.
 В случае просто GaladrielMap mmsi есть только у gpsdPROXY, поэтому считаем, что если mmsi нет - то это мы.
@@ -2212,13 +2229,13 @@ else if(marker.properties){	// mobMarkerJSON
 	}
 	else ret = true;
 };
-//console.log('[is_currentMOBmarkerSelf] return=',ret);
+//console.log('[is_currentMOBmarkerSelf]  selfmmsi=',selfmmsi,'return=',ret);
 return ret;
 }; // end function is_currentMOBmarkerSelf
 
 
 function checkSelfMOBmarkerScount(){
-/* Считает, имеется ли больше двух своих маркеров MOB */
+/* Считает, имеется ли больше одного своего маркеров MOB */
 let n=0;
 for(const layer of mobMarker.getLayers()){
 	if(!(layer instanceof L.Marker)) continue;
@@ -2226,7 +2243,7 @@ for(const layer of mobMarker.getLayers()){
 	if(n > 1) return true;
 };
 return false;
-}; // end function delMOBmarkerButtonState
+}; // end function checkSelfMOBmarkerScount
 
 
 function mobMarkerDragendFunction(event){
@@ -2293,6 +2310,7 @@ let mobMarkerJSON = {
 	}
 };
 for(const point of MOBdata.points){
+	if(point.coordinates.length === 0 || point.coordinates[0]==null || point.coordinates[1]==null) continue;	// Точки без координат просто не показываем. А что делать?
 	const feature = {	
 		"type":"Feature",
 		"properties":{

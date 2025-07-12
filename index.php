@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.20.10';
+$versionTXT = '2.20.11';
 /* 
 2.20.0	user authorisation & AIS SART support
 2.10.4	with Norwegian localisation
@@ -933,7 +933,10 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		break;
 	case 'MOB': 	// человек за бортом
 		//console.log('map.hasLayer(mobMarker)=',map.hasLayer(mobMarker),mobMarker);
-		if(!map.hasLayer(mobMarker)) MOBalarm();
+		if(!map.hasLayer(mobMarker)) {
+			MOBalarm();
+			MOBtabHighLight(true);	// Подсветим кнопку
+		}
 		else if(typeof cursor === 'undefined' || !map.hasLayer(cursor)) centerMarkOn(); 	// включить крестик в середине
 		break;
 	case 'download':
@@ -1690,7 +1693,7 @@ function realtimeATTupdate(data){
 /**/
 // Глубина
 if(data.depth) {
-	//console.log('[realtimeTPVupdate] Index data',data.depth);
+	//console.log('[realtimeATTupdate] Index data',data.depth);
 	depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(data.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
 }
 else {
@@ -1776,7 +1779,7 @@ for(const vehicle in vehicles){
 function realtimeMOBupdate(MOBdata) {
 // MOBdata - в формате gpsdPROXY
 // pre MOB -- даже если у нас нет координат, полезно показать маркеры MOB
-console.log('[realtimeMOBupdate] MOBdata:',MOBdata);
+//console.log('[realtimeMOBupdate] MOBdata:',MOBdata);
 if(MOBdata.status === false) { 	// режим MOB надо выключить
 	if(map.hasLayer(mobMarker)){ 	// если показывается мультислой с маркерами MOB. 
 		MOBclose(); 	// пришло, что режима MOB нет -- завершим его
@@ -1789,8 +1792,15 @@ else { 	//console.log('режим MOB есть, пришли новые данн
 	//console.log('[realtimeMOBupdate] mobMarkerJSON:',mobMarkerJSON);
 	// Восстановим мультислой маркеров из GeoJSON, а потом каждому маркеру в мультислое присвоим иконку, которая в GeoJSON не сохраняется.
 	mobMarker.remove(); 	// убрать мультислой-маркер с карты
-	mobMarker = null; 	// ритуальное действие. Возможно, оно воздействует на сборщик мусора, и приведёт к быстрому реальному удалению объекта, но это ни откуда не следует.
 	createMOBpointMarker(mobMarkerJSON);
+
+	// включим запись трека, но только если этот MOB свой и текущий
+	if(is_currentMOBmarkerSelf(mobMarkerJSON) && (loggingIndicator !== undefined && !loggingSwitch.checked)) {	
+		loggingSwitch.checked = true;
+		loggingRun(); 	//
+	};
+	
+	MOBtabHighLight(true);	// Подсветим кнопку
 };
 //console.log('[realtimeMOBupdate] mobMarker from server',mobMarker);
 } // end function realtimeMOBupdate
