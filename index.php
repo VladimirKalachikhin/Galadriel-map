@@ -1451,7 +1451,7 @@ spatialWebSocket.onclose = function(event) {
 }; // end spatialWebSocket.onclose
 
 spatialWebSocket.onerror = function(error) {
-	console.log(`[spatialWebSocket error] ${error.message}, lastDataUpdate=`,lastDataUpdate);
+	//console.log(`[spatialWebSocket error] ${error.message}, lastDataUpdate=`,lastDataUpdate);
 	fetch('gpsdPROXYtry.php');	// если сервер перегрузился, там не запущен gpsdPROXY.
 }; // end spatialWebSocket.onerror
 

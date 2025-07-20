@@ -230,7 +230,7 @@ else {	// текущий режим - "все карты"
 removeMap(node.id);
 }; // end function deSelectMap
 
-async function displayMap(mapname) {
+function displayMap(mapname) {
 /* Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
  Делает запрос к tileproxy/cacheControl.php для получения параметров карты
  Если в параметрах карты есть проекция, и она EPSG3395, 
@@ -371,7 +371,7 @@ if(mapParm['data'] && mapParm['data']['javascriptClose']) savedLayers[mapname].o
 savedLayers[mapname].addTo(map);
 }; // end function displayMap
 
-async function removeMap(mapname) {
+function removeMap(mapname) {
 mapname=mapname.trim();
 if(!savedLayers[mapname]) return;	// например, в списке есть трек, но gpx был кривой, и слой не был создан
 if(savedLayers[mapname].options.javascriptClose) eval(savedLayers[mapname].options.javascriptClose);
@@ -411,7 +411,7 @@ else {	// текущий режим - "все карты" - покажем то�
 
 
 // Функции выбора - удаления треков
-function selectTrack(node,trackList,trackDisplayed,displayTrack) { 	
+async function selectTrack(node,trackList,trackDisplayed,displayTrack) { 	
 /* Выбор трека из списка имеющихся. 
 node - объект li, элемент списка имеющихся, который выбрали
 trackList - объект ul, список имеющихся
@@ -419,7 +419,7 @@ trackDisplayed - объект ul, список выбранных
 displayTrack - функция показывания того, что соответствует выбранному элементу
 global deSelectTrack() currentTrackShowedFlag
 */
-//console.log(trackDisplayed.firstChild);
+console.log('[selectTrack] trackDisplayed.firstChild:',trackDisplayed.firstChild);
 trackDisplayed.insertBefore(node,trackDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.onclick = function(event){deSelectTrack(event.currentTarget,trackList,trackDisplayed,displayTrack);};
 if(node.title.toLowerCase().indexOf("current")!= -1) {	// текущий трек
@@ -430,7 +430,7 @@ if(node.title.toLowerCase().indexOf("current")!= -1) {	// текущий тре�
 displayTrack(node); 	// создадим трек
 }; // end function selectTrack
 
-function deSelectTrack(node,trackList,trackDisplayed,displayTrack) {
+async function deSelectTrack(node,trackList,trackDisplayed,displayTrack) {
 /* Прекращение показа трека, и возврат его в список имеющихся. Получим объект
 node - объект li, элемент списка показываемых, который выбрали для непоказывания
 trackList - объект ul, список имеющихся, куда надо вернуть node
@@ -514,7 +514,7 @@ else {
 };
 }; // end function displayTrack
 
-function displayRoute(routeNameNode) {
+async function displayRoute(routeNameNode) {
 /* рисует маршрут или места с именем routeName 
 global routeDirURI map window
 */
@@ -551,7 +551,7 @@ else {
 }
 }; // end function displayRoute
 
-function updateCurrTrack() {
+async function updateCurrTrack() {
 // Получим GeoJSON - ломаную из скольких-то последних путевых точек, или false, если с последнего
 // обращения нет новых точек
 // в формате GeoJSON
@@ -1904,7 +1904,7 @@ return;
 }; // end function loggingCheck
 
 
-function coverage(){
+async function coverage(){
 //console.log(cowerSwitch);
 //console.log(mapDisplayed.firstElementChild);
 if(cowerSwitch.checked){ 	// переключатель в интерфейсе загрузчика
