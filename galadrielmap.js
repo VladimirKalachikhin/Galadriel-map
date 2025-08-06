@@ -230,7 +230,7 @@ else {	// текущий режим - "все карты"
 removeMap(node.id);
 }; // end function deSelectMap
 
-function displayMap(mapname) {
+async function displayMap(mapname) {
 /* Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
  Делает запрос к tileproxy/cacheControl.php для получения параметров карты
  Если в параметрах карты есть проекция, и она EPSG3395, 
@@ -1123,7 +1123,7 @@ function findEditDisabled(layer){
 			expires.setTime(expires.getTime() + (60*24*60*60*1000)); 	// протухнет через два месяца
 		}
 	}
-} // end function findEditDisabled
+}; // end function findEditDisabled
 //console.log('[doSaveMeasuredPaths] toSave original:',toSave);
 dravingLines.eachLayer(findEditDisabled);
 toSave = toSave.toGeoJSON();	// здесь я реально не понял. А оно не geoJSON? Оно не GeoJSON. Оно LayerGroup
@@ -1134,7 +1134,7 @@ toSave = toGPX(toSave); 	// сделаем gpx
 //console.log('[doSaveMeasuredPaths] Save to cookie GaladrielMapMeasuredPaths',toSave,expires.getTime()-Date.now());
 toSave = utoa(toSave);	// кодируем в Base64, потому что xml нельза сохранить в куке
 storageHandler.save('RestoreMeasuredPaths',toSave);
-} 	// end function doSaveMeasuredPaths
+}; 	// end function doSaveMeasuredPaths
 
 function doRestoreMeasuredPaths() {
 /*Global drivedPolyLineOptions*/
