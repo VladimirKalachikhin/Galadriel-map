@@ -32,6 +32,8 @@ $routeSaveTXT = 'Navn';
 $routeSaveTitle = 'Lagre rute til en server';
 $routeSaveDescrTXT = 'Lagre beskrivelse til fil';
 $editableObjectDescrTXT = 'Objektbeskrivelse';
+$followWPTbuttonTXT = 'Følge';
+$nofollowWPTbuttonTXT = 'Avbryte';
 
 $routesHeaderTXT = 'Ruter og interessepunkter';
 
@@ -56,7 +58,7 @@ $minWATCHintervalTXT = 'Ikke oppdater posisjonen oftere enn, i sekunder.';
 $integerTXT = 'Integer';
 $realTXT = 'Sann';
 $clearTXT = 'Tøm';
-$okTXT = 'Opprett!';
+$okTXT = 'Lagre';
 $latTXT = 'Bredde';
 $longTXT = 'Lengde';
 $completeTXT = 'ferdig';

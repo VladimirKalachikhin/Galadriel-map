@@ -32,6 +32,8 @@ $routeSaveTXT = 'Label';
 $routeSaveTitle = 'Save route to a server';
 $routeSaveDescrTXT = 'Description to file';
 $editableObjectDescrTXT = 'Object description';
+$followWPTbuttonTXT = 'Follow';
+$nofollowWPTbuttonTXT = 'Cancel';
 
 $routesHeaderTXT = 'Routes and POI';
 
@@ -56,7 +58,7 @@ $minWATCHintervalTXT = 'Update the position not quickly than, sec.';
 $integerTXT = 'Integer';
 $realTXT = 'Real';
 $clearTXT = 'Clear';
-$okTXT = 'Create!';
+$okTXT = 'Save';
 $latTXT = 'Lat';
 $longTXT = 'Lng';
 $completeTXT = 'complete';

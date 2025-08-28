@@ -9,8 +9,9 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.20.11';
+$versionTXT = '2.21.0';
 /* 
+2.21.0	following waypoints
 2.20.0	user authorisation & AIS SART support
 2.10.4	with Norwegian localisation
 2.9.4	update route list with panel open
@@ -90,30 +91,30 @@ if($gpsdProxyHost=='localhost' or $gpsdProxyHost=='127.0.0.1' or $gpsdProxyHost=
 if($gpsdPROXYpath) {	// в этом случае подкдючается ещё и params.php от gpsdPROXY 
 	// start gpsdPROXY
 	exec("$phpCLIexec $gpsdPROXYpath/gpsdPROXY.php > /dev/null 2>&1 &");
-	// Характеристики судна, в основном для контроля столкновений, но mmsi необходим для netAIS
-	if($netAISconfig) {	// а это params.php от netAIS, который подключается в params.php от gpsdPROXY
-		$saveBoatInfo = $boatInfo;	// params.php
-		$boatInfo = parse_ini_file($netAISconfig,FALSE,INI_SCANNER_TYPED);
-		if($boatInfo===false) {
-			echo "\nFound netAISconfig parm in params.php, but loading netAIS boatInfo.ini false.\n";
-			$boatInfo = $saveBoatInfo;
-		}
-		else {
-			if(!$boatInfo['shipname']) $boatInfo['shipname'] = $saveBoatInfo['shipname'];
-			if(!$boatInfo['mmsi']) $boatInfo['mmsi'] = $saveBoatInfo['mmsi'];
-			if(!$boatInfo['length']) $boatInfo['length'] = $saveBoatInfo['length'];
-			if(!$boatInfo['beam']) $boatInfo['beam'] = $saveBoatInfo['beam'];
-			if(!$boatInfo['to_bow']) $boatInfo['to_bow'] = $saveBoatInfo['to_bow'];
-			if(!$boatInfo['to_stern']) $boatInfo['to_stern'] = $saveBoatInfo['to_stern'];
-			if(!$boatInfo['to_port']) $boatInfo['to_port'] = $saveBoatInfo['to_port'];
-			if(!$boatInfo['to_starboard']) $boatInfo['to_starboard'] = $saveBoatInfo['to_starboard'];
-		}
-		unset($saveBoatInfo);
-	}
-	if(!$boatInfo['shipname']) $boatInfo['shipname'] = (string)uniqid();
-	if(!$boatInfo['mmsi']) $boatInfo['mmsi'] = str_pad(substr(crc32($boatInfo['shipname']),0,9),9,'0'); 	// левый mmsi, похожий на настоящий -- для тупых, кому не всё равно (SignalK, к примеру)
-	//echo "boatInfo:"; print_r($boatInfo); echo "\n";
 };
+// Характеристики судна, в основном для контроля столкновений, но mmsi необходим для netAIS
+if($netAISconfig) {	// а это params.php от netAIS, который подключается в params.php от gpsdPROXY
+	$saveBoatInfo = $boatInfo;	// params.php
+	$boatInfo = parse_ini_file($netAISconfig,FALSE,INI_SCANNER_TYPED);
+	if($boatInfo===false) {
+		echo "\nFound netAISconfig parm in params.php, but loading netAIS boatInfo.ini false.\n";
+		$boatInfo = $saveBoatInfo;
+	}
+	else {
+		if(!$boatInfo['shipname']) $boatInfo['shipname'] = $saveBoatInfo['shipname'];
+		if(!$boatInfo['mmsi']) $boatInfo['mmsi'] = $saveBoatInfo['mmsi'];
+		if(!$boatInfo['length']) $boatInfo['length'] = $saveBoatInfo['length'];
+		if(!$boatInfo['beam']) $boatInfo['beam'] = $saveBoatInfo['beam'];
+		if(!$boatInfo['to_bow']) $boatInfo['to_bow'] = $saveBoatInfo['to_bow'];
+		if(!$boatInfo['to_stern']) $boatInfo['to_stern'] = $saveBoatInfo['to_stern'];
+		if(!$boatInfo['to_port']) $boatInfo['to_port'] = $saveBoatInfo['to_port'];
+		if(!$boatInfo['to_starboard']) $boatInfo['to_starboard'] = $saveBoatInfo['to_starboard'];
+	}
+	unset($saveBoatInfo);
+}
+if(!$boatInfo['shipname']) $boatInfo['shipname'] = (string)uniqid();
+if(!$boatInfo['mmsi']) $boatInfo['mmsi'] = str_pad(substr(crc32($boatInfo['shipname']),0,9),9,'0'); 	// левый mmsi, похожий на настоящий -- для тупых, кому не всё равно (SignalK, к примеру)
+//echo "boatInfo:"; print_r($boatInfo); echo "\n";
 
 $mapsInfo = array();
 if($tileCacheControlURI){	// мы знаем про GaladrielCache
@@ -394,26 +395,14 @@ foreach($trackInfo as $trackName) {
 			</ul>
 		</div>
 		<!-- Расстояния -->
-		<div class="leaflet-sidebar-pane" id="measure">
+		<div class="leaflet-sidebar-pane" id="measure" style="text-elgn:center;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $measureHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
 			<?php // Кнопки создания/редактирования маршрута ?>
-			<div id='routeControls' class="routeControls" style="width:95%; padding:1rem 0 2rem; text-align: center;">
+			<div id='routeControls' class="routeControls" style="width:95%; margin:1em 0; text-align: center;">
 				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
 					onChange="
-						pointsControlsDisable();	// отключить кнопки точек
-						if(!currentRoute) currentRoute = dravingLines; 	// 
-						//console.log('[Кнопка Начать] currentRoute:',currentRoute._leaflet_id,'dravingLines:',dravingLines._leaflet_id);
-						let layer = map.editTools.startPolyline(false,drivedPolyLineOptions.options);
-						layer.options.color = '#FDFF00';
-						layer.feature = drivedPolyLineOptions.feature;
-						layer.on('editable:editing', function (event){event.target.updateMeasurements();});	// обновлять расстояния при редактировании
-						//layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
-						layer.on('click',tooggleEditRoute);
-						layer.addTo(currentRoute);
-						routeEraseButton.disabled=false;
-						//if(!routeSaveName.value || Date.parse(routeSaveName.value)) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было или была дата
-						if(!routeSaveName.value) routeSaveName.value = new Date().toJSON(); 	// запишем в поле ввода имени дату, если там ничего не было
-						//console.log('[Кнопка Начать] layer:',layer);
+						startEditing();
+						//WPTbuttonsReady();	// Может быть, оно не надо? Кнопка Следовать появится после повторной активации режима редактирования. Типа, после завершения рисования...
 					"
 				>
 				<label for="routeCreateButton"><?php echo $routeControlsBeginTXT;?></label>
@@ -432,34 +421,29 @@ foreach($trackInfo as $trackName) {
 					"
 				>
 				<label for="routeContinueButton"><?php echo $routeControlsContinueTXT;?></label><br>
-				<div id='pointsButtons'>
-					<br>
+				<div id='pointsButtons' style="margin: 1em 0;">
 					<button id='ButtonSetpoint' onClick='createEditableMarker(pointIcon);' class='pointButton'><img src="leaflet-omnivorePATCHED/symbols/point.png" alt="<?php echo $okTXT;?>" width="100%"></button>
 					<button id='ButtonSetanchor' onClick='createEditableMarker(anchorIcon);' class='pointButton'><img src="leaflet-omnivorePATCHED/symbols/anchor.png" alt="<?php echo $okTXT;?>" width="100%"></button>
 					<button id='ButtonSetcaution' onClick='createEditableMarker(cautionIcon);' class='pointButton'><img src="leaflet-omnivorePATCHED/symbols/caution.png" alt="<?php echo $okTXT;?>" width="100%"></button><br>
-					<br>
 				</div>
-				<input id = 'editableObjectName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:90%;font-size:150%;'><br>
-				<textarea id = 'editableObjectDescr' title="<?php echo $editableObjectDescrTXT;?>" rows='3' cols='255' placeholder='<?php echo $editableObjectDescrTXT;?>' style='width:87%;padding: 0.5rem 3%;'></textarea><br>
-				<br>
-				<input type="radio" name="routeControl" id="routeEraseButton"
-					onChange="
-						delShapes(true);	// удалим все редактируемые объекты
-						routeControlsDeSelect();	// сделаем невыбранными кнопки управления рисованием маршрута
-						routeCreateButton.disabled=false; 	// - сделать доступной кнопку Начать
-						pointsControlsEnable();	// включим кнопки точек
-						this.disabled=true;
-						routeContinueButton.disabled=true;
-						// раз не осталось редактируемых объектов, редактирование завершено? Сохраним.
-						if(currentRoute==dravingLines)	doSaveMeasuredPaths();
-						//else saveGPX();	// ?но загруженный файл не будем сохранять, потому что он тогда перезагрузится, и перестанет быть текущим редактируемым
-						//currentRoute = null;	// ?не будем считать, что редактирование завершено
-					"
-				>
+				<input id='editableObjectName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:90%;font-size:150%;'><br>
+				<textarea id='editableObjectDescr' title="<?php echo $editableObjectDescrTXT;?>" rows='3' cols='255' placeholder='<?php echo $editableObjectDescrTXT;?>' style='width:87%;padding: 0.5rem 3%;'></textarea><br>
+				<input id='editableObjectLeafletID' type="hidden">
+				<input type="radio" name="routeControl" id="routeEraseButton"  class='M' onChange="eraseEditable();">
 				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
 			</div>
+			<?php // Управление следованием по маршруту ?>
+<?php if($privileged){	// для пользователя со всеми правами ?>
+<?php //if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат. Однако, что мешает готовить и без? ?>
+			<div style="margin: 2.5em 0;text-align: center;width:96%;">
+				<button id="prevWPTbutton" disabled onClick="prevWPT();" style="font-size:200%;padding:0 0.2em;">◁</button>
+				<button id="followWPTbutton" disabled  style="vertical-align:top;padding:0.7em 1.3em;margin:0.1em 0.5em;"><?php echo $followWPTbuttonTXT;?></button>
+				<button id="nextWPTbutton" disabled onClick="nextWPT();" style="font-size:200%;padding:0 0.2em;">▷</button>
+			</div>
+<?php //};	// Определён сервис координат ?>
+<?php }; // для пользователя со всеми правами ?>	
 			<?php // Поиск места ?>
-			<div style="width:95%;">
+			<div style="width:95%; margin:1em 0;">
 				<div style="margin:0;padding:0;">
 					<button onClick='goToPositionField.value = "";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;float:right;"><img src="img/no.svg" title="<?php echo $clearTXT;?>" alt="<?php echo $clearTXT;?>" width="8px" style="vertical-align:top;"></button>
 					<button onClick='goToPositionField.value += "°";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">°</span></button>
@@ -481,13 +465,9 @@ foreach($trackInfo as $trackName) {
 				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:90%;font-size:150%;'>
 				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='5' cols='255' placeholder='<?php echo $routeSaveDescrTXT;?>' style='width:87%;padding: 0.5rem 3%;'></textarea><br>
 				<br>
-				<button onClick="
-						saveGPX();
-						// routeSaveName - единственное хранилище имени редактируемого файла?
-						//currentRoute = null;
-						//routeSaveName.value = '';
-						//routeSaveDescr.value = '';" 
-					type='submit' class='okButton' style="float:right;"><img src="img/ok.svg" title="<?php echo $okTXT;?>" alt="<?php echo $okTXT;?>" width="16px"></button>
+				<button type='submit' class='okButton' style="float:right;"	onClick="DOsaveGPX();">
+					<img src="img/ok.svg" title="<?php echo $okTXT;?>" alt="<?php echo $okTXT;?>" width="16px">
+				</button>
 				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;"><img src="img/no.svg" title="<?php echo $clearTXT;?>" alt="<?php echo $clearTXT;?>" width="16px"></button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
 			</div>			
@@ -713,6 +693,7 @@ if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
 ?>
 <script> "use strict";
 // Глобальные переменные
+var selfServerPath = '<?php echo __DIR__; ?>';
 var appLocale = '<?php echo $appLocale; ?>';
 var vesselSelf = '<?php echo $boatInfo["mmsi"]; ?>';
 // для загрузки Mapbox GL при необходимости. Из-за чего-то надо так.
@@ -775,6 +756,7 @@ var editorEnabled = false;	// семафор, что можно использо
 var currentTrackServerURI = '<?php echo $currentTrackServerURI;?>'; 	// адрес для подключения к сервису, отдающему сегменты текущего трека
 var trackDirURI = '<?php echo $trackDir;?>'; 	// адрес каталога с треками
 var routeDirURI = '<?php echo $routeDir;?>'; 	// адрес каталога с маршрутами
+var routeDir = '<?php echo $routeDir;?>'; 	// каталог с маршрутами на сервере
 var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущего (пишущегося сейчас) трека
 var updateRouteServerURI = '<?php echo $updateRouteServerURI;?>'; 	// url службы динамического обновления маршрутов
 currTrackSwitch.checked = Boolean(storageHandler.restore('currTrackSwitch'));
@@ -852,6 +834,9 @@ const mob_markerImg = '<?php echo $mob_markerImg; ?>';
 var superclusterRadius = 40;	// px
 var lastSuperClusterUpdatePosition = [[0,0],0];	// [<LatLng>,<zoom>] точка и масштаб последнего пересчёта supercluster
 
+// Waypoints
+var followWPTbuttonTXT = '<?php echo $followWPTbuttonTXT; ?>';
+var nofollowWPTbuttonTXT = '<?php echo $nofollowWPTbuttonTXT; ?>';
 
 
 // Поехали
@@ -917,18 +902,35 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		break;
 	case 'routes':	// маршруты
 		// обновим список маршрутов, асинхронно
-		listPopulate(routeList,routeDirURI,false,true,function(){
-			const routeListLi = routeList.querySelectorAll('li');
+		listPopulate(routeList,routeDirURI,false,true,function(){	// заполним список routeList
+			// Если удалить файл, то соответствующая ему li исчезнет из списка файлов routeList
+			// но останется в списке показываемых routeDisplayed.
+			// Соответствующий мультислой будет пустым, но останется в savedLayers
+			// и может показываться.
+			// Поэтому удалим это всё и забудем. Типа, сборка мусора.
+			// И да, делать это, ища пустые мультислои в savedLayers нельзя, потому что
+			// заполнение мультислоёв слоями происходит асинхронно, и мультислой может быть
+			// ещё пустой, а не уже пустой.
+			const liRLs = routeList.querySelectorAll('li');	// список всех li в routeList
+			let found;
 			routeDisplayed.querySelectorAll('li').forEach(function (displayedLi){
-				//console.log('displayedLi:',displayedLi.id);
-				for(const li of routeListLi){
-					//console.log('\trouteList li',li.id);
-					if(displayedLi.id==li.id){
-						li.remove();	// method removes the element from the DOM. Объект остаётся в коллекции routeListLi? Похоже, да, хотя не должен? Тогда он будет убит сборщиком мусора только после смерти routeListLi
+				found = false;
+				for(const li of liRLs){	// прокрутим список всех li в routeList
+					if(displayedLi.id==li.id){	// если элемент из списка routeDisplayed есть в списке элементов routeList
+						found = true;
 						break;
 					};
 				};
+				if(!found){	// li из routeDisplayed отсутствует в routeList
+					let routeName = displayedLi.innerText.trim();
+					if(savedLayers[routeName]) {
+						savedLayers[routeName].remove();
+						delete savedLayers[routeName];
+					};
+					displayedLi.remove();	// method removes the element from the DOM. Объект остаётся в коллекции routeListLi? Похоже, да, хотя не должен?
+				};
 			});
+			ulDiff(routeDisplayed,routeList);	// удалим из routeList то, что есть в routeDisplayed
 		});
 		break;
 	case 'MOB': 	// человек за бортом
@@ -956,7 +958,7 @@ sidebar.on("closing", function(){
 	if(currentRoute && delShapes()) editorEnabled='maybe';	// есть редактируемые слои
 	else {
 		editorEnabled=false; 	// если нет редактируемых слоёв -- запретим включать редактирования
-		currentRoute = null;
+		currentRoute = undefined;
 		if(typeof routeSaveName !== 'undefined'){
 			routeSaveName.value = '';
 			routeSaveDescr.value = '';
@@ -1086,8 +1088,7 @@ if( !downJob) dwnldJobZoom.innerText = map.getZoom(); 	// текущий мас�
 cover_zoom.innerText = map.getZoom()+8;
 <?php }; // для пользователя со всеми правами ?>	
 
-// Восстановим показываемые из gpx пути
-restoreDisplayedRoutes();
+restoreDisplayedRoutes();	// Восстановим показываемые из gpx пути
 // Рисование маршрута
 dravingLines.addTo(map);
 doRestoreMeasuredPaths(); 	// восстановим из кук сохранённые на устройстве маршруты
@@ -1302,7 +1303,7 @@ var toMOBline = L.polyline([], {
 	color: 'red',
 	weight: 10,
 	opacity:0.3,
-})
+});
 
 // восстановим маркеры
 // mobMarker - это мультислой, содержащий сколько-то L.Marker и одну L.Polyline,
@@ -1337,8 +1338,25 @@ if((typeof mobMarker !== "object") || !(mobMarker instanceof L.LayerGroup)) {
 	mobMarker.feature = {properties: {}};
 };
 
+// WayPoints
+// кружок текущей точки
+var wptMarker = L.circle([], {
+		color: '#00FF00',
+		weight: 2,
+		opacity: 0.7,
+		fill: false,
+		pane: 'overlayPane',
+		zIndexOffset: -503
+});
+// линия между положением и указанным маркером MOB
+var toWPTline = L.polyline([], { 	
+	color: '#00FF00',
+	weight: 2,
+	opacity:0.7,
+});
+
 // Realtime периодическое получение внешних данных
-let subscribe = ['TPV','ATT','AIS','ALARM'];
+var subscribe = ['TPV','ATT','AIS','ALARM','WPT'];
 
 var spatialWebSocket; // будет глобальным сокетом
 var lastDataUpdate=0;	// момент последнего получения данных, в милисекундах	
@@ -1348,7 +1366,7 @@ var lastPositionUpdate=0;	// момент последнего обновлен�
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 function spatialWebSocketStart(){
 /**/
-let checkDataFreshInterval;	// объект периодического запуска проверки свежести данных.	Оказывается, я, ..., использую "замыкания". Но это не нарочно, просто я хотел ограничить область видимиости.
+let checkDataFreshInterval;	// объект периодического запуска проверки времени последнего обновления данных.	Оказывается, я, ..., использую "замыкания". Но это не нарочно, просто я хотел ограничить область видимиости.
 if(!DisplayAISswitch.checked) subscribe = subscribe.filter(i=>i!='AIS');
 
 //console.log('gpsdProxyHost:',"ws://<?php echo "$gpsdProxyHost:$gpsdProxyPort"?>");
@@ -1363,13 +1381,16 @@ spatialWebSocket.onopen = function(e) {
 		sendMOBtoServer(false); 	// отдадим данные MOB для передачи на сервер, на всякий случай -- вдруг там не знают
 	}
 	// Запуск проверки актуальности всех сведений если, скажем, нет связи с сервером.
+	if(checkDataFreshInterval) {
+		clearInterval(checkDataFreshInterval);
+	};
 	checkDataFreshInterval = setInterval(function (){
-		//console.log('[checkDataFreshInterval] running, now-lastDataUpdate = ',Date.now()-lastDataUpdate,'PosFreshBefore=',PosFreshBefore);
-		if(Date.now()-lastDataUpdate>PosFreshBefore){
+		//console.log('[checkDataFreshInterval] running, now-lastDataUpdate = ',Date.now()-lastDataUpdate);
+		if(Date.now()-lastDataUpdate>PosFreshBefore+20000){	// по мере протухания, но не чаще периода проверки
 			console.log('The latest TPV data was received too long ago, trying to reconnect for checking.');
 			spatialWebSocket.close(1000,'The latest data was received too long ago');
 		}
-	},PosFreshBefore);
+	},20000);	// Проверяем каждые 10 секунд
 	//
 	windSwitchToggler();	// (если) добавим символ ветра в курсор
 }; // end spatialWebSocket.onopen
@@ -1427,19 +1448,23 @@ spatialWebSocket.onmessage = function(event) {
 				realtimeCollisionsUpdate(data.alarms.collisions);
 				//realtimeCollisionsUpdate(data.alarms.collisions,data.alarms.collisionSegments);	///////// for collision test purpose /////////
 				break;
-			}
-		}
+			};
+		};
 		break;
-	}
+	case 'WPT':
+		//console.log('recieved WPT data',data);
+		realtimeWPTupdate(data);
+		break;
+	};
 }; // end spatialWebSocket.onmessage
 
 spatialWebSocket.onclose = function(event) {
 	console.log(`spatialWebSocket closed: connection broken with code ${event.code} by reason ${event.reason}`);
-	window.setTimeout(spatialWebSocketStart, 3000); 	// перезапустим сокет через  секунд. В каком контексте здесь вызывается callback -- мне осталось непонятным, поэтому сокет ваще глобален
+	clearInterval(checkDataFreshInterval);	// остановить периодическую проверку времени последнего обновления данных, потому что следующей строкой запускается другой интервал, где этот будет запущен.
+	window.setTimeout(spatialWebSocketStart, 5000); 	// перезапустим сокет через  секунд. В каком контексте здесь вызывается callback -- мне осталось непонятным, поэтому сокет ваще глобален
 	//console.log('[spatialWebSocket.onclose] Date.now()-lastDataUpdate=',Date.now()-lastDataUpdate,'PosFreshBefore*PosFreshBeforeMultiplexor=',PosFreshBefore*PosFreshBeforeMultiplexor);
 	if((Date.now()-lastDataUpdate)>(PosFreshBefore*PosFreshBeforeMultiplexor)) {	// обычно PosFreshBefore -- 3-5 секунд
 		positionCursor.remove(); 	// уберём курсор (layerGroup) с карты
-		clearInterval(checkDataFreshInterval);	// остановить периодическую проверку свежести.
 	}
 	else cursor.setIcon(NoGpsCursor)	// заменим курсор (значёк) на серый
 	windSymbolMarker.removeFrom(positionCursor);
@@ -1483,7 +1508,7 @@ return res;
 
 function watchAISstop() {
 let res = false;
-if(spatialWebSocket.readyState == 1) {
+if(spatialWebSocket.readyState == WebSocket.OPEN) {
 	subscribe = subscribe.filter(i=>i!='AIS');
 	res = true;
 	try {
@@ -1542,6 +1567,8 @@ if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null)) { 	// == nu
 		collisisonDetected.remove();
 		collisionDirectionsCursor.clearLayers();
 		collisionDirectionsCursor.remove();
+		toWPTline.remove;
+		toWPTline.setLatLngs([]);
 	}
 	else cursor.setIcon(NoGpsCursor)	// заменим курсор (значёк) на серый
 	//velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
@@ -1557,6 +1584,13 @@ else {
 	//MOBtab.className=''; 	// координаты появились -- можно включить режим MOB
 	positionCursor.invoke('setLatLng',[gpsdData.lat,gpsdData.lon]); // установим координаты всех маркеров
 	if(!map.hasLayer(positionCursor)) positionCursor.addTo(map); 	// добавить курсор на карту
+	
+	// WayPoints
+	if(map.hasLayer(wptMarker)){	// на карте имеется путевая точка, режим следования включён?
+		toWPTline.setLatLngs([[gpsdData.lat,gpsdData.lon],wptMarker.getLatLng()]);	// проведём линию от положения к этой путевой точке
+		if(map.hasLayer(toWPTline)) toWPTline.redraw();
+		else toWPTline.addTo(map);
+	};
 };
 if(distCirclesSwitch.checked) distCirclesUpdate(distCircles);	// нарисуем круги дистанции
 var positionTime = new Date(gpsdData.time);
@@ -1875,7 +1909,35 @@ if(collisionSegments.intersections){
 
 collisisonDetected.addTo(map);	// а collisionDirectionsCursor часть positionCursor, и оно и так addTo(map)
 collisisonDetected.setZIndex(-1000);
-} // end function realtimeCollisionsUpdate
+}; // end function realtimeCollisionsUpdate
+
+
+function realtimeWPTupdate(data){
+/* 
+Это происходит достаточно редко, поэтому манипуляции с кнопками интерфейса здесь уместны.
+*/
+//console.log('[realtimeWPTupdate] WPT data',data);
+if(data.wayFileName == null){	// Режима следования нет. == null проверяет также и на undefined, поскольку в этом горбатом языке есть соглашение, что null == undefined.
+	wptMarker.remove();	// уберём маркер точки следования
+	toWPTline.remove;
+	toWPTline.setLatLngs([]);
+	// выключим кнопки управления следованием, если нет текущего редактируемого маршрута, 
+	// потому что там своё управление
+	if(!currentRoute) WPTbuttonsOFF();	
+}
+else {	// Режим следования есть
+	if(data.lat==null || data.lon==null) return;	// однако, координат может и не быть
+	wptMarker.setLatLng([data.lat,data.lon]);	// установим маркер точки следования
+	wptMarker.setRadius(data.wptPrecision || 100);	// зададим диаметр области попадания
+	//console.log('[realtimeWPTupdate] wptMarker:',wptMarker);
+	if(map.hasLayer(wptMarker)) wptMarker.redraw();
+	else wptMarker.addTo(map);
+	// включим кнопки управления следованием, если нет текущего редактируемого маршрута, 
+	// потому что там своё управление
+	if(!currentRoute) WPTbuttonsON();	
+};
+}; // end function realtimeWPTupdate
+
 
 
 
@@ -1887,28 +1949,40 @@ collisisonDetected.setZIndex(-1000);
 // запускается здесь, и работает, если уже есть показываемые маршруты,
 // и в displayRoute (galadrielmap.js) при показе gpx
 var updateRoutesInterval;
-if(updateRouteServerURI) updateRoutesInterval = setInterval(realtime,3000,updateRouteServerURI,routeUpdate);
+if(! updateRoutesInterval) {	
+	// оно запускается в displayRoute, и может это делать раньше, чем тут.
+	// Но updateRoutesInterval уже есть?
+	// Потому что там запрос внешнего ресурса, и всё асинхронно
+	if(updateRouteServerURI) updateRoutesInterval = setInterval(realtime,3000,updateRouteServerURI,routeUpdate);
+};
 
 function routeUpdate(changedRouteNames) {
-/* Вызывается из-под realtime 
+/* Загружает изменённый слой как полностью новый, если он есть в trackDisplayed
+т.е., слои, для которых есть известные файлы.
+Вызывается из-под realtime 
 */
 //console.log('[routeUpdate] changedRouteNames:',changedRouteNames);
 if(routeDisplayed.innerHTML.trim() == "") { 	// не показывается ни одного маршрута
 	updateRoutesInterval = clearInterval(updateRoutesInterval); 	// прекратим следить за изменениями
 	return;
-}
-/* в связи с возможностью наличия в trackDisplayed дублирующихся id --
-может быть, вместо document.getElementById(name) сделать цикл по потомкам routeDisplayed? */
+};
+
 let node;
 if(changedRouteNames.error) return;
 for(const name of changedRouteNames){
-	node = document.getElementById(name); 	// однако, в trackDisplayed могут быть те же имена. Забить? в querySelector требуется экранирование пробелов и спец-символов. Это секс.
-	//console.log('[routeUpdate] node:',name,node);
-	if(node.parentNode != routeDisplayed) continue; 	// элемент, конечно, всегда есть, нужно, чтобы он показывался
-	//console.log('[routeUpdate] replase node:',node);
-	savedLayers[name].remove(); 	// удалим слой с карты
-	savedLayers[name] = null; 	// обозначим, что слоя с таким именем у нас нет
-	displayRoute(node); 	// перересуем маршрут
+	// [... выражение] просто делает из результатов выражения массив
+	// но результат querySelectorAll и так массив (в отличии от)? Авотхрен, оно тоже NodeList, хоть и статический, и методы массива там ёк
+	let routeDisplayedLi = [... routeDisplayed.querySelectorAll('li')].filter(el => el.textContent == name)[0];	// элементы li из routeDisplayed с именем name. может, их там и несколько, но мы берём первый?	
+	if(!routeDisplayedLi) continue;	// li с таким значением нет в routeDisplayed
+	// Итак, слой показывается, но файл, из которого сделан этот слой, изменился. Нами или кем-то. 
+	if(currentRoute == savedLayers[name]){	// Однако, слой с изменённым файлом сейчас редактируется
+	};
+	displayRoute(routeDisplayedLi,true); 	// перересуем слой
+	// В результате, savedLayers[routeName] не тот savedLayers[routeName], который, возможно
+	// был currentRoute.
+	//if(currentRoute && incurrentRoute) currentRoute.addLayer(savedLayers[name]);
+	resetRouteButtons();	// 
+	//console.log('[routeUpdate] обновлён слой',name,savedLayers[name]._leaflet_id,savedLayers[name]);
 };
 }; // end  function routeUpdate
 
@@ -1952,6 +2026,7 @@ currentTrackUpdateProcess = setInterval(currentTrackUpdate,3000);	// раз в 3
 console.log('[startCurrentTrackUpdateProcess] Update track started with',currentTrackName,'track');
 }; // end function startCurrentTrackUpdateProcess
 
+
 function startCurrentWaitTrackUpdateProcess(){
 // указано, откуда взять обновления, иначе бессмысленно следить за фактом записи трека
 if(!currentTrackServerURI) return;
@@ -1963,6 +2038,7 @@ currentTrackUpdateProcess = null;
 currentWaitTrackUpdateProcess = setInterval(loggingCheck,10000);	// раз в 10 секунд слежение за наличием текущего трека
 console.log('[startCurrentWaitTrackUpdateProcess] Logging check started');
 }; // end function startCurrentWaitTrackUpdateProcess
+
 
 function currentTrackUpdate(){
 /*
