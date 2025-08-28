@@ -16,8 +16,9 @@ $name = trim(urldecode($_REQUEST['name']));
 //error_log($gpx);
 if(pathinfo($name,PATHINFO_EXTENSION) != 'gpx') $name = "$name.gpx";
 if($gpx){
-	file_put_contents("$routeDir/$name",$gpx); 	// 
-	echo "$name saved!";
+	$res = file_put_contents("$routeDir/$name",$gpx); 	// 
+	if($res === false) echo "$name not saved!";
+	else echo "$name saved!";
 }
 else {
 	unlink("$routeDir/$name");

@@ -4,13 +4,15 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 2.20
+## v. 2.21
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
 **The author is not responsible for the consequences of using the GaladrielMap for navigation. It is not guaranteed that any of the information on the screen is correct, including but not limited to spatial position, speed, depth, and direction of movement.**
 
 The GaladrielMap created with use a lot of famous projects, so don't forget to install [dependenses](#dependences-and-thanks).  
+
+This code, with the possible exception of certain functions, is written without using AI, "best practices," OOP, and an IDE.
 
 
 ## Features
@@ -19,6 +21,7 @@ The GaladrielMap created with use a lot of famous projects, so don't forget to i
 3. [Tracking](#tracking)
 4. [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
 5. [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
+6. [Follow to the route](#follow-to-the-route)
 6. [Exchange coordinates](#exchange-coordinates) via clipboard
 7. [Clear screen](#clear-screen)
 7. [Weather forecast](#weather-forecast) from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
@@ -155,6 +158,12 @@ Open <img src="img/route.svg" alt="Handle route" width="24px"> tab to navigation
 For route planning, it is useful to find coordinates by geographical name or postal address, if there is an Internet connection, of course. And vice versa -- getting the nearest address for the screen centre. Use the input field for it.
 
 
+## Follow to the route
+On the <img src="img/route.svg" alt="Handle route" width="24px"> tab you can start following the specified route. Draw the route as described above, and click the "Follow" button. This will instruct the [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) to define waypoints. The GaladrielMap will show the direction to the next waypoint and the circle of the hit.  
+You can select the next or previous waypoints.  
+You can also specify the route in the existing .gpx file.
+
+
 ## Exchange coordinates
 To get current position to clipboard to share it via other apps - tap on Position on <img src="img/speed1.svg" alt="Dashboard" width="24px"> tab.  
 Also, tap on POI name on point's popup to get a position of this point.  
@@ -203,7 +212,9 @@ Also, the AIS Search and Rescue Transmitter (SART) messages AIS-MOB and AIS-EPIR
 
 ## Authorisation
 A simple authorization system is designed to divide users into those who have access to all features and those whose possibilities are limited. The limitations are that there is no access to the functions that modify the data on the server, except for the MOB mode activation.  
-You can specify a list of addresses or/and subnets from which full access is allowed (white list) or, conversely, a list of addresses and subnets from which full access is prohibited (black list). See `params.php` for details.
+Authorization data is specified in the [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY)'s configuration file. If they are not specified there,
+you can specify a list of addresses or/and subnets from which full access is allowed (white list) or, conversely, a list of addresses and subnets from which full access is prohibited (black list). See `params.php` for details.  
+
 
 
 ## Dashboard
