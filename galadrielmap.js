@@ -258,7 +258,7 @@ storageHandler.save(toSave);
 
 
 // Функции выбора - удаления карт
-async function selectMap(node) { 	
+function selectMap(node) { 	// async нельзя, потому что при старте приложения карты должны загружаться в определённом порядке
 // Выбор карты из списка имеющихся. Получим объект
 mapDisplayed.insertBefore(node,mapDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.classList.remove("showedMapName");
@@ -1016,7 +1016,7 @@ for(let layer of inLayer.getLayers()){
 				needUpdateSuperclaster = needUpdateSuperclaster || removeFromSuperclaster(inLayer,layer);	// могут быть кластеризованные точки, а так -- достаточно removeLayer
 			};
 			inLayer.removeLayer(layer);	// удалим слой из LayerGroup
-			console.log('[delShapes] из inLayer ',inLayer._leaflet_id,inLayer,'удалён объект',layer._leaflet_id,layer);
+			//console.log('[delShapes] из inLayer ',inLayer._leaflet_id,inLayer,'удалён объект',layer._leaflet_id,layer);
 			layer = null;	// это приведёт к быстрому удалению объекта сборщиком мусора? Обычно оно не успевает...
 		};
 	};
@@ -1058,6 +1058,7 @@ default:
 };
 let layerName = '';
 //console.log('[tooggleEditRoute] target',target);
+//console.log('[tooggleEditRoute] target.feature:',JSON.stringify(target.feature));
 //console.log('[tooggleEditRoute] savedLayers:',savedLayers);
 if(dravingLines && dravingLines.hasLayerRecursive(target)){	// Щёлкнули по одному из нарисованных объектов. hasLayerRecursive потому что omnivore импортирует gpx как L.LayerGroup с двумя слоями: точки и всё остальное
 	//console.log('[tooggleEditRoute] Щёлкнули на нарисованном объекте',target._leaflet_id,target,'в dravingLines',dravingLines._leaflet_id,dravingLines);
@@ -1077,23 +1078,22 @@ if(dravingLines && dravingLines.hasLayerRecursive(target)){	// Щёлкнули 
 }
 else {
 	for (layerName in savedLayers) {	// нет способа определить, в какой layerGroup находится layer, но у нас все показываемые слои хранятся в массиве savedLayers
-		//console.log('[tooggleEditRoute] layerName=',layerName);
-		if((savedLayers[layerName] instanceof L.LayerGroup) && savedLayers[layerName].hasLayerRecursive(target)){
-			//console.log('[tooggleEditRoute] Щёлкнули на загруженном объекте',target._leaflet_id,target,'в',savedLayers[layerName]._leaflet_id,layerName,savedLayers[layerName]);
-			if(currentRoute && (currentRoute !== savedLayers[layerName])){
-				//console.log('[tooggleEditRoute] currentRoute есть, добавляем savedLayers[',layerName,'] в currentRoute')
-				//if(!currentRoute.hasLayerRecursive(savedLayers[layerName])) currentRoute.addLayer(savedLayers[layerName]);
-				//currentRoute.addLayer(savedLayers[layerName]);
-				//console.log('[tooggleEditRoute] currentRoute есть, копируем объект, по которому щёлкнули, в currentRoute')
-				currentRoute.addLayer(target);
-			}
-			else {
-				//console.log('[tooggleEditRoute] currentRoute нет, или currentRoute===savedLayers[',layerName,'], объектом currentRoute становится объект savedLayers[',layerName,']')
-				currentRoute = savedLayers[layerName];
-			};
-			routeSaveName.value = layerName; 	// запишем в поле ввода имени имя загруженного файла
-			break;
+		if(!(savedLayers[layerName] instanceof L.LayerGroup) || !savedLayers[layerName].hasLayerRecursive(target)) continue;
+		//console.log('[tooggleEditRoute] Щёлкнули на загруженном объекте',target._leaflet_id,target,'в',savedLayers[layerName]._leaflet_id,layerName,savedLayers[layerName]);
+		//if(currentRoute && (currentRoute !== savedLayers[layerName])){
+		if(currentRoute && (currentRoute._leaflet_id != savedLayers[layerName]._leaflet_id)){
+			//console.log('[tooggleEditRoute] currentRoute есть, добавляем savedLayers[',layerName,'] в currentRoute')
+			//if(!currentRoute.hasLayerRecursive(savedLayers[layerName])) currentRoute.addLayer(savedLayers[layerName]);
+			//currentRoute.addLayer(savedLayers[layerName]);
+			//console.log('[tooggleEditRoute] currentRoute есть, и это не тот же слой, в котором объект, по токорому щёлкнули. Копируем объект, по которому щёлкнули, в currentRoute')
+			currentRoute.addLayer(target);
+		}
+		else {
+			//console.log('[tooggleEditRoute] currentRoute нет, или currentRoute===savedLayers[',layerName,'], объектом currentRoute становится объект savedLayers[',layerName,']')
+			currentRoute = savedLayers[layerName];
 		};
+		routeSaveName.value = layerName; 	// запишем в поле ввода имени имя загруженного файла
+		break;
 	};
 };
 
@@ -1154,8 +1154,6 @@ else {
 		bindPopUptoEditable(target);
 		resetRouteButtons();	// вернём кнопки в исходное состояние
 		if(editorEnabled==='maybe') editorEnabled=false;	// панель закрыли во время редактирования, потом редактирование завершили
-		//routeSaveName.value = '';	// если нет автоматического сохранения gpx, то надо оставить
-		//routeSaveDescr.value = '';
 	};
 	if(target instanceof L.Marker){
 		//console.log('[tooggleEditRoute] target is instanceof L.Marker');
@@ -1351,7 +1349,7 @@ dravingLines - L.layerGroup, слои, в которых, собственно, 
 В отличии от cancelEditing, где редактируемые объекты становятся? не редактируемыми, здесь они удаляются.
 */
 $cnt=delShapes(true);	// удалим все редактируемые объекты
-console.log('[eraseEditable] Удалено ',$cnt,'редактируемых слоёв.');
+//console.log('[eraseEditable] Удалено ',$cnt,'редактируемых слоёв.');
 resetRouteButtons();	// выставим кнопки в начальное состояние
 if(currentRoute==dravingLines)	{
 	doSaveMeasuredPaths();	// Сохраним локально, если оно рисовано от руки
@@ -1377,14 +1375,19 @@ if(currentRoute && (currentRoute !== dravingLines)) {
 	currentRoute.addLayer(dravingLines);	// addLayer не добавляет, если уже есть
 }
 else {
-	//console.log('[Кнопка Начать] currentRoute нет или currentRoute==dravingLines - сделаем слой dravingLines слоем currentRoute');
+	//console.log('[Кнопка Начать] currentRoute нет или currentRoute==dravingLines - сделаем слой dravingLines объектом currentRoute');
 	currentRoute = dravingLines;
 };
 pointsControlsDisable();	// отключить кнопки точек
 //console.log('[Кнопка Начать] currentRoute:',currentRoute._leaflet_id,'dravingLines:',dravingLines._leaflet_id);
-let layer = map.editTools.startPolyline(false,drivedPolyLineOptions.options);
+// Поскольку в этом говёном Javascript объекты передаются по ссылке на их значение,
+// map.editTools.startPolyline(null,drivedPolyLineOptions.options) приведёт к тому, что
+// объект, обозначенный как drivedPolyLineOptions, будет один на все layer.
+// Поэтому для каждого создаваемого layer будем делать новый объект drivedPolyLineOptions
+let drivedPolyLineOptionsNEW = JSON.parse(JSON.stringify(drivedPolyLineOptions));	
+let layer = map.editTools.startPolyline(null,drivedPolyLineOptionsNEW.options);
 layer.options.color = '#FDFF00';
-layer.feature = drivedPolyLineOptions.feature;
+layer.feature = drivedPolyLineOptionsNEW.feature;
 layer.on('editable:editing', function (event){event.target.updateMeasurements();});	// обновлять расстояния при редактировании
 //layer.on('click', L.DomEvent.stop).on('click', tooggleEditRoute);
 layer.on('click',tooggleEditRoute);
@@ -1539,21 +1542,34 @@ saveGPX(function (fileName){
 	//console.log('[DOsaveGPX] Сохранён файл',fileName);
 	// Покажем сохранённый объект на карте естественным путём - т.е., так, как если бы
 	// он был открыт по щелчку в списке route
-	doSaveMeasuredPaths();	// Очистим локальное хранилище
 	const routeDisplayedLi = [... routeDisplayed.querySelectorAll('li')].filter(el => el.textContent == fileName)[0];
 	if(routeDisplayedLi){	// слой с этим именем уже есть в списке routeDisplayed, т.е., маршрут показывается
 		//console.log('[DOsaveGPX] Файл',fileName,'имеется в routeDisplayed');
-		// currentRoute в этом случае не меняется. Потому что есть мнение, что должно остаться, чтобы можно было добавлять рисуемое.
+		// currentRoute в этом случае не меняется. Потому что есть мнение, что должно остаться,
+		// чтобы можно было добавлять рисуемое.
+		// Но после сохранения объект будет перезагружен следилкой, в результате
+		// currentRoute и сохранённый объект станут разными объектами, и добавить рисуемое
+		// к сохранённому объекту не получится.
+		// Поэтому просто cancelEditing()
 		if(currentRoute.hasLayer(dravingLines)){
-			dravingLines.clearLayers();	// очистим вообще слой рисования
-			dravingLines.remove();	// удалим рисуемое с карты
+			// очистим вообще слой рисования, фактически - это удаление рисуемого с карты.
+			// Делать dravingLines.remove() не следует: слои добавляются на карту в Leaflet.Editable,
+			// и в результате .remove() dravingLines просто просто теряет связь с этими слоями,
+			// а на карте они всё равно остаются.
+			// Кроме того, dravingLines добавляется на карту вообще только при старте страницы
+			// (и при локальном восстановлении, что дублирование.) Поэтому если здесь сделать .remove()
+			// и потом нигде не сделать addTo - будет забавно. Слой, созданный Leaflet.Editable будет
+			// видим, потому что там есть addTo(map), но dravingLines видим на будет, хотя будет
+			// этот слой содержать. В результате .clearLayers() очистит dravingLines, но слой
+			// на карте останется.
+			//console.log('[DOsaveGPX] dravingLines нет в currentRoute',dravingLines);
+			dravingLines.clearLayers();	
 		};
 	}
 	else {	// слоя нет, т.е., мы сохранили новый файл (иначе он был бы в routeDisplayed)
 		//console.log('[DOsaveGPX] Файла',fileName,'нет в routeDisplayed');
 		// Сперва удалим рисуемое - вместо него будет сохранённое
 		dravingLines.clearLayers();	// очистим вообще слой рисования
-		dravingLines.remove();	// удалим рисуемое с карты
 		// обновим список routeList. Оно асинхронно.
 		listPopulate(routeList,routeDirURI,false,true,function(){	// заполним список routeList
 			ulDiff(routeDisplayed,routeList);	// удалим из routeList то, что есть в routeDisplayed
@@ -1562,15 +1578,13 @@ saveGPX(function (fileName){
 			// покажем этот li
 			//console.log('[DOsaveGPX] Показываем',routeListLi);
 			if(routeListLi){	// ну мало ли...
-				currentRoute = undefined; // При сохранении нового файла - тоже нужно добавлять?
-				routeSaveName.value = '';	// очистим имя файла
-				routeSaveDescr.value = '';
-				resetRouteButtons();	// выставим кнопки в начальное состояние
 				selectTrack(routeListLi,routeList,routeDisplayed,displayRoute);
 			};
 		}); // end function
 	};
 	// В это время ещё выполняется listPopulate
+	doSaveMeasuredPaths();	// Очистим локальное хранилище
+	cancelEditing();
 	if(byLoadAction) byLoadAction(fileName);
 }); // end function
 }; // end function DOsaveGPX

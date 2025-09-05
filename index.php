@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.21.0';
+$versionTXT = '2.21.1';
 /* 
 2.21.0	following waypoints
 2.20.0	user authorisation & AIS SART support
@@ -764,12 +764,11 @@ SelectedRoutesSwitch.checked = Boolean(storageHandler.restore('SelectedRoutesSwi
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 var depthInData = <?php echo $depthInData;?>;	// параметры показа глубины вдоль пути
 // Маршрут
-var drivedPolyLineOptions;
 var currentRoute; 	// L.layerGroup, по объекту Editable которого щёлкнули. Типа, текущий.
 {let weight;
 if(L.Browser.mobile && L.Browser.touch) weight = 13; 	// мобильный браузер
 else weight = 9; 	// стационарный браузер
-drivedPolyLineOptions = { options: {
+var drivedPolyLineOptions = { options: {
 		showMeasurements: true,	// включить показ расстояний
 		//color: '#FDFF00',
 		weight: weight,
@@ -781,7 +780,7 @@ drivedPolyLineOptions = { options: {
 		},
 	},
 };
-}
+};
 var dravingLines = L.layerGroup();	// слои, в которых, собственно, рисуются маршруты и путевые точки
 dravingLines.properties = {};
 var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
@@ -899,6 +898,8 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		editorEnabled = true;	// разрешим редактирования
 		routeCreateButton.disabled=false; 	// - сделать доступной кнопку Начать
 		pointsControlsEnable();	// включим кнопки точек
+		//console.log('[Open measure] currentRoute:',currentRoute);
+		//console.log('[Open measure] dravingLines:',dravingLines);
 		break;
 	case 'routes':	// маршруты
 		// обновим список маршрутов, асинхронно

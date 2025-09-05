@@ -161,7 +161,8 @@ For route planning, it is useful to find coordinates by geographical name or pos
 ## Follow to the route
 On the <img src="img/route.svg" alt="Handle route" width="24px"> tab you can start following the specified route. Draw the route as described above, and click the "Follow" button. This will instruct the [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) to define waypoints. The GaladrielMap will show the direction to the next waypoint and the circle of the hit.  
 You can select the next or previous waypoints.  
-You can also specify the route in the existing .gpx file.
+You can also specify the route in the existing .gpx file.  
+In the editor, you can change the route you are following. After saving, following a new route will begin.
 
 
 ## Exchange coordinates
