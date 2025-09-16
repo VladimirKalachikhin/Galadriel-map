@@ -53,7 +53,7 @@ Unfortunately, the Oracle Inc. turned out to be a crook, so the demo does not wo
 
 
 ## Ready to use images
-[Available](https://github.com/VladimirKalachikhin/GaladrielMap-Demo-image/blob/master/README.md) ready to use virtual machine disk image and Raspberry Pi bootable image. It's a fully configured Linux system with GaladrielMap, GaladrielCache, netAIS, gpsd, gpxlogger, etc. for test and builds own onboard server. 
+[Available](https://github.com/VladimirKalachikhin/GaladrielMap-Demo-image/) ready to use virtual machine disk image and Raspberry Pi bootable image. It's a fully configured Linux system with GaladrielMap, GaladrielCache, netAIS, gpsd, gpxlogger, etc. for test and builds own onboard server. 
 
 
 ## Install&configure:
