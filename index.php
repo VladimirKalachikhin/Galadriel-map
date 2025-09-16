@@ -96,6 +96,7 @@ if($gpsdPROXYpath) {	// в этом случае подкдючается ещё
 if($netAISconfig) {	// а это params.php от netAIS, который подключается в params.php от gpsdPROXY
 	$saveBoatInfo = $boatInfo;	// params.php
 	$boatInfo = parse_ini_file($netAISconfig,FALSE,INI_SCANNER_TYPED);
+	//echo "boatInfo:"; print_r($boatInfo); echo "\n";
 	if($boatInfo===false) {
 		echo "\nFound netAISconfig parm in params.php, but loading netAIS boatInfo.ini false.\n";
 		$boatInfo = $saveBoatInfo;
