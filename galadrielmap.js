@@ -1953,7 +1953,7 @@ try {
 	lon=position.getLongitude();
 } 
 catch (error) { 	// coordinate-parser обломался, строка - не координаты.
-	console.log('[flyByString] stringPos=',stringPos,error);
+	//console.log('[flyByString] stringPos=',stringPos,error);
 	// это возможно, строка с lon lat
 	lon = extractNumberAfterKeyword(stringPos, 'lon');
 	lat = extractNumberAfterKeyword(stringPos, 'lat');
