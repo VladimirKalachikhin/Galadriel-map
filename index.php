@@ -9,7 +9,7 @@ $currentTrackServerURI = 'getlasttrkpt.php'; 	// uri of the active track service
 // 		url службы динамического обновления маршрутов. При отсутствии -- маршруты можно обновить только перезагрузив страницу.
 $updateRouteServerURI = 'checkRoutes.php'; 	// url to route updater service. If not present -- update server-located routes not work.
 
-$versionTXT = '2.21.1';
+$versionTXT = '2.21.2';
 /* 
 2.21.0	following waypoints
 2.20.0	user authorisation & AIS SART support
@@ -469,7 +469,9 @@ foreach($trackInfo as $trackName) {
 				<button type='submit' class='okButton' style="float:right;"	onClick="DOsaveGPX();">
 					<img src="img/ok.svg" title="<?php echo $okTXT;?>" alt="<?php echo $okTXT;?>" width="16px">
 				</button>
-				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;"><img src="img/no.svg" title="<?php echo $clearTXT;?>" alt="<?php echo $clearTXT;?>" width="16px"></button>
+				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;">
+					<img src="img/no.svg" title="<?php echo $clearTXT;?>" alt="<?php echo $clearTXT;?>" width="16px">
+				</button>
 				<div id='routeSaveMessage' style='margin: 1rem;'></div>
 			</div>			
 <?php }; // для пользователя со всеми правами ?>	

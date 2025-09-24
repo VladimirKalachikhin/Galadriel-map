@@ -42,8 +42,8 @@ startEditing()
 cancelEditing()
 resetRouteButtons()
 
-saveGPX() 			Сохраняет на сервере маршрут из объекта currentRoute
-DOsaveGPX
+saveGPX(byLoadAction=undefined) 			Сохраняет на сервере маршрут из объекта currentRoute
+DOsaveGPX(byLoadAction=undefined)
 toGPX(geoJSON,createTrk) Create gpx route or track (createTrk==true) from geoJSON object
 
 // Кластеризация точек
@@ -1348,7 +1348,7 @@ dravingLines - L.layerGroup, слои, в которых, собственно, 
 
 В отличии от cancelEditing, где редактируемые объекты становятся? не редактируемыми, здесь они удаляются.
 */
-$cnt=delShapes(true);	// удалим все редактируемые объекты
+let cnt=delShapes(true);	// удалим все редактируемые объекты
 //console.log('[eraseEditable] Удалено ',$cnt,'редактируемых слоёв.');
 resetRouteButtons();	// выставим кнопки в начальное состояние
 if(currentRoute==dravingLines)	{
@@ -1969,7 +1969,8 @@ catch (error) { 	// coordinate-parser обломался, строка - не к
 
 if((lon == null) || (lat == null) || (lon == lat)){	// координат так и не нашли
 	// А не номер тайла ли там?
-	const digits = stringPos.trim().match(new RegExp("/(?<!-|\.)\d+(?!\.)/g"));	// вытащим неотрицательные целые числа из строки. Выражение неправильное, оно возвращает вторые и далеее цифры после запятой. Но так бывает редко ;-)
+	//const digits = stringPos.trim().match(new RegExp("/(?<!-|\.)\d+(?!\.)/g"));	// вытащим неотрицательные целые числа из строки. Выражение неправильное, оно возвращает вторые и далеее цифры после запятой. Но так бывает редко ;-)
+	const digits = stringPos.trim().match(/\d+/g);	// вытащим неотрицательные целые числа из строки. Выражение неправильное, оно возвращает вторые и далеее цифры после запятой. Но так бывает редко ;-)
 	//console.log('[flyByString] digits:',digits);
 	let x,y,z;
 	if (digits && digits.length == 3 && ((digits.join().length+11) > stringPos.trim().length)) {	// если чисел три, и добавление разумного количества разделителей и пробелов делает строку результата больше исходной. А иначе - это адрес с цифрами.
@@ -1983,9 +1984,9 @@ if((lon == null) || (lat == null) || (lon == lat)){	// координат так
 		};
 	};
 	if(z && x && y){	// это похоже на номер тайла, переместимся к этому тайлу
-		console.log('[flyByString] z,x,y:',z,x,y);
-		map.panTo(tileNum2degree(z,x,y));
+		//console.log('[flyByString] z,x,y:',z,x,y);
 		map.setZoom(z);
+		map.panTo(tileNum2degree(z,x,y));
 	}
 	else {	// это просто строка, возможно, с адресом, сделаем запрос к геосервису
 		let xhr = new XMLHttpRequest();
@@ -3052,7 +3053,7 @@ DOsaveGPX(function (fileName){
 
 
 function WPTbuttonsON(){
-if(!followWPTbutton) return;	// кнопки могут отсутствовать у неполноценных юзеров
+if(typeof followWPTbutton == 'undefined') return;	// кнопки могут отсутствовать у неполноценных юзеров
 nextWPTbutton.disabled = false;
 followWPTbutton.disabled = false;
 followWPTbutton.innerHTML = nofollowWPTbuttonTXT;
@@ -3062,7 +3063,7 @@ prevWPTbutton.disabled = false;
 }; // end function WPTbuttonsON
 
 function WPTbuttonsReady(){
-if(!followWPTbutton) return;	// кнопки могут отсутствовать у неполноценных юзеров
+if(typeof followWPTbutton == 'undefined') return;	// кнопки могут отсутствовать у неполноценных юзеров
 // Неважно, есть ли уже режим следования или нет, делаем невозможным управление им
 nextWPTbutton.disabled = true;
 followWPTbutton.disabled = false;
@@ -3073,7 +3074,7 @@ prevWPTbutton.disabled = true;
 }; // end function WPTbuttonsON
 
 function WPTbuttonsOFF(){
-if(!followWPTbutton) return;	// кнопки могут отсутствовать у неполноценных юзеров
+if(typeof followWPTbutton == 'undefined') return;	// кнопки могут отсутствовать у неполноценных юзеров
 nextWPTbutton.disabled = true;
 followWPTbutton.disabled = true;
 followWPTbutton.innerHTML = followWPTbuttonTXT;
