@@ -327,7 +327,7 @@ if(mapParm.maxZoom<16){
 	maxNativeZoom = mapParm.maxZoom;
 	mapParm.maxZoom += 1;
 };
-if(mapParm['bounds']) {
+if(mapParm['bounds'] && !(JSON.stringify(mapParm['bounds']=='[]'))) {
 	mapParm['bounds'] = [mapParm['bounds']['leftTop'],mapParm['bounds']['rightBottom']];
 	//console.log('[displayMap] mapParm:',mapParm);
 	if(mapParm['bounds'][0]['lng']>0 && mapParm['bounds'][1]['lng']<=0){	// граница переходит антимередиан

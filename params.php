@@ -44,12 +44,12 @@ array(
 // Службы Services
 // 	Источник карты Map source
 // url источника карты: в интернет (только растровые тайлы) или GaladrielCache
-$tileCacheURI = "/tileproxy/tiles.php?z={z}&x={x}&y={y}&r={map}"; 	// uri of the map service, for example Galadriel tile cache/proxy service. In case GaladrielCache {map} is a map name in GaladrielCache app.
+$tileCacheURI = "/tileproxyNG/tiles.php?z={z}&x={x}&y={y}&r={map}"; 	// uri of the map service, for example Galadriel tile cache/proxy service. In case GaladrielCache {map} is a map name in GaladrielCache app.
 //$tileCacheURI = "/tileproxy/tiles/{map}/{z}/{x}/{y}.{ext}"; 	//
 //$tileCacheURI = "http://mt2.google.com/vt/lyrs=s,m&hl=ru&x={x}&y={y}&z={z}"; 	//
 //$tileCacheURI = 'http://a.tile.opentopomap.org/{z}/{x}/{y}.png'; 	//
 //	Управление GaladrielCache, если используется GaladrielCache.
-$tileCacheControlURI = "/tileproxy/cacheControl.php";	// uri of GaladrielCache control interface
+$tileCacheControlURI = "/tileproxyNG/cacheControl.php";	// uri of GaladrielCache control interface
 // Карта, которая показывается, если нечего показывать.
 $defaultMap = 'OpenTopoMap';	// GaladrielCache map to display then no map selected
 // Начальная точка, если никакой точки не указано, строка json
