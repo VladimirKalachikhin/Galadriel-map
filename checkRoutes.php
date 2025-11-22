@@ -25,13 +25,15 @@ foreach($routesInfo as $fileName){
 };
 // Удалённые файлы:
 $routesInfo = array_map(function($fileName){return end(explode('/',$fileName));},$routesInfo);
-foreach($_SESSION['shanged'] as $fileName => $val){
-	//echo "fileName=$fileName;<br>\n";
-	if(!in_array($fileName,$routesInfo)) {
-		//echo "Missed fileName=$fileName;<br>\n";
-		$shanged[]=end(explode('/',$fileName));
-		unset($_SESSION['shanged'][$fileName]);
-	}
+if($_SESSION['shanged']){	// из-за казлов, которые делают warning по причине не того типа аргумета в foreach - добавлена обёртка в if, которая ни нафиг не нужна. Казлы.
+	foreach($_SESSION['shanged'] as $fileName => $val){
+		//echo "fileName=$fileName;<br>\n";
+		if(!in_array($fileName,$routesInfo)) {
+			//echo "Missed fileName=$fileName;<br>\n";
+			$shanged[]=end(explode('/',$fileName));
+			unset($_SESSION['shanged'][$fileName]);
+		}
+	};
 };
 session_write_close();
 $shanged = json_encode($shanged);

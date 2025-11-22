@@ -8,8 +8,12 @@ doSavePosition() 	Сохранение положения, списка пока
 selectMap(node) 	Выбор карты из списка имеющихся
 deSelectMap(node) 	Прекращение показа карты, и возврат её в список имеющихся.
 displayMap(mapname) Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
+autoMapUpdate(mapLayer,start)	Автоматическое обновление карт с маленьким временем свежести.
 removeMap(mapname)
 showMapsToggle()	переключает показ всех или выбранных карт в списке карт
+displayMapBounds()	покажем границы карт
+displayMapBoundsOFF()
+
 
 // Функции выбора - удаления треков
 selectTrack(node,trackList,trackDisplayed,displayTrack)		Выбор трека из списка имеющихся. 
@@ -133,6 +137,7 @@ String.prototype.encodeHTML = function ()
 
 L.Control.CopyToClipboard
 hasLayerRecursive(what)
+getLayersRecursive(classOnly=undefined)	 рекурсивный getLayers
 eachLayerRecursive()
 getLayerRecursive(what)
 
@@ -269,8 +274,10 @@ displayMap(node.id);
 
 
 async function deSelectMap(node) {
-// Прекращение показа карты, и возврат её в список имеющихся. Получим объект
-//alert(node);
+/* Прекращение показа карты, и возврат её в список имеющихся. Получим объект
+*/
+//console.log('[deSelectMap] node:',node);
+
 let li = null;
 for (let i = 0; i < mapList.children.length; i++) { 	// для каждого потомка списка mapList
 	li = mapList.children[i]; 	// взять этого потомка
@@ -289,163 +296,248 @@ if(showMapsToggler.innerHTML == showMapsTogglerTXT[0]){	// текущий реж
 else {	// текущий режим - "все карты"
 	if(showMapsList.includes(node.id)) node.classList.add("showedMapName");
 }
-removeMap(node.id);
+// Теперь собственно уберём карту с экрана
+removeMap(node.id);	// просто уберём карту с этим именем
+//console.log('[deSelectMap] savedLayers:',savedLayers);
+if(map.hasLayer(tileGrid)) displayMapBounds();	// перерисуем границы карт, если показываем сетку
 }; // end function deSelectMap
 
 
-async function displayMap(mapname) {
-/* Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
- Делает запрос к tileproxy/cacheControl.php для получения параметров карты
- Если в параметрах карты есть проекция, и она EPSG3395, 
- или в имени карты есть EPSG3395 - делает слой в проекции с пересчётом с помощью L.tileLayer.Mercator
+async function displayMap(mapname,mapParm={}) {
+//console.log('[displayMap] mapname=',mapname,'mapParm:',JSON.stringify(mapParm));
+if(savedLayers[mapname] == null) {
+	const layer = realDisplayMap(mapname,mapParm);
+	if(layer != null) {
+		if(typeof layer.options.javascriptOpen === 'function') {
+			layer.options.javascriptOpen(layer);
+		};
+		if(savedLayers[mapname]) savedLayers[mapname].remove();
+		savedLayers[mapname] = layer;
+		//console.log('[displayMap] mapname=',mapname,'savedLayers[mapname]:',savedLayers[mapname]);
+		savedLayers[mapname].addTo(map);
+	};
+}
+else {	// такая карта уже есть, просто покажем
+	if(typeof savedLayers[mapname].options.javascriptOpen === 'function') {
+		savedLayers[mapname].options.javascriptOpen(savedLayers[mapname]);
+	};
+	savedLayers[mapname].addTo(map);
+};
+//console.log('[displayMap] mapname=',mapname,'mapParm:',savedLayers[mapname].options.mapParm);
+autoMapUpdate(savedLayers[mapname],true) // Включить автоматическое обновление
+//
+if(map.hasLayer(tileGrid)) displayMapBounds();	// перерисуем границы карт, если показываем сетку
+}; // end function displayMap
+
+
+function realDisplayMap(mapname,mapParm={}) {
+/* Если всё это добро расписать в старом добром структурном стиле, а не как принято в javascript - всё хорошо ложится.
 */
-mapname=mapname.trim(mapname);
-// Всегда будем спрашивать параметры карты
-let mapParm = new Array(); 	// переменная для параметров карты
+// сделаем новый мультислой. Карта - всегда мультислой.
+const multilayer = L.layerGroup();	// требуемая карта или составная часть карты 
+multilayer.options.mapname = mapname;
+// Получим параметры карты
 const xhr = new XMLHttpRequest();
-xhr.open('GET', tileCacheControlURI+'?getMapInfo='+mapname, false); 	// Подготовим синхронный запрос
+xhr.open('GET', tileCacheControlURI+'?getMapInfo='+encodeURIComponent(mapname), false); 	// Подготовим синхронный запрос
 xhr.send();
 if (xhr.status == 200) { 	// Успешно
 	try {
-		//console.log('[displayMap] xhr.responseText:',xhr.responseText);
-		mapParm = JSON.parse(xhr.responseText); 	// параметры карты
+		//console.log('[realDisplayMap] xhr.responseText:',xhr.responseText);
+		mapParm = {...JSON.parse(xhr.responseText),...mapParm}; 	// объединяем параметры карты с переданными параметрами, так, что addParm переписывает соответствующие параметры карты
 	}
 	catch(err) { 	// 
 		return;
 	};
 }
-else return;
-// javascript в загружаемом источнике на открытие карты
-//console.log('[displayMap] mapParm:',mapParm);
-if(mapParm['data'] && mapParm['data']['javascriptOpen']) eval(mapParm['data']['javascriptOpen']);
-let minNativeZoom,maxNativeZoom;
-if(mapParm.minZoom>3){
-	minNativeZoom = mapParm.minZoom;
-	mapParm.minZoom = 3;
+else {
+	return;
 };
-if(mapParm.maxZoom<16){
-	maxNativeZoom = mapParm.maxZoom;
-	mapParm.maxZoom += 1;
+// используются ли векторные тайлы
+const isVector = (mapParm.ContentType=='application/x-protobuf')
+				 || (mapParm.ext=='pbf')
+				 || (mapParm.ext=='mvt')
+				 || (mapParm.vectorTileStyleFile!=null)
+				 || (mapParm.vectorTileStyleURL!=null)
+
+if(!mapParm.mapTiles && !isVector){	// не указано, как получать тайлы. Однако, если mvt - то там это указано в стиле?
+	return;
 };
-if(mapParm['bounds'] && !(JSON.stringify(mapParm['bounds']=='[]'))) {
-	mapParm['bounds'] = [mapParm['bounds']['leftTop'],mapParm['bounds']['rightBottom']];
-	//console.log('[displayMap] mapParm:',mapParm);
-	if(mapParm['bounds'][0]['lng']>0 && mapParm['bounds'][1]['lng']<=0){	// граница переходит антимередиан
-		// Caution: if the area crosses the antimeridian (often confused with the International Date Line), you must specify corners outside the [-180, 180] degrees longitude range.
-		mapParm['bounds'][0]['lng'] -= 360;
-		mapParm['bounds'][1]['lng'] += 360;
-	};
+multilayer.options.mapParm = mapParm;
+//console.log('[realDisplayMap] mapname=',mapname,'isVector=',isVector,'mapParm:',mapParm);
+
+if(!Array.isArray(mapParm.mapTiles)) {	// список способов получения тайлов - всегда массив
+	mapParm.mapTiles = [mapParm.mapTiles];
 };
-//console.log('[displayMap] mapParm[bounds]:',mapParm['bounds']);
-let layerParm = {
-	"minZoom":mapParm.minZoom,
-	"maxZoom":mapParm.maxZoom,
-	"minNativeZoom":minNativeZoom,
-	"maxNativeZoom":maxNativeZoom,
-	//"bounds": mapParm['bounds']
-};
-let vectorLayerParm = {
-	"style": mapParm['mapboxStyle'],
-	"minZoom":mapParm.minZoom,
-	"bounds": mapParm['bounds']
-};
-//console.log('[displayMap] layerParm:',layerParm);
-// Загружаемая карта - многослойная?
-if(Array.isArray(additionalTileCachePath)) { 	// глобальная переменная - дополнительный кусок пути к талам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Например, Weather.php
-	let currZoom; 
-	//console.log('[displayMap] mapname=',mapname,'savedLayers[mapname]',savedLayers[mapname]);
-	if(savedLayers[mapname]) {
-		if(savedLayers[mapname].options.zoom) currZoom = savedLayers[mapname].options.zoom;
-		savedLayers[mapname].remove();
+
+for(let i=0; i<mapParm.mapTiles.length; i++){
+	//console.log('[realDisplayMap] mapParm[',i,']:',mapParm.mapTiles[i]);
+	if(typeof mapParm.mapTiles[i] !== "string") {	// тогда объект, ссылка на другую карту
+		// Здесь мы создаём multilayer с начала, и в нем заведомо нет объектов.
+		// Поэтому можно добавлять, не проверяя наличие
+		const layer = realDisplayMap(mapParm.mapTiles[i].mapName,mapParm.mapTiles[i].mapParm);
+		if(layer != null) {
+			multilayer.addLayer(layer);
+			if(typeof layer.options.javascriptOpen === "function") {
+				layer.options.javascriptOpen(layer);
+			};
+		};
 	}
-	savedLayers[mapname]=L.layerGroup();
-	if(currZoom) savedLayers[mapname].options.zoom = currZoom;
-	// Потому что в javascript при закрытии карты могут указать aditionalTileCachePath = []; (как, собственно, и было в Weather) и тогда после закрытия такой карты открыть другую не получится
-	if(!additionalTileCachePath.length) additionalTileCachePath.push('');
-	for(let addPath of additionalTileCachePath) {
-		let mapnameThis = mapname+addPath; 	// 
-		let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
-		if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
-		//console.log(tileCacheURIthis);
-		//console.log('mapname=',mapname,savedLayers[mapname]);
-		if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
-			savedLayers[mapname].addLayer(L.tileLayer.Mercator(tileCacheURIthis, layerParm));
+	else {	// способ получения тайла этой карты, т.е., один слой мультислоя
+		let minNativeZoom,maxNativeZoom;
+		
+		if(!mapParm.clientData || !mapParm.clientData.noAutoScaled){
+			if(mapParm.minZoom>3){
+				minNativeZoom = mapParm.minZoom;
+				mapParm.minZoom = 3;
+			};
+			if(mapParm.maxZoom<16){
+				maxNativeZoom = mapParm.maxZoom;
+				mapParm.maxZoom += 2;
+			};
+		};
+		let layerParm;
+		if(isVector){ 
+			layerParm = {
+				"style": mapParm.vectorTileStyleURL,
+				"minZoom":mapParm.minZoom,
+			};
 		}
-		else if(mapParm['mapboxStyle']) { 	// векторные тайлы, mapboxStyle добавляется в askMapParm.php, и содержит uri стиля
-			if(typeof L.mapboxGL !== 'undefined'){
+		else {
+			layerParm = {
+				"minZoom":mapParm.minZoom,
+				"maxZoom":mapParm.maxZoom,
+			};
+			if(!mapParm.clientData || !mapParm.clientData.noAutoScaled){
+				layerParm["minNativeZoom"] = minNativeZoom;
+				layerParm["maxNativeZoom"] = maxNativeZoom;
+			}
+		};
+		// В Leaflet древний баг: антимередиан. Всё, что его пересекает, показывается криво
+		// В частности, если bounds пересекает антимередиан, то вся карта будет за пределами границ,
+		// и не будет запрашиваться.
+		// К счастью, у нас GaladrielCache не станет получать тайлы за пределами границ, так что
+		// Leaflet может запрашивать.
+		// Однако, 
+		// Caution: if the area crosses the antimeridian (often confused with the International Date Line),
+		// you must specify corners outside the [-180, 180] degrees longitude range.
+		if(mapParm.bounds && (JSON.stringify(mapParm.bounds)!='[]')) {
+			//console.log('[realDisplayMap] mapParm.bounds:',JSON.stringify(mapParm.bounds));
+			let leftTop = {};
+			leftTop.lng = mapParm.bounds.leftTop.lng;	// а иначе оно ссылка, б...!
+			leftTop.lat = mapParm.bounds.leftTop.lat;
+			let rightBottom = {};
+			rightBottom.lng = mapParm.bounds.rightBottom.lng;
+			rightBottom.lat = mapParm.bounds.rightBottom.lat;
+			if(mapParm.bounds.leftTop.lng>0 && mapParm.bounds.rightBottom.lng<=0){	// граница переходит антимередиан
+				// Не вполне понятна шлубинная суть этого деяния, но факт в том, что если не вычитать/прибавлять,
+				// то не видны либо левые, либо правые части. А если ничего не делать - то не видно ничего.
+				leftTop.lng -= 360;
+				rightBottom.lng += 360;
+			};
+			layerParm.bounds = L.latLngBounds(leftTop,rightBottom);
+		};
+		//console.log('[realDisplayMap] layerParm:',layerParm);
+
+		let mapTilesURIthis;
+		if(mapParm.r) mapTilesURIthis = mapParm.mapTiles[i].replace('{map}',mapParm.r.trim());	// нужно, как минимум, для COVER.
+		else mapTilesURIthis = mapParm.mapTiles[i].replace('{map}',mapname);
+		if(mapParm.requestOptions) mapTilesURIthis = mapTilesURIthis.replace('{options}',JSON.stringify(mapParm.requestOptions));
+		else mapTilesURIthis = mapTilesURIthis.replace('{options}','');
+		if(mapParm.ext)	mapTilesURIthis = mapTilesURIthis.replace('{ext}',mapParm.ext);
+		//console.log('[realDisplayMap] mapTilesURIthis:',mapTilesURIthis);
+
+		let layer;
+		if((mapParm.epsg && String(mapParm.epsg).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
+			layer = L.tileLayer.Mercator(mapTilesURIthis, layerParm);
+		}
+		else if(isVector) { 	// векторные тайлы
+			//console.log("[realDisplayMap] typeof L.mapboxGL=",typeof L.mapboxGL,L.mapboxGL);
+			if(typeof L.mapboxGL === 'undefined'){	// если ещё не загружено
 				let link = document.createElement('link');
 				link.type = 'text/css';
 				link.href = 'style.css';
-				link.rel = 'mapbox-gl-js/dist/mapbox-gl.css';
+				link.rel = 'maplibre-gl/dist/mapbox-gl.css';
 				document.head.appendChild(link);
-				if(!loadScriptSync("mapbox-gl-js/dist/mapbox-gl.js")) return;
-				if(!loadScriptSync("mapbox-gl-leaflet/leaflet-mapbox-gl.js")) return;
+				if(!(mapboxGLscript=loadScriptSync("maplibre-gl/dist/maplibre-gl.js"))) return;	// Нахрена присваивать глобальной переменной, которая нигде не используется -- неясно, но без этого возникает ошибка при закрытии карты.
+				if(!(mapboxLeafletscript=loadScriptSync("maplibre-gl-leaflet/leaflet-maplibre-gl.js"))) return;
+				console.log("[realDisplayMap] функции загружены");
 			}
-			savedLayers[mapname].addLayer(L.mapboxGL(vectorLayerParm));
+			layer = L.maplibreGL(layerParm);
 		}
 		else {
-			savedLayers[mapname].addLayer(L.tileLayer(tileCacheURIthis, layerParm));
-		}
-	}
-}
-else {
-	let mapnameThis = additionalTileCachePath ? mapname+additionalTileCachePath : mapname;
-	let tileCacheURIthis = tileCacheURI.replace('{map}',mapnameThis); 	// глобальная переменная
-	if(mapParm['ext'])	tileCacheURIthis = tileCacheURIthis.replace('{ext}',mapParm['ext']); 	// при таком подходе можно сделать несколько слоёв с одним запросом параметров
-	//console.log(tileCacheURIthis);
-	if((mapParm['epsg']&&String(mapParm['epsg']).indexOf('3395')!=-1)||(mapname.indexOf('EPSG3395')!=-1)) {
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer.Mercator(tileCacheURIthis, layerParm);
-	}
-	else if(mapParm['mapboxStyle']) { 	// векторные тайлы, mapboxStyle добавляется в askMapParm.php, и содержит uri стиля
-		//console.log("[displayMap] typeof L.mapboxGL=",typeof L.mapboxGL,L.mapboxGL);
-		if(typeof L.mapboxGL === 'undefined'){
-			let link = document.createElement('link');
-			link.type = 'text/css';
-			link.href = 'style.css';
-			link.rel = 'mapbox-gl-js/dist/mapbox-gl.css';
-			document.head.appendChild(link);
-			if(!(mapboxGLscript=loadScriptSync("mapbox-gl-js/dist/mapbox-gl.js"))) return;	// Нахрена присваивать глобальной переменной, которая нигде не используется -- неясно, но без этого возникает ошибка при закрытии карты.
-			if(!(mapboxLeafletscript=loadScriptSync("mapbox-gl-leaflet/leaflet-mapbox-gl.js"))) return;
-			//console.log("[displayMap] функции загружены");
-		}
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.mapboxGL(vectorLayerParm);
-	}
-	else {
-		if(!savedLayers[mapname])	savedLayers[mapname] = L.tileLayer(tileCacheURIthis, layerParm);
-	}
-}
-//console.log(savedLayers[mapname]);
-// установим текущий масштаб в пределах возможного для загружаемой карты
-if(! savedLayers[mapname].options.zoom) {
+			layer = L.tileLayer(mapTilesURIthis, layerParm);
+		};
+		multilayer.addLayer(layer);
+	};
+};
+// установим текущий масштаб в пределах возможного для указанной карты
+if(! multilayer.options.zoom) {
 	let currZoom = map.getZoom();
-	if(mapParm['maxZoom'] < currZoom) {
-		map.setZoom(mapParm['maxZoom']);
-		savedLayers[mapname].options.zoom = currZoom;
+	if(mapParm.maxZoom < currZoom) {
+		map.setZoom(mapParm.maxZoom);
+		multilayer.options.zoom = currZoom;
 	}
-	else if(mapParm['minZoom'] > currZoom) { 
-		map.setZoom(mapParm['minZoom']);
-		savedLayers[mapname].options.zoom = currZoom;
+	else if(mapParm.minZoom > currZoom) { 
+		map.setZoom(mapParm.minZoom);
+		multilayer.options.zoom = currZoom;
 	}
-	else savedLayers[mapname].options.zoom = false;
-}
+	else multilayer.options.zoom = false;
+};
+//console.log('[realDisplayMap] mapParm:',mapParm);
+
 // javascript в загружаемом источнике на закрытие карты
-if(mapParm['data'] && mapParm['data']['javascriptClose']) savedLayers[mapname].options.javascriptClose = mapParm['data']['javascriptClose'];
-// Наконец, покажем
-savedLayers[mapname].addTo(map);
-}; // end function displayMap
+// window.eval выполняет eval в глобальном контексте, в результате можно в eval объявить
+// глобальные функции и переменные
+if(mapParm.clientData && (typeof mapParm.clientData.javascriptClose  === "string")) {
+	multilayer.options.javascriptClose = window.eval(mapParm.clientData.javascriptClose);	// eval должен возвращать функцию
+};
+// javascript в загружаемом источнике на открытие карты
+if(mapParm.clientData && (typeof mapParm.clientData.javascriptOpen  === "string")) {
+	multilayer.options.javascriptOpen = window.eval(mapParm.clientData.javascriptOpen);	// eval должен возвращать функцию
+};
+//console.log('[realDisplayMap] multilayer:',multilayer);
+return multilayer;
+}; // end function realDisplayMap
+
+function autoMapUpdate(mapLayer,start){
+/* Автоматическое обновление карт с маленьким временем свежести.
+mapLauer - LayerGroup карта
+*/
+if(!autoUpdateMap) return;
+let mapLayers = mapLayer.getLayersRecursive(L.LayerGroup);	// вдруг карта составная? LayerGroup - это составляющая карта
+mapLayers.push(mapLayer);
+//console.log('[autoMapUpdate] mapLayers:',mapLayers);
+for(layer of mapLayers){
+	if( !layer.options.mapParm || !layer.options.mapParm.ttl || (layer.options.mapParm.ttl>autoUpdateMap)) continue;
+	if(start){	// надо запустить обновление
+		layer.options.autoUpdateMap = setInterval(() => {
+			const mapLayer = layer;
+			console.log('Обновляется карта',mapLayer.options.mapname);
+			mapLayer.eachLayer((layer)=>{
+				if(layer instanceof L.TileLayer) layer.redraw();
+			});
+		}, layer.options.mapParm.ttl*1000);
+	}
+	else {	// надо остановить обновление
+		if(layer.options.autoUpdateMap) clearInterval(layer.options.autoUpdateMap);
+	};
+};
+}; // end function autoMapUpdate
 
 
 function removeMap(mapname) {
 /**/
 mapname=mapname.trim();
 if(!savedLayers[mapname]) return;	// например, в списке есть трек, но gpx был кривой, и слой не был создан
-if(savedLayers[mapname].options.javascriptClose) eval(savedLayers[mapname].options.javascriptClose);
+if(typeof savedLayers[mapname].options.javascriptClose === 'function') {
+	savedLayers[mapname].options.javascriptClose(savedLayers[mapname]);
+};
+savedLayers[mapname].remove(); 	// удалим слой с карты
 if(savedLayers[mapname].options.zoom) { 
 	map.setZoom(savedLayers[mapname].options.zoom); 	// вернём масштаб как было
 	savedLayers[mapname].options.zoom = false;
 }
-savedLayers[mapname].remove(); 	// удалим слой с карты
-//savedLayers[mapname] = null; 	// удалим сам слой. Но это не надо, ибо включение/выключение отображения слоёв должно быть быстро, и обычно их не надо повторно получать с сервера
+autoMapUpdate(savedLayers[mapname],false) // Выключить автоматическое обновление
 }; // end function removeMap
 
 
@@ -476,6 +568,79 @@ else {	// текущий режим - "все карты" - покажем то�
 }; // end function showMapsToggle
 
 
+function displayMapBounds(){
+/* Рисует границы показываемых карт
+*/
+mapBoundsLayer.remove().clearLayers();
+map.eachLayer((layer)=>{
+	//console.log('[displayMapBounds] layer:',layer);
+	if(layer.options.mapParm && layer.options.mapParm.bounds){	// гы, там нет continue
+		//console.log('[displayMapBounds] layer:',layer);
+		
+		let latlngs = [];
+/*/		// Ниасилил, как правильно. Указание границ работает с вычитанием 360?
+		// Так или иначе, но с вычитанием и границами карты выглядит сносно.
+		// leftTop
+		latlngs.push({"lat":layer.options.mapParm.bounds.leftTop.lat,"lng":layer.options.mapParm.bounds.leftTop.lng});
+		// rightTop
+		if(layer.options.mapParm.bounds.rightBottom.lng<layer.options.mapParm.bounds.leftTop.lng){
+			latlngs.push({"lat":layer.options.mapParm.bounds.leftTop.lat,"lng":layer.options.mapParm.bounds.rightBottom.lng+360});
+		}
+		else {
+			latlngs.push({"lat":layer.options.mapParm.bounds.leftTop.lat,"lng":layer.options.mapParm.bounds.rightBottom.lng});
+		};
+		// rightBottom
+		if(layer.options.mapParm.bounds.rightBottom.lng<layer.options.mapParm.bounds.leftTop.lng){
+			latlngs.push({"lat":layer.options.mapParm.bounds.rightBottom.lat,"lng":layer.options.mapParm.bounds.rightBottom.lng+360});
+		}
+		else {
+			latlngs.push({"lat":layer.options.mapParm.bounds.rightBottom.lat,"lng":layer.options.mapParm.bounds.rightBottom.lng});
+		};
+		// leftBottom
+		latlngs.push({"lat":layer.options.mapParm.bounds.rightBottom.lat,"lng":layer.options.mapParm.bounds.leftTop.lng});
+/*/		
+		// leftTop
+		if(layer.options.mapParm.bounds.leftTop.lng>0 && layer.options.mapParm.bounds.rightBottom.lng<=0){	// граница переходит антимередиан
+			latlngs.push({"lat":layer.options.mapParm.bounds.leftTop.lat,"lng":layer.options.mapParm.bounds.leftTop.lng-360});
+		}
+		else{
+			latlngs.push({"lat":layer.options.mapParm.bounds.leftTop.lat,"lng":layer.options.mapParm.bounds.leftTop.lng});
+		};
+		// rightTop
+		latlngs.push({"lat":layer.options.mapParm.bounds.leftTop.lat,"lng":layer.options.mapParm.bounds.rightBottom.lng});
+		// rightBottom
+		latlngs.push({"lat":layer.options.mapParm.bounds.rightBottom.lat,"lng":layer.options.mapParm.bounds.rightBottom.lng});
+		// leftBottom
+		if(layer.options.mapParm.bounds.leftTop.lng>0 && layer.options.mapParm.bounds.rightBottom.lng<=0){	// граница переходит антимередиан
+			latlngs.push({"lat":layer.options.mapParm.bounds.rightBottom.lat,"lng":layer.options.mapParm.bounds.leftTop.lng-360});
+		}
+		else{
+			latlngs.push({"lat":layer.options.mapParm.bounds.rightBottom.lat,"lng":layer.options.mapParm.bounds.leftTop.lng});
+		};
+//		
+		const leftTopPixel = map.latLngToLayerPoint(layer.options.mapParm.bounds.leftTop);
+		const rightTopPixel = map.latLngToLayerPoint({"lat":layer.options.mapParm.bounds.leftTop.lat,"lng":layer.options.mapParm.bounds.rightBottom.lng});
+		const leftBottomPixel = map.latLngToLayerPoint({"lat":layer.options.mapParm.bounds.rightBottom.lat,"lng":layer.options.mapParm.bounds.leftTop.lng});
+		//console.log('[displayMapBounds] leftTopPixel:',leftTopPixel,'rightTopPixel:',rightTopPixel,'leftBottomPixel:',leftBottomPixel);
+
+		L.polygon(latlngs, {"color": "fuchsia", "weight":12, "fill":false, "opacity":0.2})
+		.bindTooltip( layer.options.mapParm.humanName[appLocale] || layer.options.mapParm.humanName.en,
+			{"permanent":true,
+			"direction":'center',
+			"className":'mapBoundsTooltip',
+			//"offset":[((leftTopPixel.x-rightTopPixel.x)/2)+50,((leftTopPixel.y-leftBottomPixel.y)/2)+20]
+			"offset":[0,((leftTopPixel.y-leftBottomPixel.y)/2)]
+		}).addTo(mapBoundsLayer);
+	};
+});
+//console.log('[displayMapBounds] mapBoundsLayer:',mapBoundsLayer.getLayers().length,mapBoundsLayer);
+if(mapBoundsLayer.getLayers().length) mapBoundsLayer.addTo(map);
+}; // end function displayMapBounds
+
+
+function displayMapBoundsOFF(){
+mapBoundsLayer.remove().clearLayers();
+}; // end function displayMapBoundsOFF()
 
 
 // Функции выбора - удаления треков
@@ -558,7 +723,7 @@ else {
 	var options = {featureNameNode : trackNameNode};
 	var xhr = new XMLHttpRequest();
 	//console.log('[displayTrack] Загружаем новый файл trackName=',trackDirURI+'/'+trackName+'.gpx');
-	xhr.open('GET', trackDirURI+encodeURI('/'+trackName+'.gpx'), true); 	// В этом грёбаном языке специальная грёбаная функция для получения правильного url портит [], которые являются частью ipv6
+	xhr.open('GET', trackDirURI+'/'+encodeURIComponent(trackName+'.gpx'), true); 	// В этом грёбаном языке специальная грёбаная функция для получения правильного url портит [], которые являются частью ipv6
 	xhr.overrideMimeType( "application/gpx+xml; charset=UTF-8" ); 	// тупые уроды из Mozilla считают, что если не указан mime type ответа -- то он text/xml. Файлы они, очевидно, не скачивают.
 	xhr.send();
 	xhr.onreadystatechange = function() { // trackName - внешняя
@@ -647,7 +812,7 @@ async function updateCurrTrack() {
 // в формате GeoJSON
 //console.log('[updateCurrTrack]',currentTrackServerURI,currentTrackName);
 var xhr = new XMLHttpRequest();
-xhr.open('GET', currentTrackServerURI+encodeURI('?currTrackName='+currentTrackName), true); 	// Подготовим асинхронный запрос
+xhr.open('GET', currentTrackServerURI+'?currTrackName='+encodeURIComponent(currentTrackName), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился, покинем функцию
@@ -676,7 +841,6 @@ xhr.onreadystatechange = function() { //
 		}
 		if(resp.pt) { 	// есть данные
 			if(savedLayers[currentTrackName]) {	// может не быть, если, например, показ треков выключили, но выполнение currentTrackUpdate уже запланировано. Вообще-то, так быть не может, но сообщение об отсутствии иногда наблюдается. А иногда -- нет.
-				//if(typeof savedLayers[currentTrackName].getLayers  == 'function') { 	// это layerGroup
 				if(savedLayers[currentTrackName] instanceof L.LayerGroup) { 	// это layerGroup
 					savedLayers[currentTrackName].getLayers()[0].addData(resp.pt); 	// добавим полученное к слою с текущим треком
 					//console.log(savedLayers[currentTrackName].getLayers()[0]);
@@ -827,62 +991,84 @@ let tileXs = dwnldJob.getElementsByClassName("tileX");
 let tileYs = dwnldJob.getElementsByClassName("tileY");
 let zoom = dwnldJobZoom.innerText;
 let XYs = '', XYsE = '', xhr = [];
+
+// Создадим задание для каждой найденной карты
 for (let i = 0; i < mapDisplayed.children.length; i++) { 	// для каждого потомка списка mapDisplayed
-	let mapname = mapDisplayed.children[i].id; 	// 
-	let uri;
-	if(mapname.indexOf('EPSG3395')==-1) {	// карта - на сфере, пишем тайлы как есть
-		if(!XYs.length) {
-			for (var k = 0; k < tileXs.length; k++) {
-				if(tileXs[k].value && tileYs[k].value) 	XYs += tileXs[k].value+','+tileYs[k].value+'\n';
-			}
-		}
-		//console.log(XYs);
-		uri = '?loaderJob='+mapname+'.'+zoom+'&xys='+XYs+'&infinitely';
-	}
-	else {	// карта - на эллипсоиде, пишем тайлы на один ниже
-		if(!XYsE.length) {
-			var minY = 524288;	// max Y on zoom 19
-			for (var k = 0; k < tileXs.length; k++) {
-				if(+tileXs[k].value && +tileYs[k].value) {		
-					XYsE += tileXs[k].value+','+String(+tileYs[k].value+1)+'\n'; 	// тайлы на 1 ниже,
-					if(tileYs[k].value < minY) minY = tileYs[k].value;
+	const mapname = mapDisplayed.children[i].id; 	// 
+	// Получим параметры карты, вдруг там что
+	// Однако, наличие функций $getURL и $getTile нас не должно волновать - мало ли для чего
+	// нам нужно задание для загрузчика
+	fetch(tileCacheControlURI+'?getMapInfo='+encodeURIComponent(mapname))
+	.then(response => {
+		if (!response.ok) {
+			throw new Error(`getMapInfo http error! Status: ${response.status}`);
+		};
+		return response.json();
+	})
+	.then(mapParm => {
+		//console.log('[createDwnldJob] mapParm:',mapParm);
+		let uri;
+		if((mapname.indexOf('EPSG3395')!=-1) || ((mapParm!=null)&&(mapParm.EPSG==3395))) {	// карта - на эллипсоиде, пишем тайлы на один ниже
+			if(!XYsE.length) {
+				var minY = 524288;	// max Y on zoom 19
+				for (var k = 0; k < tileXs.length; k++) {
+					if(+tileXs[k].value && +tileYs[k].value) {		
+						XYsE += tileXs[k].value+','+String(+tileYs[k].value+1)+'\n'; 	// тайлы на 1 ниже,
+						if(tileYs[k].value < minY) minY = tileYs[k].value;
+					};
+				};
+				// а потом добавим верхний ряд
+				for (var k = 0; k < tileXs.length; k++) {
+					if(+tileXs[k].value && +tileYs[k].value) {		
+						if(tileYs[k].value == minY) XYsE += tileXs[k].value+','+tileYs[k].value+'\n';
+					}
 				}
 			}
-			// а потом добавим верхний ряд
-			for (var k = 0; k < tileXs.length; k++) {
-				if(+tileXs[k].value && +tileYs[k].value) {		
-					if(tileYs[k].value == minY) XYsE += tileXs[k].value+','+tileYs[k].value+'\n';
-				}
+			//console.log(XYsE);
+			uri = '?loaderJob='+mapname+'.'+zoom+'&xys='+XYsE+'&infinitely';
+		}
+		else {	// карта - неизвестно на чём, считаем, что на сфере, пишем тайлы как есть
+			if(!XYs.length) {
+				for (var k = 0; k < tileXs.length; k++) {
+					if(tileXs[k].value && tileYs[k].value) 	XYs += tileXs[k].value+','+tileYs[k].value+'\n';
+				};
+			};
+			//console.log(XYs);
+			uri = '?loaderJob='+encodeURIComponent(mapname+'.'+zoom)+'&xys='+encodeURIComponent(XYs)+'&infinitely';
+		}
+		//console.log('[createDwnldJob] uri=',uri);
+		
+		fetch(tileCacheControlURI+uri)
+		.then(response => {
+			if (!response.ok) {
+				throw new Error(`Create loager job http error! Status: ${response.status}`);
+			};
+			return response.json();
+		})
+		.then(response => {
+			if(response && response['status'] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
+				loaderIndicator.style.color='green';
+				loaderIndicator.style.cursor='pointer';
+				//loaderIndicator.innerText='\u263A';
+				loaderIndicator.title=downloadLoaderIndicatorOnTXT;
+				loaderIndicator.onclick=function (){chkLoaderStatus('stop');};
 			}
-		}
-		//console.log(XYsE);
-		uri = '?loaderJob='+mapname+'.'+zoom+'&xys='+XYsE+'&infinitely';
-	}
-	//console.log('[createDwnldJob] uri=',uri);
-	//continue;
-	xhr[i] = new XMLHttpRequest();
-	xhr[i].open('GET', tileCacheControlURI+encodeURI(uri), true); 	// Подготовим асинхронный запрос
-	xhr[i].send();
-	xhr[i].onreadystatechange = function() { // 
-		if (this.readyState != 4) return; 	// запрос ещё не завершился
-		if (this.status != 200) return; 	// что-то не то с сервером
-		let response = JSON.parse(this.response);
-		if(response && response['status'] == '0') { 	// первым должен идти код возврата eval запуска загрузчика
-			loaderIndicator.style.color='green';
-			loaderIndicator.style.cursor='pointer';
-			//loaderIndicator.innerText='\u263A';
-			loaderIndicator.title=downloadLoaderIndicatorOnTXT;
-			loaderIndicator.onclick=function (){chkLoaderStatus('stop');};
-		}
-		else {
-			loaderIndicator.style.color='red';
-			loaderIndicator.style.cursor='pointer';
-			//loaderIndicator.innerText='\u2639';
-			loaderIndicator.title=downloadLoaderIndicatorOffTXT;
-			loaderIndicator.onclick=function (){chkLoaderStatus('start');};
-		}
-		if(response && response['jobName']) dwnldJobList.innerHTML += '<li>' + response['jobName'] + '</li>\n';
-	};
+			else {
+				loaderIndicator.style.color='red';
+				loaderIndicator.style.cursor='pointer';
+				//loaderIndicator.innerText='\u2639';
+				loaderIndicator.title=downloadLoaderIndicatorOffTXT;
+				loaderIndicator.onclick=function (){chkLoaderStatus('start');};
+			}
+			if(response && response['jobName']) dwnldJobList.innerHTML += '<li>' + response['jobName'] + '</li>\n';
+		})
+		.catch(error => {
+			console.error('Create loager job Error:', error);
+		});
+	})
+	.catch(error => {
+		console.error('getMapInfo fetch data Error:', error);
+	});
 };
 }; 	// end function createDwnldJob
 
@@ -900,7 +1086,7 @@ else if(restartLoader=='stop') {
 	url += '&stopLoader';
 	dwnldJobList.innerHTML = 'Send stop loader<br>';
 };
-xhr.open('GET', tileCacheControlURI+encodeURI(url), true); 	// Подготовим асинхронный запрос
+xhr.open('GET', tileCacheControlURI+url, true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился
@@ -1043,7 +1229,7 @@ if(editorEnabled===false) {
 	return;
 }
 let target;
-if(e.target) target = e.target;	// вызвали как обработчик события. В этом языке this почему-то currentTarget (текущий обработчик события в процессе всплытия), а не current (тот, кто инициировал событие). Поэтому лучше явно.
+if(e.target) target = e.target;	// вызвали как обработчик события. В этом языке this почему-то currentTarget. currentTarget - это то, где зарегистрирован обработчик, когда как событие могло произойти во вложенном объекте и всплывать через этот. Когда как target - это объект, где произошло событие.
 else target = e;	// вызвали просто как функцию
 // Это нужно делать до переноса target в другой слой, иначе у Leaflet.Editable съезжает крыша.
 switch(flavor){
@@ -1691,11 +1877,11 @@ return gpxtrack;
 function createSuperclaster(geoJSONpoints){
 /* geoJSONpoints - array of GeoJSON points, as it described in Superclaster doc */
 const index = new Supercluster({
-	log: false, 	// вывод лога в консоль
-	radius: superclusterRadius,
-	extent: 256,
-	maxZoom: 14,
-	minPoints: 3	// при умолчальных 2 невозможно разделить дублирующиеся точки
+	"log": false, 	// вывод лога в консоль
+	"radius": superclusterRadius,
+	"extent": 256,
+	"maxZoom": 14,
+	"minPoints": 3	// при умолчальных 2 невозможно разделить дублирующиеся точки
 }).load(geoJSONpoints); 
 return index;
 } // end function createSuperclaster
@@ -1926,14 +2112,18 @@ function flyByString(stringPos){
 //console.log('goToPositionButton',goToPositionButton.value,'goToPositionField',goToPositionField.value);
 if(!stringPos) stringPos = map.getCenter().lat+' '+map.getCenter().lng; 	// map -- глобально определённая карта
 //console.log('[flyByString] stringPos=',stringPos);
-	// Это написал GigaChat, я так и ниасилил регулярные выражения
+	// Это написано с использованием аж трёх ИИ, сам я так и ниасилил регулярные выражения
+	// Но за то время, что я убил, добиваясь от ИИ правильного результата, я написал бы сам.
+	// Ещё и понимал бы, что здесь написано.
+	// Напиши регулярное выражение для javascript regex, извлекающее из строки первое число, следующее за указанной подстрокой через любое количество любых нецифровых символов. Число может быть отрицательными.
 	function extractNumberAfterKeyword(str, keyword) {
 		// Используем экранирование специальных символов регулярного выражения внутри keywor'd'
-		const escapedKeyword = keyword.replace(/[-/\\^$*+?.()|[$${}]/g, '\\$&');
+		const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
 		// Регулярное выражение теперь включает аргумент keyword
-		const regex = new RegExp(`${escapedKeyword}[^0-9]*([+-]?\\d*\\.?\\d+)`, 'i');
+		const regex = new RegExp(`${escapedKeyword}[^\\d.-]*(-?\\d+(?:\\.\\d+)?)`, 'i');
 		// Выполняем поиск соответствия регулярному выражению
 		const match = str.match(regex);
+		//console.log('[extractNumberAfterKeyword] match:',match);
 		if (match && match.length > 1) { // Если найдено совпадение и оно имеет значение
 		    return parseFloat(match[1]); // Возвращаем найденное число
 		};
@@ -1955,19 +2145,27 @@ try {
 catch (error) { 	// coordinate-parser обломался, строка - не координаты.
 	//console.log('[flyByString] stringPos=',stringPos,error);
 	// это возможно, строка с lon lat
+	//console.log('[flyByString] stringPos=',stringPos);
 	lon = extractNumberAfterKeyword(stringPos, 'lon');
 	lat = extractNumberAfterKeyword(stringPos, 'lat');
-	if((lon == null) || (lat == null) || (lon == lat)){
+	//console.log('[flyByString] 1 lon=',lon,'lat=',lat);
+	if(lon == null){
 		lon = extractNumberAfterKeyword(stringPos, 'lng');
-		lat = extractNumberAfterKeyword(stringPos, 'lat');
-		if((lon == null) || (lat == null) || (lon == lat)){
+		if(lon == null){
 			lon = extractNumberAfterKeyword(stringPos, 'longitude');
+		};
+	};
+	if(lat == null){
+		lat = extractNumberAfterKeyword(stringPos, 'lat');
+		if(lat == null){
 			lat = extractNumberAfterKeyword(stringPos, 'latitude');
 		};
 	};
+	//console.log('[flyByString] 2 lon=',lon,'lat=',lat);
 };
 
-if((lon == null) || (lat == null) || (lon == lat)){	// координат так и не нашли
+//console.log('[flyByString] 3 lon=',lon,'lat=',lat);
+if((lon == null) || (lat == null)){	// координат так и не нашли
 	// А не номер тайла ли там?
 	//const digits = stringPos.trim().match(new RegExp("/(?<!-|\.)\d+(?!\.)/g"));	// вытащим неотрицательные целые числа из строки. Выражение неправильное, оно возвращает вторые и далеее цифры после запятой. Но так бывает редко ;-)
 	const digits = stringPos.trim().match(/\d+/g);	// вытащим неотрицательные целые числа из строки. Выражение неправильное, оно возвращает вторые и далеее цифры после запятой. Но так бывает редко ;-)
@@ -2005,6 +2203,7 @@ if((lon == null) || (lat == null) || (lon == lat)){	// координат так
 	};
 }
 else{	// координаты нашли
+	//console.log('[flyByString] 4 lon=',lon,'lat=',lat);
 	map.setView(L.latLng([lat,lon])); 	// подвинем карту в указанное место
 	let xhr = new XMLHttpRequest();	// Запросим сервис геокодирования на предмет - что у нас в этом месте
 	const url = encodeURI('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lon);
@@ -2014,8 +2213,9 @@ else{	// координаты нашли
 	xhr.onreadystatechange = function() { // 
 		if (this.readyState != 4) return; 	// запрос ещё не завершился
 		if (this.status != 200) return; 	// что-то не то с сервером
+		//console.log('[flyByString] this.response=',this.response);
 		const nominatim = JSON.parse(this.response);
-		//console.log(nominatim);
+		//console.log('[flyByString] nominatim:',nominatim);
 		updGeocodeList(nominatim);
 	};
 };
@@ -2023,12 +2223,13 @@ else{	// координаты нашли
 
 
 function updGeocodeList(nominatim){
+if(nominatim.error) return;
 if(!Array.isArray(nominatim)) nominatim = [nominatim];
 geocodedList.innerHTML = ""; 	// очистим список
 for(const geoObj of nominatim){
 	//console.log(geoObj);
 	let optNode = document.createElement('li');
-	optNode.innerText = geoObj.display_name;
+	optNode.innerText = geoObj.display_name || geoObj.error;
 	optNode.onclick = function(e) {
 		//console.log(e); 
 		for(let liNode of geocodedList.children){
@@ -2038,8 +2239,8 @@ for(const geoObj of nominatim){
 		map.setView(L.latLng([geoObj.lat,geoObj.lon]))
 	};
 	geocodedList.append(optNode);
-}
-} // end function updGeocodeList
+};
+}; // end function updGeocodeList
 
 
 // Копирование в буфер обмена
@@ -2164,7 +2365,7 @@ function loggingCheck(logging='logging.php') {
 */
 //console.log('[loggingCheck] started');
 let xhr = new XMLHttpRequest();
-xhr.open('GET', logging, true); 	// Подготовим асинхронный запрос
+xhr.open('GET', encodeURI(logging), true); 	// Подготовим асинхронный запрос
 xhr.send();
 xhr.onreadystatechange = function() { // 
 	if (this.readyState != 4) return; 	// запрос ещё не завершился
@@ -2233,21 +2434,22 @@ async function coverage(){
 //console.log(mapDisplayed.firstElementChild);
 if(cowerSwitch.checked){ 	// переключатель в интерфейсе загрузчика
 	if(mapDisplayed.firstElementChild){ 	// список показываемых карт не пуст
-		const mapname = mapDisplayed.firstChild.id;
-		displayMap(mapname+'_COVER');
-		coverMap.innerHTML = mapname;
+		if(savedLayers[mapDisplayed.firstElementChild.id].getLayers().length>1){	// в карте больше одного слоя
+			cowerSwitch.checked = false;	// для составной (многослойной) карты непонятно, покрытие чего показывать
+		}
+		else {
+			displayMap('COVER',{'r':mapDisplayed.firstChild.id});
+			coverMap.innerHTML = mapDisplayed.firstChild.id;
+		};
 	}
 	else cowerSwitch.checked = false;
 }
 else {
 	//console.log(savedLayers);
-	for (let mapname in savedLayers) {
-		if(mapname.indexOf('_COVER')!=-1) {
-			//console.log(mapname);
-			savedLayers[mapname].remove();
-			//break; 	// почему-то иногда не удаляется предыдущий... Восстанавливается из куки?
-		}
-	}
+	if(savedLayers['COVER'] != null) {
+		savedLayers['COVER'].remove();
+		delete savedLayers['COVER'];	// удалим карту покрытия из кеша
+	};
 	coverMap.innerHTML = '';
 }
 return;
@@ -3105,7 +3307,7 @@ function loadScriptSync(scriptURL){
 только при загрзке <script src=""><script>, где указывает, что надо сохранить порядок загрузки
 */
 const xhr = new XMLHttpRequest();
-xhr.open('GET', scriptURL, false); 	// Подготовим синхронный запрос
+xhr.open('GET', encodeURI(scriptURL), false); 	// Подготовим синхронный запрос
 xhr.send();
 if (xhr.status == 200) { 	// Успешно
 	let script = document.createElement("script");
@@ -3245,6 +3447,10 @@ L.Control.CopyToClipboard = L.Control.extend({
 		}
 });
 
+L.Layer.include({	
+	getParentLayer: function() {return this._map || this._mapToAdd;}
+});
+
 L.LayerGroup.include({	
 	// рекурсивный eachLayer. Их просили это сделать с 2016 года, но они только плачь по Украине осилили. 
 	// https://github.com/Leaflet/Leaflet/issues/4461
@@ -3253,6 +3459,20 @@ L.LayerGroup.include({
 			if (layer._layers) layer.eachLayerRecursive(method, context);	// а почему они не применяют instanceof? Медленно? 
 			else method.call(context, layer);
 		});
+	},
+	// рекурсивный getLayers
+	getLayersRecursive: function(classOnly=undefined) {
+		let res = [];
+		this.eachLayer(function(layer){
+			if (layer._layers) res.concat(layer.getLayersRecursive());
+			else {
+				if(classOnly){
+					if(layer instanceof classOnly) res.push(layer);
+				}
+				else res.push(layer);
+			};
+		});
+		return res;
 	},
 	// рекурсивный hasLayer
 	hasLayerRecursive: function(what) {
@@ -3265,7 +3485,7 @@ L.LayerGroup.include({
 		}
 		return res;
 	},
-	// рекурсивный getLayer
+	// рекурсивный getLayer Returns the layer with the given internal ID.
 	getLayerRecursive: function(what) {
 		let res = this.getLayer(what);
 		if(res!=null) return res;

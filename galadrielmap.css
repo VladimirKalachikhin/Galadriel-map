@@ -382,5 +382,13 @@ button:disabled {
 	background: transparent;
 	border: none;
 	border-width : 0;
-	border : 0;
+}
+
+.mapBoundsTooltip {
+	color: black;
+	opacity:1 !important;
+	background: transparent;
+	border: none;
+	border-width : 0;
+	text-align: left;
 }

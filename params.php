@@ -8,18 +8,24 @@
 // Velocity vector length, own and AIS targets. Minutes of movement.
 // if not set - the $collisionDistance in gpsdPROXY's params.php
 //$velocityVectorLengthInMn = 10;	
+
 // Пути paths
 // путь в файловой системе к демону, собирающему информацию от gpsd. Демон имеет собственные настройки и зависимости!
 // The Data collection daemon. Daemon has its own config file!
-$gpsdPROXYpath = 'gpsdPROXY';	// file system path
+// file system path
+$gpsdPROXYpath = 'gpsdPROXY';	
 // Адрес gpsdPROXY, если не указан $gpsdPROXYpath. gpsdPROXY url, if no $gpsdPROXYpath present.
 // Если не указано, то не будет координат и другой динамической информации.
-//$gpsdProxyHost = ;	// If undefined - no spatial and other data presents. If $gpsdPROXYpath is set, then get it from gpsdPROXY's params.php
+// If undefined - no spatial and other data presents. If $gpsdPROXYpath is set,
+// then getting it from gpsdPROXY's params.php
+//$gpsdProxyHost = ;	
 //$gpsdProxyPort = ;	// Required, if $gpsdProxyHost is defined
 // путь в файловой системе к папке с записью пути (треку), от расположения GaladrielMap или абсолютный
-$trackDir = 'track'; 	// track files directory, if present, in filesystem
+// track files directory, if present, in filesystem
+$trackDir = 'track'; 	
 // путь в файловой системе к папке с проложенными маршрутами и навигационными точками. Или абсолютный.
-$routeDir = 'route'; 	// route & POI files directory, if present, in filesystem
+// route & POI files directory, if present, in filesystem
+$routeDir = 'route'; 
 
 // Список адресов, обращение с которых позволяет иметь полные (белый список, white list)
 // или ограниченные (чёрный список, black list) возможности.
@@ -42,6 +48,7 @@ array(
 );
 */
 // Службы Services
+<<<<<<< HEAD
 // 	Источник карты Map source
 // url источника карты: в интернет (только растровые тайлы) или GaladrielCache
 $tileCacheURI = "/tileproxy/tiles.php?z={z}&x={x}&y={y}&r={map}"; 	// uri of the map service, for example Galadriel tile cache/proxy service. In case GaladrielCache {map} is a map name in GaladrielCache app.
@@ -54,27 +61,57 @@ $tileCacheControlURI = "/tileproxy/cacheControl.php";	// uri of GaladrielCache c
 $defaultMap = 'OpenTopoMap';	// GaladrielCache map to display then no map selected
 // Начальная точка, если никакой точки не указано, строка json
 $defaultCenter = '{"lat": 55.754, "lng": 37.62}';	// map center when no coordinates sets, json string
+=======
+//	Источник карты Map source
+//		url источника карты: в интернет если не используется GaladrielCache.
+//		Для использования GaladrielCache следует указать $tileCacheControlURI
+//		uri of the map service with no GaladrielCache tile cache/proxy service.
+//		In case the GaladrielCache configure the variable $tileCacheControlURI.
+//$mapTilesURI = "http://mt2.google.com/vt/lyrs=s,m&hl=ru&x={x}&y={y}&z={z}"; 	//
+//$mapTilesURI = 'http://a.tile.opentopomap.org/{z}/{x}/{y}.png'; 	//
+//	Управление GaladrielCache, если используется GaladrielCache.
+// uri of GaladrielCache control interface
+$tileCacheControlURI = "/tileproxyNG/cacheControl.php";	
+>>>>>>> cache3
 
+// Карта, которая показывается, если нечего показывать.
+// GaladrielCache map to display then no map selected
+$defaultMap = 'OpenTopoMap';	
+// Начальная точка, если никакой точки не указано, строка json
+// map center when no coordinates sets, json string
+$defaultCenter = '{"lat": 55.754, "lng": 37.62}';
+// Автоматически обновлять карту через указанный в описании карты срок годности, если
+// этот срок меньше указанного.
+// сек., если 0 - не обновлять.
+// Automatically update the map after the expiration date specified in the map description, if
+// this period is less than the specified one.
+// In sec., if 0 - do not update.
+$autoUpdateMap = 60*60*24;
 // если время последнего определения положения отличается от текущего на столько секунд -- положение показывается как устаревшее (серый курсор)
-$PosFreshBefore = 5; 	// seconds. The position is considered correct no longer than this time. If the position older - cursor is grey.
+// The position is considered correct no longer than this time. If the position older - cursor is grey.
+$PosFreshBefore = 5; 	// seconds.
 
 // 	Запись пути Logging
 //		установите gpsd-utils, в состав которых входит gpxlogger  install gpsd-utils for gpxlogger
 // 		при потере позиции на столько секунд будет создан новый путь
-$loggerNoFixTimeout = 30; 	// sec A new track is created if there's no fix written for an interval
+// 		A new track is created if there's no fix written for an interval
+$loggerNoFixTimeout = 30; 	// sec
 // 		новые координаты записываются каждые столько секунд
-$loggerMinMovie = 5; 	// m Motions shorter than this will not be logged 
+//		Motions shorter than this will not be logged 
+$loggerMinMovie = 5; 	// m
 //		файл, куда записывается путь, имеет такое имя, что более поздние файлы находятся в начале списка (TRUE), или в конце (FALSE). Зависит от программы записи пути.
-$currTrackFirst = FALSE; 	// In list of a tracks current track is a first (TRUE), or a last (FALSE). Depending on a your tracking app.
+// 		In list of a tracks current track is a first (TRUE), or a last (FALSE). Depending on a your tracking app.
+$currTrackFirst = FALSE; 	
 //		Через сколько дней начинать новый файл.
 $newTrackEveryDays = 1;	// After how many days to start a new file.
-//		запуск gpxlogger. &logfile заменяется на имя файла лога, &host -- именем хоста, на котором занущена программа
-//		если эта переменная не установлена -- считается, что запись пути осуществляется чем-то другим
-//		_Обязательно_ указывать полные пути, если вы хотите, чтобы запись пути возобновилась после
-//		случайного выключения сервера. Узнать полный путь к команде можно с помощью заклинания which.
-//		It is mandatory to specify full paths if you want the path recording to resume after
-//		accidentally shutting down the server. You can find out the full path to the command 
-//		using a spell "which"		
+//		запуск gpxlogger.
+//			 &logfile заменяется на имя файла лога, &host -- именем хоста, на котором занущена программа
+//			если эта переменная не установлена -- считается, что запись пути осуществляется чем-то другим
+//			_Обязательно_ указывать полные пути, если вы хотите, чтобы запись пути возобновилась после
+//			случайного выключения сервера. Узнать полный путь к команде можно с помощью заклинания which.
+//			It is mandatory to specify full paths if you want the path recording to resume after
+//			accidentally shutting down the server. You can find out the full path to the command 
+//			using a spell "which"		
 //$gpxlogger = "/usr/local/bin/gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. &logfile replaced by log filename
 //$gpxlogger = "gpxlogger -e shm -r --garmin -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile"; 	// sins 3.24.1 - logging depth as Garmin extension. will listen to the local gpsd using shared memory, reconnect, interval, minmove. &logfile replaced by log filename
 //$gpxlogger = "gpxlogger -e shm -r -i $loggerNoFixTimeout -m $loggerMinMovie -f &logfile &host:2947"; 	// will listen to the local gpsd using shared memory, reconnect, interval, minmove. &logfile replaced by log filename, &host replaced by host name 
@@ -98,7 +135,6 @@ $gpxlogger = "gpxlogger -e dbus -r -i $loggerNoFixTimeout -m $loggerMinMovie -f 
 //							Color for a depth less than minvalue. Html color string only.
 // upperMaxColor	string	Цвет для глубины, большей чем maxvalue. Только! строка с html обозначением цвета.
 //							Colour for depth, more than maxvalue. Html color string only.
-
 $depthInData = '{"display":true,
 "minvalue": 2,
 "maxvalue": 10,
@@ -110,13 +146,15 @@ $depthInData = '{"display":true,
 
 // Показ символа ветра Display wind symbol
 // Использовать истинный ветер, а не вымпельный
-$useTrueWind = false;	// Use true wind instead relative
+// Use true wind instead relative
+$useTrueWind = false;	
 
 // Системные параметры System
 // строка запуска консольного интерпретатора php
-//$phpCLIexec = '/usr/bin/php-cli'; 	// php-cli executed name on your OS
-//$phpCLIexec = '/usr/bin/php'; 	// php-cli executed name on your OS
-$phpCLIexec = 'php'; 	// php-cli executed name on your OS
+// php-cli executed name on your OS
+//$phpCLIexec = '/usr/bin/php-cli'; 	
+//$phpCLIexec = '/usr/bin/php';
+$phpCLIexec = 'php';
 
 //  поскольку params.php загружается отнюдь не только в index, все параметры должны быть здесь
 if($gpsdPROXYpath) require_once($gpsdPROXYpath.'/params.php'); 	// 

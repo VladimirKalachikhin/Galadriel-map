@@ -118,6 +118,7 @@ if(!$boatInfo['mmsi']) $boatInfo['mmsi'] = str_pad(substr(crc32($boatInfo['shipn
 //echo "boatInfo:"; print_r($boatInfo); echo "\n";
 
 $mapsInfo = array();
+$isCOVERpresent = false;
 if($tileCacheControlURI){	// мы знаем про GaladrielCache
 	if(substr($tileCacheControlURI,0,4)!=='http'){	// всё на одном сервере
 		$str = "{$_SERVER['REQUEST_SCHEME']}://$HTTP_HOST:{$_SERVER['SERVER_PORT']}";
@@ -134,8 +135,11 @@ if($tileCacheControlURI){	// мы знаем про GaladrielCache
 		foreach($mapList as $mapName => $mapHumanNames) {
 			//echo "mapName=$mapName;<br>\n";
 			// $appLocale - из internationalisation
-			if($mapHumanNames[$appLocale]) $mapsInfo[$mapName] = $mapHumanNames[$appLocale];
-			else $mapsInfo[$mapName] = $mapHumanNames['en'];	// там заведомо есть
+			if($mapName == 'COVER') $isCOVERpresent = true;	// не будем включать в список карт карту покрытия, но отметим, что она есть
+			else {
+				if($mapHumanNames[$appLocale]) $mapsInfo[$mapName] = $mapHumanNames[$appLocale];
+				else $mapsInfo[$mapName] = $mapHumanNames['en'];	// там заведомо есть
+			};
 		};
 	};
 	asort($mapsInfo,SORT_LOCALE_STRING);
@@ -225,8 +229,8 @@ $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_
 
     <!-- Leaflet -->
 	<link rel="stylesheet" href="leaflet/leaflet.css" type="text/css" />
-	<script src="leaflet/leaflet.js"></script>
-
+	<script src="leaflet/leaflet-src.js"></script>
+	
 	<script src="polycolor/polycolorRenderer.js"></script>
 	<script src="value2color/value2color.js"></script>
 
@@ -256,7 +260,7 @@ $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_
 	<script src="long-press-event/dist/long-press-event.min.js"></script>
 	
 	<script src="Leaflet.TextPath/leaflet.textpath.js"></script>
-	
+
 	<link rel="stylesheet" href="galadrielmap.css" type="text/css" /> <!-- замена стилей -->
 	<script src="galadrielmap.js"></script>
 	<!-- <script src="test.js"></script> -->
@@ -533,6 +537,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 		<!-- Загрузчик -->
 		<div class="leaflet-sidebar-pane" id="download" style="height:100%;">
 			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+<?php if($isCOVERpresent){ ?>
 			<div style="margin: 1rem 0 0.5 0;height:5rem;">
 				<div style="margin:0 0 0.5rem 0">
 					<div class="onoffswitch" style="float:right;margin: 0.3rem auto;"> <?php //  Переключатель https://proto.io/freebies/onoff/  ?>
@@ -548,6 +553,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 				</div>
 				<span id='coverMap' style='font-size:150%;'></span>
 			</div>
+<?php }; ?>
 			<h2 style=''><?php echo $downloadZoomTXT;?>: <span id='dwnldJobZoom'></span></h2>
 			<form id="dwnldJob" style="font-size:120%;margin:0;height:50%;" onSubmit="createDwnldJob(); return false;" onreset="dwnldJobZoom.innerHTML=map.getZoom(); downJob=false; tileGrid.redraw();">
 					<div>
@@ -718,6 +724,7 @@ if(! startCenter) startCenter = defaultCenter; 	// начальная точка
 var startZoom = storageHandler.restore('startZoom'); 	// storageHandler from galadrielmap.js
 if(! startZoom) startZoom = 12; 	// начальный масштаб
 var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
+var autoUpdateMap = '<?php echo $autoUpdateMap;?>'; 	// Автоматически обновлять карту через указанный в описании карты срок годности
 // ГПС
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 // поскольку теперь есть TPV и ATT, не вся требуемая информация поступает в одном сообщениии,
@@ -740,7 +747,8 @@ var savePositionEvery = 10 * 1000; 	// будем сохранять полож�
 var followPaused; 	// объект таймера, который восстанавливает следование курсору
 var velocityVectorLengthInMn = <?php echo $velocityVectorLengthInMn;?>; 	// длинной в сколько минут пути рисуется линия скорости
 // Окружности дистанции
-distCirclesSwitch.checked = Boolean(storageHandler.restore('distCirclesSwitch')); 	// показывать окружности дистанции
+let res = storageHandler.restore('distCirclesSwitch');
+if(res != null) distCirclesSwitch.checked = Boolean(res); 	// показывать окружности дистанции
 // AIS
 var vehicles = {}; 	// list of visible by AIS data vehicle objects 
 var AISstatusTXT = {
@@ -753,6 +761,7 @@ var AISshipTypeTXT = {
 var downJob = false; 	// флаг - не создаётся ли задание на скачивание
 var downloadLoaderIndicatorOnTXT = '<?php echo $downloadLoaderIndicatorOnTXT; ?>';
 var downloadLoaderIndicatorOffTXT = '<?php echo $downloadLoaderIndicatorOffTXT; ?>';
+var isCOVERpresent = '<?php echo $isCOVERpresent; ?>';
 // Пути и маршруты
 var editorEnabled = false;	// семафор, что можно использовать редактирования
 // Путь
@@ -762,8 +771,10 @@ var routeDirURI = '<?php echo $routeDir;?>'; 	// адрес каталога с 
 var routeDir = '<?php echo $routeDir;?>'; 	// каталог с маршрутами на сервере
 var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущего (пишущегося сейчас) трека
 var updateRouteServerURI = '<?php echo $updateRouteServerURI;?>'; 	// url службы динамического обновления маршрутов
-currTrackSwitch.checked = Boolean(storageHandler.restore('currTrackSwitch'));
-SelectedRoutesSwitch.checked = Boolean(storageHandler.restore('SelectedRoutesSwitch')); 	// показывать выбранные маршруты
+res = storageHandler.restore('currTrackSwitch');
+if(res != null) currTrackSwitch.checked = Boolean(res);
+res = storageHandler.restore('SelectedRoutesSwitch');
+if(res != null) SelectedRoutesSwitch.checked = Boolean(res); 	// показывать выбранные маршруты
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
 var depthInData = <?php echo $depthInData;?>;	// параметры показа глубины вдоль пути
 // Маршрут
@@ -789,8 +800,8 @@ dravingLines.properties = {};
 var goToPositionManualFlag = false; 	// флаг, что поле goToPositionField стали редактировать руками, и его не надо обновлять
 var distCircles = [];	// круги дистанции, массив L.circle. Обращение к этому массиву может происходить сразу после инициализации карты.
 
-if(storageHandler.restore('WindSwitch') === null) windSwitch.checked = true; 	// показывать символ ветра
-else windSwitch.checked = Boolean(storageHandler.restore('WindSwitch'));
+res = storageHandler.restore('WindSwitch');
+if(res != null) windSwitch.checked = Boolean(res); 	// показывать символ ветра
 var useTrueWind = <?php echo $useTrueWind?'true':'false';?>;
 
 // Dashboard
@@ -811,7 +822,8 @@ var latTXT = '<?php echo $latTXT;?>';
 var longTXT = '<?php echo $longTXT;?>';	
 var controlsList = [];	// список control для сокрытия их с экрана
 // восстановление переключателя сокрытия всего
-hideControlsSwitch.checked = Boolean(storageHandler.restore('hideControlsSwitch'));
+res = storageHandler.restore('hideControlsSwitch');
+if(res != null) hideControlsSwitch.checked = Boolean(res);
 if(storageHandler.restore('hideControlPosition')){
 	for(let radio of settings.querySelectorAll('input[type="radio"][name="hideControlPosition"]')){
 		if(radio.value == storageHandler.restore('hideControlPosition')) {
@@ -848,7 +860,8 @@ var map = L.map('mapid', {
     zoom: startZoom,
     attributionControl: false,
     zoomControl: false,
-    editable: true
+    editable: true,
+//    worldCopyJump:true	// это ни хрена не помогает, а наоборот, всё портит. Ну, частично помогает...
 	}
 );
 
@@ -950,12 +963,14 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		tileGrid.addTo(map); 	// добавить на карту тайловую сетку
 		if(CurrnoFollowToCursor === 1)CurrnoFollowToCursor = noFollowToCursor;  // запомним состояние глобального признака следования за курсором, если ещё не запоминали
 		noFollowToCursor = true; 	// отключим следование за курсором
+		displayMapBounds();	// покажем границы карт
 		break;
 	}
 });
 sidebar.on("closing", function(){
 	//console.log('sidebar closing',map.editTools.drawing(),currentRoute);
 	if((typeof tileGrid !== 'undefined') && (tileGrid instanceof L.GridLayer)) tileGrid.remove(); 	// удалить с карты тайловую сетку
+	displayMapBoundsOFF();	// прекратить показывать границы карт
 	if(CurrnoFollowToCursor !== 1) noFollowToCursor = CurrnoFollowToCursor; 	// восстановим признак следования за курсором
 	CurrnoFollowToCursor = 1;
 	centerMarkOff(); 	// выключить крестик в середине
@@ -993,9 +1008,10 @@ map.on('zoomend', function(event) {
 	let zoom = event.target.getZoom();
 <?php if($privileged){	// для пользователя со всеми правами ?>
 	if(!downJob) dwnldJobZoom.innerHTML = zoom;
-	cover_zoom.innerHTML = zoom+8;
+	if(isCOVERpresent) cover_zoom.innerHTML = zoom+8;
 <?php }	// для пользователя со всеми правами ?>
 	if(distCirclesSwitch.checked) distCirclesUpdate(distCircles);	// нарисуем круги дистанции
+	if(map.hasLayer(tileGrid)) displayMapBounds();	// перерисуем границы карт, если показываем сетку
 	if(map.hasLayer(centerMark)) centerMarkUpdate();	// нарисуем круги дистанции крестика в центре
 });
 <?php if($trackDir OR $routeDir) {?>
@@ -1068,7 +1084,7 @@ if(layers) layers.reverse().forEach(function(layerName){ 	// потому что
 	});
 else if(document.getElementById(defaultMap)) selectMap(document.getElementById(defaultMap)); 	// покажкм defaultMap
 <?php if($privileged){	// для пользователя со всеми правами ?>
-coverage();	// Восстановим показ карты покрытия. Хотя состояние переключателя карты покрытия не сохраняется, firefox сохраняет состояние переключателя при простой перезагрузке страницы.
+if(isCOVERpresent) coverage();	// Восстановим показ карты покрытия. Хотя состояние переключателя карты покрытия не сохраняется, firefox сохраняет состояние переключателя при простой перезагрузке страницы.
 <?php }; // для пользователя со всеми правами ?>	
 <?php } else {	// мы не знаем про GaladrielCache ?>
 L.tileLayer(tileCacheURI, {"minZoom":4,"maxZoom":18}).addTo(map);
@@ -1089,7 +1105,10 @@ tileGrid.createTile = function (coords) {
 	return tile;
 }
 if( !downJob) dwnldJobZoom.innerText = map.getZoom(); 	// текущий масштаб отобразим на панели скачивания
-cover_zoom.innerText = map.getZoom()+8;
+if(isCOVERpresent) cover_zoom.innerText = map.getZoom()+8;
+
+// Границы карт
+var mapBoundsLayer = L.layerGroup();
 <?php }; // для пользователя со всеми правами ?>	
 
 restoreDisplayedRoutes();	// Восстановим показываемые из gpx пути
