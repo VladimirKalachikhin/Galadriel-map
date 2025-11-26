@@ -386,9 +386,9 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 		let minNativeZoom,maxNativeZoom;
 		
 		if(!mapParm.clientData || !mapParm.clientData.noAutoScaled){
-			if(mapParm.minZoom>3){
+			if(mapParm.minZoom>5){
 				minNativeZoom = mapParm.minZoom;
-				mapParm.minZoom = 3;
+				mapParm.minZoom = 5;
 			};
 			if(mapParm.maxZoom<16){
 				maxNativeZoom = mapParm.maxZoom;
@@ -460,7 +460,7 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 				document.head.appendChild(link);
 				if(!(mapboxGLscript=loadScriptSync("maplibre-gl/dist/maplibre-gl.js"))) return;	// Нахрена присваивать глобальной переменной, которая нигде не используется -- неясно, но без этого возникает ошибка при закрытии карты.
 				if(!(mapboxLeafletscript=loadScriptSync("maplibre-gl-leaflet/leaflet-maplibre-gl.js"))) return;
-				console.log("[realDisplayMap] функции загружены");
+				//console.log("[realDisplayMap] функции загружены");
 			}
 			layer = L.maplibreGL(layerParm);
 		}
