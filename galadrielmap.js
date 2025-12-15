@@ -8,8 +8,9 @@ doSavePosition() 	Сохранение положения, списка пока
 selectMap(node) 	Выбор карты из списка имеющихся
 deSelectMap(node) 	Прекращение показа карты, и возврат её в список имеющихся.
 displayMap(mapname) Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
+isPointInBounds(point,bounds)
 autoMapUpdate(mapLayer,start)	Автоматическое обновление карт с маленьким временем свежести.
-removeMap(mapname)
+removeMap(mapname)	Находится ли точка в границах, а если нет - где ближайшая граница
 showMapsToggle()	переключает показ всех или выбранных карт в списке карт
 displayMapBounds()	покажем границы карт
 displayMapBoundsOFF()
@@ -126,6 +127,7 @@ loadScriptSync(scriptURL)	Синхронная загрузка javascript
 
 bearing(latlng1, latlng2)
 tileNum2degree(zoom,xtile,ytile) Tile numbers to lon./lat. left top corner
+isValidTile(z, x, y) проверяет, номер тайла ли
 
 atou(b64)		ASCII to Unicode (decode Base64 to original data)
 utoa(data)		Unicode to ASCII (encode data to Base64)
@@ -342,14 +344,16 @@ xhr.open('GET', tileCacheControlURI+'?getMapInfo='+encodeURIComponent(mapname), 
 xhr.send();
 if (xhr.status == 200) { 	// Успешно
 	try {
-		//console.log('[realDisplayMap] xhr.responseText:',xhr.responseText);
+		//console.log('[realDisplayMap] xhr.responseText:',xhr.responseText,'mapParm:',mapParm);
 		mapParm = {...JSON.parse(xhr.responseText),...mapParm}; 	// объединяем параметры карты с переданными параметрами, так, что addParm переписывает соответствующие параметры карты
 	}
 	catch(err) { 	// 
+		console.log('[realDisplayMap] xhr ERROR:',err);
 		return;
 	};
 }
 else {
+	console.log('[realDisplayMap] xhr request ERROR:',xhr.status);
 	return;
 };
 // используются ли векторные тайлы
@@ -357,7 +361,7 @@ const isVector = (mapParm.ContentType=='application/x-protobuf')
 				 || (mapParm.ext=='pbf')
 				 || (mapParm.ext=='mvt')
 				 || (mapParm.vectorTileStyleFile!=null)
-				 || (mapParm.vectorTileStyleURL!=null)
+				 || (mapParm.vectorTileStyleURL!=null);
 
 if(!mapParm.mapTiles && !isVector){	// не указано, как получать тайлы. Однако, если mvt - то там это указано в стиле?
 	return;
@@ -368,7 +372,6 @@ multilayer.options.mapParm = mapParm;
 if(!Array.isArray(mapParm.mapTiles)) {	// список способов получения тайлов - всегда массив
 	mapParm.mapTiles = [mapParm.mapTiles];
 };
-
 for(let i=0; i<mapParm.mapTiles.length; i++){
 	//console.log('[realDisplayMap] mapParm[',i,']:',mapParm.mapTiles[i]);
 	if(typeof mapParm.mapTiles[i] !== "string") {	// тогда объект, ссылка на другую карту
@@ -386,9 +389,9 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 		let minNativeZoom,maxNativeZoom;
 		
 		if(!mapParm.clientData || !mapParm.clientData.noAutoScaled){
-			if(mapParm.minZoom>5){
+			if(mapParm.minZoom>9){
 				minNativeZoom = mapParm.minZoom;
-				mapParm.minZoom = 5;
+				mapParm.minZoom = 9;
 			};
 			if(mapParm.maxZoom<16){
 				maxNativeZoom = mapParm.maxZoom;
@@ -429,7 +432,7 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 			rightBottom.lng = mapParm.bounds.rightBottom.lng;
 			rightBottom.lat = mapParm.bounds.rightBottom.lat;
 			if(mapParm.bounds.leftTop.lng>0 && mapParm.bounds.rightBottom.lng<=0){	// граница переходит антимередиан
-				// Не вполне понятна шлубинная суть этого деяния, но факт в том, что если не вычитать/прибавлять,
+				// Не вполне понятна глубинная суть этого деяния, но факт в том, что если не вычитать/прибавлять,
 				// то не видны либо левые, либо правые части. А если ничего не делать - то не видно ничего.
 				leftTop.lng -= 360;
 				rightBottom.lng += 360;
@@ -451,18 +454,22 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 			layer = L.tileLayer.Mercator(mapTilesURIthis, layerParm);
 		}
 		else if(isVector) { 	// векторные тайлы
-			//console.log("[realDisplayMap] typeof L.mapboxGL=",typeof L.mapboxGL,L.mapboxGL);
-			if(typeof L.mapboxGL === 'undefined'){	// если ещё не загружено
+			if(typeof L.maplibreGL === 'undefined'){	// если ещё не загружено
+			//if(typeof L.mapboxGL === 'undefined'){	// если ещё не загружено
 				let link = document.createElement('link');
 				link.type = 'text/css';
 				link.href = 'style.css';
 				link.rel = 'maplibre-gl/dist/mapbox-gl.css';
+				//link.rel = 'mapbox-gl-js/dist/mapbox-gl.css';
 				document.head.appendChild(link);
 				if(!(mapboxGLscript=loadScriptSync("maplibre-gl/dist/maplibre-gl.js"))) return;	// Нахрена присваивать глобальной переменной, которая нигде не используется -- неясно, но без этого возникает ошибка при закрытии карты.
 				if(!(mapboxLeafletscript=loadScriptSync("maplibre-gl-leaflet/leaflet-maplibre-gl.js"))) return;
-				//console.log("[realDisplayMap] функции загружены");
+				//if(!(mapboxGLscript=loadScriptSync("mapbox-gl-js/dist/mapbox-gl.js"))) return;
+				//if(!(mapboxLeafletscript=loadScriptSync("mapbox-gl-leaflet/leaflet-mapbox-gl.js"))) return;
+				console.log("[realDisplayMap] gl & gl-leaflet is loaded");
 			}
 			layer = L.maplibreGL(layerParm);
+			//layer = L.mapboxGL(layerParm);
 		}
 		else {
 			layer = L.tileLayer(mapTilesURIthis, layerParm);
@@ -470,12 +477,16 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 		multilayer.addLayer(layer);
 	};
 };
+//console.log('[realDisplayMap] mapParm:',mapParm);
+
 // установим текущий масштаб в пределах возможного для указанной карты
-if(! multilayer.options.zoom) {
+// Это всё не должно быть в displayMap, а не здесь?
+if(! multilayer.options.zoom) {	// т.е., не устанавливали уже масштаб по какому-то слою
 	let currZoom = map.getZoom();
+	//console.log('[realDisplayMap] currZoom=',currZoom,'mapParm.maxZoom=',mapParm.maxZoom);
 	if(mapParm.maxZoom < currZoom) {
-		map.setZoom(mapParm.maxZoom);
-		multilayer.options.zoom = currZoom;
+		map.setZoom(mapParm.maxZoom);	// установим масштаб в видимость этого слоя
+		multilayer.options.zoom = currZoom;	// запомним, какой был, чтобы потом восстановить
 	}
 	else if(mapParm.minZoom > currZoom) { 
 		map.setZoom(mapParm.minZoom);
@@ -483,8 +494,15 @@ if(! multilayer.options.zoom) {
 	}
 	else multilayer.options.zoom = false;
 };
-//console.log('[realDisplayMap] mapParm:',mapParm);
 
+//console.log('[realDisplayMap] multilayer:',multilayer);
+if(multilayer.options.mapParm.bounds) {	// карте указаны рамки в описании. LayerGroup не имеет свойства bounds
+	// Если карта составная, то в каждой составляющей - свои границы. Но к этому моменту те границы
+	// уже сработали?, и здесь будет позиционировано в пределах границ объемлющей карты.
+	const bondsPoint = isPointInBounds(map.getCenter(),multilayer.options.mapParm.bounds);
+	if(bondsPoint !== true) map.setView(bondsPoint);
+};
+//
 // javascript в загружаемом источнике на закрытие карты
 // window.eval выполняет eval в глобальном контексте, в результате можно в eval объявить
 // глобальные функции и переменные
@@ -498,6 +516,76 @@ if(mapParm.clientData && (typeof mapParm.clientData.javascriptOpen  === "string"
 //console.log('[realDisplayMap] multilayer:',multilayer);
 return multilayer;
 }; // end function realDisplayMap
+
+
+function isPointInBounds(point,bounds){
+/* Находится ли точка в границах, а если нет - где ближайшая граница */
+const nearestPoint = {"lat":null,"lng":null};
+// Широта
+if(point.lat > bounds.leftTop.lat){
+	// Точка севернее рамки, т.е., не в границах.
+	// Очевидно, ближайшая широтная граница рамки - северная
+ 	nearestPoint.lat = bounds.leftTop.lat;
+}
+else if(point.lat < bounds.rightBottom.lat){
+	// Точка южнее рамки, т.е., не в границах.
+	// Очевидно, ближайшая широтная граница рамки - южная
+ 	nearestPoint.lat = bounds.rightBottom.lat;
+}
+// иначе - точка по широте в пределах рамки
+
+// Долгота
+const dLon = Math.abs(bounds.leftTop.lng - bounds.rightBottom.lng);
+if(dLon < 180) {	//console.log("рамка не пересекает антимеридиан");
+	if(point.lng < bounds.leftTop.lng){
+		//console.log("Точка западнее левой рамки и восточнее антимередиана, т.е., не в границах");
+		const dL = bounds.leftTop.lng-point.lng;	// градусов между долготой точки и долготой левой границы рамки
+		const dR = 360-bounds.rightBottom.lng-point.lng;	// оставшаяся часть круга, градусов между долготой точки и долготой правой границы рамки
+		if(dL<dR){	// до западной границы рамки ближе, чем до восточной
+		 	nearestPoint.lng = bounds.leftTop.lng;
+		}
+		else{
+		 	nearestPoint.lng = bounds.rightBottom.lng;
+		};
+	}
+	else if(point.lng > bounds.rightBottom.lng){
+		//console.log("Точка восточнее правой рамки и западнее антимередиана, т.е., не в границах");
+		const dR = point.lng - bounds.rightBottom.lng;	// градусов между долготой точки и долготой правой границы рамки
+		const dL = 360-point.lng-bounds.leftTop.lng;	// оставшаяся часть круга, градусов между долготой точки и долготой левой границы рамки
+		if(dL<dR){	// до западной границы рамки ближе, чем до восточной
+		 	nearestPoint.lng = bounds.leftTop.lng;
+		}
+		else{
+		 	nearestPoint.lng = bounds.rightBottom.lng;
+		};
+	};
+}
+else {	//console.log("рамка пересекает антимередиан");
+	if((point.lng < bounds.leftTop.lng) && (point.lng > bounds.rightBottom.lng)){
+		//console.log("Точка западнее левой рамки и восточнее правой, т.е., не в границах");
+		const dL = Math.abs(bounds.leftTop.lng-point.lng);	// градусов между долготой точки и долготой левой границы рамки
+		let dR = Math.abs(bounds.rightBottom.lng-point.lng);	// оставшаяся часть круга, градусов между долготой точки и долготой правой границы рамки
+		//console.log('от левой рамки до точки:',dL,'от правой рамки до точки:',dR);
+		if(dL<dR){	// до левой границы рамки ближе, чем до правой
+		 	nearestPoint.lng = bounds.leftTop.lng;
+		}
+		else{
+		 	nearestPoint.lng = bounds.rightBottom.lng;
+		};
+	};
+};
+
+if((nearestPoint.lat===null)&&(nearestPoint.lng===null)) return true;	// точка внутри рамки
+else if(nearestPoint.lat===null){	//console.log(" точка в пределах широты, но не попадает по долготе");
+	nearestPoint.lat = point.lat;
+}
+else if(nearestPoint.lng===null){	//console.log("точка в пределах долготы, но не попадает по широте");
+	nearestPoint.lng = point.lng;
+}
+// иначе - точка вне рамки
+return nearestPoint;
+}; // end function isPointInBounds
+
 
 function autoMapUpdate(mapLayer,start){
 /* Автоматическое обновление карт с маленьким временем свежести.
@@ -2111,6 +2199,7 @@ function flyByString(stringPos){
 /* Получает строку предположительно с координатами, и перемещает туда центр карты */
 //console.log('goToPositionButton',goToPositionButton.value,'goToPositionField',goToPositionField.value);
 if(!stringPos) stringPos = map.getCenter().lat+' '+map.getCenter().lng; 	// map -- глобально определённая карта
+stringPos = stringPos.trim();
 //console.log('[flyByString] stringPos=',stringPos);
 	// Это написано с использованием аж трёх ИИ, сам я так и ниасилил регулярные выражения
 	// Но за то время, что я убил, добиваясь от ИИ правильного результата, я написал бы сам.
@@ -2130,83 +2219,66 @@ if(!stringPos) stringPos = map.getCenter().lat+' '+map.getCenter().lng; 	// map 
 		return null; // Если ничего не нашли — возвращаем null
 	};
 
-let error,lat,lon;
+let error,position,x,y,z;
 try {
     // Разберём строку как координаты https://github.com/otto-dev/coordinate-parser
     // Писал это дело законченный мудак, и там, кроме кучи бессмысленных объектных наворотов,
     // совершенно шизоидная логика. Исправить её невозможно - проще написать снова. Поэтому
     // проще то, что в этом парсере не предусмотрено, отдельно привести к виду, парсером
     // понимаемому.
-    var position = new Coordinates(stringPos); 	
-	//console.log('[flyByString] position:',position);
-	lat=position.getLatitude();
-	lon=position.getLongitude();
+	position = new Coordinates(stringPos);
+	position = {lon:position.longitude,lat:position.latitude};
+	//console.log('[flyByString] Координаты разобраны успешно, position:',position);
 } 
 catch (error) { 	// coordinate-parser обломался, строка - не координаты.
-	//console.log('[flyByString] stringPos=',stringPos,error);
+	//console.log('[flyByString] Координаты йок, stringPos=',stringPos,error);
 	// это возможно, строка с lon lat
-	//console.log('[flyByString] stringPos=',stringPos);
-	lon = extractNumberAfterKeyword(stringPos, 'lon');
-	lat = extractNumberAfterKeyword(stringPos, 'lat');
+	position = {lon:extractNumberAfterKeyword(stringPos, 'lon'),lat:extractNumberAfterKeyword(stringPos, 'lat')};
 	//console.log('[flyByString] 1 lon=',lon,'lat=',lat);
-	if(lon == null){
-		lon = extractNumberAfterKeyword(stringPos, 'lng');
-		if(lon == null){
-			lon = extractNumberAfterKeyword(stringPos, 'longitude');
+	if(position.lon == null){
+		position.lon = extractNumberAfterKeyword(stringPos, 'lng');
+		if(position.lon == null){
+			position.lon = extractNumberAfterKeyword(stringPos, 'longitude');
 		};
 	};
-	if(lat == null){
-		lat = extractNumberAfterKeyword(stringPos, 'lat');
-		if(lat == null){
-			lat = extractNumberAfterKeyword(stringPos, 'latitude');
+	if(position.lat == null){
+		position.lat = extractNumberAfterKeyword(stringPos, 'lat');
+		if(position.lat == null){
+			position.lat = extractNumberAfterKeyword(stringPos, 'latitude');
 		};
 	};
-	//console.log('[flyByString] 2 lon=',lon,'lat=',lat);
+	if((position.lon == null) || (position.lat == null)){	// координат так и не нашли
+		//console.log("А не номер тайла ли там?");
+		x = extractNumberAfterKeyword(stringPos, 'x');
+		y = extractNumberAfterKeyword(stringPos, 'y');
+		z = extractNumberAfterKeyword(stringPos, 'z');
+		//console.log('[flyByString] номер тайла z,x,y:',z,x,y);
+		if((x == null) || (y == null) || (z == null)){	// координат так и не нашли
+			//console.log("Может быть, там номер тайла просто в виде трёх чисел zxy?");
+			const regex = /[-+]?\d*\.?\d+/g;	// все числа
+			const zxy = stringPos.match(regex).map(Number);
+			//console.log(zxy);
+			if((zxy.length == 3) && isValidTile(zxy[0],zxy[1],zxy[2])){
+				position = tileNum2degree(zxy[0],zxy[1],zxy[2]);
+				z=zxy[0];
+				//console.log('[flyByString] Да, это 3 числа. position=',position,'z=',z);
+			}
+			else {
+				position = null;
+			};
+		}
+		else{
+			position = tileNum2degree(z,x,y);
+			//console.log('[flyByString] Да, там номер тайла. position=',position,'z=',z);
+		};
+	};
 };
-
-//console.log('[flyByString] 3 lon=',lon,'lat=',lat);
-if((lon == null) || (lat == null)){	// координат так и не нашли
-	// А не номер тайла ли там?
-	//const digits = stringPos.trim().match(new RegExp("/(?<!-|\.)\d+(?!\.)/g"));	// вытащим неотрицательные целые числа из строки. Выражение неправильное, оно возвращает вторые и далеее цифры после запятой. Но так бывает редко ;-)
-	const digits = stringPos.trim().match(/\d+/g);	// вытащим неотрицательные целые числа из строки. Выражение неправильное, оно возвращает вторые и далеее цифры после запятой. Но так бывает редко ;-)
-	//console.log('[flyByString] digits:',digits);
-	let x,y,z;
-	if (digits && digits.length == 3 && ((digits.join().length+11) > stringPos.trim().length)) {	// если чисел три, и добавление разумного количества разделителей и пробелов делает строку результата больше исходной. А иначе - это адрес с цифрами.
-		digits.map(Number);	// преобразуем строки в числа (оно и так, но так модно и прилично. Так ChatGPT говорит.)
-		[z,x,y] = digits;
-		let maxTileNum = Math.pow(2, z) - 1;
-		if (x > maxTileNum || y > maxTileNum) {
-			[x,y,z] = digits;
-			maxTileNum = Math.pow(2, z) - 1;
-			if (x > maxTileNum || y > maxTileNum) [z,x,y] = [null,null,null];
-		};
-	};
-	if(z && x && y){	// это похоже на номер тайла, переместимся к этому тайлу
-		//console.log('[flyByString] z,x,y:',z,x,y);
-		map.setZoom(z);
-		map.panTo(tileNum2degree(z,x,y));
-	}
-	else {	// это просто строка, возможно, с адресом, сделаем запрос к геосервису
-		let xhr = new XMLHttpRequest();
-		//const url = encodeURI('https://nominatim.openstreetmap.org/search/'+stringPos+'?format=jsonv2'); 	// прямое геокодирование
-		const url = encodeURI('https://nominatim.openstreetmap.org/search?q='+stringPos+'&format=jsonv2'); 	// прямое геокодирование
-		xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
-		xhr.setRequestHeader('Referer',url); 	// nominatim.org требует? Теперь, .... требует.
-		xhr.send();
-		xhr.onreadystatechange = function() { // 
-			if (this.readyState != 4) return; 	// запрос ещё не завершился
-			if (this.status != 200) return; 	// что-то не то с сервером
-			const nominatim = JSON.parse(this.response);
-			//console.log(nominatim);
-			updGeocodeList(nominatim);
-		};
-	};
-}
-else{	// координаты нашли
-	//console.log('[flyByString] 4 lon=',lon,'lat=',lat);
-	map.setView(L.latLng([lat,lon])); 	// подвинем карту в указанное место
+//console.log('[flyByString] 3 position=',position,'z=',z);
+if(position){	// координаты нашли
+	if(z==null)	map.setView(position); 	// подвинем карту в указанное место
+	else map.setView(position,z); 	// подвинем карту в указанное место
 	let xhr = new XMLHttpRequest();	// Запросим сервис геокодирования на предмет - что у нас в этом месте
-	const url = encodeURI('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lon);
+	const url = encodeURI('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+position.lat+'&lon='+(position.lon || position.lng));
 	xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
 	xhr.setRequestHeader('Referer',url); 	// nominatim.org требует?
 	xhr.send();
@@ -2216,6 +2288,23 @@ else{	// координаты нашли
 		//console.log('[flyByString] this.response=',this.response);
 		const nominatim = JSON.parse(this.response);
 		//console.log('[flyByString] nominatim:',nominatim);
+		updGeocodeList(nominatim);
+	};
+}
+else{
+	//console.log("это просто строка, возможно, с адресом, сделаем запрос к геосервису");
+	position = undefined;
+	let xhr = new XMLHttpRequest();
+	//const url = encodeURI('https://nominatim.openstreetmap.org/search/'+stringPos+'?format=jsonv2'); 	// прямое геокодирование
+	const url = encodeURI('https://nominatim.openstreetmap.org/search?q='+stringPos+'&format=jsonv2'); 	// прямое геокодирование
+	xhr.open('GET', url, true); 	// Подготовим асинхронный запрос
+	xhr.setRequestHeader('Referer',url); 	// nominatim.org требует? Теперь, .... требует.
+	xhr.send();
+	xhr.onreadystatechange = function() { // 
+		if (this.readyState != 4) return; 	// запрос ещё не завершился
+		if (this.status != 200) return; 	// что-то не то с сервером
+		const nominatim = JSON.parse(this.response);
+		//console.log(nominatim);
 		updGeocodeList(nominatim);
 	};
 };
@@ -3358,6 +3447,16 @@ const nn = Math.PI - (2 * Math.PI * ytile) / Math.pow(2, zoom);
 const lat_deg = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(nn) - Math.exp(-nn)));
 return {'lat': lat_deg,'lng': lon_deg};
 }
+
+
+function isValidTile(z, x, y) {
+/* проверяет, номер тайла ли */
+if (!Number.isInteger(z) || z < 0 || z > 22) return false;
+const max = (1 << z) - 1;	// 2^z - 1   Максимальное количество тайлов в строке или колонке на уровне z
+if (!Number.isInteger(x) || x < 0 || x > max) return false;
+if (!Number.isInteger(y) || y < 0 || y > max) return false;
+return true;
+}; // end function isValidTile
 
 
 /**

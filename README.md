@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 3.0
+## v. 3.1
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -75,8 +75,8 @@ You may download full pack -- more 10MB, or without vector tiles support and scr
 * [Leaflet.RotatedMarker](https://github.com/bbecquet/Leaflet.RotatedMarker) as _Leaflet.RotatedMarker/leaflet.rotatedMarker.js_
 * [Leaflet Measure Path](https://github.com/ProminentEdge/leaflet-measure-path) in _leaflet-measure-path/_ directory
 * [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) in _leaflet-sidebar-v2/_ directory
-* [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) in _mapbox-gl-js/dist/_ directory
-* [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) as _mapbox-gl-leaflet/leaflet-mapbox-gl.js_
+* [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) in _maplibre-gl/dist/_ directory
+* [maplibre-gl-leaflet](https://github.com/maplibre/maplibre-gl-leaflet) as _maplibre-gl-leaflet/leaflet-mapbox-gl.js_
 * [supercluster](https://github.com/mapbox/supercluster) as _supercluster/dist/supercluster.js_
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) in _gpsdPROXY/_ directory
 * [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) in _polycolor/_ directory  
@@ -111,7 +111,10 @@ At least, it include
 maps.  
 The right way is to select a little lot of favourite maps (by long-click or right-swap) from all maps in map list. This makes it easy to switch between them. 
 
-### Mapbox-style vector tiles maps
+### Mapbox-style tiles maps
+#### Map in .mbtiles file
+With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) you can use mapbox maps in separate files. To connect such a file with RASTER tiles to the GaladrielMap, you need to place it in the `$mapSourcesDir` directory (`tiles/` by default). For vector tiles, you need to prepare a style file manualy.
+#### MBTiles vector tiles 
 GaladrielMap has limited support the Mapbox-style vector tiles maps. [Mapbox style file](https://docs.mapbox.com/mapbox-gl-js/style-spec/) must be placed on `$mapSourcesDir` directory of the [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) with **{mapname}.json** name. (See [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) docs.) Sprites and glyphs you can find in _styles/_ directory.
 
 

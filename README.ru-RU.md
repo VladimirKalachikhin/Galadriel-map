@@ -5,7 +5,7 @@
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Форум</a>
 </div>
 
-## v. 3.0
+## v. 3.1
  ![screen](screenshots/s10.jpeg)<br>
 Технически это веб-приложение -- просмотрщик тайловых онлайн карт. При использовании с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) становится возможным предварительное скачивание и последующий просмотр карт без подключения к сети Интернет.  
 Предполагается, что приложение функционирует в локальной  бортовой сети катера, яхты или автомобиля, поэтому никакого разграничения доступа к функциям не предусмотрено.
@@ -79,8 +79,8 @@
 * [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) установленный в каталог _leaflet-sidebar-v2/_ 
 * [supercluster](https://github.com/mapbox/supercluster) установленный как _supercluster/dist/supercluster.js_
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) в каталоге _gpsdPROXY/_ 
-* [mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) установленная в каталог _mapbox-gl-js/dist/_ 
-* [mapbox-gl-leaflet](https://github.com/mapbox/mapbox-gl-leaflet) установленная как _mapbox-gl-leaflet/leaflet-mapbox-gl.js_
+* [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) установленная в каталог _maplibre-gl/dist/_ 
+* [maplibre-gl-leaflet](https://github.com/maplibre/maplibre-gl-leaflet) установленная как _maplibre-gl-leaflet/leaflet-mapbox-gl.js_
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) в _gpsdPROXY/_ directory
 * [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) установленная в каталог _polycolor/_  
 * [value2color](https://github.com/VladimirKalachikhin/value2color) установленная в каталог _value2color/_
@@ -113,7 +113,9 @@
 Конфигурация карт определяется пользоватетем и описана в документации к [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache). Как минимум, среди карт уже есть [Open Sea Map](http://www.openseamap.org/) и [Open Topo Map](https://opentopomap.org/about).  
 Для удобства переключения между несколькими часто используемыми картами можно выделить их долгим нажатием (или жестом вправо) в полном списке карт, и перейти к списку избранных карт.
 
-### Векторные тайлы
+### Карты MAPbox
+С [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) можно использовать файлы карт формата .mbtiles Если карты растровые, то их не надо даже как-то специально подключать: достаточно положить файл с картой в каталог, указанный переменной `$mapSourcesDir` конфигурационного файла GaladrielCache (`tiles/` по умолчанию). После перезагрузки GaladrielCache карта появится в списке карт. Однако, если карта векторная, автоматически не получится, и придётся вручную править файл стиля этой карты.  
+### Векторные тайлы MAPbox
 GaladrielMap имеет некоторую поддержку векторных тайлов в формате [Mapbox](https://www.mapbox.com/). Такие карты могут отображаться.  
 Описывающий карту файл[Mapbox style](https://docs.mapbox.com/mapbox-gl-js/style-spec/) должен находиться в каталоге `$mapSourcesDir` GaladrielCache, и называться также, как файл источника карты, но с расширением **.json**. В файле Mapbox style можно использовать значки и шрифты (Sprites and glyphs) из каталога _styles/_ .
 
