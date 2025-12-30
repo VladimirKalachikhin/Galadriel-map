@@ -1780,6 +1780,7 @@ function realtimeAISupdate(aisClass) {
 //console.log(aisClass); 	// 
 let aisData = aisClass.ais;
 //console.log("[realtimeAISupdate] aisData:",aisData); 	// массив с данными целей
+//console.log("[realtimeAISupdate] пришли данные AIS");
 //console.log(DisplayAISswitch);
 let vehiclesVisible = [];
 for(let vehicle in aisData){	// vehicle == mmsi

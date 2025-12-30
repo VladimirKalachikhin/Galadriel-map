@@ -121,7 +121,8 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
   },
 
 	addData: function(aisData){ 	// aisData опрелён во внешней функции, типа - глобален
-		//console.log('leaflet-tracksymbol aisData:',JSON.stringify(aisData))
+		//if(this.options.mmsi==265585310) console.log('leaflet-tracksymbol aisData:',JSON.stringify(aisData))
+
 		this._speed = aisData.speed;
 		delete aisData.speed;
 		//console.log('aisData.heading=',aisData.heading,'aisData.course=',aisData.course);
@@ -159,7 +160,6 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 		//console.log(this.options.mmsi);
 		//console.log(this._shiptype);
 
-       	//if(this.options.mmsi==244770791) console.log(this.options);
        	let speedKMH='';
        	if(this._speed) speedKMH = Math.round((this._speed*60*60/1000)*10)/10+' Km/h';
       
@@ -255,9 +255,10 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 				else this.options.safety_related_text = 'SART TEST';
 			};
 		};
+		//if(this.options.mmsi==230992510) console.log(aisData,this._heading);
 
 		let PopupContent = `
-<div>
+<div style="min-width:12em;">
 	${iconIMG}
 	<span style='font-size:120%';'>${this.options.shipname||''}</span><br>
 	<div style='width:100%;'>
@@ -275,8 +276,12 @@ M ${center.x-4} ${center.y} L ${center.x+4} ${center.y} `;
 	</div>
 ${this.options.hazard_text||''} ${this.options.loaded_text||''}<br>`;
 		//console.log('leaflet-tracksymbol aisData:',JSON.stringify(aisData))
-		if(aisData.imo && this.options.mmsi.substring(0,2)!=='97') PopupContent += `<span style='float:right;'>This on <a href='http://www.marinetraffic.com/${appLocale}/ais/details/ships/imo:${aisData.imo}' target='_blank'>MarineTraffic.com</a></span>`;	// это не AIS-SART
-		PopupContent += `<span>${dataStamp}</span>
+		//if(aisData.imo && this.options.mmsi.substring(0,2)!=='97') PopupContent += `<span style='float:right;'>This on <a href='http://www.marinetraffic.com/${appLocale}/ais/details/ships/imo:${aisData.imo}' target='_blank'>MarineTraffic.com</a></span>`;	// это не AIS-SART
+		if(this.options.mmsi && this.options.mmsi.substring(0,2)!=='97') {	// это не AIS-SART
+			PopupContent += `<span style="float:right;"><a href="http://www.vesselfinder.com/${appLocale}/vessels/details/${this.options.mmsi}" target="_blank">vesselfinder.com</a></span>`;	// это не AIS-SART
+			PopupContent += '<a href="https://www.google.com/search?q=MMSI+%22'+this.options.mmsi+'%22&udm=2" target="_blank"><img style="margin:0; width:1em; vertical-align: middle;" src="'+thisScript.src.substring(0, thisScript.src.lastIndexOf("/"))+'/symbols/cam.svg"></a>';
+		};
+		PopupContent += `<br><span style="float:right;">${dataStamp}</span>
 </div>
 		`;
         if(this.getPopup()){
