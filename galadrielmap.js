@@ -2256,16 +2256,18 @@ catch (error) { 	// coordinate-parser обломался, строка - не к
 		if((x == null) || (y == null) || (z == null)){	// координат так и не нашли
 			//console.log("Может быть, там номер тайла просто в виде трёх чисел zxy?");
 			const regex = /[-+]?\d*\.?\d+/g;	// все числа
-			const zxy = stringPos.match(regex).map(Number);
-			//console.log(zxy);
-			if((zxy.length == 3) && isValidTile(zxy[0],zxy[1],zxy[2])){
-				position = tileNum2degree(zxy[0],zxy[1],zxy[2]);
-				z=zxy[0];
-				//console.log('[flyByString] Да, это 3 числа. position=',position,'z=',z);
+			const zxy = stringPos.match(regex);	// вот какой кретин придумал возвращать null при неудаче поиска? Почему не пустой массив?
+			if(zxy) {
+				zxy = zxy.map(Number);
+				//console.log(zxy);
+				if((zxy.length == 3) && isValidTile(zxy[0],zxy[1],zxy[2])){
+					position = tileNum2degree(zxy[0],zxy[1],zxy[2]);
+					z=zxy[0];
+					//console.log('[flyByString] Да, это 3 числа. position=',position,'z=',z);
+				}
+				else position = null;
 			}
-			else {
-				position = null;
-			};
+			else position = null;
 		}
 		else{
 			position = tileNum2degree(z,x,y);
