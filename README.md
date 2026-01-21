@@ -62,7 +62,7 @@ Paths and other are set and describe in _params.php_
 More detailed instructions are available in _emergencykit/_ directory.
 
 
-## Emergency kit
+## Quick start or Emergency kit
 All you need to install, including dependences, are in _emergencykit/_.  See README.txt how to install.
 You may download full pack -- more 10MB, or without vector tiles support and screenshots pack -- less them 3MB.
 
