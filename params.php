@@ -61,7 +61,7 @@ $tileCacheControlURI = "/tileproxy/cacheControl.php";
 
 // Карта, которая показывается, если нечего показывать.
 // GaladrielCache map to display then no map selected
-$defaultMap = 'OpenTopoMap';	
+$defaultMap = 'osmmapMapnik';	
 // Начальная точка, если никакой точки не указано, строка json
 // map center when no coordinates sets, json string
 $defaultCenter = '{"lat": 55.754, "lng": 37.62}';

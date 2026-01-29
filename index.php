@@ -2,7 +2,7 @@
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 //ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 
-$versionTXT = '3.1.0';
+$versionTXT = '3.1.1';
 /* 
 3.1.0	auto update mbtiles maps list
 3.0.0	support GaladrielCache 3
@@ -639,7 +639,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 			<br>
 			<div style="margin: 0.7em 1em;"> <!-- Показывать символ ветра -->
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
-					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="windSwitch"  onChange="windSwitchToggler();">
+					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="windSwitch"  onChange="windSwitchToggler();" checked>
 					<label class="onoffswitch-label" for="windSwitch">
 						<span class="onoffswitch-inner"></span>
 						<span class="onoffswitch-switch"></span>
@@ -719,7 +719,8 @@ var mapboxGLscript = null;	// скрипт Mapbox GL, загружается п�
 var mapboxLeafletscript = null;	// скрипт mapbox-gl-leaflet
 // Карта
 var defaultMap = '<?php echo $defaultMap;?>'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
-if(! defaultMap) defaultMap = 'OpenTopoMap';
+//if(! defaultMap) defaultMap = 'OpenTopoMap';	// Эти суки стали бороться с русскими, и забанили OpenTopoMap
+if(! defaultMap) defaultMap = 'osmmapMapnik';
 var defaultCenter = <?php echo $defaultCenter ? $defaultCenter : 'undefined';?>; 	// начальная точка, {lat: 99, lng: 99}
 if(! defaultCenter) defaultCenter = {"lat": 55.754, "lng": 37.62}; 	
 var showMapsTogglerTXT = [<?php echo $showMapsTogglerTXT; ?>];	// подписи на кнопке все/избранные карты
