@@ -325,16 +325,15 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 	<div class="leaflet-sidebar-content" id='tabPanes'>
 		<!-- Карты -->
 		<div class="leaflet-sidebar-pane" id="home" style="height:100%;">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div style="min-height:92%;">
-				<br>
-				<ul id="mapDisplayed" class='commonList'>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
+			<div style="min-height:92%;overflow-y: hidden;margin-left:0.5rem;">
+				<ul id="mapDisplayed" class="commonList"  style="min-width:110%">
 				</ul>
 				<ul id="mapList" class='commonList'>
 <?php
 foreach($mapsInfo as $mapName => $humanName) {
 ?>
-						<li hidden id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}"><?php echo "$humanName";?> </li>
+						<li hidden id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}" style="display:flex;justify-content:space-between;align-items:center;"><span><?php echo "$humanName";?></span><img src="img/info.svg" alt="Info" style="width:calc(0.7em);margin:0 1em 0 1em;display:inline;vertical-align: middle;" onclick="{(e)=>{console.log(e); e.stopPropagation();};}"></li>
 <?php
 }
 ?>
@@ -344,41 +343,41 @@ foreach($mapsInfo as $mapName => $humanName) {
 		</div>
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 		<!-- Приборы -->
-		<div class="leaflet-sidebar-pane" id="dashboard" style="height:100%;">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $dashboardHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
-			<div class="big_symbol"> <?php // передвинуть карту на место курсора ?>
+		<div class="leaflet-sidebar-pane" id="dashboard" style="height:95%;">
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $dashboardHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
+			<div class="big_symbol centred_pane"> <?php // передвинуть карту на место курсора ?>
 				<div>
 					<div style="line-height:0.6;" onClick="map.setView(cursor.getLatLng());">				
-						<div style="font-size:50%;"><?php echo $dashboardSpeedTXT;?></div><br>
-						<div id='velocityDial'></div><br>
-						<div style="font-size:50%;"><?php echo $dashboardSpeedMesTXT;?></div>
+						<div><?php echo $dashboardSpeedTXT;?></div><br>
+						<div id='velocityDial' style="font-size:200%;"></div><br>
+						<div style=""><?php echo $dashboardSpeedMesTXT;?></div>
 					</div>
-					<div id='depthDial' style="line-height:0.4;" onClick="map.setView(cursor.getLatLng());">				
+					<div id='depthDial' style="line-height:0.6;" onClick="map.setView(cursor.getLatLng());">				
 					</div>
-					<div style="line-height:0.6;" onClick="map.setView(cursor.getLatLng());">
-						<br><span style="font-size:50%;" id="dashboardCourseTXTlabel"><?php echo $dashboardCourseTXT;?></span>
-						<span style="font-size:30%;"><br><span id="dashboardCourseAltTXTlabel"><?php echo $dashboardCourseAltTXT;?></span></span>
+					<div style="line-height:0.9;" onClick="map.setView(cursor.getLatLng());">
+						<br><span style="" id="dashboardCourseTXTlabel"><?php echo $dashboardCourseTXT;?></span>
+						<span  style="font-size:50%;"><br><span id="dashboardCourseAltTXTlabel"><?php echo $dashboardCourseAltTXT;?></span></span>
+						<div style="font-size:200%;">
+							<span id='courseDisplay'></span>
+						</div>
 					</div>
-					<div style="">
-						<span id='courseDisplay'></span>
-					</div>
-					<div style="font-size:50%;line-height:0.6;" onClick="doCopyToClipboard(lat+' '+lng);" >
-						<br><span style="font-size:50%;"><?php echo $dashboardPosTXT;?></span><br>
-						<span style="font-size:30%; "><?php echo $dashboardPosAltTXT;?></span>
-					</div>
-					<div style="font-size:50%;" onClick="doCopyToClipboard(lat+' '+lng);">
-						<span id='locationDisplay'></span>
+					<div style="line-height:1;" onClick="doCopyToClipboard(lat+' '+lng);" >
+						<br><span style=""><?php echo $dashboardPosTXT;?></span><br>
+						<span style="font-size:50%;"><?php echo $dashboardPosAltTXT;?></span>
+						<div style="font-size:150%;" onClick="doCopyToClipboard(lat+' '+lng);">
+							<span id='locationDisplay'></span>
+						</div>
 					</div>
 				</div>
 			</div>
-			<div class="scaledText" style="text-align:center; position: absolute; bottom: 0;">
+			<div style="text-align:center; position: absolute; bottom: 0;margin:0 0.5rem;">
 				<?php echo $dashboardSpeedZoomTXT;?> <span id='velocityVectorLengthInMnDisplay'></span> <?php echo $dashboardSpeedZoomMesTXT;?>.
 			</div>
 		</div>
 <?php }; ?>
 		<!-- Треки -->
 		<div class="leaflet-sidebar-pane" id="tracks">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 <?php if($gpxlogger){ // если запись пути осуществляется gpxlogger'ом ?>
 <?php 	if($privileged){	// для пользователя со всеми правами ?>
 			<div style="margin: 1rem;">
@@ -410,7 +409,7 @@ foreach($trackInfo as $trackName) {
 		</div>
 		<!-- Расстояния -->
 		<div class="leaflet-sidebar-pane" id="measure" style="text-elgn:center;">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $measureHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $measureHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 			<?php // Кнопки создания/редактирования маршрута ?>
 			<div id='routeControls' class="routeControls" style="width:95%; margin:1em 0; text-align: center;">
 				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
@@ -491,7 +490,7 @@ foreach($trackInfo as $trackName) {
 		</div>
 		<!-- Места и маршруты -->
 		<div class="leaflet-sidebar-pane" id="routes">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $routesHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $routesHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 			<ul id="routeDisplayed" class='commonList'>
 			</ul>
 			<ul id="routeList" class='commonList'>
@@ -507,11 +506,11 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 		</div>
 		<!-- MOB -->
 		<div class="leaflet-sidebar-pane" style="height:90%;" id="MOB">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close" style="background-color:red;"><?php echo $mobTXT; ?><span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close" style="background-color:red;"><?php echo $mobTXT; ?><span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 			<div style="margin: 1rem 1rem;width:90%;text-align: center;">
 				<button onClick='MOBalarm();' style="width:75%;"><span style=""><?php echo $addMarkerTXT; ?></span></button>
 			</div>
-			<div class="big_symbol" style="line-height: normal;align-items: center;height:70%;" onClick="map.setView(currentMOBmarker.getLatLng());"> <?php //  передвинуть карту на место текущего маркера MOB ?>
+			<div class="big_symbol centred_pane" style="line-height: normal;align-items: center;height:70%;" onClick="map.setView(currentMOBmarker.getLatLng());"> <?php //  передвинуть карту на место текущего маркера MOB ?>
 				<div style=''><?php // объемлющий div необходим ?>
 						<div style="font-size:50%;">
 							<span style="font-size:50%;display:block;"><?php echo $bearingTXT; ?></span>
@@ -545,7 +544,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 <?php if($privileged){	// для пользователя со всеми правами ?>
 		<!-- Загрузчик -->
 		<div class="leaflet-sidebar-pane" id="download" style="height:100%;">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" width="16px"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 <?php if($isCOVERpresent){ ?>
 			<div style="margin: 1rem 0 0.5 0;height:5rem;">
 				<div style="margin:0 0 0.5rem 0">
@@ -1061,7 +1060,7 @@ else {
 	showMapsList.push(e.target.id);
 	e.target.classList.add("showedMapName");
 }
-event.stopImmediatePropagation();	// прекратим всплытие и обломим все имеющиеся обработчики. Вдруг фигня, навешенная скотским Google, перестанет работать.
+e.stopImmediatePropagation();	// прекратим всплытие и обломим все имеющиеся обработчики. Вдруг фигня, навешенная скотским Google, перестанет работать.
 //console.log('[longPressListener] Список избранных карт:',showMapsList);
 }; // end function long-pressListener
 
@@ -1761,7 +1760,7 @@ function realtimeATTupdate(data){
 // Глубина
 if(data.depth) {
 	//console.log('[realtimeATTupdate] Index data',data.depth);
-	depthDial.innerHTML = '<br><br><div style="font-size:50%;">'+dashboardDepthMesTXT+'</div><br><div>'+(Math.round(data.depth*100)/100)+'</div><br><div style="font-size:50%;">'+dashboardMeterMesTXT+'</div>';
+	depthDial.innerHTML = '<br><br><div>'+dashboardDepthMesTXT+'</div><br><div style="font-size:200%;">'+(Math.round(data.depth*100)/100)+'</div><br><div>'+dashboardMeterMesTXT+'</div>';
 }
 else {
 	//console.log('No depth',data.depth);
