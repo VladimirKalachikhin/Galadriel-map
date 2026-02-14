@@ -1,7 +1,7 @@
 html {
-	--sidebar-width: 22vmax;
+	--sidebar-width: 23vmax;
 	/*--font-size: calc(var(--sidebar-width)*0.065);*/
-	--font-size: calc(1.35em); /* Размер шрифта устанавливается браузером не пропорционально размеру viewport */
+	--font-size: calc(1.1em); /* Размер шрифта устанавливается браузером не пропорционально размеру viewport */
 }
 /* Стили, заменяющие соответствующее в оригинальных стилях */
 /* leaflet */
@@ -15,7 +15,7 @@ html {
 	margin-top: calc(var(--sidebar-width)*0.4); /* Сдвиг control масштаба от верха */
 }
 .leaflet-control-scale-line {
-	font-size: 24px;
+	font-size: calc(var(--font-size)*1.2);
 }
 
 /* leaflet-sidebar-v2 */
@@ -24,6 +24,7 @@ html {
 }
 .leaflet-sidebar-content {
 	background-color: rgba(255, 255, 255, 0.9);
+	margin: 0;
 }
 .disabled {
 	opacity:0.3; /* Полупрозрачность элемента */
@@ -38,7 +39,7 @@ html {
 }
 .leaflet-sidebar-close-icn { /* создадим аналогичный стиль с другим именем, но на который не навешен обработчик. Картинка сохранится. */
 	position: absolute;
-	top: 0;
+	top: calc(var(--font-size)*0.25);
 	width: calc(var(--font-size)*1.7);
 	height: calc(var(--font-size)*1.7);
 	text-align: center;
@@ -55,15 +56,16 @@ html {
 
 
 .leaflet-sidebar-header {
-	padding: calc(var(--sidebar-width)*0.03) calc(var(--sidebar-width)*0.15) 0;
-	font-size: calc(var(--font-size)*0.9);
+	padding: calc(var(--sidebar-width)*0.03) 0 0 calc(var(--sidebar-width)*0.15);
+	font-size: calc(var(--font-size)*0.8);
 	font-weight: 800;
 }
 .leaflet-sidebar { 	/*  */
 	width: var(--sidebar-width);
 }
 .leaflet-sidebar-pane {
-	min-width: 0; /* Не знаю, как оно, но без этого ширина панели вдвое больше */
+	font-size: var(--font-size);
+	min-width: 0; /* Не знаю, как оно, но без этого ширина панели вдвое больше. Видимо, потому, что в основном стиле принудительно указан min-width. */
 	/*padding: calc(var(--sidebar-width)*0.03) 0 0 calc(var(--sidebar-width)*0.03); всё же не везде нужны эти поля*/
 	padding: 0;
 } 
@@ -116,24 +118,22 @@ div.leaflet-control-zoom {
 /* Свои стили */
 
 ul { /* нужно, чтобы стили работали */
-  list-style-type: none;
-  margin: 2rem 0 2rem 0;
-  padding: 0;
+	list-style-type: none;
 }
 /*#mapList, #mapDisplayed, #trackList, #trackDisplayed, #routeList, #routeDisplayed, #geocodedList */
 .commonList {
+	list-style-type: none;
 	cursor: pointer;
 	font-family: Helvetica, Verdana, sans-serif;
 	font-size: calc(var(--font-size)*1.1);
 	font-weight: 300;
 	border-bottom: 1px solid #ccc;
-	margin-bottom: 1rem;
-	overflow: none;
-	width: max-content;
+	padding: 0 0 1rem 0;
+	margin:0.5rem 0;
 }
 .commonList > li {
-	margin: 0 0 0.5rem 0;
 	white-space: nowrap;
+	margin:0.3rem 0 0 1rem; /* вертикальное поле необходимо, иначе Crome и аналогичное говно криво показывают li. Плюс пальцами попадать удобней. */
 }
 .currentTrackName {
 	background-color:  rgba(227, 231, 251, 0.8) /* бледно-голубой полупрозрачный Потому что так эти li разноцветные, и эти цвета сохраняются. Но текущий трек, типа, надо выделить */
@@ -208,24 +208,25 @@ ul { /* нужно, чтобы стили работали */
     border-radius: 5px;
     text-align: center;
     padding: 0;
+    margin: 0;
 }
 .routeControls > input[type="radio"].L + label {
     /*border-right: none;*/
     border-radius: 5px 0px 0px 5px;
     width:48%;
-    margin-top: 0.3em;
+    margin-top: 0.3rem;
 }
 .routeControls > input[type="radio"].R + label {
     /*border-left: none;*/
     border-radius: 0px 5px 5px 0px;
     width:48%;
-    margin-top: 0.3em;
+    margin-top: 0.3rem;
 }
 .routeControls > input[type="radio"].M + label {
     /*border-left: none;*/
     width:80%;
     font-size: 89%;
-    margin-top: 0.7em;
+    margin-top: 0.7rem;
 }
 .routeControls > input[type="radio"]:checked + label {
 	background-color: rgb(233, 233, 233);
@@ -259,6 +260,7 @@ button:disabled {
 }
 /* Активная зона выключателя элементов управления */
 #hideControl {
+	--control-size: 20vmin;
 	position: fixed; 
 	width: var(--sidebar-width);
 	height: var(--sidebar-width);

@@ -631,7 +631,7 @@ autoMapUpdate(savedLayers[mapname],false) // Выключить автомати
 
 function showMapsToggle(all=false){
 /*	переключает показ всех или выбранных карт в списке карт */
-//console.log('[showMapsToggle] showMapsList:',showMapsList);
+//console.log('[showMapsToggle] showMapsList:',showMapsList,showMapsTogglerTXT[0],showMapsToggler.innerHTML);
 if(all || showMapsToggler.innerHTML == showMapsTogglerTXT[0]){	// текущий режим - "избранные карты" (на кнопке надпись: "все карты")
 	for(let mapLi of mapList.children){
 		//console.log('покажем все карты',mapLi.id);
@@ -644,7 +644,7 @@ if(all || showMapsToggler.innerHTML == showMapsTogglerTXT[0]){	// текущий
 }
 else {	// текущий режим - "все карты" - покажем только избранные
 	for(let mapLi of mapList.children){
-		//console.log('покажем только избранные',mapLi.id);
+		//console.log('покажем только избранные',mapLi.id,showMapsList.includes(mapLi.id));
 		mapLi.hidden = false;	// при старте они все скрытые
 		if(!showMapsList.includes(mapLi.id)){	// карта не в списке избранных
 			mapLi.hidden = true;	// не покажем карту
