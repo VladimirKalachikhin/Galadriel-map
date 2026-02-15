@@ -336,7 +336,7 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 <?php
 foreach($mapsInfo as $mapName => $humanName) {
 ?>
-						<li hidden id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}" style="width:<?php echo $maxStrLength*0.73;?>rem;"><img src="img/info.svg" alt="Info" style="float:right;width:calc(0.7em);margin:0.5rem 1rem 0.5rem 0;" onclick="{(e)=>{console.log(e); e.stopPropagation();};}"><span><?php echo "$humanName";?></span></li>
+						<li hidden id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}" style="width:<?php echo $maxStrLength*0.65;?>rem;"><img src="img/info.svg" alt="Info" style="float:right;width:calc(0.7em);margin:0.5rem 1rem 0.5rem 0;" onclick="{(e)=>{console.log(e); e.stopPropagation();};}"><span><?php echo "$humanName";?></span></li>
 <?php
 }
 ?>
