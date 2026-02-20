@@ -65,6 +65,19 @@ $completeTXT = 'выполнено';
 $copyToClipboardMessageOkTXT = 'Копирование в буфер обмена выполнено ';
 $copyToClipboardMessageBadTXT = 'Копирование в буфер обмена не удалось ';
 
+$mapInfoComplexTXT = 'Составная карта';
+$mapInfoProjectionTXT = 'Проекция';
+$mapInfoMinZoomTXT = 'Минимальный масштаб';
+$mapInfoMaxZoomTXT = 'Максимальный масштаб';
+$mapInfoBordersTXT = 'Границы';
+$mapInfoVectorTXT = 'Векторная';
+$mapInfoRasterTXT = 'Растровая';
+$mapInfoStyleFileTXT = 'Style file';
+$mapInfoLoadableTXT = 'Загружаемая из Интернет';
+$mapInfoUseProxyTXT = 'Используется proxy';
+$mapInfoSourceTXT = 'Файл описания';
+$mapInfoDataTXT = 'Данные';
+
 $AISstatusTXT = array(
 0=>'Двигаюсь под мотором',
 1=>'На якоре',

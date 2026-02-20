@@ -65,6 +65,19 @@ $completeTXT = 'complete';
 $copyToClipboardMessageOkTXT = 'Copy to clipboard OK ';
 $copyToClipboardMessageBadTXT = 'Copy to clipboard FAILED ';
 
+$mapInfoComplexTXT = 'Complex map';
+$mapInfoProjectionTXT = 'Projection';
+$mapInfoMinZoomTXT = 'Min zoom';
+$mapInfoMaxZoomTXT = 'Max zoom';
+$mapInfoBordersTXT = 'Borders';
+$mapInfoVectorTXT = 'Vector';
+$mapInfoRasterTXT = 'Raster';
+$mapInfoStyleFileTXT = 'Style file';
+$mapInfoLoadableTXT = 'Loadable from the Internet';
+$mapInfoUseProxyTXT = 'Use proxy';
+$mapInfoSourceTXT = 'Map description file';
+$mapInfoDataTXT = 'The data';
+
 $AISstatusTXT = array(
 0=>'under way using engine',
 1=>'at anchor',

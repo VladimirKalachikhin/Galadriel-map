@@ -1,182 +1,101 @@
+html {
+	--sidebar-width: 23vmax;
+	/*--font-size: calc(var(--sidebar-width)*0.065);*/
+	--font-size: calc(1.1em); /* Размер шрифта устанавливается браузером не пропорционально размеру viewport */
+}
 /* Стили, заменяющие соответствующее в оригинальных стилях */
 /* leaflet */
 .leaflet-touch .leaflet-bar a {
 	/*background-color: rgba(255,255,255,0.66);*/
-    width: 1.65rem;
-    height: 1.65rem;
-    line-height: 1.65rem;
+	width: 1.65rem;
+	height: 1.65rem;
+	line-height: 1.65rem;
 }
 .leaflet-top .leaflet-control {
-    margin-top: 40px;
+	margin-top: calc(var(--sidebar-width)*0.4); /* Сдвиг control масштаба от верха */
 }
 .leaflet-control-scale-line {
-	font-size: 24px;
+	font-size: calc(var(--font-size)*1.2);
 }
 
 /* leaflet-sidebar-v2 */
 .leaflet-sidebar-tabs {
-	background-color: rgba(255, 255, 255, 0.66); 
+	background-color: rgba(255, 255, 255, 0.7); 
 }
 .leaflet-sidebar-content {
 	background-color: rgba(255, 255, 255, 0.9);
+	margin: 0;
 }
 .disabled {
 	opacity:0.3; /* Полупрозрачность элемента */
 	/*visibility: hidden;*/
 }
 .leaflet-sidebar-close { 	/* уберём свойства, исходно приписываемые стилю. Но навешивание обработчика на этот стиль где-то в скрипте останется. В результате этим стилем мы можем навесить обработчик без порчи картинки. */
-  position: unset;
-  top: unset;
-  width: unset;
-  height: unset;
-  text-align: unset;
+	position: unset;
+	top: unset;
+	width: unset;
+	height: unset;
+	text-align: unset;
 }
 .leaflet-sidebar-close-icn { /* создадим аналогичный стиль с другим именем, но на который не навешен обработчик. Картинка сохранится. */
-  position: absolute;
-  top: 0;
-  width: 40px;
-  height: 40px;
-  text-align: center;
-  cursor: pointer; 
+	position: absolute;
+	top: calc(var(--font-size)*0.25);
+	width: calc(var(--font-size)*1.7);
+	height: calc(var(--font-size)*1.7);
+	text-align: center;
+	cursor: pointer; 
 }
 .leaflet-measure-path-measurement { /* цифры на маршруте */
 	font-size: 130%;
 }
 .leaflet-measure-path-measurement > div { /* подпись на маршруте */
-    position: relative;
-    margin-top: -75% !important;	/* поскольку собственный стиль библиотеки leaflet-measure-path загружается позже */
-    left: -50%;
+	position: relative;
+	margin-top: -75% !important;	/* поскольку собственный стиль библиотеки leaflet-measure-path загружается позже */
+	left: -50%;
 }
-@media (max-width: 767px) { /* 854×480 */
-	.leaflet-sidebar-header {
-		font-size: 9px;
-	}
-	.leaflet-sidebar { 	/*  */
-		width: 160px;
-		max-width: 160px; 
-	}
-	.leaflet-sidebar-pane {
-		min-width: 140px; 
-	} 
-	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
-		left: 160px; 
-	}
-	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
-		right: 160px; 
-	}
-	.big_symbol {
-		font-size:20px;
-	}
-	.scaledText {
-		font-size:50%;
-	}
+
+
+.leaflet-sidebar-header {
+	padding: calc(var(--sidebar-width)*0.03) 0 0 calc(var(--sidebar-width)*0.15);
+	font-size: calc(var(--font-size)*0.8);
+	font-weight: 800;
 }
-@media (min-width: 768px) and (max-width: 991px) {
-	.leaflet-sidebar-header {
-		font-size: 12px;
-	}
-	.leaflet-sidebar { 	/* исходно на 40 пикселов больше, чем leaflet-sidebar-pane */
-		width: 250px;
-		max-width: 250px; 
-	}
-	.leaflet-sidebar-pane {
-		min-width: 230px; 
-	} 
-	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
-		left: 280px; 
-	}
-	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
-		right: 280px; 
-	}
-	.big_symbol {
-		font-size:25px;
-	}
-	.scaledText {
-		font-size:75%;
-	}
+.leaflet-sidebar { 	/*  */
+	width: var(--sidebar-width);
 }
-@media (min-width: 992px) and (max-width: 1199px) { /* 1920x1200 */
-	.leaflet-sidebar-header {
-		font-size: 15px;
-	}
-	.leaflet-sidebar {
-		width: 270px;
-		max-width: 270px; 
-	}
-	.leaflet-sidebar-pane {
-		min-width: 250px; 
-	} 
-	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
-		left: 315px; 
-	}
-	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
-		right: 315px; 
-	}
-	.big_symbol {
-		font-size:40px;
-	}
-	.scaledText {
-		font-size:inherit;
-	}
+.leaflet-sidebar-pane {
+	font-size: var(--font-size);
+	min-width: 0; /* Не знаю, как оно, но без этого ширина панели вдвое больше. Видимо, потому, что в основном стиле принудительно указан min-width. */
+	/*padding: calc(var(--sidebar-width)*0.03) 0 0 calc(var(--sidebar-width)*0.03); всё же не везде нужны эти поля*/
+	padding: 0;
+} 
+.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
+	left: var(--sidebar-width); 
 }
-@media (min-width: 1200px) {
-	.leaflet-sidebar {
-		width: 320px;
-		max-width: 320px; 
-	}
-	.leaflet-sidebar-pane {
-		min-width: 300px; 
-	} 
-	.leaflet-sidebar-left ~ .leaflet-control-container .leaflet-left {
-		left: 335px; 
-	}
-	.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
-		right: 335px; 
-	}
-	.big_symbol {
-		font-size:52px;
-	}
-	.scaledText {
-		font-size:inherit;
-	}
+.leaflet-sidebar-right ~ .leaflet-control-container .leaflet-right {
+	right: var(--sidebar-width); 
 }
+.big_symbol {
+	/*font-size: calc(var(--font-size)*1.2);*/
+	font-size: calc(var(--sidebar-width)*0.07); /* Так на большом экране будут больше цифры */
+}
+
 .leaflet-sidebar-left .leaflet-sidebar-close-icn {
     right: 0; 
 }
 .leaflet-sidebar-right .leaflet-sidebar-close-icn {
     left: 0; 
 }
-.leaflet-sidebar-tabs > ul {
-	margin: 1rem auto;
+
+
+.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
+	margin: calc(var(--font-size)*0.4) auto;
+}
+#MOB-tab {
+	margin-top: calc(var(--font-size)*0.4);
+	margin-bottom: 100%;
 }
 
-@media (min-height: 500px) {
-	.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
-		margin: 0 auto;
-	}
-	#MOB-tab {
-		margin-top:1rem;
-		margin-bottom:1rem;
-	}
-}
-@media (min-height: 501px) and (max-height: 649px) {
-	.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
-		margin: 0.5rem auto;
-	}
-	#MOB-tab {
-		margin-top:1rem;
-		margin-bottom:50%;
-	}
-}
-@media (min-height: 650px) {
-	.leaflet-sidebar-tabs > li, .leaflet-sidebar-tabs > ul > li {
-		margin: 0.75rem auto;
-	}
-	#MOB-tab {
-		margin-top:1rem;
-		margin-bottom:100%;
-	}
-}
 
 .leaflet-sidebar-tabs > ul > li > a > img {
 	vertical-align: middle;
@@ -199,34 +118,34 @@ div.leaflet-control-zoom {
 /* Свои стили */
 
 ul { /* нужно, чтобы стили работали */
-  list-style-type: none;
-  margin: 2rem 0 2rem 0;
-  padding: 0;
+	list-style-type: none;
 }
 /*#mapList, #mapDisplayed, #trackList, #trackDisplayed, #routeList, #routeDisplayed, #geocodedList */
 .commonList {
+	list-style-type: none;
 	cursor: pointer;
-	font: 200 20px/1.5 Helvetica, Verdana, sans-serif;
+	font-family: Helvetica, Verdana, sans-serif;
+	font-size: calc(var(--font-size)*1.1);
+	font-weight: 300;
 	border-bottom: 1px solid #ccc;
-	margin-bottom: 1rem;
-	overflow:auto;
+	padding: 0 0 1rem 0;
+	margin:0.5rem 0;
 }
 .commonList > li {
-	margin: 0 0 0.5rem 0;
 	white-space: nowrap;
+	margin:0.3rem 0 0 1rem; /* вертикальное поле необходимо, иначе Crome и аналогичное говно криво показывают li. Плюс пальцами попадать удобней. */
 }
 .currentTrackName {
 	background-color:  rgba(227, 231, 251, 0.8) /* бледно-голубой полупрозрачный Потому что так эти li разноцветные, и эти цвета сохраняются. Но текущий трек, типа, надо выделить */
 	/*background-color:  rgba(227, 231, 251, 0.8) !important; *//* бледно-голубой полупрозрачный Потому что так эти li разноцветные, и эти цвета сохраняются. Но текущий трек, типа, надо выделить */
 }
-.big_symbol {
+.centred_pane {
 	height:90%;
 	width: 100%;	
 	display: flex;
     justify-content: center; /*Центрирование по горизонтали*/
     align-items: center;    /* Центрирование по вертикали */
     text-align: center;
-    /*padding: 0 auto;*/
 }
 
 /* Переключатель https://proto.io/freebies/onoff/ */
@@ -289,24 +208,25 @@ ul { /* нужно, чтобы стили работали */
     border-radius: 5px;
     text-align: center;
     padding: 0;
+    margin: 0;
 }
 .routeControls > input[type="radio"].L + label {
     /*border-right: none;*/
     border-radius: 5px 0px 0px 5px;
     width:48%;
-    margin-top: 0.3em;
+    margin-top: 0.3rem;
 }
 .routeControls > input[type="radio"].R + label {
     /*border-left: none;*/
     border-radius: 0px 5px 5px 0px;
     width:48%;
-    margin-top: 0.3em;
+    margin-top: 0.3rem;
 }
 .routeControls > input[type="radio"].M + label {
     /*border-left: none;*/
     width:80%;
     font-size: 89%;
-    margin-top: 0.7em;
+    margin-top: 0.7rem;
 }
 .routeControls > input[type="radio"]:checked + label {
 	background-color: rgb(233, 233, 233);
@@ -342,8 +262,8 @@ button:disabled {
 #hideControl {
 	--control-size: 20vmin;
 	position: fixed; 
-	width: var(--control-size);
-	height: var(--control-size);
+	width: var(--sidebar-width);
+	height: var(--sidebar-width);
 	z-index: 1; /*на 0 кто-то перехватывает события. А leaflet начинается с 100 */
 	display: none;
 	border: dashed fuchsia;
@@ -351,7 +271,7 @@ button:disabled {
 
 /*  */
 .leaflet-popup-content {
-    max-height: 55vh;
+    max-height: var(--sidebar-width);
     overflow-y: auto;
 }
 .mobIcon {
@@ -392,3 +312,25 @@ button:disabled {
 	border-width : 0;
 	text-align: left;
 }
+
+#mapInfo {
+	position: absolute;
+	top: calc(var(--sidebar-width)*0.4);
+	left: 0;
+	right: 0;
+	height: 50%;
+	width: 80%;
+	margin: 0 auto 0 auto;
+	z-index: 3000; /*на 0 кто-то перехватывает события. leaflet начинается с 100, leaflet-sidebar - с 2000 */
+	
+	border: solid rgba(0, 0, 0, 0.2);
+	border-radius: calc(var(--sidebar-width)*0.03);
+	background-color: white;
+	font-size: var(--font-size);
+	padding: 1rem;
+	overflow-y: auto;
+}
+#mapInfo > h2,h3 {
+	font-size: 90%;
+}
+
