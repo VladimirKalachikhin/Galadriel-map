@@ -719,6 +719,38 @@ if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
 var selfServerPath = '<?php echo __DIR__; ?>';
 var appLocale = '<?php echo $appLocale; ?>';
 var vesselSelf = '<?php echo $boatInfo["mmsi"]; ?>';
+// Интернационализация
+var showMapsTogglerTXT = [<?php echo $showMapsTogglerTXT; ?>];	// подписи на кнопке все/избранные карты
+var downloadLoaderIndicatorOnTXT = '<?php echo $downloadLoaderIndicatorOnTXT; ?>';
+var downloadLoaderIndicatorOffTXT = '<?php echo $downloadLoaderIndicatorOffTXT; ?>';
+var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
+var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
+var dashboardDepthMesTXT = '<?php echo $dashboardDepthMesTXT;?>';
+var dashboardMeterMesTXT = '<?php echo $dashboardMeterMesTXT;?>';
+var dashboardKiloMeterMesTXT = '<?php echo $dashboardKiloMeterMesTXT;?>';
+var dashboardCourseTXT = '<?php echo $dashboardCourseTXT;?>';
+var dashboardCourseAltTXT = '<?php echo $dashboardCourseAltTXT;?>';
+var dashboardHeadingTXT = '<?php echo $dashboardHeadingTXT;?>';
+var dashboardHeadingAltTXT = '<?php echo $dashboardHeadingAltTXT;?>';
+var dashboardMHeadingTXT = '<?php echo $dashboardMHeadingTXT;?>';
+var dashboardMHeadingAltTXT = '<?php echo $dashboardMHeadingAltTXT;?>';
+var latTXT = '<?php echo $latTXT;?>';
+var longTXT = '<?php echo $longTXT;?>';	
+var relBearingTXT = [<?php echo $relBearingTXT; // internationalisation ?>]
+var followWPTbuttonTXT = '<?php echo $followWPTbuttonTXT; ?>';
+var nofollowWPTbuttonTXT = '<?php echo $nofollowWPTbuttonTXT; ?>';
+var mapInfoComplexTXT = "<?php echo $mapInfoComplexTXT; ?>]";
+var mapInfoProjectionTXT = "<?php echo $mapInfoProjectionTXT; ?>";
+var mapInfoMinZoomTXT = "<?php echo $mapInfoMinZoomTXT; ?>";
+var mapInfoMaxZoomTXT = "<?php echo $mapInfoMaxZoomTXT; ?>";
+var mapInfoBordersTXT = "<?php echo $mapInfoBordersTXT; ?>";
+var mapInfoVectorTXT = "<?php echo $mapInfoVectorTXT; ?>";
+var mapInfoRasterTXT = "<?php echo $mapInfoRasterTXT; ?>";
+var mapInfoStyleFileTXT = "<?php echo $mapInfoStyleFileTXT; ?>";
+var mapInfoLoadableTXT = "<?php echo $mapInfoLoadableTXT; ?>";
+var mapInfoUseProxyTXT = "<?php echo $mapInfoUseProxyTXT; ?>";
+var mapInfoSourceTXT = "<?php echo $mapInfoSourceTXT; ?>";
+var mapInfoDataTXT = "<?php echo $mapInfoDataTXT; ?>";
 // для загрузки Mapbox GL при необходимости. Из-за чего-то надо так.
 var mapboxGLscript = null;	// скрипт Mapbox GL, загружается при открытии соответствующей карты. Эти глобальные переменные ни нафиг не нужны, но если грузить скрипты Mapbox GL где-то в глубине -- при закрытии карты возникает мутная ошибка.
 var mapboxLeafletscript = null;	// скрипт mapbox-gl-leaflet
@@ -728,7 +760,6 @@ var defaultMap = '<?php echo $defaultMap;?>'; 	// Карта, которая п�
 if(! defaultMap) defaultMap = 'osmmapMapnik';
 var defaultCenter = <?php echo $defaultCenter ? $defaultCenter : 'undefined';?>; 	// начальная точка, {lat: 99, lng: 99}
 if(! defaultCenter) defaultCenter = {"lat": 55.754, "lng": 37.62}; 	
-var showMapsTogglerTXT = [<?php echo $showMapsTogglerTXT; ?>];	// подписи на кнопке все/избранные карты
 var showMapsList = storageHandler.restore('showMapsList') || [];	// массив названий избранных карт
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте. Типа - кеш объектов.
 var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
@@ -774,8 +805,6 @@ var AISshipTypeTXT = {
 }
 // Loader
 var downJob = false; 	// флаг - не создаётся ли задание на скачивание
-var downloadLoaderIndicatorOnTXT = '<?php echo $downloadLoaderIndicatorOnTXT; ?>';
-var downloadLoaderIndicatorOffTXT = '<?php echo $downloadLoaderIndicatorOffTXT; ?>';
 var isCOVERpresent = '<?php echo $isCOVERpresent; ?>';
 // Пути и маршруты
 var editorEnabled = false;	// семафор, что можно использовать редактирования
@@ -822,19 +851,6 @@ var useTrueWind = <?php echo $useTrueWind?'true':'false';?>;
 // Dashboard
 var lat; 	 	// широта
 var lng; 	 	// долгота, округлённые до 4-х знаков
-var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
-var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
-var dashboardDepthMesTXT = '<?php echo $dashboardDepthMesTXT;?>';
-var dashboardMeterMesTXT = '<?php echo $dashboardMeterMesTXT;?>';
-var dashboardKiloMeterMesTXT = '<?php echo $dashboardKiloMeterMesTXT;?>';
-var dashboardCourseTXT = '<?php echo $dashboardCourseTXT;?>';
-var dashboardCourseAltTXT = '<?php echo $dashboardCourseAltTXT;?>';
-var dashboardHeadingTXT = '<?php echo $dashboardHeadingTXT;?>';
-var dashboardHeadingAltTXT = '<?php echo $dashboardHeadingAltTXT;?>';
-var dashboardMHeadingTXT = '<?php echo $dashboardMHeadingTXT;?>';
-var dashboardMHeadingAltTXT = '<?php echo $dashboardMHeadingAltTXT;?>';
-var latTXT = '<?php echo $latTXT;?>';
-var longTXT = '<?php echo $longTXT;?>';	
 var controlsList = [];	// список control для сокрытия их с экрана
 // восстановление переключателя сокрытия всего
 res = storageHandler.restore('hideControlsSwitch');
@@ -849,7 +865,6 @@ if(storageHandler.restore('hideControlPosition')){
 };
 // MOB
 var currentMOBmarker;	// Объект L.Marker в мультислое mobMarker, являющийся "текущим". Исторически в наименованиях есть некоторое смешение: mobMarker - это не маркер, это L.Polyline.
-var relBearingTXT = [<?php echo $relBearingTXT; // internationalisation ?>]
 // main output data
 var upData = {};
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
@@ -864,8 +879,6 @@ var superclusterRadius = 40;	// px
 var lastSuperClusterUpdatePosition = [[0,0],0];	// [<LatLng>,<zoom>] точка и масштаб последнего пересчёта supercluster
 
 // Waypoints
-var followWPTbuttonTXT = '<?php echo $followWPTbuttonTXT; ?>';
-var nofollowWPTbuttonTXT = '<?php echo $nofollowWPTbuttonTXT; ?>';
 
 
 // Поехали
@@ -1003,17 +1016,6 @@ sidebar.on("closing", function(){
 hideControlsToggler(hideControlsSwitch);	// создаёт как-бы control, делающий невидимыми все control, перечисленные в controlsList
 
 // Показ сведений о карте
-var mapInfoComplexTXT = "<?php echo $mapInfoComplexTXT; ?>]";
-var mapInfoProjectionTXT = "<?php echo $mapInfoProjectionTXT; ?>";
-var mapInfoMinZoomTXT = "<?php echo $mapInfoMinZoomTXT; ?>";
-var mapInfoMaxZoomTXT = "<?php echo $mapInfoMaxZoomTXT; ?>";
-var mapInfoBordersTXT = "<?php echo $mapInfoBordersTXT; ?>";
-var mapInfoVectorTXT = "<?php echo $mapInfoVectorTXT; ?>";
-var mapInfoRasterTXT = "<?php echo $mapInfoRasterTXT; ?>";
-var mapInfoLoadableTXT = "<?php echo $mapInfoLoadableTXT; ?>";
-var mapInfoUseProxyTXT = "<?php echo $mapInfoUseProxyTXT; ?>";
-var mapInfoSourceTXT = "<?php echo $mapInfoSourceTXT; ?>";
-var mapInfoDataTXT = "<?php echo $mapInfoDataTXT; ?>";
 mapInfo.addEventListener('click',function (event){	// для срабатывания клика везде, кроме самого окна, для закрытия
 	event.stopPropagation();	// чтобы оно не дошло до body, на который раньше успело навеситься modeMenuClose.
 });
@@ -1689,7 +1691,7 @@ if(gpsdData.track === null || gpsdData.track === undefined) {	// no course over 
 		courseDisplay.innerHTML = "&nbsp;"+Math.round(gpsdData.heading)+"°"; // покажем направление на приборной панели
 		// Заменим подписи
 		dashboardCourseTXTlabel.innerHTML = dashboardHeadingTXT;
-		dashboardCourseAltTXTlabel.innerHTML = dashboardHeadingAltTXT
+		dashboardCourseAltTXTlabel.innerHTML = dashboardHeadingAltTXT;
 	}
 	else if(gpsdData.mheading != null){	// или магнитный курс
 		if(gpsdData.magvar != null) {		// если есть склонение -- он истинный курс
