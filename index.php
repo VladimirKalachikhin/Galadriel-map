@@ -2,8 +2,9 @@
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 //ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 
-$versionTXT = '3.1.1';
+$versionTXT = '3.2.0';
 /* 
+3.2.0	map descriptions support
 3.1.0	auto update mbtiles maps list
 3.0.0	support GaladrielCache 3
 2.21.0	following waypoints
@@ -332,11 +333,11 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 				<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 				<ul id="mapDisplayed" class="commonList"  style="max-height:100%;min-height:8%;overflow:auto;"><?php // overflow не наследуется, но если здесь не указать - горизонтальной прокрутки не будет, как это указано в основном стиле для leaflet-sidebar-pane ?>
 				</ul>
-				<ul id="mapList" class='commonList' style="flex-grow:1;overflow:auto;"><?php // Указание высоты включит прокручивание по вертикали. Почему прокручивание по горизонтали и так работает - х.з. ?>
+				<ul id="mapList" class='commonList' style="overflow:auto;">
 <?php
 foreach($mapsInfo as $mapName => $humanName) {
 ?>
-						<li hidden id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}" style="width:<?php echo $maxStrLength*0.65;?>rem;"><img src="img/info.svg" alt="Info" style="float:right;width:calc(0.7em);margin:0.5rem 1rem 0.5rem 0;" onclick="{(e)=>{console.log(e); e.stopPropagation();};}"><span><?php echo "$humanName";?></span></li>
+						<li hidden id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}" style="width:<?php echo $maxStrLength*0.65;?>rem;"><img src="img/info.svg" alt="Info" style="float:right;height:1em;padding:0.1rem 0.7rem 0.1rem 3rem;" onclick="mapInfoOpen(event)"><span style=""><?php echo "$humanName";?></span></li>
 <?php
 }
 ?>
@@ -707,6 +708,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 	</div>
 </div>
 <div id="hideControl"></div>
+<div id="mapInfo" style="display:none;"></div>
 <div id="mapid" ></div>
 <?php
 if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = $collisionDistance;	// gpsdPROXY's params.php
@@ -999,6 +1001,22 @@ sidebar.on("closing", function(){
 });
 // Сокрытие всего
 hideControlsToggler(hideControlsSwitch);	// создаёт как-бы control, делающий невидимыми все control, перечисленные в controlsList
+
+// Показ сведений о карте
+var mapInfoComplexTXT = "<?php echo $mapInfoComplexTXT; ?>]";
+var mapInfoProjectionTXT = "<?php echo $mapInfoProjectionTXT; ?>";
+var mapInfoMinZoomTXT = "<?php echo $mapInfoMinZoomTXT; ?>";
+var mapInfoMaxZoomTXT = "<?php echo $mapInfoMaxZoomTXT; ?>";
+var mapInfoBordersTXT = "<?php echo $mapInfoBordersTXT; ?>";
+var mapInfoVectorTXT = "<?php echo $mapInfoVectorTXT; ?>";
+var mapInfoRasterTXT = "<?php echo $mapInfoRasterTXT; ?>";
+var mapInfoLoadableTXT = "<?php echo $mapInfoLoadableTXT; ?>";
+var mapInfoUseProxyTXT = "<?php echo $mapInfoUseProxyTXT; ?>";
+var mapInfoSourceTXT = "<?php echo $mapInfoSourceTXT; ?>";
+var mapInfoDataTXT = "<?php echo $mapInfoDataTXT; ?>";
+mapInfo.addEventListener('click',function (event){	// для срабатывания клика везде, кроме самого окна, для закрытия
+	event.stopPropagation();	// чтобы оно не дошло до body, на который раньше успело навеситься modeMenuClose.
+});
 // end controls
 
 // Поведение карты

@@ -136,7 +136,11 @@ $useTrueWind = false;
 
 // Системные параметры System
 // строка запуска консольного интерпретатора php
+// Если не указано, автоматически будет предпринята попытка определить фактически используемую строку запуска.
+// Определить команду php можно так:
+//	$phpCLIexec = trim(explode(' ',trim(shell_exec("ps -p ".(getmypid())." -o command=")))[0]);	// из PID системной командой получаем командную строку и берём первый отделённый пробелом элемент. Считаем, что он - команда запуска php. Должно работать и в busybox. Но только в cli.
 // php-cli executed name on your OS
+// If not specified, an attempt will be made automatically to determine the actual startup string being used.
 //$phpCLIexec = '/usr/bin/php-cli'; 	
 //$phpCLIexec = '/usr/bin/php';
 $phpCLIexec = 'php';

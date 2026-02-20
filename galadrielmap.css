@@ -312,3 +312,25 @@ button:disabled {
 	border-width : 0;
 	text-align: left;
 }
+
+#mapInfo {
+	position: absolute;
+	top: calc(var(--sidebar-width)*0.4);
+	left: 0;
+	right: 0;
+	height: 50%;
+	width: 80%;
+	margin: 0 auto 0 auto;
+	z-index: 3000; /*на 0 кто-то перехватывает события. leaflet начинается с 100, leaflet-sidebar - с 2000 */
+	
+	border: solid rgba(0, 0, 0, 0.2);
+	border-radius: calc(var(--sidebar-width)*0.03);
+	background-color: white;
+	font-size: var(--font-size);
+	padding: 1rem;
+	overflow-y: auto;
+}
+#mapInfo > h2,h3 {
+	font-size: 90%;
+}
+

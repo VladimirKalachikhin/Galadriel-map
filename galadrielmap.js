@@ -267,6 +267,7 @@ storageHandler.save(toSave);
 // Функции выбора - удаления карт
 function selectMap(node) { 	// async нельзя, потому что при старте приложения карты должны загружаться в определённом порядке
 // Выбор карты из списка имеющихся. Получим объект
+//console.log('[selectMap] node:',node);
 mapDisplayed.insertBefore(node,mapDisplayed.firstChild); 	// из списка доступных в список показываемых (объект, на котором событие, добавим в конец потомков mapDisplayed)
 node.classList.remove("showedMapName");
 node.hidden = false;
@@ -729,6 +730,81 @@ if(mapBoundsLayer.getLayers().length) mapBoundsLayer.addTo(map);
 function displayMapBoundsOFF(){
 mapBoundsLayer.remove().clearLayers();
 }; // end function displayMapBoundsOFF()
+
+
+function mapInfoOpen(event){
+/* Global appLocale
+*/
+event.stopPropagation();
+//console.log('[mapInfoOpen] кликнули на ',event);
+if(mapInfo.style.display != 'none') mapInfoClose();
+mapInfo.style.display = '';
+document.body.addEventListener('click',(event)=>{
+	mapInfoClose();
+},{'once':true});	// закрывать меню по клику в любом месте
+//console.log('[mapInfoOpen] mapInfo:',mapInfo);
+fetch(tileCacheControlURI+'?getMapDescription='+encodeURIComponent(event.target.parentElement.attributes.id.value))
+.then(response => {
+	if (!response.ok) {
+		throw new Error(`getMapDescription http error! Status: ${response.status}`);
+	};
+	return response.json();
+})
+.then(mapInfoData => {
+	//console.log('[mapInfoOpen] mapInfoData:',mapInfoData);
+	let innerHTML = '';
+	if(Object.keys(mapInfoData).length>1) innerHTML += `<h2>${mapInfoComplexTXT}:</h2>`;
+	for(let mapname in mapInfoData){
+		if(typeof mapInfoData[mapname].humanName[appLocale] === "undefined"){
+			innerHTML += `<h3>${mapInfoData[mapname].humanName['en']}</h3>`;
+		}
+		else {
+			innerHTML += `<h3>${mapInfoData[mapname].humanName[appLocale]}</h3>`;
+		};
+		if(typeof mapInfoData[mapname].mapDescription[appLocale] === "undefined"){
+			innerHTML += mapInfoData[mapname].mapDescription['en'].replace(/(?:\r\n|\r|\n)/g, '<br>')+'<br>';
+		}
+		else {
+			innerHTML += mapInfoData[mapname].mapDescription[appLocale].replace(/(?:\r\n|\r|\n)/g, '<br>')+'<br>';
+		};
+		if(typeof mapInfoData[mapname].epsg !== "undefined") innerHTML += `${mapInfoProjectionTXT} ${mapInfoData[mapname].epsg}<br>`;
+		if(typeof mapInfoData[mapname].minZoom !== "undefined") innerHTML += `${mapInfoMinZoomTXT}: ${mapInfoData[mapname].minZoom}<br>`;
+		if(typeof mapInfoData[mapname].maxZoom !== "undefined") innerHTML += `${mapInfoMaxZoomTXT}: ${mapInfoData[mapname].maxZoom}<br><br>`;
+		if(typeof mapInfoData[mapname].bounds !== "undefined") innerHTML += `${mapInfoBordersTXT}, ${latTXT}, ${longTXT}: ${mapInfoData[mapname].bounds.leftTop.lat}, ${mapInfoData[mapname].bounds.leftTop.lng} &mdash; ${mapInfoData[mapname].bounds.rightBottom.lat}, ${mapInfoData[mapname].bounds.rightBottom.lng}`;
+		innerHTML += '<div style="font-size:75%;text-align:right;margin:1rem;">';
+		if(typeof mapInfoData[mapname].vectorTileStyleURL !== "undefined") {
+			innerHTML += `${mapInfoVectorTXT}<br>${mapInfoStyleFileTXT}: `;
+			if(URL.canParse(mapInfoData[mapname].vectorTileStyleURL)){
+				innerHTML += mapInfoData[mapname].vectorTileStyleURL;
+			}
+			else{
+				innerHTML += (window.location.origin+mapInfoData[mapname].vectorTileStyleURL);
+			}
+			innerHTML += '<br>';
+		}
+		else innerHTML += `${mapInfoRasterTXT}<br>`;
+		if(mapInfoData[mapname].online) {
+			innerHTML += `${mapInfoLoadableTXT}<br>`;
+			if(typeof mapInfoData[mapname].proxy !== "undefined") innerHTML += `${mapInfoUseProxyTXT} ${mapInfoData[mapname].proxy}<br>`;
+		};
+		innerHTML += `${mapInfoSourceTXT}: ${mapInfoData[mapname].mapDescriptionFile}<br>`;
+		innerHTML += `${mapInfoDataTXT}: ${mapInfoData[mapname].mapDataFile}<br>`;
+		innerHTML += '</div>'
+	};
+	
+	//console.log('[mapInfoOpen] innerHTML=',innerHTML);
+	mapInfo.innerHTML = innerHTML;
+})
+.catch(error => {
+	console.error('getMapDescription fetch data Error:', error);
+});
+}; // end function mapInfoOpen
+
+function mapInfoClose(){
+console.log('[mapInfoClose]');
+mapInfo.style.display = 'none';
+mapInfo.innerHTML = '';
+}; // end function mapInfoClose
 
 
 // Функции выбора - удаления треков
@@ -2256,7 +2332,7 @@ catch (error) { 	// coordinate-parser обломался, строка - не к
 		if((x == null) || (y == null) || (z == null)){	// координат так и не нашли
 			//console.log("Может быть, там номер тайла просто в виде трёх чисел zxy?");
 			const regex = /[-+]?\d*\.?\d+/g;	// все числа
-			const zxy = stringPos.match(regex);	// вот какой кретин придумал возвращать null при неудаче поиска? Почему не пустой массив?
+			let zxy = stringPos.match(regex);	// вот какой кретин придумал возвращать null при неудаче поиска? Почему не пустой массив?
 			if(zxy) {
 				zxy = zxy.map(Number);
 				//console.log(zxy);
