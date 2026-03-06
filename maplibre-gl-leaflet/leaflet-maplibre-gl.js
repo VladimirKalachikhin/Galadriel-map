@@ -35,7 +35,8 @@
                 this._initContainer();
             }
 
-            var paneName = this.getPaneName();
+            var paneName = this.getPaneName();	// tilePane
+            //console.log('paneName=',paneName,map.getPane(paneName));
             map.getPane(paneName).appendChild(this._container);
 
             this._initGL();

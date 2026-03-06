@@ -331,9 +331,9 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 		<div class="leaflet-sidebar-pane" id="home" style="margin:0;padding:0;height:100%;overflow:hidden;"><?php // тогда вложенные блоки не увеличат высоту и не вызовут прокручивание ?>
 			<div style="margin:0;padding:0;height:100%;overflow:hidden;display:flex;flex-direction:column;">
 				<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
-				<ul id="mapDisplayed" class="commonList"  style="max-height:100%;min-height:8%;overflow:auto;"><?php // overflow не наследуется, но если здесь не указать - горизонтальной прокрутки не будет, как это указано в основном стиле для leaflet-sidebar-pane ?>
+				<ul id="mapDisplayed" class="commonList"  style="height:10%;overflow:auto;"><?php // overflow не наследуется, но если здесь не указать - горизонтальной прокрутки не будет, как это указано в основном стиле для leaflet-sidebar-pane ?>
 				</ul>
-				<ul id="mapList" class='commonList' style="overflow:auto;">
+				<ul id="mapList" class='commonList' style="overflow:auto;height:90%;">
 <?php
 foreach($mapsInfo as $mapName => $humanName) {
 ?>

@@ -115,6 +115,11 @@ div.leaflet-control-zoom {
 }
 
 
+.leaflet-gl-layer {
+	position: relative;
+	z-index: 1;	/* почему-то map(box|libre)-gl-leaflet не содержит стилей, и не указывает в коде (как leaflet) z-index добавляемого слоя. В результате векторный слой всегда ниже растровых. Это исправляет. */
+}
+
 /* Свои стили */
 
 ul { /* нужно, чтобы стили работали */

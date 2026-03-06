@@ -401,9 +401,8 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 		};
 		let layerParm;
 		if(isVector){ 
-			layerParm = {
+			layerParm = {	// здесь всё в стиле, и, например, указание minzoom даёт весёлые визуальные эффекты
 				"style": mapParm.vectorTileStyleURL,
-				"minZoom":mapParm.minZoom,
 			};
 		}
 		else {
@@ -415,30 +414,33 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 				layerParm["minNativeZoom"] = minNativeZoom;
 				layerParm["maxNativeZoom"] = maxNativeZoom;
 			}
-		};
-		// В Leaflet древний баг: антимередиан. Всё, что его пересекает, показывается криво
-		// В частности, если bounds пересекает антимередиан, то вся карта будет за пределами границ,
-		// и не будет запрашиваться.
-		// К счастью, у нас GaladrielCache не станет получать тайлы за пределами границ, так что
-		// Leaflet может запрашивать.
-		// Однако, 
-		// Caution: if the area crosses the antimeridian (often confused with the International Date Line),
-		// you must specify corners outside the [-180, 180] degrees longitude range.
-		if(mapParm.bounds && (JSON.stringify(mapParm.bounds)!='[]')) {
-			//console.log('[realDisplayMap] mapParm.bounds:',JSON.stringify(mapParm.bounds));
-			let leftTop = {};
-			leftTop.lng = mapParm.bounds.leftTop.lng;	// а иначе оно ссылка, б...!
-			leftTop.lat = mapParm.bounds.leftTop.lat;
-			let rightBottom = {};
-			rightBottom.lng = mapParm.bounds.rightBottom.lng;
-			rightBottom.lat = mapParm.bounds.rightBottom.lat;
-			if(mapParm.bounds.leftTop.lng>0 && mapParm.bounds.rightBottom.lng<=0){	// граница переходит антимередиан
-				// Не вполне понятна глубинная суть этого деяния, но факт в том, что если не вычитать/прибавлять,
-				// то не видны либо левые, либо правые части. А если ничего не делать - то не видно ничего.
-				leftTop.lng -= 360;
-				rightBottom.lng += 360;
+			// bounds в параметрах - только в растровой карте, потому что в векторной границы указываются
+			// в стиле. К тому же имеется баг в векторных библиотеках - оно падает с сообщением
+			// о неверном формате границ, хотя формат верный.
+			// В Leaflet древний баг: антимередиан. Всё, что его пересекает, показывается криво
+			// В частности, если bounds пересекает антимередиан, то вся карта будет за пределами границ,
+			// и не будет запрашиваться.
+			// К счастью, у нас GaladrielCache не станет получать тайлы за пределами границ, так что
+			// Leaflet может запрашивать.
+			// Однако, 
+			// Caution: if the area crosses the antimeridian (often confused with the International Date Line),
+			// you must specify corners outside the [-180, 180] degrees longitude range.
+			if(mapParm.bounds && (JSON.stringify(mapParm.bounds)!='[]')) {
+				//console.log('[realDisplayMap] mapParm.bounds:',JSON.stringify(mapParm.bounds));
+				let leftTop = {};
+				leftTop.lng = mapParm.bounds.leftTop.lng;	// а иначе оно ссылка, б...!
+				leftTop.lat = mapParm.bounds.leftTop.lat;
+				let rightBottom = {};
+				rightBottom.lng = mapParm.bounds.rightBottom.lng;
+				rightBottom.lat = mapParm.bounds.rightBottom.lat;
+				if(mapParm.bounds.leftTop.lng>0 && mapParm.bounds.rightBottom.lng<=0){	// граница переходит антимередиан
+					// Не вполне понятна глубинная суть этого деяния, но факт в том, что если не вычитать/прибавлять,
+					// то не видны либо левые, либо правые части. А если ничего не делать - то не видно ничего.
+					leftTop.lng -= 360;
+					rightBottom.lng += 360;
+				};
+				layerParm.bounds = L.latLngBounds(leftTop,rightBottom);
 			};
-			layerParm.bounds = L.latLngBounds(leftTop,rightBottom);
 		};
 		//console.log('[realDisplayMap] layerParm:',layerParm);
 
@@ -2382,7 +2384,7 @@ else{
 		if (this.readyState != 4) return; 	// запрос ещё не завершился
 		if (this.status != 200) return; 	// что-то не то с сервером
 		const nominatim = JSON.parse(this.response);
-		//console.log(nominatim);
+		console.log(nominatim);
 		updGeocodeList(nominatim);
 	};
 };
