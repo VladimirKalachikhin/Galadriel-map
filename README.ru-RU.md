@@ -5,7 +5,7 @@
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Форум</a>
 </div>
 
-## v. 3.1
+## v. 3.2
  ![screen](screenshots/s10.jpeg)<br>
 Технически это веб-приложение -- просмотрщик тайловых онлайн карт. При использовании с  [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) становится возможным предварительное скачивание и последующий просмотр карт без подключения к сети Интернет.  
 Предполагается, что приложение функционирует в локальной  бортовой сети катера, яхты или автомобиля, поэтому никакого разграничения доступа к функциям не предусмотрено.
@@ -81,6 +81,7 @@
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) в каталоге _gpsdPROXY/_ 
 * [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) установленная в каталог _maplibre-gl/dist/_ 
 * [maplibre-gl-leaflet](https://github.com/maplibre/maplibre-gl-leaflet) установленная как _maplibre-gl-leaflet/leaflet-mapbox-gl.js_
+* [maplibre-contour](https://github.com/onthegomap/maplibre-contour) установленная как _maplibre-contour/dist/index.js_
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) в _gpsdPROXY/_ directory
 * [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) установленная в каталог _polycolor/_  
 * [value2color](https://github.com/VladimirKalachikhin/value2color) установленная в каталог _value2color/_

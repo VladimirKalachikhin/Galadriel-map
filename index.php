@@ -2,7 +2,7 @@
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 //ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 
-$versionTXT = '3.2.1';
+$versionTXT = '3.2.2';
 /* 
 3.2.0	map descriptions support
 3.1.0	auto update mbtiles maps list

@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 3.1
+## v. 3.2
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -77,6 +77,7 @@ You may download full pack -- more 10MB, or without vector tiles support and scr
 * [leaflet-sidebar-v2](https://github.com/nickpeihl/leaflet-sidebar-v2) in _leaflet-sidebar-v2/_ directory
 * [maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js) in _maplibre-gl/dist/_ directory
 * [maplibre-gl-leaflet](https://github.com/maplibre/maplibre-gl-leaflet) as _maplibre-gl-leaflet/leaflet-mapbox-gl.js_
+* [maplibre-contour](https://github.com/onthegomap/maplibre-contour) as _maplibre-contour/dist/index.js_
 * [supercluster](https://github.com/mapbox/supercluster) as _supercluster/dist/supercluster.js_
 * [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) in _gpsdPROXY/_ directory
 * [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) in _polycolor/_ directory  
