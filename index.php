@@ -133,7 +133,7 @@ if($tileCacheControlURI){	// мы знаем про GaladrielCache
 			$str .= substr($_SERVER['REQUEST_URI'],0,strrpos($_SERVER['REQUEST_URI'],'/')+1);
 		};
 		file_get_contents("http://localhost$tileCacheControlURI?collectMBTiles",false);	// создать отсутствующие описания для новых файлов mbtiles
-		$mapList = json_decode(file_get_contents("http://localhost$tileCacheControlURI?getMapList",false),true);
+		$mapList = json_decode(@file_get_contents("http://localhost$tileCacheControlURI?getMapList",false),true);
 		$tileCacheControlURI = $str . $tileCacheControlURI;
 		//echo("str=$str; tileCacheControlURI=$tileCacheControlURI;");
 	}
@@ -739,7 +739,7 @@ var longTXT = '<?php echo $longTXT;?>';
 var relBearingTXT = [<?php echo $relBearingTXT; // internationalisation ?>]
 var followWPTbuttonTXT = '<?php echo $followWPTbuttonTXT; ?>';
 var nofollowWPTbuttonTXT = '<?php echo $nofollowWPTbuttonTXT; ?>';
-var mapInfoComplexTXT = "<?php echo $mapInfoComplexTXT; ?>]";
+var mapInfoComplexTXT = "<?php echo $mapInfoComplexTXT; ?>";
 var mapInfoProjectionTXT = "<?php echo $mapInfoProjectionTXT; ?>";
 var mapInfoMinZoomTXT = "<?php echo $mapInfoMinZoomTXT; ?>";
 var mapInfoMaxZoomTXT = "<?php echo $mapInfoMaxZoomTXT; ?>";
@@ -754,6 +754,7 @@ var mapInfoDataTXT = "<?php echo $mapInfoDataTXT; ?>";
 // для загрузки Mapbox GL при необходимости. Из-за чего-то надо так.
 var mapboxGLscript = null;	// скрипт Mapbox GL, загружается при открытии соответствующей карты. Эти глобальные переменные ни нафиг не нужны, но если грузить скрипты Mapbox GL где-то в глубине -- при закрытии карты возникает мутная ошибка.
 var mapboxLeafletscript = null;	// скрипт mapbox-gl-leaflet
+var mapboxCountourscript = null;	// скрипт mapbox-contour
 // Карта
 var defaultMap = '<?php echo $defaultMap;?>'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
 //if(! defaultMap) defaultMap = 'OpenTopoMap';	// Эти суки стали бороться с русскими, и забанили OpenTopoMap

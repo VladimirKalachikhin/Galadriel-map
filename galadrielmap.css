@@ -114,11 +114,16 @@ div.leaflet-control-zoom {
 	background-color:rgba(0, 0, 0, 0)!important;	/* прозрачный фон, защищённый от переписывания в других css */
 }
 
+/* почему-то map(box|libre)-gl-leaflet не содержит стилей, и не указывает в коде (как leaflet) z-index добавляемого слоя. В результате векторный слой всегда ниже растровых. Это исправляет. 
+absolute - потому, что нормальные слои absolute, и тогда они все будут отображаться в порядке появления?
+z-index: 1 - z-index должен быть не auto
+*/
 
 .leaflet-gl-layer {
-	position: relative;
-	z-index: 1;	/* почему-то map(box|libre)-gl-leaflet не содержит стилей, и не указывает в коде (как leaflet) z-index добавляемого слоя. В результате векторный слой всегда ниже растровых. Это исправляет. */
+	position: absolute;
+	z-index: 1;	
 }
+
 
 /* Свои стили */
 

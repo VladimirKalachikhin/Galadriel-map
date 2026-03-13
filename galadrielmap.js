@@ -333,6 +333,157 @@ if(map.hasLayer(tileGrid)) displayMapBounds();	// перерисуем гран�
 }; // end function displayMap
 
 
+function contourLines(mapname){
+/**/
+function realContourLines(maplibreMap){
+//console.log('[realContourLines] maplibreMap:',maplibreMap);
+if(maplibreMap.isStyleLoaded()){
+	//console.log('[realContourLines] maplibreMap style:',maplibreMap.getStyle());
+	const style = maplibreMap.getStyle();
+	let layer;
+	for(layer of style.layers){
+		if(layer.type == 'hillshade'){
+			//console.log('[realContourLines] слой',layer,'является тонировкой рельефа');
+			//console.log('[realContourLines] слой найден в maplibreMap:',maplibreMap);
+			break;	// там только один слой hillshade? Ну, по логике вещей...
+		};
+	};
+	if(layer.type != 'hillshade') return;	// слоя hillshade в карте maplibre нет.
+	//console.log('[realContourLines] Загружена ли maplibre-contour?:',mapboxCountourscript);
+	if(!mapboxCountourscript){	// библиотека maplibre-contour ещё не загружена
+		if(mapboxCountourscript=loadScriptSync("maplibre-contour/dist/index.js")) console.log("[realDisplayMap] maplibre-contour is loaded");
+		else return;	// не удалось загрузить библиотеку maplibre-contour
+	};
+
+	// У этих придурков "The URL must be absolute, containing the scheme, authority and path components." https://maplibre.org/maplibre-style-spec/glyphs/
+	//console.log(window.location.origin,window.location.pathname);
+	// Ещё у этих придурков не работают функции getGlyphs() и setGlyphs().
+	// Однако, версия @5.19.0 (последняя), имеет встроенный шрифт, и может обходиться без glyphs.
+	// Но она на 300K больше.
+	// Но @5.19.0 не падает на .getStyle() после замены glyphs в setStyle
+	if(!style.glyphs) {
+		//console.log('[realContourLines] glyphs нет, добавляем');
+		//maplibreMap.setGlyphs(`${window.location.origin}${window.location.pathname}styles/fonts/{fontstack}/{range}.pbf`);
+		style.glyphs = `${window.location.origin}${window.location.pathname}styles/fonts/{fontstack}/{range}.pbf`;
+		maplibreMap.setStyle(style);	// стиль будет полностью заменён?, потому что изменён glyphs
+		setTimeout(realContourLines,10,maplibreMap);	// запустим ожидание обновления стиля. Строго говоря, даже повторная проверка на наличие слоя hillshade будет уместна - вдруг его кто-то удалит?
+		return;	// и на этом всё, ибо считаем, что без glyphs упс.
+	};
+
+	//console.log('[realContourLines] Стиль есть, можно рисовать карту',maplibreMap.getStyle())
+	// Итак, glyphs есть. Пора рисовать горизонтали.
+	//console.log('Объект sources для найденного слоя типа hillshade:',style.sources[layer.source]);
+	//console.log('Объект sources для найденного слоя типа hillshade с ID:',layer.id,maplibreMap.getSource(layer.id));	// Стиль, сцуко, в этот момент ещё не загружен, и их горбатая функция возвращает undefined
+	const url = style.sources[layer.source].tiles[0];
+	const maxzoom = style.sources[layer.source].maxzoom || 17;
+	//console.log('url=',url,'maxzoom=',maxzoom);
+	let demSource = new mlcontour.DemSource({
+		"url" : url,
+		//"encoding" : "terrarium", // "mapbox" or "terrarium" default="terrarium"
+		"maxzoom" : maxzoom,
+		"worker" : true, // offload isoline computation to a web worker to reduce jank
+		//cacheSize: 100, // number of most-recent tiles to cache
+		timeoutMs: 10_000, // timeout on fetch requests
+	});
+	demSource.setupMaplibre(maplibregl);
+	// Then configure a new contour source and add it to your map:
+	/*/
+	The demSource.contourProtocolUrl thresholds parameter in MapLibre/maplibre-contour defines elevation intervals for minor and major contour lines, mapped by zoom level (zoom: [minor, major]). It controls which contour lines are displayed (e.g., every 50m/200m or 20m/100m) to reduce clutter at different map scales. 
+	Common Threshold Configurations (Zoom: [Minor, Major]):
+		Detailed (Zoom 14+): 14: [50, 200] or 14: [20, 100] for high-resolution terrain.
+		Mid-range (Zoom 11-13): 11: [200, 1000], 12: [100, 500].
+		Example Usage: thresholds: { 11: [200, 1000], 12: [100, 500], 14: [50, 200], 15: [20, 100] }. 
+	Key Details:
+		Units: Values are generally in meters unless a multiplier is applied (e.g., 3.28084 for feet).
+		Structure: Defines when to show lighter, thin lines (minor) and darker, thick lines (major).
+		Alternative Inline Format: In URLs, these can be specified as 11*250*1000 (Zoom * Minor * Major).
+	/*/    
+	maplibreMap.addSource("contourSource", {
+		"type": "vector",
+		"tiles": [
+			demSource.contourProtocolUrl({
+				// convert meters to feet, default=1 for meters
+				//"multiplier": 3.28084,
+				"thresholds": {
+					// zoom: [minor, major]
+					11: [100, 500],
+					12: [50, 500],
+					13: [10, 200],
+					14: [5, 100],
+					15: [2, 100]
+				},
+				// optional, override vector tile parameters:
+				"contourLayer": "contours",
+				"elevationKey": "ele",
+				"levelKey": "level",
+				"overzoom": 1,
+				//"extent": 4096,
+				//"buffer": 1,
+			})
+		],
+		"maxzoom": maxzoom
+	});
+	// Then add contour line and label layers:
+	maplibreMap.addLayer({
+		"id": "contourLines",
+		"type": "line",
+		"source": "contourSource",
+		"source-layer": "contours",
+		"paint": {
+			//"line-color": "rgba(0,0,0, 30%)",
+			"line-color": "rgba(230,135,30, 100%)",
+			//"line-color": "red",
+			// level = highest index in thresholds array the elevation is a multiple of
+			"line-width": ["match", ["get", "level"], 1, 1, 0.5],
+		},
+	});
+	maplibreMap.addLayer({
+		"id": "contourLabels",
+		"type": "symbol",
+		"source": "contourSource",
+		"source-layer": "contours",
+		"filter": [">", ["get", "level"], 0],
+		"layout": {
+			"symbol-placement": "line",
+			"text-size": 10,
+			"text-field": ["concat", ["number-format", ["get", "ele"], {}], "'"],
+			"text-font": ["Noto Sans Bold"],
+		},
+		"paint": {
+			"text-halo-color": "white",
+			"text-halo-width": 1,
+		},
+	});
+}
+else {
+	//console.log('[realContourLines] Стилей ещё нет, ждём');
+	setTimeout(realContourLines,100,maplibreMap);
+};
+}; // end function realContourLines
+
+function  waitMapLibreMap(Llayer){
+// У этих придурков объект _glMap появляется в объекте l.maplibreGL только после .addTo(map)? Не, когда всё загрузится. Или на следующий оборот?
+if(typeof Llayer.getMaplibreMap === 'function'){
+	//console.log('[waitMapLibreMap] Это Leaflet слой maplibre');
+	const Mmap = Llayer.getMaplibreMap();
+	if(Mmap === undefined) setTimeout(waitMapLibreMap,100,Llayer);	// но карты maplibre там нет
+	else realContourLines(Mmap);
+};
+}; // end function  waitMapLibreMap
+
+let mapObj;
+if(typeof mapname === 'string') mapObj = savedLayers[mapname];
+else mapObj = mapname;
+if(mapObj instanceof L.LayerGroup) { 	// это layerGroup
+	for(let layer of mapObj.getLayers()){
+		waitMapLibreMap(layer);
+	};
+}
+else waitMapLibreMap(mapObj);
+//
+}; // end function contourLines
+
+
 function realDisplayMap(mapname,mapParm={}) {
 /* Если всё это добро расписать в старом добром структурном стиле, а не как принято в javascript - всё хорошо ложится.
 */
@@ -442,6 +593,10 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 				layerParm.bounds = L.latLngBounds(leftTop,rightBottom);
 			};
 		};
+		//layerParm.pane = 'tilePane';	// "By default the layer will be added to the map's overlay pane." Но на самом деле - карта и так добавляется в tilePane. Как-то оно там разбирается...
+		////////////////////////////////
+		//if(mapname=='waterkaartBatymetry') layerParm.pane = 'overlayPane';
+		////////////////////////////////
 		//console.log('[realDisplayMap] layerParm:',layerParm);
 
 		let mapTilesURIthis;
@@ -470,9 +625,10 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 				//if(!(mapboxGLscript=loadScriptSync("mapbox-gl-js/dist/mapbox-gl.js"))) return;
 				//if(!(mapboxLeafletscript=loadScriptSync("mapbox-gl-leaflet/leaflet-mapbox-gl.js"))) return;
 				console.log("[realDisplayMap] gl & gl-leaflet is loaded");
-			}
+			};
 			layer = L.maplibreGL(layerParm);
 			//layer = L.mapboxGL(layerParm);
+			contourLines(layer);
 		}
 		else {
 			layer = L.tileLayer(mapTilesURIthis, layerParm);
@@ -803,7 +959,7 @@ fetch(tileCacheControlURI+'?getMapDescription='+encodeURIComponent(event.target.
 }; // end function mapInfoOpen
 
 function mapInfoClose(){
-console.log('[mapInfoClose]');
+//console.log('[mapInfoClose]');
 mapInfo.style.display = 'none';
 mapInfo.innerHTML = '';
 }; // end function mapInfoClose
