@@ -310,15 +310,14 @@ async function displayMap(mapname,mapParm={}) {
 //console.log('[displayMap] mapname=',mapname,'mapParm:',JSON.stringify(mapParm));
 if(savedLayers[mapname] == null) {
 	const layer = realDisplayMap(mapname,mapParm);
-	if(layer != null) {
-		if(typeof layer.options.javascriptOpen === 'function') {
-			layer.options.javascriptOpen(layer);
-		};
-		if(savedLayers[mapname]) savedLayers[mapname].remove();
-		savedLayers[mapname] = layer;
-		//console.log('[displayMap] mapname=',mapname,'savedLayers[mapname]:',savedLayers[mapname]);
-		savedLayers[mapname].addTo(map);
+	if(layer == null) return;
+	if(typeof layer.options.javascriptOpen === 'function') {
+		layer.options.javascriptOpen(layer);
 	};
+	if(savedLayers[mapname]) savedLayers[mapname].remove();
+	savedLayers[mapname] = layer;
+	//console.log('[displayMap] mapname=',mapname,'savedLayers[mapname]:',savedLayers[mapname]);
+	savedLayers[mapname].addTo(map);
 }
 else {	// такая карта уже есть, просто покажем
 	if(typeof savedLayers[mapname].options.javascriptOpen === 'function') {
@@ -643,13 +642,14 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 		else {
 			layer = L.tileLayer(mapTilesURIthis, layerParm);
 		};
+		//console.log('[realDisplayMap] layer:',layer);
 		multilayer.addLayer(layer);
 	};
 };
 //console.log('[realDisplayMap] mapParm:',mapParm);
 
 // установим текущий масштаб в пределах возможного для указанной карты
-// Это всё не должно быть в displayMap, а не здесь?
+// Это всё должно быть в displayMap, а не здесь?
 if(! multilayer.options.zoom) {	// т.е., не устанавливали уже масштаб по какому-то слою
 	let currZoom = map.getZoom();
 	//console.log('[realDisplayMap] currZoom=',currZoom,'mapParm.maxZoom=',mapParm.maxZoom);
@@ -3660,16 +3660,10 @@ function bearing(latlng1, latlng2) {
 //console.log(latlng1,latlng2)
 const rad = Math.PI/180;
 let lat1,lat2,lon1,lon2;
-if(latlng1.lat) lat1 = latlng1.lat * rad;
-else lat1 = latlng1.latitude * rad;
-if(latlng2.lat) lat2 = latlng2.lat * rad;
-else lat2 = latlng2.latitude * rad;
-if(latlng1.lng) lon1 = latlng1.lng * rad;
-else if(latlng1.lon) lon1 = latlng1.lon * rad;
-else lon1 = latlng1.longitude * rad;
-if(latlng2.lng) lon2 = latlng2.lng * rad;
-else if(latlng2.lon) lon2 = latlng2.lon * rad;
-else lon2 = latlng2.longitude * rad;
+lat1 = (latlng1.lat || latlng1.latitude || latlng1[0])  * rad;
+lat2 = (latlng2.lat || latlng2.latitude || latlng2[0])  * rad;
+lon1 = (latlng1.lng || latlng1.lon || latlng1.longitude || latlng1[1]) * rad;
+lon2 = (latlng2.lng || latlng2.lon || latlng2.longitude || latlng2[1]) * rad;
 //console.log('lat1=',lat1,'lat2=',lat2,'lon1=',lon1,'lon2=',lon2)
 
 let y = Math.sin(lon2 - lon1) * Math.cos(lat2);
