@@ -2515,6 +2515,7 @@ catch (error) { 	// coordinate-parser обломался, строка - не к
 		}
 		else{
 			position = tileNum2degree(z,x,y);
+			position.lon = position.lng
 			//console.log('[flyByString] Да, там номер тайла. position=',position,'z=',z);
 		};
 	};
@@ -3686,7 +3687,7 @@ const lon_deg = xtile / n * 360.0 - 180.0;
 const nn = Math.PI - (2 * Math.PI * ytile) / Math.pow(2, zoom);
 const lat_deg = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(nn) - Math.exp(-nn)));
 return {'lat': lat_deg,'lng': lon_deg};
-}
+}; // end function tileNum2degree
 
 
 function isValidTile(z, x, y) {
