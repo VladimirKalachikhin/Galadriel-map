@@ -37,6 +37,11 @@ $nofollowWPTbuttonTXT = 'Прекратить';
 
 $routesHeaderTXT = 'Места и маршруты';
 
+$panoControlHeaderTXT = 'Панорамный просмотр';
+$panoControlSlavesLabelTXT = 'Показывать на:';
+$panoControlFollowSwitchTXT = 'Следовать текущим координатам';
+$panoControlKioskModeSwitchTXT = 'Панель управления на панораме';
+
 $coverTXT = 'Покрытие масштабом';
 $downloadHeaderTXT = 'Загрузки';
 $downloadZoomTXT = 'Масштаб';

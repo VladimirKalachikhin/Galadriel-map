@@ -4,7 +4,7 @@ This is a server-based chart plotter navigation software for pleasure crafts, mo
 <div style='float:right;'><a href='https://github.com/VladimirKalachikhin/Galadriel-map/discussions'>Forum</a>
 </div>
 
-## v. 3.2
+## v. 3.3
 ![screen](screenshots/s10.jpeg)<br>
 Technically this an online tiles map viewer. With [GaladrielCache](https://github.com/VladimirKalachikhin/Galadriel-cache) -- this an offline viewer with tile grabbing features. It is assumed that the application is used in the onboard local area network of the boat or car. The author uses it from the [wi-fi router/GSM modem under OpenWRT](https://github.com/VladimirKalachikhin/MT7620_openwrt_firmware) as a server on his sailboat "Galadriel".  
 
@@ -31,6 +31,7 @@ This code is written without using AI, "best practices," OOP, and an IDE.
 11. [A Man OverBoard feature](#a-man-overboard)
 12. [Authorisation](#authorisation)
 13. Optimised for E-Ink screens [Dashboard](#dashboard)
+14. [Panoramic view](#panoramic-view)
 14. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
 15. English or some other languages interface, dependent of browser language settings
 
@@ -79,7 +80,7 @@ You may download full pack -- more 10MB, or without vector tiles support and scr
 * [maplibre-gl-leaflet](https://github.com/maplibre/maplibre-gl-leaflet) as _maplibre-gl-leaflet/leaflet-mapbox-gl.js_
 * [maplibre-contour](https://github.com/onthegomap/maplibre-contour) as _maplibre-contour/dist/index.js_
 * [supercluster](https://github.com/mapbox/supercluster) as _supercluster/dist/supercluster.js_
-* [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) in _gpsdPROXY/_ directory
+* [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) in _gpsdPROXY/_ directory. At least v. 1.4 required.
 * [polycolorRenderer](https://github.com/VladimirKalachikhin/polycolorRenderer) in _polycolor/_ directory  
 * [value2color](https://github.com/VladimirKalachikhin/value2color) in _value2color/_ directory  
 * [long-press-event](https://github.com/john-doherty/long-press-event) as _long-press-event/dist/long-press-event.min.js_
@@ -99,7 +100,7 @@ Create a local copy of dependences and/or edit _index.php_
 * [GitHub MAPBOX project](https://github.com/mapbox) for navigation ui resources
 * [OpenMapTiles](https://github.com/openmaptiles) for Mapbox GL basemap style
 * [leaflet-ais-tracksymbol](https://github.com/PowerPan/leaflet-ais-tracksymbol) for ideas
-* Mastiff to Norwegian localisation
+* Mastiff for Norwegian localisation
 
 
 ## Maps
@@ -251,6 +252,16 @@ For some devices with JavaScript you may set up some hardware keys to switch mod
  
 No fanciful javascript, no fanciful css.  
 Highly recommended to use [gpsdPROXY](https://github.com/VladimirKalachikhin/gpsdPROXY) if you want to see data other them velocity.
+
+## Panoramic view
+The GaladrielMap allows you to control the panorama viewer [DEMpanoPanel](https://github.com/VladimirKalachikhin/DEMpanoPanel). Enable this feature in the settings menu <img src="img/settings1.svg" alt="Settings" width="24px">.
+
+Open the panorama control panel <img src="img/pano.svg" alt="Panorama" width="24px">. A cursor will appear on the map indicating the point of view and the direction of view. Move the cursor to the desired location in the usual way. To rotate the cursor, click inside it, move the mouse or finger across the screen, and click again.  
+The panorama will display the specified viewpoint. The arrow buttons allow you to change the direction of your view without changing your viewpoint. If these actions are performed directly on the panorama screen, the panorama cursor on the GaladrielMap screen will change its position accordingly.
+
+After the viewpoint and viewing direction are set to the panorama, all markers placed on the map by this GaladrielMap instance with the tools of the panel <img src="img/route.svg" alt="Route" width="24px"> "Route" will also be shown in the panorama.  
+Conversely, pointing the mouse at a point on the panorama will open the Route panel and position the crosshair at the specified point.  
+![Markers samply](screenshots/s18_en.jpeg)<br>
 
 
 ## The GaladrielCache Loader

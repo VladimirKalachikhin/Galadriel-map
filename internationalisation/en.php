@@ -37,6 +37,11 @@ $nofollowWPTbuttonTXT = 'Cancel';
 
 $routesHeaderTXT = 'Routes and POI';
 
+$panoControlHeaderTXT = 'Panoramic view control';
+$panoControlSlavesLabelTXT = 'Showing on:';
+$panoControlFollowSwitchTXT = 'Follow the current position';
+$panoControlKioskModeSwitchTXT = 'The control panel on the panorama';
+
 $coverTXT = 'Coverage by the zoom';
 $downloadHeaderTXT = 'Download';
 $downloadZoomTXT = 'Zoom';

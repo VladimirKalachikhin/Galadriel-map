@@ -1,0 +1,23 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Определение градиента прозрачности -->
+  <defs>
+    <linearGradient id="gradLine" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-opacity="1" />
+      <stop offset="100%" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Левая линия с градиентом прозрачности -->
+  <line x1="100" y1="200" x2="30" y2="0"
+        stroke="black" stroke-width="8"
+        stroke-opacity="1"
+        stroke-linecap="round"
+        style="stroke:url(#gradLine);"/>
+
+  <!-- Правая линия с градиентом прозрачности -->
+  <line x1="100" y1="200" x2="170" y2="0"
+        stroke="black" stroke-width="8"
+        stroke-opacity="1"
+        stroke-linecap="round"
+        style="stroke:url(#gradLine);"/>
+</svg>
