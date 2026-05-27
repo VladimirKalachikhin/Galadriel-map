@@ -2,7 +2,7 @@
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 //ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 
-$versionTXT = '3.3.0';
+$versionTXT = '3.3.1';
 /* 
 3.3.0	panorama control
 3.2.0	map descriptions support

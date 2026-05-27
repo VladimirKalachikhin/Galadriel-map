@@ -427,7 +427,7 @@ if(maplibreMap.isStyleLoaded()){
 					12: [50, 500],
 					13: [10, 200],
 					14: [5, 100],
-					15: [2, 100]
+					15: [2, 50]
 				},
 				// optional, override vector tile parameters:
 				"contourLayer": "contours",
