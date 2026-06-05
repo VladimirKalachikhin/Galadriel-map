@@ -16,28 +16,33 @@ This code is written without using AI, "best practices," OOP, and an IDE.
 
 
 ## Features
-1. [Online and offline user-defined maps](#maps)
-2. [Positioning](#positioning) with GNSS receivers
-3. [Tracking](#tracking)
-4. [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
-5. [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
-6. [Follow to the route](#follow-to-the-route)
-6. [Exchange coordinates](#exchange-coordinates) via clipboard
-7. [Clear screen](#clear-screen)
-7. [Weather forecast](#weather-forecast) from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
-8. [Display AIS info](#display-ais-info)
-9. [Collision detection](#collision-detection)
-10. [netAIS support](#netais)
-11. [A Man OverBoard feature](#a-man-overboard)
-12. [Authorisation](#authorisation)
-13. Optimised for E-Ink screens [Dashboard](#dashboard)
-14. [Panoramic view](#panoramic-view)
-14. [Control the GaladrielCache Loader](#the-galadrielcache-loader)
-15. English or some other languages interface, dependent of browser language settings
+* [Online and offline user-defined maps](#maps)
+* * [Mapbox-style tiles maps](#mapbox-style-tiles-maps)
+* [Positioning](#positioning) with GNSS receivers
+* [Tracking](#tracking)
+* [Display routes and POIs](#routes-and-pois) files in gpx, kml and csv format
+* * [CSV](#csv)
+* * [Some POI sources](#some-poi-sources)
+* * * [BALTIC BOATHARBORS ANG NATURHARBORS](#baltic-boatharbors-ang-naturharbors)
+* * * [NVPEDIA](#nvpedia)
+* * * [SaimaaPOI](#saimaapoi)
+* [Creating and edit a route](#creating-and-edit-a-route) localy and save it to the server in gpx format
+* [Follow to the route](#follow-to-the-route)
+* [Exchange coordinates](#exchange-coordinates) via clipboard
+* [Clear screen](#clear-screen)
+* [Weather forecast](#weather-forecast) from [Thomas Krüger Weather Service](http://weather.openportguide.de/index.php/en/)
+* [Display AIS info](#display-ais-info)
+* [Collision detection](#collision-detection)
+* [netAIS support](#netais)
+* [A Man OverBoard feature](#a-man-overboard)
+* [Authorisation](#authorisation)
+* Optimised for E-Ink screens [Dashboard](#dashboard)
+* [Panoramic view](#panoramic-view)
+* [Control the GaladrielCache Loader](#the-galadrielcache-loader)
+* English or some other languages interface, dependent of browser language settings
 
-
-* [Work on OpenWRT](#work-in-openwrt)
-* [Work on VenusOS](#work-in-venusos)
+- [Work on OpenWRT](#work-in-openwrt)
+- [Work on VenusOS](#work-in-venusos)
 
  [Support](#support)
 
@@ -148,8 +153,26 @@ Comma-Separated Values text file - the simplest way of cooking personal POI for 
 The first line in the CSV file must be field names. Good choice is a   `"number","name","description","type","link","latitude","longitude"`  
 as the [_gpsbabel_ doc](https://www.gpsbabel.org/htmldoc-1.7.0/fmt_unicsv.html) recommends.  
 Latitude and longitude may be in degrees, minutes and seconds, 61°04.7'N for example, or in decimal degrees.
-A real example of using CSV to store information about ports and piers on Lake Saimaa in Finland - [SaimaaPOI](https://github.com/VladimirKalachikhin/Saimaa-POI). File with geospatial photolinks on CSV format - is a good example too.  
 Place your CSV to _route_ directory on the server as it directory described in _params.php_. Avoid setting file names in _route_ same as names in _tracks_ directory.
+
+### Some POI sources
+#### BALTIC BOATHARBORS ANG NATURHARBORS
+["This book (in English) contains information about near 1800 marinas, naturharbors and anchorages, located on the Baltic seafront"](https://parusanarod.ru/bib/books/harbors/index.htm)  
+It's paid, but has a gpx with all of the points. Unfortunately, apart from the codinates, there is nothing else in gpx.
+
+#### NVPEDIA
+[www.free-x.de/nvpedia/](https://www.free-x.de/nvpedia/)  
+An illustrated guide to the anchor lots, berths and marinas of the German and Dutch coasts of the Baltic Sea, in html format. In German, free.  
+##### Installing the NVPEDIA in GaladrielMap
+* Copy (or create a link) the `nvpedia/` directory from the archive to the GaladrielMap directory (`/map/` by default).
+* Copy (or create links) all gpx files from the archive to the directory `/map/route/`.
+
+Don't forget to assign rights. Open the panel <img src="img/poi.svg" alt="POI" width="24px">.
+
+#### SaimaaPOI
+Ports and piers on Lake Saimaa in Finland [SaimaaPOI](https://github.com/VladimirKalachikhin/Saimaa-POI).  
+File with geospatial photolinks on CSV format has too.  
+
 
 
 ## Creating and edit a route

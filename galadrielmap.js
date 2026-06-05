@@ -934,7 +934,10 @@ fetch(tileCacheControlURI+'?getMapDescription='+encodeURIComponent(event.target.
 .then(mapInfoData => {
 	//console.log('[mapInfoOpen] mapInfoData:',mapInfoData);
 	let innerHTML = '';
-	if(Object.keys(mapInfoData).length>1) innerHTML += `<h2>${mapInfoComplexTXT}:</h2>`;
+	if(Object.keys(mapInfoData).length>1) {
+		innerHTML += `<div style="float:right;font-size:75%;margin:1rem;">${mapInfoSourceTXT}: ${event.target.parentElement.attributes.id.value}</div>`;
+		innerHTML += `<h2>${mapInfoComplexTXT}:</h2>`;
+	};
 	for(let mapname in mapInfoData){
 		if(typeof mapInfoData[mapname].humanName[appLocale] === "undefined"){
 			innerHTML += `<h3>${mapInfoData[mapname].humanName['en']}</h3>`;
