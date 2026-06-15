@@ -33,6 +33,7 @@ chkLoaderStatus(restartLoader=false) 	запускает загрузчик
 
 // Функции рисования маршрутов
 routeControlsDeSelect()
+pointsControlsButtonImgs()
 pointsControlsDisable()
 pointsControlsEnable()
 getGPXicon(gpxtype)
@@ -1494,29 +1495,44 @@ for(let element of document.getElementsByName('routeControl')){
 }; // end function routeControlsDeSelect
 
 
+function pointsControlsButtonImgs(){
+/* Назначает картинку на кнопки в соответствии со значением button.value 
+Картинки - из leaflet-omnivore/symbols, получаются от сервера иконок в leaflet-omnivore.js
+*/
+for(let button of pointsButtons.querySelectorAll('button')){	// кнопки установки маркеров
+	const gpxtype = button.value;
+	getGPXicon(gpxtype).then((icon)=>{	// leaflet-omnivore.js
+		let imgURL;
+		if(icon instanceof L.Icon.Default) imgURL = 'leaflet/images/marker-icon.png';	// iconUrl от L.Icon.Default ...., от leaflet/images/, а не от текущего каталога.
+		else imgURL = icon.options.iconUrl;	// картинка для этого типа есть
+		button.firstElementChild.src = imgURL;
+	});
+};
+}; // end function pointsControlsButtonImgs
+
 function pointsControlsDisable(){
 for(let button of pointsButtons.querySelectorAll('button')){	// кнопки установки маркеров
 	button.disabled = true;
 };
 }; // end function pointsControlsDisable
 
-
 function pointsControlsEnable(){
 for(let button of pointsButtons.querySelectorAll('button')){	// кнопки установки маркеров
-	let gpxtype = button.id.substring(9);	// id начинаются с "ButtonSet", а дальше, например, point: ButtonSetpoint
+	const gpxtype = button.value;	//
 	//console.log('[pointsControlsEnable] button',gpxtype,button);
-	button.onclick = function (event) {createEditableMarker(getGPXicon(gpxtype));};
+	button.onclick = async (event)=>{createEditableMarker(await getGPXicon(gpxtype));};	// здесь нужно именно await, который ждёт. Т.е., в этой конструкции функция onclick, конечно, завершится мгновенно, но createEditableMarker останется работать, т.е., ждать значка от getGPXicon, и потом всё.
 	button.disabled = false;
 };
 }; // end function pointsControlsEnable
 
 
-function getGPXicon(gpxtype){
-/* вообще-то, здесь должно быть обращение к iconServer из leaflet-omnivore, но пока так
-Все три значка явным образом определяются в index.php
+async function getGPXicon(gpxtype){
+/* 
 */
-let iconName = gpxtype+'Icon';
-return window[iconName];
+//console.log('[getGPXicon] начали ждать icon типа',gpxtype);
+const icon = await iconServer.customIcon([gpxtype]);	// ждём иконки
+//console.log('[getGPXicon] icon:',icon);
+return icon || new L.Icon.Default;
 }; // end function getGPXicon
 
 
@@ -1660,7 +1676,7 @@ if(target.editEnabled()) { 	//  если включено редактирова
 		const gpxtype = target.feature.properties.type;
 		//console.log('[tooggleEditRoute] gpxtype=',gpxtype,pointsButtons.querySelectorAll('button'));
 		for(let button of pointsButtons.querySelectorAll('button')){
-			if(button.id != 'ButtonSet'+gpxtype) {
+			if(button.value != gpxtype) {
 				button.disabled = true;
 			}
 			else {
@@ -1699,7 +1715,7 @@ else {
 		const gpxtype = target.feature.properties.type;
 		for(let button of pointsButtons.querySelectorAll('button')){	// кнопки установки маркеров
 			button.disabled = false;
-			if(button.id == 'ButtonSet'+gpxtype) {	// кнопка, по которой был создан этот маркер
+			if(button.value == gpxtype) {	// кнопка, по которой был создан этот маркер
 				button.onclick = function (event) {createEditableMarker(target.getIcon());};	// вернём стандартное действие -- создание маркера
 			}
 		};
@@ -1719,8 +1735,9 @@ else {
 
 
 function createEditableMarker(Icon){
+console.log('[createEditableMarker] Icon:',Icon);
 if(!currentRoute) currentRoute = dravingLines; 	
-let gpxtype = Icon.options.iconUrl.substring(Icon.options.iconUrl.lastIndexOf('/')+1,Icon.options.iconUrl.lastIndexOf('.png'));
+let gpxtype = Icon.options.symbolType;	// добавляется в leaflet-omnivore.js iconServer.customIcon
 let layer = map.editTools.startMarker(centerMarkMarker.getLatLng(),{
 	icon: Icon,
 	opacity: 0.5
@@ -1747,8 +1764,7 @@ layer.editor.tools.stopDrawing();
 //console.log('[createEditableMarker] layer:',layer);
 
 for(let button of pointsButtons.querySelectorAll('button')){
-	//console.log('[createEditableMarker] button.id=',button.id,'ButtonSet+gpxtype=','ButtonSet'+gpxtype);
-	if(button.id != 'ButtonSet'+gpxtype) {
+	if(button.value != gpxtype) {
 		button.disabled = true;
 	}
 	else {

@@ -1,0 +1,15 @@
+<svg viewBox="0 0 50 150"  preserveAspectRatio="xMaxYMax meet" xmlns="http://www.w3.org/2000/svg">
+	<desc>License: CC BY-NC-SA 4.0 Vladimir Yurievich Kalachikhin</desc>
+	<!-- Вертикальный прямоугольник -->
+	<rect x="20" y="50" width="10" height="85" fill="black" stroke="black" stroke-width="2" />
+	<!-- Круг на вершине прямоугольника -->
+	<circle cx="25" cy="12" r="7" fill="red" stroke="black" stroke-width="2"/>
+	<!-- Круг на вершине прямоугольника -->
+	<circle cx="25" cy="35" r="7" fill="red" stroke="black" stroke-width="2"/>
+	<!-- Красная верхняя треть -->
+	<rect x="20" y="60" width="10" height="25" fill="red" stroke="black" stroke-width="2" />
+	<!-- Красная нижняя треть -->
+	<rect x="20" y="100" width="10" height="25" fill="red" stroke="black" stroke-width="2" />
+	<!-- Короткий штрих, направленный вниз, в середине нижней части прямоугольника -->
+	<line x1="25" y1="135" x2="25" y2="150" stroke="black" stroke-width="2"/>
+</svg>

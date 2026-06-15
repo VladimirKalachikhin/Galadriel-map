@@ -1,0 +1,11 @@
+<svg viewBox="0 0 50 150"  preserveAspectRatio="xMaxYMax meet" xmlns="http://www.w3.org/2000/svg">
+	<desc>License: CC BY-NC-SA 4.0 Vladimir Yurievich Kalachikhin</desc>
+	<!-- Вертикальный прямоугольник -->
+	<rect x="20" y="35" width="10" height="100" fill="white" stroke="black" stroke-width="2" />
+	<!-- Круг на вершине прямоугольника -->
+	<circle cx="25" cy="20" r="10" fill="red" stroke="black" stroke-width="2"/>
+	<!-- Полоска в середине прямоугольника -->
+	<line x1="25" y1="35" x2="25" y2="135" stroke="red" stroke-width="2"/>
+	<!-- Короткий штрих, направленный вниз, в середине нижней части прямоугольника -->
+	<line x1="25" y1="135" x2="25" y2="150" stroke="black" stroke-width="2"/>
+</svg>

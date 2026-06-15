@@ -3,7 +3,60 @@ updClaster(pointsLayer);	// galadrielmap.js
 createSuperclaster(geojson);	// galadrielmap.js
 depends polycolorRenderer, supercluster, Leaflet.TextPath
 */
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.omnivore = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function(f){
+	if(typeof exports==="object"&&typeof module!=="undefined"){
+		module.exports=f()
+	}
+	else if(typeof define==="function"&&define.amd){
+		define([],f)
+	}
+	else{
+		var g;
+		if(typeof window!=="undefined"){
+			g=window
+		}
+		else if(typeof global!=="undefined"){
+			g=global
+		}
+		else if(typeof self!=="undefined"){
+			g=self
+		}
+		else{
+			g=this
+		}
+		g.omnivore = f()
+	}
+})
+(function(){
+	var define,module,exports;
+	return (function(){
+		function r(e,n,t){
+			function o(i,f){
+				if(!n[i]){
+					if(!e[i]){
+						var c="function"==typeof require&&require;
+						if(!f&&c)return c(i,!0);
+						if(u)return u(i,!0);
+						var a=new Error("Cannot find module '"+i+"'");
+						throw a.code="MODULE_NOT_FOUND",a
+					}
+					var p=n[i]={
+						exports:{}
+					};
+					e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)
+				}
+				return n[i].exports
+			}
+			for(var u="function"==typeof require&&require,i=0;i<t.length;i++) o(t[i]);
+			return o
+		}
+		return r
+	})
+	()
+	({1:[function(require,module,exports){
+
+
+
 "use strict"
 
 var xhr = require('corslite'),
@@ -34,7 +87,6 @@ module.exports.wkt = wktLoad;
 module.exports.wkt.parse = wktParse;
 
 //module.exports.toGeoJSON = toGeoJSON;
-
 
 function addData(l, d) { 	// layer geojson
 /* Загружает geojson в layer 
@@ -83,7 +135,7 @@ function topojsonLoad(url, options, customLayer) {
         layer.fire('ready');
     }
     return layer;
-}
+}; // end function topojsonLoad
 
 /**
  * Load a CSV document into a layer and return the layer.
@@ -109,7 +161,7 @@ function onload(err, response) {
     if (!error) layer.fire('ready');
 }
 return layer;
-}
+}; // end function csvLoad
 
 /**
  * Load a GPX document into a layer and return the layer.
@@ -138,7 +190,7 @@ function onload(err, response) {
     if (!error) layer.fire('ready');
 }
 return layer;
-}
+}; // end function gpxLoad
 
 /**
  * Load a [KML](https://developers.google.com/kml/documentation/) document into a layer and return the layer.
@@ -164,7 +216,7 @@ function onload(err, response) {
     if (!error) layer.fire('ready');
 }
 return layer;
-}
+}; // end function kmlLoad
 
 /**
  * Load a WKT (Well Known Text) string into a layer and return the layer
@@ -183,7 +235,7 @@ function wktLoad(url, options, customLayer) {
         layer.fire('ready');
     }
     return layer;
-}
+}; // end function wktLoad
 
 /**
  * Load a polyline string into a layer and return the layer
@@ -202,7 +254,7 @@ function polylineLoad(url, options, customLayer) {
         layer.fire('ready');
     }
     return layer;
-}
+}; // end function polylineLoad
 
 
 
@@ -216,7 +268,7 @@ function topojsonParse(data, options, layer) {
         else addData(layer, ft);
     }
     return layer;
-}
+}; // end function topojsonParse
 
 
 function csvParse(csv, options, layer) {
@@ -522,6 +574,7 @@ layer.on('click', (e) => { 	// клик по любому значку (вооб
 return layer;
 } // end function doClastering
 
+
 function getMarkerToPoint(geoJsonPoint, latlng, parameters) { 	//  https://leafletjs.com/reference-1.3.4.html#geojson 
 // Функция, которая в latlng рисует маркер по сведениям из geoJsonPoint
 // обычно вызывается как свойство layer.options.pointToLayer
@@ -622,6 +675,7 @@ else { 	// это индивидуальная точка
 return marker;
 } // end function getMarkerToPoint
 
+
 function getLinksHTML(feature) {
 /* Возвращает строку,которую можно было бы показать в PopUp, 
 из атрибутов link в feature. Оформляет ссылки как может.
@@ -670,6 +724,7 @@ for(let linkStr of links){
 if(popUpHTML) popUpHTML = '<br>'+popUpHTML;
 return popUpHTML;
 }; 	// end function getLinksHTML
+
 
 var popupDepthInfo = L.popup();	// popup для отображения глубины на путях с глубиной
 
@@ -748,7 +803,8 @@ for (let i = 0; i < latlngs.length; i++) {
 return index;
 } // end function getNearestSegPoint
 //console.log('leaflet-omnivore [getPopUpToLine] layer:',layer);
-} // end function getPopUpToLine
+}; // end function getPopUpToLine
+
 
 function equirectangularDistance(from,to){
 // https://www.movable-type.co.uk/scripts/latlong.html
@@ -766,7 +822,7 @@ const x = Δλ * Math.cos((φ1+φ2)/2);
 const y = (φ2-φ1);
 const d = Math.sqrt(x*x + y*y) * R;	// метров
 return d;
-} // end function equirectangularDistance
+}; // end function equirectangularDistance
 
 // определение имени файла этого скрипта
 var scripts = document.getElementsByTagName('script');
@@ -785,78 +841,121 @@ var iconServer = {
 // могут стать именем файла значка для объекта. Но значка с таким именем в коллекции может не быть.
 // Чтобы это понять, и установить умолчальный значёк -- и используется предварительная загрузка файла.
 iconsByType: {}, 	// сюда будем складывать L.icon каждого типа
+
 setIconCustomIcon: function (marker,iconNames) {
-/* пытается создать L.icon с iconUrl из iconNames, где они без пути и расширения
-при наличии такого файла - создаёт, устанавливает эту L.icon в marker
-и складывает в iconsByType
+/* А эта функция не должна быть async, чтобы прервать шизу с await и возвратом череды promise.
+Функция всё равно ничего не возвращает, поэтому может закончится мгновенно, а реально выполниться потом.
+*/
+this.customIcon(iconNames).then((icon)=>{
+	//console.log('[iconServer].setIconCustomIcon icon:',icon);
+	if(icon instanceof L.Icon) marker.setIcon(icon).openTooltip(); 	// посадить значёк и перерисовать подпись
+});
+}, // end function setIconCustomIcon, список атрибутов объекта продолжается
+
+//customIcon: async function (iconNames,ext='.png') {
+customIcon: async function (iconNames,ext='.svg') {
+/* Сильно асинхронная функция, которая пытается получить картинку с именем из iconNames,
+где эти имена без пути и расширения.
+При наличии такого файла .png или .svg - создаёт L.icon с такой картинкой и складывает в iconsByType.
+
+Попытка получить возврат из асинхронной функции, вариант чисто на await. 
+Конструкция не очень шизоидная, почти нормальная. 
+Однако, поскольку в javascript получить
+возврат из асинхронной функции в принципе невозвожно, ибо асинхронная функция всегда возвращает
+только promise, а его можно только then((), что делает асинхронную функцию полностью бессмысленной.
+Но! promise.then совсем не то же самое, что await promise! 
 */
 let iconName = iconNames.shift();
-//console.log("[iconServer] iconName=",iconName);
-if(!iconName) return;
-//console.log(this.iconsByType);
+//console.log("[iconServer] iconName=",iconName,'ext=',ext);
+if(!iconName) return null;	// имена кончились, но ничего не нашлось
+//console.log('[iconServer] iconsByType:',this.iconsByType);
 if(this.iconsByType[iconName]) {
-	if(typeof this.iconsByType[iconName] === 'object') { 	// такая icon уже получена
-		marker.setIcon(this.iconsByType[iconName]).openTooltip(); 	// если  icon с таким именем уже создавали - посадить значёк и перерисовать подпись
-		//console.log('icon '+iconName+' из хранилища');
+	if(this.iconsByType[iconName] instanceof L.Icon) { 	// такая icon уже получена
+		//console.log('[iconServer].customIcon icon '+iconName+' из хранилища');
+		return this.iconsByType[iconName];
 	}
-	else { 	// такую icon кто-то сейчас получает
-		// ждать
-		let vait = setInterval(function(){ 	// запустим асинхронное ожидание. В результате сначала присвоится умолчальный значёк, а потом - нужный
-			//console.log('Ждём icon '+iconName);
-			if(iconServer.iconsByType[iconName] && typeof iconServer.iconsByType[iconName] === 'object') { 	// такая icon уже получена
-				marker.setIcon(iconServer.iconsByType[iconName]).openTooltip(); 	// если  icon с таким именем уже создавали  посадить значёк и перерисовать подпись
-				//console.log('Дождались icon '+iconName);
-				clearInterval(vait); 	// прекратим ждать
-			}
-			else {
-				if(iconServer.iconsByType[iconName] === false) {
-					//console.log('Не дождались icon '+iconName);
-					clearInterval(vait); 	// оно обломалось, прекратим ждать
+	else { 	// console.log('[iconServer].customIcon icon '+iconName+', такую icon кто-то сейчас получает');
+		await new Promise((resolve) => {	// создаём анонимный promise для ожидания, потому что setTimeout - не promise
+			const checkFlag = async () => {	// создаём функцию для ожидания
+				if(iconServer.iconsByType[iconName] instanceof L.Icon) { 	// такая icon наконец получена
+					resolve();	// прекратим ждать. в данном случае - умолчальная функция?
 				}
-			}
-		},100); 	// таймер на  милисекунд
-	}
+				else if(iconServer.iconsByType[iconName] === false){	// оно обломалось
+					resolve();	// прекратим ждать
+				}
+				else {
+					//console.log('[iconServer].customIcon Ждём icon '+iconName);
+					setTimeout(checkFlag,100);	// ждать
+				};
+			};
+			checkFlag();
+		});
+		// Тут, типа, мы ждали-ждали, и дождались
+		//console.log('[iconServer].customIcon icon '+iconName+' кто-то получил');
+		return this.iconsByType[iconName];
+	};
 }
 else if(this.iconsByType[iconName] === false) { 	// такой icon вообще нет, её кто-то пытался получить, но безуспешно
 	//console.log('Уже был облом с icon '+iconName);
-    iconServer.setIconCustomIcon(marker,iconNames); 	// вызовем себя для следующего имени
-	// ничего не делать - поставится умолчальная
+	//const icon = await iconServer.customIcon(iconNames); 	// вызовем себя для следующего имени
+	//return icon;
+	return null;
 }
 else { 	// такая icon ещё не получена
 	this.iconsByType[iconName] = true; 	// укажем, что понеслось получать
 	// получить асинхронно
 	// все требуемые картинки значков скачиваются и хранятся в памяти
 	// а нафига? А так мы узнаем, какой картинки нет.
-	//console.log(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/")),iconName);
-	fetch(leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/"))+"/symbols/"+iconName+".png")
-	.then(function(response) {
-		//console.log(response);
-		if(response.ok)	return response.blob(); 	// руками обработаем ошибки сервера
-		else throw new Error('Network response was not ok for icon '+iconName); 	// Перейдём сразу к .catch
-	})
-	.then(function(blob){
-		let iconURL = URL.createObjectURL(blob);	// здесь получается blob -- такой хитрый Data URL. В результате его понимает L.icon как ссылку, но файл уже загружен. Вопрос выгрузки остаётся открытым: ведь оно нужновсё время после загрузки, и загружается только один раз. https://developer.mozilla.org/ru/docs/Web/API/URL/createObjectURL
-		//console.log(iconURL);
-		let icon = L.icon({
-			iconUrl: iconURL,
-			iconSize: [32, 37],
-			iconAnchor: [16, 37],
-			tooltipAnchor: [16,-25],
-			className: 'wpIcon'
-		});
-		iconServer.iconsByType[iconName] = icon;	// сохраним полученный значёк в кеше
-		marker.setIcon(icon).openTooltip(); 	// посадить значёк и перерисовать подпись
-		//console.log('Create and Set icon '+iconName);
-		//console.log(marker);
-	})
-	.catch(function(error) {	// - не работает в случае 404!, поэтому выше throw new Error
-		iconServer.iconsByType[iconName] = false; 	// укажем, что со значком облом
-		console.log('iconServer setIconCustomIcon fetch error: ' + error.message);
-	    iconServer.setIconCustomIcon(marker,iconNames); 	// вызовем себя для следующего имени
-	});
-}
-}, // end function setIconCustomIcon, список атрибутов объекта продолжается
-} // end object iconServer
+	try{
+		const url = leafletOmnivoreScript.src.substr(0, leafletOmnivoreScript.src.lastIndexOf("/"))+"/symbols/"+iconName+ext;
+		//console.log('[iconServer] url=',url);
+		const response = await fetch(url);	// здесь await всякой служебной сетевой активности
+		//console.log('[iconServer] response:',response);
+		if(response.ok) {	// т.е., нет сетевых ошибок и нет 404
+			// здесь получается blob -- такой хитрый Data URL. В результате его понимает
+			// L.icon как ссылку, но файл уже загружен.
+			// Вопрос выгрузки остаётся открытым: ведь оно нужно всё время после загрузки, и загружается только один раз. https://developer.mozilla.org/ru/docs/Web/API/URL/createObjectURL
+			const iconURL = URL.createObjectURL(await response.blob());	// await необходим, потому что данные на самом деле получаются от источника только здесь
+			const icon = L.icon({
+				iconUrl: iconURL,
+				iconSize: [32, 37],
+				iconAnchor: [16, 37],
+				tooltipAnchor: [16,-25],
+				className: 'wpIcon',
+				symbolType: iconName
+			});
+			iconServer.iconsByType[iconName] = icon;	// сохраним полученный значёк в кеше, 
+			//console.log('[iconServer].customIcon Create icon '+iconName,icon);
+			return icon;
+		}
+		else if(response.status === 404){
+			if(ext == '.svg'){	// обломались мы сейчас с поиском значка iconName.svg
+				iconNames.unshift(iconName);	// вернём имя в список, и попробуем с другим расширением
+				//console.log('[iconServer].customIcon iconNames:',iconNames);
+				delete this.iconsByType[iconName];	// укажем, что ещё не получали
+				const icon = await iconServer.customIcon(iconNames,'.png'); 	// вызовем себя
+				//console.log('[iconServer] await завершился:',iconServer.iconsByType[iconName]);
+				return icon;
+			}
+			else{	// обломались с поиском как .png, так и .svg
+				this.iconsByType[iconName] = false; 	// укажем, что со значком облом
+				const icon = await iconServer.customIcon(iconNames); 	// вызовем себя для следующего имени
+				return icon;
+			};
+		}
+		else {	// А каккая тут может быть ошибка?
+			throw new Error(`${response.status} ${response.statusText}`);	// go to общий обработчик ошибок
+		};
+	}
+	catch (error){
+		this.iconsByType[iconName] = false; 	// укажем, что со значком облом
+		console.log('[iconServer] customIcon fetch error: ',error);
+		return null;
+	};
+};
+}, // end function customIcon
+}; // end object iconServer
+window.iconServer = iconServer;	// кривой хак, делающий доступным iconServer глобально. Я ниасилил, как тут устроен module.exports
 
 
 function kmlParse(gpx, options, layer) {

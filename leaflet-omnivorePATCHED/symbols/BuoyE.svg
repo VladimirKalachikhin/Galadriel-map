@@ -1,0 +1,13 @@
+<svg viewBox="0 0 50 150"  preserveAspectRatio="xMaxYMax meet" xmlns="http://www.w3.org/2000/svg">
+	<desc>License: CC BY-NC-SA 4.0 Vladimir Yurievich Kalachikhin</desc>
+	<!-- Вертикальный прямоугольник -->
+	<rect x="20" y="40" width="10" height="95" fill="black" stroke="black" stroke-width="2" />
+	<!-- Равносторонний треугольник, направленный вершиной вверх -->
+	<polygon points="15,15 35,15 25,0" fill="black" />
+	<!-- Равносторонний треугольник, направленный вершиной вниз -->
+	<polygon points="15,20 35,20 25,35" fill="black" />
+	<!-- Жёлтая средняя треть -->
+	<rect x="20" y="70" width="10" height="30" fill="yellow"  stroke="black" stroke-width="2" />
+	<!-- Короткий штрих, направленный вниз, в середине нижней части прямоугольника -->
+	<line x1="25" y1="135" x2="25" y2="150" stroke="black" stroke-width="2"/>
+</svg>

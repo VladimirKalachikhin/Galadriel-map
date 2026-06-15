@@ -352,4 +352,16 @@ button:disabled {
 	margin: 0.7em 1em;
 }
 
+#pointsButtons > button {
+	/*background-color: red;*/
+	height: 2em;
+	width: 2em;
+	margin: 0.5em 1em;
+	display: inline-flex;
+	align-items: center;     /* Centers items vertically */
+	justify-content: center;
+}
+#pointsButtons > button > img {
+	height: 100%;
+}
 

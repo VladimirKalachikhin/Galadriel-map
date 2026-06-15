@@ -134,6 +134,15 @@ $depthInData = '{"display":true,
 // Use true wind instead relative
 $useTrueWind = false;	
 
+// Значки маршрутных точек Icons for waypoints
+// Имена файлов картинок из leaflet-omnivorePATCHED/symbols, без расширения.
+// Image file names from leaflet-omnivorePATCHED/symbols, without extension.
+$pointsButtonsConfig = array(
+	array('point','anchor','caution'),
+//	array('BuoyE','BuoyN','BuoyW'),
+//	array('BuoyBorder','BuoyS','BuoyAxial')
+);
+
 // Системные параметры System
 // строка запуска консольного интерпретатора php
 // Если не указано, автоматически будет предпринята попытка определить фактически используемую строку запуска.

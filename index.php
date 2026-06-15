@@ -2,8 +2,9 @@
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 //ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 
-$versionTXT = '3.3.2';
+$versionTXT = '3.4.0';
 /* 
+3.4.0	user defined waypoint icons
 3.3.0	panorama control
 3.2.0	map descriptions support
 3.1.0	auto update mbtiles maps list
@@ -123,6 +124,11 @@ if($netAISconfig) {	// а это params.php от netAIS, который подк
 if(!$boatInfo['shipname']) $boatInfo['shipname'] = (string)uniqid();
 if(!$boatInfo['mmsi']) $boatInfo['mmsi'] = str_pad(substr(crc32($boatInfo['shipname']),0,9),9,'0'); 	// левый mmsi, похожий на настоящий -- для тупых, кому не всё равно (SignalK, к примеру)
 //echo "boatInfo:"; print_r($boatInfo); echo "\n";
+
+// Умолчальные значки маршрутных точек
+if(!$pointsButtonsConfig) $pointsButtonsConfig = array(
+	array('point','anchor','caution')
+);
 
 $mapsInfo = array();
 $isCOVERpresent = false;
@@ -278,7 +284,7 @@ $mob_markerImg = 'data: ' . mime_content_type($imgFileName) . ';base64,' . $mob_
 	<link rel="stylesheet" href="galadrielmap.css" type="text/css" /> <!-- замена стилей -->
 	<script src="galadrielmap.js"></script>
 	<!-- <script src="test.js"></script> -->
-   <title>GaladrielMap <?php echo $versionTXT;?></title>
+   <title>GaladrielMap <?=$versionTXT?></title>
    <!-- карта на весь экран -->
    <style>
 body {
@@ -334,14 +340,14 @@ infoBox.innerText='width: '+window.outerWidth+' height: '+window.outerHeight;
 		<!-- Карты -->
 		<div class="leaflet-sidebar-pane" id="home" style="margin:0;padding:0;height:100%;overflow:hidden;"><?php // тогда вложенные блоки не увеличат высоту и не вызовут прокручивание ?>
 			<div style="margin:0;padding:0;height:100%;overflow:hidden;display:flex;flex-direction:column;">
-				<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $homeHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
+				<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?=$homeHeaderTXT?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 				<ul id="mapDisplayed" class="commonList"  style="height:10%;overflow:auto;"><?php // overflow не наследуется, но если здесь не указать - горизонтальной прокрутки не будет, как это указано в основном стиле для leaflet-sidebar-pane ?>
 				</ul>
 				<ul id="mapList" class='commonList' style="overflow:auto;height:90%;">
 <?php
 foreach($mapsInfo as $mapName => $humanName) {
 ?>
-						<li hidden id="<?php echo $mapName;?>" onClick="{selectMap(event.currentTarget)}" style="width:<?php echo $maxStrLength*0.65;?>rem;"><img src="img/info.svg" alt="Info" style="float:right;height:1em;padding:0.1rem 0.7rem 0.1rem 3rem;" onclick="mapInfoOpen(event)"><span style=""><?php echo "$humanName";?></span></li>
+						<li hidden id="<?=$mapName?>" onClick="{selectMap(event.currentTarget)}" style="width:<?php echo $maxStrLength*0.65;?>rem;"><img src="img/info.svg" alt="Info" style="float:right;height:1em;padding:0.1rem 0.7rem 0.1rem 3rem;" onclick="mapInfoOpen(event)"><span style=""><?=$humanName?></span></li>
 <?php
 }
 ?>
@@ -354,26 +360,26 @@ foreach($mapsInfo as $mapName => $humanName) {
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 		<!-- Приборы -->
 		<div class="leaflet-sidebar-pane" id="dashboard" style="height:95%;">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $dashboardHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?=$dashboardHeaderTXT?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 			<div class="big_symbol centred_pane">
 				<div>
 					<div style="line-height:0.6;" onClick="map.setView(cursor.getLatLng());">				
-						<div><?php echo $dashboardSpeedTXT;?></div><br>
+						<div><?=$dashboardSpeedTXT?></div><br>
 						<div id='velocityDial' style="font-size:200%;"></div><br>
-						<div><?php echo $dashboardSpeedMesTXT;?></div>
+						<div><?=$dashboardSpeedMesTXT?></div>
 					</div>
 					<div id='depthDial' style="line-height:0.6;" onClick="map.setView(cursor.getLatLng());">				
 					</div>
 					<div style="line-height:0.9;" onClick="map.setView(cursor.getLatLng());">
-						<br><span id="dashboardCourseTXTlabel"><?php echo $dashboardCourseTXT;?></span>
-						<span  style="font-size:50%;"><br><span id="dashboardCourseAltTXTlabel"><?php echo $dashboardCourseAltTXT;?></span></span>
+						<br><span id="dashboardCourseTXTlabel"><?=$dashboardCourseTXT?></span>
+						<span  style="font-size:50%;"><br><span id="dashboardCourseAltTXTlabel"><?=$dashboardCourseAltTXT?></span></span>
 						<div style="font-size:200%;">
 							<span id='courseDisplay'></span>
 						</div>
 					</div>
 					<div style="line-height:1;" onClick="doCopyToClipboard(lat+' '+lng);" >
-						<br><span><?php echo $dashboardPosTXT;?></span><br>
-						<span style="font-size:50%;"><?php echo $dashboardPosAltTXT;?></span>
+						<br><span><?=$dashboardPosTXT?></span><br>
+						<span style="font-size:50%;"><?=$dashboardPosAltTXT?></span>
 						<div style="font-size:150%;" onClick="doCopyToClipboard(lat+' '+lng);">
 							<span id='locationDisplay'></span>
 						</div>
@@ -381,13 +387,13 @@ foreach($mapsInfo as $mapName => $humanName) {
 				</div>
 			</div>
 			<div style="text-align:center; position: absolute; bottom: 0;margin:0 0.5rem;">
-				<?php echo $dashboardSpeedZoomTXT;?> <span id='velocityVectorLengthInMnDisplay'></span> <?php echo $dashboardSpeedZoomMesTXT;?>.
+				<?=$dashboardSpeedZoomTXT?> <span id='velocityVectorLengthInMnDisplay'></span> <?=$dashboardSpeedZoomMesTXT?>.
 			</div>
 		</div>
 <?php }; ?>
 		<!-- Треки -->
 		<div class="leaflet-sidebar-pane" id="tracks" style="overflow:hidden;">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $tracksHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?=$tracksHeaderTXT?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 <?php if($gpxlogger){ // если запись пути осуществляется gpxlogger'ом ?>
 <?php 	if($privileged){	// для пользователя со всеми правами ?>
 			<div style="margin:0 1rem;float:right;">
@@ -401,7 +407,7 @@ foreach($mapsInfo as $mapName => $humanName) {
 			</div>
 <?php 	}; ?>
 			<div style="padding:1rem 0.5rem 0 0;font-size:120%;text-align:center;">
-				<span id="loggingIndicator" style="font-size:100%;<?php if($gpxloggerRun) echo"color:green;"; ?>"><?php if($gpxloggerRun) echo '&#x2B24;'; ?></span> <?php echo $loggingTXT;?>
+				<span id="loggingIndicator" style="font-size:100%;<?php if($gpxloggerRun) echo"color:green;"; ?>"><?php if($gpxloggerRun) echo '&#x2B24;'; ?></span> <?=$loggingTXT?>
 			</div>
 <?php }; ?>
 			<div style="width:100%;overflow-x:auto;"><?php // Здесь только горизонтальная прокрутка, а вертикальная - в объемлющем div ?>
@@ -421,7 +427,7 @@ foreach($trackInfo as $trackName) {
 		</div>
 		<!-- Расстояния -->
 		<div class="leaflet-sidebar-pane" id="measure" style="padding-bottom:1rem;">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $measureHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?=$measureHeaderTXT?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 			<?php // Кнопки создания/редактирования маршрута ?>
 			<div id='routeControls' class="routeControls" style="width:94%; margin:1em 0.5rem;text-align:center;">
 				<input type="radio" name="routeControl" class='L' id="routeCreateButton"
@@ -430,7 +436,7 @@ foreach($trackInfo as $trackName) {
 						//WPTbuttonsReady();	// Может быть, оно не надо? Кнопка Следовать появится после повторной активации режима редактирования. Типа, после завершения рисования...
 					"
 				>
-				<label for="routeCreateButton"><?php echo $routeControlsBeginTXT;?></label>
+				<label for="routeCreateButton"><?=$routeControlsBeginTXT?></label>
 				<input type="radio" name="routeControl" class='R' id="routeContinueButton"
 					onChange="
 						// по нажатию кнопки создаётся однократно срабатываемый обработчик клика
@@ -445,24 +451,26 @@ foreach($trackInfo as $trackName) {
 						});
 					"
 				>
-				<label for="routeContinueButton"><?php echo $routeControlsContinueTXT;?></label><br>
-				<div id='pointsButtons' style="margin: 1em 0;">
-					<button id='ButtonSetpoint' onClick='createEditableMarker(pointIcon);' class='pointButton'><img src="leaflet-omnivorePATCHED/symbols/point.png" alt="<?php echo $okTXT;?>" width="100%"></button>
-					<button id='ButtonSetanchor' onClick='createEditableMarker(anchorIcon);' class='pointButton'><img src="leaflet-omnivorePATCHED/symbols/anchor.png" alt="<?php echo $okTXT;?>" width="100%"></button>
-					<button id='ButtonSetcaution' onClick='createEditableMarker(cautionIcon);' class='pointButton'><img src="leaflet-omnivorePATCHED/symbols/caution.png" alt="<?php echo $okTXT;?>" width="100%"></button><br>
+				<label for="routeContinueButton"><?=$routeControlsContinueTXT?></label><br>
+				<div id="pointsButtons" style="margin: 1em 0;">
+					<!-- onclick и картинка на кнопке устанавливаются в коде при открытии панели по значению value -->
+<?php foreach($pointsButtonsConfig as $buttonString){ 
+	foreach($buttonString as $value){?>
+					<button value='<?=$value?>' class='pointButton'><img></button>
+<?php }; echo '<br>';}; ?>
 				</div>
-				<input id='editableObjectName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:95%;font-size:120%;'><br>
-				<textarea id='editableObjectDescr' title="<?php echo $editableObjectDescrTXT;?>" rows='3' cols='255' placeholder='<?php echo $editableObjectDescrTXT;?>' style='width:95%;'></textarea><br>
+				<input id='editableObjectName' type="text" title="<?=$routeSaveTXT?>" placeholder='<?=$routeSaveTXT?>' size='255' style='width:95%;font-size:120%;'><br>
+				<textarea id='editableObjectDescr' title="<?=$editableObjectDescrTXT?>" rows='3' cols='255' placeholder='<?=$editableObjectDescrTXT?>' style='width:95%;'></textarea><br>
 				<input id='editableObjectLeafletID' type="hidden">
 				<input type="radio" name="routeControl" id="routeEraseButton"  class='M' onChange="eraseEditable();">
-				<label for="routeEraseButton"><?php echo $routeControlsClearTXT;?></label>
+				<label for="routeEraseButton"><?=$routeControlsClearTXT?></label>
 			</div>
 			<?php // Управление следованием по маршруту ?>
 <?php if($privileged){	// для пользователя со всеми правами ?>
 <?php //if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат. Однако, что мешает готовить и без? ?>
 			<div style="margin: 2.5em 0;text-align: center;width:96%;">
 				<button id="prevWPTbutton" disabled onClick="prevWPT();" style="font-size:200%;padding:0 0.2em;">◁</button>
-				<button id="followWPTbutton" disabled  style="vertical-align:top;padding:0.7em 1.3em;margin:0.1em 0.5em;"><?php echo $followWPTbuttonTXT;?></button>
+				<button id="followWPTbutton" disabled  style="vertical-align:top;padding:0.7em 1.3em;margin:0.1em 0.5em;"><?=$followWPTbuttonTXT?></button>
 				<button id="nextWPTbutton" disabled onClick="nextWPT();" style="font-size:200%;padding:0 0.2em;">▷</button>
 			</div>
 <?php //};	// Определён сервис координат ?>
@@ -470,28 +478,28 @@ foreach($trackInfo as $trackName) {
 			<?php // Поиск места ?>
 			<div style="width:95%;margin:1em 0.5rem;">
 				<div style="margin:0;padding:0;">
-					<button onClick='goToPositionField.value = "";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;float:right;"><img src="img/no.svg" title="<?php echo $clearTXT;?>" alt="<?php echo $clearTXT;?>" style="width:calc(var(--font-size)*0.5);vertical-align:top;"></button>
+					<button onClick='goToPositionField.value = "";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;float:right;"><img src="img/no.svg" title="<?php=$clearTXT?>" alt="<?=$clearTXT?>" style="width:calc(var(--font-size)*0.5);vertical-align:top;"></button>
 					<button onClick='goToPositionField.value += "°";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">°</span></button>
 					<button onClick='goToPositionField.value += "′";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0.7rem 0 0;"><span style="font-weight: bold; font-size:150%;">′</span></button>
 					<button onClick='goToPositionField.value += "″";goToPositionField.focus();' style="width:2rem;height:1rem;margin:0 0rem 0 0;"><span style="font-weight: bold; font-size:150%;">″</span></button><br>
 				</div>
-				<span style=""><?php echo $routePosTXT;?></span><br>
-				<input id='goToPositionField' type="text" title="<?php echo $goToPositionTXT;?>" size='12' style='width:70%;font-size:150%;'>			
-				<button id='goToPositionButton' onClick='flyByString(goToPositionField.value);' class='okButton' style="float:right;"><img src="img/ok.svg" title="<?php echo $okTXT;?>" alt="<?php echo $okTXT;?>" style="width:var(--font-size);"></button><br>
+				<span style=""><?=$routePosTXT?></span><br>
+				<input id='goToPositionField' type="text" title="<?=$goToPositionTXT?>" size='12' style='width:70%;font-size:150%;'>			
+				<button id='goToPositionButton' onClick='flyByString(goToPositionField.value);' class='okButton' style="float:right;"><img src="img/ok.svg" title="<?=$okTXT?>" alt="<?=$okTXT?>" style="width:var(--font-size);"></button><br>
 			</div>
 			<ul id='geocodedList' class='commonList' style="width:100%;max-height:23vh;overflow:auto;"><?php // 23vh - вмещается в полный экран в Firefox на моём ноутбуке ?>
 			</ul>
 <?php if($privileged){	// для пользователя со всеми правами ?>
 			<?php // Сохранение маршрута ?>
 			<div style="width:94%;margin:1em 0.5rem;text-align:center;">
-				<h3><?php echo $routeSaveTitle;?></h3>
-				<input id = 'routeSaveName' type="text" title="<?php echo $routeSaveTXT;?>" placeholder='<?php echo $routeSaveTXT;?>' size='255' style='width:95%;font-size:120%;'>
-				<textarea id = 'routeSaveDescr' title="<?php echo $routeSaveDescrTXT;?>" rows='3' cols='255' placeholder='<?php echo $routeSaveDescrTXT;?>' style='width:95%;'></textarea><br>
+				<h3><?=$routeSaveTitle?></h3>
+				<input id = 'routeSaveName' type="text" title="<?=$routeSaveTXT?>" placeholder='<?=$routeSaveTXT?>' size='255' style='width:95%;font-size:120%;'>
+				<textarea id = 'routeSaveDescr' title="<?=$routeSaveDescrTXT?>" rows='3' cols='255' placeholder='<?=$routeSaveDescrTXT?>' style='width:95%;'></textarea><br>
 				<button type='submit' class='okButton' style="float:right;"	onClick="DOsaveGPX();">
-					<img src="img/ok.svg" title="<?php echo $okTXT;?>" alt="<?php echo $okTXT;?>" style="width:var(--font-size);">
+					<img src="img/ok.svg" title="<?=$okTXT?>" alt="<?=$okTXT?>" style="width:var(--font-size);">
 				</button>
 				<button onClick='routeSaveName.value=""; routeSaveDescr.value="";' type='reset' class='okButton' style="float:left;">
-					<img src="img/no.svg" title="<?php echo $clearTXT;?>" alt="<?php echo $clearTXT;?>" style="width:var(--font-size);">
+					<img src="img/no.svg" title="<?=$clearTXT?>" alt="<?=$clearTXT?>" style="width:var(--font-size);">
 				</button>
 				<div id="routeSaveMessage" style="margin: 1rem;"></div>
 			</div>			
@@ -499,7 +507,7 @@ foreach($trackInfo as $trackName) {
 		</div>
 		<!-- Места и маршруты -->
 		<div class="leaflet-sidebar-pane" id="routes">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $routesHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?=$routesHeaderTXT?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 			<div style="width:100%;overflow-x:auto;"><?php // Здесь только горизонтальная прокрутка, а вертикальная - в объемлющем div ?>
 				<ul id="routeDisplayed" class='commonList'>
 				</ul>
@@ -517,10 +525,10 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 		</div>
 		<!-- Управление DEMpanoPanel -->
 		<div class="leaflet-sidebar-pane" id="panoControl">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?php echo $panoControlHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"> <?=$panoControlHeaderTXT?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 			<div style="margin:0.5em;">
 				<input id="clientNameInput" type="text" onchange="clientNameUpdate(clientNameInput.value)" size="120" style="width:97%;font-size:130%;">
-				<label for="PANOslavesList"><?php echo $panoControlSlavesLabelTXT;?></label>
+				<label for="PANOslavesList"><?=$panoControlSlavesLabelTXT?></label>
 				<select multiple size="2" name="PANOslavesList" id="PANOslavesList" onchange="PANOslaveSelect(event);" style="width:100%;font-size:130%;">
 				</select>
 			</div>
@@ -555,7 +563,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 							<span class="onoffswitch-switch"></span>
 						</label>
 					</div>
-					<span><?php echo $panoControlFollowSwitchTXT;?></span>
+					<span><?=$panoControlFollowSwitchTXT?></span>
 				</div>
 				<div class="parentonoffswitch" style="margin: 0 1em;padding:1em 0;"> <!-- Kiosk mode -->
 					<div class="onoffswitch" style="float:right;margin:0 0 0 1em;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
@@ -566,49 +574,49 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 							<span class="onoffswitch-switch"></span>
 						</label>
 					</div>
-					<span><?php echo $panoControlKioskModeSwitchTXT;?></span>
+					<span><?=$panoControlKioskModeSwitchTXT?></span>
 				</div>
 			</div>
 		</div>
 		<!-- MOB -->
 		<div class="leaflet-sidebar-pane" style="height:90%;" id="MOB">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close" style="background-color:red;"><?php echo $mobTXT; ?><span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close" style="background-color:red;"><?=$mobTXT?><span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 			<div style="margin:1rem 0;width:100%;text-align: center;">
-				<button onClick='MOBalarm();' style="width:75%;"><span style=""><?php echo $addMarkerTXT; ?></span></button>
+				<button onClick='MOBalarm();' style="width:75%;"><span style=""><?=$addMarkerTXT?></span></button>
 			</div>
 			<div class="big_symbol centred_pane" style="height:85%;overflow:auto;" onClick="map.setView(currentMOBmarker.getLatLng());"> <?php //  передвинуть карту на место текущего маркера MOB ?>
 				<div><?php // объемлющий div необходим ?>
 					<div style="margin:0.5rem 0;">
-						<span style="display:block;"><?php echo $bearingTXT; ?></span>
-						<span style="font-size:75%;display:block;"><?php echo $altBearingTXT; ?></span>
+						<span style="display:block;"><?=$bearingTXT?></span>
+						<span style="font-size:75%;display:block;"><?=$altBearingTXT?></span>
 						<span style="font-size:200%;margin:0.5rem;display:block;" id='azimuthMOBdisplay'> </span>
 					</div>
 					<div style="margin:0.5rem 0;">
-						<span style="display:block;"><?php echo $distanceTXT ?>, <?php echo $dashboardMeterMesTXT ?></span>
-						<span style="font-size:75%;display:block;"><?php echo $altDistanceTXT ?></span>
+						<span style="display:block;"><?=$distanceTXT?>, <?=$dashboardMeterMesTXT?></span>
+						<span style="font-size:75%;display:block;"><?=$altDistanceTXT?></span>
 						<span style="font-size:200%;margin:0.5rem;display:block;" id='distanceMOBdisplay'> </span>
 						<span style="font-size:120%;margin:0.5rem;display:block;" id='directionMOBdisplay'></span>
 					</div>
 					<div onClick="doCopyToClipboard(Math.round(currentMOBmarker.getLatLng().lat*10000)/10000+' '+Math.round(currentMOBmarker.getLatLng().lng*10000)/10000);" >
-						<span style="display:block;"><?php echo $dashboardPosTXT;?></span>
-						<span style="font-size:75%;display:block;"><?php echo $dashboardPosAltTXT;?></span>
+						<span style="display:block;"><?=$dashboardPosTXT?></span>
+						<span style="font-size:75%;display:block;"><?=$dashboardPosAltTXT?></span>
 						<span style="font-size:130%;margin:0.3rem;display:block;" id='locationMOBdisplay'></span>
 					</div>
 				</div>
 			</div>
 			<div style="position: absolute; bottom: 1rem;margin:0;width:100%;text-align: center;"> <?php // Отбой ?>
-				<button onClick='delMOBmarker();' id='delMOBmarkerButton' style="width:75%;margin:1.5rem 0;" disabled ><span style=""><?php echo $removeMarkerTXT; ?></span></button><br>
+				<button onClick='delMOBmarker();' id='delMOBmarkerButton' style="width:75%;margin:1.5rem 0;" disabled ><span style=""><?=$removeMarkerTXT?></span></button><br>
 				<a style="position:relative;left:0rem;vertical-align:revert;color:gray;font-size:150%;" onClick='
 					this.nextElementSibling.disabled=false;
 					this.style.color="green";
 				'>&FilledSmallSquare;</a>
-				<button onClick='realMOBclose();' style="position:relative;rigt:1rem;width:70%;" disabled><span style=""><?php echo $cancelMOBTXT; ?></span></button>
+				<button onClick='realMOBclose();' style="position:relative;rigt:1rem;width:70%;" disabled><span style=""><?=$cancelMOBTXT?></span></button>
 			</div>
 		</div>
 <?php if($privileged){	// для пользователя со всеми правами ?>
 		<!-- Загрузчик -->
 		<div class="leaflet-sidebar-pane" id="download" style="height:100%;margin:0;">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $downloadHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?=$downloadHeaderTXT?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close" height="100%"></span></h1>
 <?php if($isCOVERpresent){ ?>
 			<div style="margin: 1rem 0.5rem;height:5rem;">
 				<div style="margin:0 0 0.5rem 0;">
@@ -620,33 +628,33 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						</label>
 					</div>
 					<div style="width:73%;">
-						<span style=''><?php echo $coverTXT;?></span> <span id='cover_zoom' style='font-size:120%;font-weight:bold;'></span>
+						<span style=''><?=$coverTXT?></span> <span id='cover_zoom' style='font-size:120%;font-weight:bold;'></span>
 					</div>
 				</div>
 				<span id='coverMap' style='font-size:120%;'></span>
 			</div>
 <?php }; ?>
-			<span style='margin-left:0.5rem;'><?php echo $downloadZoomTXT;?>: <span id='dwnldJobZoom'  style='font-size:120%;'></span></span>
+			<span style='margin-left:0.5rem;'><?=$downloadZoomTXT?>: <span id='dwnldJobZoom'  style='font-size:120%;'></span></span>
 			<form id="dwnldJob" style="font-size:120%;width:97%;height:50%;margin:0 0.3rem;" onSubmit="createDwnldJob(); return false;" onreset="dwnldJobZoom.innerHTML=map.getZoom(); downJob=false; tileGrid.redraw();">
 				<div>
 					<span style="display:inline-block;width:50%;">X</span><span style="display:inline-block;">Y</span>
 				</div>
 				<div style="max-height:85%;padding:0;display:grid;grid-template-columns:50% 1fr;grid-auto-rows:min-content;overflow-y:auto;">
 					<div style='margin-bottom:0.5em;'>
-						<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileX" size='12' style='font-size:150%;width:95%;padding:0;'>
+						<input type="text" pattern="[0-9]*" title="<?=$integerTXT;?>" class="tileX" size='12' style='font-size:150%;width:95%;padding:0;'>
 					</div>
 					<div style='margin-bottom:0.5em;'>
-						<input type="text" pattern="[0-9]*" title="<?php echo $integerTXT;?>" class="tileY" size='12' style='font-size:150%;width:95%;padding:0;' onChange="XYentryFields(this);">
+						<input type="text" pattern="[0-9]*" title="<?=$integerTXT?>" class="tileY" size='12' style='font-size:150%;width:95%;padding:0;' onChange="XYentryFields(this);">
 					</div>
 				</div>
 				<div style="width:98%;">
-					<button type='submit' style="width:4rem;float:right;"><img src="img/ok.svg" alt="<?php echo $okTXT;?>" style="width:var(--font-size);"></button>
-					<button type='reset' style="width:4rem;"><img src="img/no.svg" alt="<?php echo $clearTXT;?>" style="width:var(--font-size);" ></button>
+					<button type='submit' style="width:4rem;float:right;"><img src="img/ok.svg" alt="<?=$okTXT?>" style="width:var(--font-size);"></button>
+					<button type='reset' style="width:4rem;"><img src="img/no.svg" alt="<?=$clearTXT?>" style="width:var(--font-size);" ></button>
 				</div>
 			</form>
 			<div style="margin:0 0.5rem;">
 				<div>
-					<span id="loaderIndicator" title="" style="vertical-align:text-bottom;color:gray;">&#x2B24; </span><?php echo $downloadJobListTXT;?>:
+					<span id="loaderIndicator" title="" style="vertical-align:text-bottom;color:gray;">&#x2B24; </span><?=$downloadJobListTXT?>:
 				</div>
 				<ul id="dwnldJobList" class='commonList'>
 				</ul>
@@ -655,7 +663,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 <?php }; // для пользователя со всеми правами ?>	
 		<!-- Настройки -->
 		<div class="leaflet-sidebar-pane" id="settings">
-			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?php echo $settingsHeaderTXT;?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close"  height="100%"></span></h1>
+			<h1 class="leaflet-sidebar-header leaflet-sidebar-close"><?=$settingsHeaderTXT?> <span class="leaflet-sidebar-close-icn"><img src="img/Triangle-left.svg" alt="close"  height="100%"></span></h1>
 			<div class="settingItem"> <?php // Следование за курсором ?>
 				<div class="onoffswitch" style="float:right;margin: 1rem auto;"> <!--  Переключатель https://proto.io/freebies/onoff/  -->
 					<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="followSwitch" onChange="noFollowToCursor=!noFollowToCursor; CurrnoFollowToCursor=noFollowToCursor;" checked>
@@ -664,7 +672,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span><?php echo $settingsCursorTXT;?></span>
+				<span><?=$settingsCursorTXT?></span>
 			</div>
 			<br>
 			<div class="settingItem"> <?php // Текущий трек всегда показывается ?>
@@ -675,7 +683,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span><?php echo $settingsTrackTXT;?></span>
+				<span><?=$settingsTrackTXT?></span>
 			</div>
 			<br>
 			<div class="settingItem"> <?php // Выбранные маршруты всегда показываются ?>
@@ -686,7 +694,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span><?php echo $settingsRoutesAlwaysTXT;?></span>
+				<span><?=$settingsRoutesAlwaysTXT?></span>
 			</div>
 			<br>
 			<div class="settingItem"> <?php // Показывать окружности дистанции ?>
@@ -697,7 +705,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span><?php echo $settingsdistCirclesTXT;?></span>
+				<span><?=$settingsdistCirclesTXT?></span>
 			</div>
 			<br>
 			<div class="settingItem"> <!-- Показывать символ ветра -->
@@ -708,7 +716,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span id="settingsdistWindTXT"><?php echo $settingsdistWindTXT;?> &nbsp; </span>
+				<span id="settingsdistWindTXT"><?=$settingsdistWindTXT?> &nbsp; </span>
 			</div>
 			<br>
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
@@ -720,7 +728,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span><?php echo $DisplayAIS_TXT;?></span>
+				<span><?=$DisplayAIS_TXT?></span>
 			</div>
 			<br>
 <?php }; ?>
@@ -733,7 +741,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span><?php echo $panoControlHeaderTXT;?></span>
+				<span><?=$panoControlHeaderTXT?></span>
 			</div>
 			<br>
 <?php }; // для пользователя со всеми правами ?>	
@@ -745,7 +753,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<span class="onoffswitch-switch"></span>
 					</label>
 				</div>
-				<span><?php echo $hideControlsSwitchTXT;?></span><br><br>
+				<span><?=$hideControlsSwitchTXT?></span><br><br>
 				<div>
 					<div style="float: right;"> 
 						<input style="width:1em;" type="radio" name="hideControlPosition" value="topleft" disabled onChange="hideControlsToggler(this);">
@@ -758,14 +766,14 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 						<input style="width:1em;" type="radio" name="hideControlPosition" value="bottommiddle" checked disabled onChange="hideControlsToggler(this);">
 						<input style="width:1em;" type="radio" name="hideControlPosition" value="bottomright" disabled onChange="hideControlsToggler(this);">
 					</div>
-					<span style="margin:100% 0 100% 0;"><?php echo $hideControlsPositionTXT;?></span>
+					<span style="margin:100% 0 100% 0;"><?=$hideControlsPositionTXT?></span>
 				</div>
 			</div>
 			<br>
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 			<div class="settingItem"> <?php // максимальная скорость обновления ?>
 				<div style="float:right;margin: 1rem auto;">
-					<input id='minWATCHintervalInput' type="text" pattern="[0-9]*" title="<?php echo $realTXT;?>" size='4' style='width:3rem;font-size:130%;'
+					<input id='minWATCHintervalInput' type="text" pattern="[0-9]*" title="<?=$realTXT?>" size='4' style='width:3rem;font-size:130%;'
 					 onChange="minWATCHinterval=parseFloat(this.value);
 					 if(isNaN(minWATCHinterval)) minWATCHinterval=0;
 					 //console.log('Изменение, minWATCHinterval',minWATCHinterval);
@@ -773,7 +781,7 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 					"
 					>
 				</div>
-				<span><?php echo $minWATCHintervalTXT;?></span>
+				<span><?=$minWATCHintervalTXT?></span>
 			</div>
 <?php }; ?>
 		</div>
@@ -788,64 +796,64 @@ if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
 ?>
 <script> "use strict";
 // Глобальные переменные
-var selfServerPath = '<?php echo __DIR__; ?>';
-var appLocale = '<?php echo $appLocale; ?>';
-var vesselSelf = '<?php echo $boatInfo["mmsi"]; ?>';
+var selfServerPath = '<?=__DIR__?>';
+var appLocale = '<?=$appLocale?>';
+var vesselSelf = '<?=$boatInfo["mmsi"]?>';
 var clientName = storageHandler.restore('clientName') || '';	// имя экземпляра
 var remImPx = parseFloat(getComputedStyle(document.documentElement).fontSize);
 // Интернационализация
-var showMapsTogglerTXT = [<?php echo $showMapsTogglerTXT; ?>];	// подписи на кнопке все/избранные карты
-var downloadLoaderIndicatorOnTXT = '<?php echo $downloadLoaderIndicatorOnTXT; ?>';
-var downloadLoaderIndicatorOffTXT = '<?php echo $downloadLoaderIndicatorOffTXT; ?>';
-var copyToClipboardMessageOkTXT = '<?php echo $copyToClipboardMessageOkTXT;?>';
-var copyToClipboardMessageBadTXT = '<?php echo $copyToClipboardMessageBadTXT;?>';
-var dashboardDepthMesTXT = '<?php echo $dashboardDepthMesTXT;?>';
-var dashboardMeterMesTXT = '<?php echo $dashboardMeterMesTXT;?>';
-var dashboardKiloMeterMesTXT = '<?php echo $dashboardKiloMeterMesTXT;?>';
-var dashboardCourseTXT = '<?php echo $dashboardCourseTXT;?>';
-var dashboardCourseAltTXT = '<?php echo $dashboardCourseAltTXT;?>';
-var dashboardHeadingTXT = '<?php echo $dashboardHeadingTXT;?>';
-var dashboardHeadingAltTXT = '<?php echo $dashboardHeadingAltTXT;?>';
-var dashboardMHeadingTXT = '<?php echo $dashboardMHeadingTXT;?>';
-var dashboardMHeadingAltTXT = '<?php echo $dashboardMHeadingAltTXT;?>';
-var latTXT = '<?php echo $latTXT;?>';
-var longTXT = '<?php echo $longTXT;?>';	
-var relBearingTXT = [<?php echo $relBearingTXT; // internationalisation ?>]
-var followWPTbuttonTXT = '<?php echo $followWPTbuttonTXT; ?>';
-var nofollowWPTbuttonTXT = '<?php echo $nofollowWPTbuttonTXT; ?>';
-var mapInfoComplexTXT = "<?php echo $mapInfoComplexTXT; ?>";
-var mapInfoProjectionTXT = "<?php echo $mapInfoProjectionTXT; ?>";
-var mapInfoMinZoomTXT = "<?php echo $mapInfoMinZoomTXT; ?>";
-var mapInfoMaxZoomTXT = "<?php echo $mapInfoMaxZoomTXT; ?>";
-var mapInfoBordersTXT = "<?php echo $mapInfoBordersTXT; ?>";
-var mapInfoVectorTXT = "<?php echo $mapInfoVectorTXT; ?>";
-var mapInfoRasterTXT = "<?php echo $mapInfoRasterTXT; ?>";
-var mapInfoStyleFileTXT = "<?php echo $mapInfoStyleFileTXT; ?>";
-var mapInfoLoadableTXT = "<?php echo $mapInfoLoadableTXT; ?>";
-var mapInfoUseProxyTXT = "<?php echo $mapInfoUseProxyTXT; ?>";
-var mapInfoSourceTXT = "<?php echo $mapInfoSourceTXT; ?>";
-var mapInfoDataTXT = "<?php echo $mapInfoDataTXT; ?>";
+var showMapsTogglerTXT = [<?=$showMapsTogglerTXT?>];	// подписи на кнопке все/избранные карты
+var downloadLoaderIndicatorOnTXT = '<?=$downloadLoaderIndicatorOnTXT?>';
+var downloadLoaderIndicatorOffTXT = '<?=$downloadLoaderIndicatorOffTXT?>';
+var copyToClipboardMessageOkTXT = '<?=$copyToClipboardMessageOkTXT?>';
+var copyToClipboardMessageBadTXT = '<?=$copyToClipboardMessageBadTXT?>';
+var dashboardDepthMesTXT = '<?=$dashboardDepthMesTXT?>';
+var dashboardMeterMesTXT = '<?=$dashboardMeterMesTXT?>';
+var dashboardKiloMeterMesTXT = '<?=$dashboardKiloMeterMesTXT?>';
+var dashboardCourseTXT = '<?=$dashboardCourseTXT?>';
+var dashboardCourseAltTXT = '<?=$dashboardCourseAltTXT?>';
+var dashboardHeadingTXT = '<?=$dashboardHeadingTXT?>';
+var dashboardHeadingAltTXT = '<?=$dashboardHeadingAltTXT?>';
+var dashboardMHeadingTXT = '<?=$dashboardMHeadingTXT?>';
+var dashboardMHeadingAltTXT = '<?=$dashboardMHeadingAltTXT?>';
+var latTXT = '<?=$latTXT?>';
+var longTXT = '<?=$longTXT?>';	
+var relBearingTXT = [<?=$relBearingTXT?>]
+var followWPTbuttonTXT = '<?=$followWPTbuttonTXT?>';
+var nofollowWPTbuttonTXT = '<?=$nofollowWPTbuttonTXT?>';
+var mapInfoComplexTXT = "<?=$mapInfoComplexTXT?>";
+var mapInfoProjectionTXT = "<?=$mapInfoProjectionTXT?>";
+var mapInfoMinZoomTXT = "<?=$mapInfoMinZoomTXT?>";
+var mapInfoMaxZoomTXT = "<?=$mapInfoMaxZoomTXT?>";
+var mapInfoBordersTXT = "<?=$mapInfoBordersTXT?>";
+var mapInfoVectorTXT = "<?=$mapInfoVectorTXT?>";
+var mapInfoRasterTXT = "<?=$mapInfoRasterTXT?>";
+var mapInfoStyleFileTXT = "<?=$mapInfoStyleFileTXT?>";
+var mapInfoLoadableTXT = "<?=$mapInfoLoadableTXT?>";
+var mapInfoUseProxyTXT = "<?=$mapInfoUseProxyTXT?>";
+var mapInfoSourceTXT = "<?=$mapInfoSourceTXT?>";
+var mapInfoDataTXT = "<?=$mapInfoDataTXT?>";
 // для загрузки Mapbox GL при необходимости. Из-за чего-то надо так.
 var mapboxGLscript = null;	// скрипт Mapbox GL, загружается при открытии соответствующей карты. Эти глобальные переменные ни нафиг не нужны, но если грузить скрипты Mapbox GL где-то в глубине -- при закрытии карты возникает мутная ошибка.
 var mapboxLeafletscript = null;	// скрипт mapbox-gl-leaflet
 var mapboxCountourscript = null;	// скрипт mapbox-contour
 // Карта
-var defaultMap = '<?php echo $defaultMap;?>'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
+var defaultMap = '<?=$defaultMap?>'; 	// Карта, которая показывается, если нечего показывать. Народ интеллектуальный ценз ниасилил.
 //if(! defaultMap) defaultMap = 'OpenTopoMap';	// Эти суки стали бороться с русскими, и забанили OpenTopoMap
 if(! defaultMap) defaultMap = 'osmmapMapnik';
 var defaultCenter = <?php echo $defaultCenter ? $defaultCenter : 'undefined';?>; 	// начальная точка, {lat: 99, lng: 99}
 if(! defaultCenter) defaultCenter = {"lat": 55.754, "lng": 37.62}; 	
 var showMapsList = storageHandler.restore('showMapsList') || [];	// массив названий избранных карт
 var savedLayers = []; 	// массив для хранения объектов, когда они не на карте. Типа - кеш объектов.
-var tileCacheURI = '<?php echo $tileCacheURI;?>'; 	// адрес источника карт, используется в displayMap
-var tileCacheControlURI = '<?php echo $tileCacheControlURI;?>'; // адрес управляющего интерфейса GaladrielCache
+var tileCacheURI = '<?=$tileCacheURI?>'; 	// адрес источника карт, используется в displayMap
+var tileCacheControlURI = '<?=$tileCacheControlURI?>'; // адрес управляющего интерфейса GaladrielCache
 var additionalTileCachePath = ''; 	// дополнительный кусок пути к тайлам между именем карты и /z/x/y.png Используется в версионном кеше, например, в погоде. Без / в конце, но с / в начале, либо пусто. Присваивается в javascriptOpen в параметрах карты. Или ещё где-нибудь.
 var startCenter = storageHandler.restore('startCenter'); 	// storageHandler from galadrielmap.js
 if(! startCenter) startCenter = defaultCenter; 	// начальная точка
 var startZoom = storageHandler.restore('startZoom'); 	// storageHandler from galadrielmap.js
 if(! startZoom) startZoom = 12; 	// начальный масштаб
 var userMoveMap = true; 	// флаг для отделения собственных движений карты от пользовательских. Считаем все пользовательскими, и только где надо - выставляем иначе
-var autoUpdateMap = '<?php echo $autoUpdateMap;?>'; 	// Автоматически обновлять карту через указанный в описании карты срок годности
+var autoUpdateMap = '<?=$autoUpdateMap?>'; 	// Автоматически обновлять карту через указанный в описании карты срок годности
 // ГПС
 <?php if($gpsdProxyHost and $gpsdProxyPort){	// Определён сервис координат ?>
 // поскольку теперь есть TPV и ATT, не вся требуемая информация поступает в одном сообщениии,
@@ -866,7 +874,7 @@ var CurrnoFollowToCursor = 1; 	// глобальная переменная дл
 var followPause = 10 * 1000; 	// пауза следования карты за курсором, когда карту подвинули руками, микросекунд
 var savePositionEvery = 10 * 1000; 	// будем сохранять положение каждые микросекунд локально в куку
 var followPaused; 	// объект таймера, который восстанавливает следование курсору
-var velocityVectorLengthInMn = <?php echo $velocityVectorLengthInMn;?>; 	// длинной в сколько минут пути рисуется линия скорости
+var velocityVectorLengthInMn = <?=$velocityVectorLengthInMn?>; 	// длинной в сколько минут пути рисуется линия скорости
 // Окружности дистанции
 let res = storageHandler.restore('distCirclesSwitch');
 if(res != null) distCirclesSwitch.checked = Boolean(res); 	// показывать окружности дистанции
@@ -880,23 +888,23 @@ var AISshipTypeTXT = {
 }
 // Loader
 var downJob = false; 	// флаг - не создаётся ли задание на скачивание
-var isCOVERpresent = '<?php echo $isCOVERpresent; ?>';
+var isCOVERpresent = '<?=$isCOVERpresent?>';
 // Пути и маршруты
 var editorEnabled = false;	// семафор, что можно использовать редактирования
 // Путь
-var currentTrackServerURI = '<?php echo $currentTrackServerURI;?>'; 	// адрес для подключения к сервису, отдающему сегменты текущего трека
-var trackDirURI = '<?php echo $trackDir;?>'; 	// адрес каталога с треками
-var routeDirURI = '<?php echo $routeDir;?>'; 	// адрес каталога с маршрутами
-var routeDir = '<?php echo $routeDir;?>'; 	// каталог с маршрутами на сервере
-var currentTrackName = '<?php echo $currentTrackName;?>'; 	// имя текущего (пишущегося сейчас) трека
-var updateRouteServerURI = '<?php echo $updateRouteServerURI;?>'; 	// url службы динамического обновления маршрутов
+var currentTrackServerURI = '<?=$currentTrackServerURI?>'; 	// адрес для подключения к сервису, отдающему сегменты текущего трека
+var trackDirURI = '<?=$trackDir?>'; 	// адрес каталога с треками
+var routeDirURI = '<?=$routeDir?>'; 	// адрес каталога с маршрутами
+var routeDir = '<?=$routeDir?>'; 	// каталог с маршрутами на сервере
+var currentTrackName = '<?=$currentTrackName?>'; 	// имя текущего (пишущегося сейчас) трека
+var updateRouteServerURI = '<?=$updateRouteServerURI?>'; 	// url службы динамического обновления маршрутов
 res = storageHandler.restore('currTrackSwitch');
 if(res != null) currTrackSwitch.checked = Boolean(res);
 res = storageHandler.restore('SelectedRoutesSwitch');
 if(res != null) SelectedRoutesSwitch.checked = Boolean(res); 	// показывать выбранные маршруты
 
 var globalCurrentColor = 0xFFFFFF; 	// цвет линий и  значков кластеров после первого набора
-var depthInData = <?php echo $depthInData;?>;	// параметры показа глубины вдоль пути
+var depthInData = <?=$depthInData?>;	// параметры показа глубины вдоль пути
 
 // Маршрут
 var currentRoute; 	// L.layerGroup, по объекту Editable которого щёлкнули. Типа, текущий.
@@ -949,7 +957,7 @@ DisplayAISswitch.checked = true;	// Показывать цели AIS. Всег�
 <?php }; ?>
 
 // Подготовленные картинки для случая off-line
-const mob_markerImg = '<?php echo $mob_markerImg; ?>';
+const mob_markerImg = '<?=$mob_markerImg?>';
 
 // Кластеризация точек
 var superclusterRadius = 40;	// px
@@ -1031,6 +1039,7 @@ sidebar.on("content", function(event){ 	// Событие открытия па�
 		noFollowToCursor = true; 	// отключим следование за курсором
 		editorEnabled = true;	// разрешим редактирования
 		routeCreateButton.disabled=false; 	// - сделать доступной кнопку Начать
+		pointsControlsButtonImgs();	// нарисуем значки на кнопках точек в соответствии с button.value
 		pointsControlsEnable();	// включим кнопки точек
 		//console.log('[Open measure] currentRoute:',currentRoute);
 		//console.log('[Open measure] dravingLines:',dravingLines);
