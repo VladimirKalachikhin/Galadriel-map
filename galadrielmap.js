@@ -323,7 +323,8 @@ if(map.hasLayer(tileGrid)) displayMapBounds();	// перерисуем гран�
 async function displayMap(mapname,mapParm={}) {
 //console.log('[displayMap] mapname=',mapname,'mapParm:',JSON.stringify(mapParm));
 if(savedLayers[mapname] == null) {
-	const layer = realDisplayMap(mapname,mapParm);
+	// вот тут надо await, а надо?
+	const layer = realDisplayMap(mapname,mapParm);	
 	if(layer == null) return;
 	if(typeof layer.options.javascriptOpen === 'function') {
 		layer.options.javascriptOpen(layer);
@@ -348,9 +349,24 @@ if(map.hasLayer(tileGrid)) displayMapBounds();	// перерисуем гран�
 
 function contourLines(mapname,mapParm={}){
 /**/
+//console.log('[contourLines] mapname=',mapname,'mapParm:',mapParm);
+let realContourLinesCounter = 1;
+const realContourLinesCounterLimit = 100;
+
+if(!mapParm.clientData) mapParm.clientData = {};
+if(!mapParm.clientData.DEMthresholds) mapParm.clientData.DEMthresholds = {
+	// zoom: [minor, major]
+	11: [100, 500],
+	12: [50, 500],
+	13: [10, 200],
+	14: [5, 100],
+	15: [2, 50]
+};
+
 function realContourLines(maplibreMap){
-//console.log('[realContourLines] maplibreMap:',maplibreMap);
-if(maplibreMap.isStyleLoaded()){
+//console.log('[realContourLines] maplibreMap:',maplibreMap,'mapParm:',mapParm);
+if(maplibreMap.isStyleLoaded()){	// однако, эта функция по непонятным причинам может никогда не вернуть true
+	//console.log('[realContourLines] isStyleLoaded() сработала на realContourLinesCounter=',realContourLinesCounter);
 	//console.log('[realContourLines] maplibreMap style:',maplibreMap.getStyle());
 	const style = maplibreMap.getStyle();
 	let layer;
@@ -375,7 +391,7 @@ if(maplibreMap.isStyleLoaded()){
 	// Но она на 300K больше.
 	// Но @5.19.0 не падает на .getStyle() после замены glyphs в setStyle
 	if(!style.glyphs) {
-		//console.log('[realContourLines] glyphs нет, добавляем');
+		console.log('[realContourLines] no glyphs, adding and waiting further');
 		//maplibreMap.setGlyphs(`${window.location.origin}${window.location.pathname}styles/fonts/{fontstack}/{range}.pbf`);
 		style.glyphs = `${window.location.origin}${window.location.pathname}styles/fonts/{fontstack}/{range}.pbf`;
 		maplibreMap.setStyle(style);	// стиль будет полностью заменён?, потому что изменён glyphs
@@ -390,7 +406,8 @@ if(maplibreMap.isStyleLoaded()){
 	const url = style.sources[layer.source].tiles[0];
 	const maxzoom = style.sources[layer.source].maxzoom || 17;
 	//console.log('url=',url,'maxzoom=',maxzoom);
-	let DEMencoding = mapParm.clientData.DEMencoding;
+	let DEMencoding;
+	DEMencoding = mapParm.clientData.DEMencoding;
 	if(DEMencoding != 'mapbox') DEMencoding = 'terrarium';
 	let demSource = new mlcontour.DemSource({
 		"url" : url,
@@ -400,7 +417,7 @@ if(maplibreMap.isStyleLoaded()){
 		"encoding" : DEMencoding, 
 		"maxzoom" : maxzoom,
 		"worker" : true, // offload isoline computation to a web worker to reduce jank
-		//cacheSize: 100, // number of most-recent tiles to cache
+		cacheSize: 100, // number of most-recent tiles to cache
 		timeoutMs: 10_000, // timeout on fetch requests
 	});
 	demSource.setupMaplibre(maplibregl);
@@ -422,14 +439,7 @@ if(maplibreMap.isStyleLoaded()){
 			demSource.contourProtocolUrl({
 				// convert meters to feet, default=1 for meters
 				//"multiplier": 3.28084,
-				"thresholds": {
-					// zoom: [minor, major]
-					11: [100, 500],
-					12: [50, 500],
-					13: [10, 200],
-					14: [5, 100],
-					15: [2, 50]
-				},
+				"thresholds": mapParm.clientData.DEMthresholds,
 				// optional, override vector tile parameters:
 				"contourLayer": "contours",
 				"elevationKey": "ele",	// имя свойства mlcontour в maplibre style
@@ -477,20 +487,33 @@ if(maplibreMap.isStyleLoaded()){
 			"text-halo-width": 1,
 		},
 	});
+	//console.log('[realContourLines] Созданы горизонтали на карте',maplibreMap);
 }
 else {
-	//console.log('[realContourLines] Стилей ещё нет, ждём');
-	setTimeout(realContourLines,100,maplibreMap);
+	//console.log('[realContourLines] Стилей ещё нет, ждём','realContourLinesCounter=',realContourLinesCounter,'realContourLinesCounterLimit=',realContourLinesCounterLimit);
+	if(realContourLinesCounter < realContourLinesCounterLimit){	// Это, б..., замыкание, ё... Ненавижу.
+		realContourLinesCounter ++;
+		setTimeout(realContourLines,100,maplibreMap);
+	}
+	else {
+		console.log(`[realContourLines] ERROR: isStyleLoaded() returned false ${realContourLinesCounterLimit} times, no contours is drawn.`);
+	};
 };
 }; // end function realContourLines
 
-function  waitMapLibreMap(Llayer){
+async function  waitMapLibreMap(Llayer){
 // У этих придурков объект _glMap появляется в объекте l.maplibreGL только после .addTo(map)? Не, когда всё загрузится. Или на следующий оборот?
 if(typeof Llayer.getMaplibreMap === 'function'){
-	//console.log('[waitMapLibreMap] Это Leaflet слой maplibre');
+	//console.log('[waitMapLibreMap] Это Leaflet слой maplibre',Llayer);
 	const Mmap = Llayer.getMaplibreMap();
-	if(Mmap === undefined) setTimeout(waitMapLibreMap,100,Llayer);	// но карты maplibre там нет
-	else realContourLines(Mmap);
+	if(Mmap === undefined) {
+		//console.log('[waitMapLibreMap] но карты maplibre там нет','mapParm:',mapParm);
+		setTimeout(waitMapLibreMap,100,Llayer);	// но карты maplibre там нет
+	}
+	else {
+		//console.log('[waitMapLibreMap] и там есть карта maplibre','mapParm:',mapParm);
+		realContourLines(Mmap);
+	};
 };
 }; // end function  waitMapLibreMap
 
@@ -499,6 +522,7 @@ if(typeof mapname === 'string') mapObj = savedLayers[mapname];
 else mapObj = mapname;
 if(mapObj instanceof L.LayerGroup) { 	// это layerGroup
 	for(let layer of mapObj.getLayers()){
+		//console.log('[contourLines] переданная карта maplibre многослойная, layer:',layer);
 		waitMapLibreMap(layer);
 	};
 }
@@ -651,6 +675,7 @@ for(let i=0; i<mapParm.mapTiles.length; i++){
 			};
 			layer = L.maplibreGL(layerParm);
 			//layer = L.mapboxGL(layerParm);
+			//console.log('[realDisplayMap] mapParm:',mapParm);
 			contourLines(layer,mapParm);
 		}
 		else {

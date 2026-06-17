@@ -195,4 +195,6 @@ $relBearingTXT = "'straight ahead',
 'left rear',
 'to port',	
 'left ahead'";
+
+$DEMcontourStepTXT = "Contour lines step is";
 ?>

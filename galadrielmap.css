@@ -278,9 +278,9 @@ button:disabled {
 	position: fixed; 
 	width: var(--sidebar-width);
 	height: var(--sidebar-width);
-	z-index: 1; /*на 0 кто-то перехватывает события. А leaflet начинается с 100 */
+	z-index: 800; /*на 0 кто-то перехватывает события. А leaflet начинается с 100 до 700 */
 	display: none;
-	border: dashed fuchsia;
+	/* border: dashed fuchsia;	с растровыми картами click как-то проходил к hideControl, хотя он был и ниже (по z-index), чем карта. Я не понимаю, как. С векторными этот фокус не проходит. Поэтому область совсем невидимая */
 }
 
 /*  */

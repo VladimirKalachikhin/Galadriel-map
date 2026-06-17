@@ -2,7 +2,7 @@
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 //ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 
-$versionTXT = '3.4.0';
+$versionTXT = '3.4.1';
 /* 
 3.4.0	user defined waypoint icons
 3.3.0	panorama control
@@ -833,6 +833,7 @@ var mapInfoLoadableTXT = "<?=$mapInfoLoadableTXT?>";
 var mapInfoUseProxyTXT = "<?=$mapInfoUseProxyTXT?>";
 var mapInfoSourceTXT = "<?=$mapInfoSourceTXT?>";
 var mapInfoDataTXT = "<?=$mapInfoDataTXT?>";
+var DEMcontourStepTXT = "<?=$DEMcontourStepTXT?>";
 // для загрузки Mapbox GL при необходимости. Из-за чего-то надо так.
 var mapboxGLscript = null;	// скрипт Mapbox GL, загружается при открытии соответствующей карты. Эти глобальные переменные ни нафиг не нужны, но если грузить скрипты Mapbox GL где-то в глубине -- при закрытии карты возникает мутная ошибка.
 var mapboxLeafletscript = null;	// скрипт mapbox-gl-leaflet
