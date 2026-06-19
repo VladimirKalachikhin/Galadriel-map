@@ -2,7 +2,7 @@
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 //ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 
-$versionTXT = '3.4.1';
+$versionTXT = '3.4.2';
 /* 
 3.4.0	user defined waypoint icons
 3.3.0	panorama control

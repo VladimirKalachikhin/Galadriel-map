@@ -8,9 +8,9 @@ doSavePosition() 	Сохранение положения, списка пока
 selectMap(node) 	Выбор карты из списка имеющихся
 deSelectMap(node) 	Прекращение показа карты, и возврат её в список имеющихся.
 displayMap(mapname) Создаёт leaflet lauer с именем, содержащемся в mapname, и заносит его на карту
-isPointInBounds(point,bounds)
+isPointInBounds(point,bounds)	Находится ли точка в границах, а если нет - где ближайшая граница
 autoMapUpdate(mapLayer,start)	Автоматическое обновление карт с маленьким временем свежести.
-removeMap(mapname)	Находится ли точка в границах, а если нет - где ближайшая граница
+removeMap(mapname)
 showMapsToggle()	переключает показ всех или выбранных карт в списке карт
 displayMapBounds()	покажем границы карт
 displayMapBoundsOFF()
@@ -335,6 +335,11 @@ if(savedLayers[mapname] == null) {
 	savedLayers[mapname].addTo(map);
 }
 else {	// такая карта уже есть, просто покажем
+	savedLayers[mapname].eachLayer((layer)=>{	// оно всегда LayerGroup?
+		if(typeof layer.options.javascriptOpen === 'function') {
+			layer.options.javascriptOpen(layer);
+		};
+	});
 	if(typeof savedLayers[mapname].options.javascriptOpen === 'function') {
 		savedLayers[mapname].options.javascriptOpen(savedLayers[mapname]);
 	};
@@ -825,6 +830,11 @@ function removeMap(mapname) {
 /**/
 mapname=mapname.trim();
 if(!savedLayers[mapname]) return;	// например, в списке есть трек, но gpx был кривой, и слой не был создан
+savedLayers[mapname].eachLayer((layer)=>{	// оно всегда LayerGroup?
+	if(typeof layer.options.javascriptClose === 'function') {
+		layer.options.javascriptClose(layer);
+	};
+});
 if(typeof savedLayers[mapname].options.javascriptClose === 'function') {
 	savedLayers[mapname].options.javascriptClose(savedLayers[mapname]);
 };
