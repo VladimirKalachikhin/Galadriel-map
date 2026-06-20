@@ -734,6 +734,15 @@ return multilayer;
 function isPointInBounds(point,bounds){
 /* Находится ли точка в границах, а если нет - где ближайшая граница */
 const nearestPoint = {"lat":null,"lng":null};
+//console.log('[isPointInBounds] bounds:',bounds);
+if(bounds instanceof L.LatLngBounds){	// это leaflet .getBounds()
+	bounds.leftTop = {};
+	bounds.leftTop.lat = bounds._northEast.lat;
+	bounds.leftTop.lng = bounds._southWest.lng;
+	bounds.rightBottom = {};
+	bounds.rightBottom.lat = bounds._southWest.lat;
+	bounds.rightBottom.lng = bounds._northEast.lng;
+};
 // Широта
 if(point.lat > bounds.leftTop.lat){
 	// Точка севернее рамки, т.е., не в границах.
