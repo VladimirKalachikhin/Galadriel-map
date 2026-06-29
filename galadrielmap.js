@@ -488,6 +488,7 @@ if(maplibreMap.isStyleLoaded()){	// однако, эта функция по н�
 			"text-font": ["Noto Sans Bold"],
 		},
 		"paint": {
+			"text-color": "rgba(230,135,30, 75%)",
 			"text-halo-color": "white",
 			"text-halo-width": 1,
 		},
