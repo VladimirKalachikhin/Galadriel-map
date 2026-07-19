@@ -376,13 +376,17 @@ if(maplibreMap.isStyleLoaded()){	// однако, эта функция по н�
 	const style = maplibreMap.getStyle();
 	let layer;
 	for(layer of style.layers){
-		if(layer.type == 'hillshade'){
-			//console.log('[realContourLines] слой',layer,'является тонировкой рельефа');
+		// Только в слое с ContourLines в имени будем рисовать горизонтали!
+		// А вот должен ли он быть обязательно типа hillshade?
+		//if((layer.type == 'hillshade') && (layer.id.includes('ContourLines'))){
+		if(layer.id.includes('ContourLines')){
+			//console.log('[realContourLines] слой',layer.id,'является тонировкой рельефа');
 			//console.log('[realContourLines] слой найден в maplibreMap:',maplibreMap);
-			break;	// там только один слой hillshade? Ну, по логике вещей...
+			break;	// там только один слой hillshade? Ну, по логике вещей... Хотя у них европейская логика.
 		};
 	};
-	if(layer.type != 'hillshade') return;	// слоя hillshade в карте maplibre нет.
+	//if((layer.type != 'hillshade') || (!layer.id.includes('ContourLines'))) return;	// слоя hillshade с нужным именем в карте maplibre нет.
+	if(!layer.id.includes('ContourLines')) return;	// слоя hillshade с нужным именем в карте maplibre нет.
 	//console.log('[realContourLines] Загружена ли maplibre-contour?:',mapboxCountourscript);
 	if(!mapboxCountourscript){	// библиотека maplibre-contour ещё не загружена
 		if(mapboxCountourscript=loadScriptSync("maplibre-contour/dist/index.js")) console.log("[realDisplayMap] maplibre-contour is loaded");
@@ -392,7 +396,7 @@ if(maplibreMap.isStyleLoaded()){	// однако, эта функция по н�
 	// У этих придурков "The URL must be absolute, containing the scheme, authority and path components." https://maplibre.org/maplibre-style-spec/glyphs/
 	//console.log(window.location.origin,window.location.pathname);
 	// Ещё у этих придурков не работают функции getGlyphs() и setGlyphs().
-	// Однако, версия @5.19.0 (последняя), имеет встроенный шрифт, и может обходиться без glyphs.
+	// Однако, версия @5.19.0 (последняя на...), имеет встроенный шрифт, и может обходиться без glyphs.
 	// Но она на 300K больше.
 	// Но @5.19.0 не падает на .getStyle() после замены glyphs в setStyle
 	if(!style.glyphs) {
@@ -406,11 +410,23 @@ if(maplibreMap.isStyleLoaded()){	// однако, эта функция по н�
 
 	//console.log('[realContourLines] Стиль есть, можно рисовать карту',maplibreMap.getStyle())
 	// Итак, glyphs есть. Пора рисовать горизонтали.
-	//console.log('Объект sources для найденного слоя типа hillshade:',style.sources[layer.source]);
-	//console.log('Объект sources для найденного слоя типа hillshade с ID:',layer.id,maplibreMap.getSource(layer.id));	// Стиль, сцуко, в этот момент ещё не загружен, и их горбатая функция возвращает undefined
-	const url = style.sources[layer.source].tiles[0];
+	//console.log('[realContourLines] Объект sources для найденного слоя типа hillshade:',style.sources[layer.source]);
+	//console.log('[realContourLines] Объект sources:',style.sources);
+	// Авотхрен. В версии 2.2.1 в этот момент уже загружены json по url, и там есть как "tiles" {}, так и "url" с json.
+	// В версии 5.19.0 "tiles" {} ещё нет.
+	// Зато функция getSource работает и там и там, если асилить доку, и понять, как её спрашивать.
+	let DEMsourceName;
+	for(const sourceID in style.sources){
+		if(style.sources[sourceID].type == "raster-dem"){
+			DEMsourceName = sourceID;
+			break;
+		};
+	}
+	if(DEMsourceName === undefined) return;	// несмотря на то, что это слой типа hillshade, в нём нет источника данных типа raster-dem. А так бывает?
+	//console.log('[realContourLines] Объект sources для найденного слоя типа hillshade с DEMsourceName:',DEMsourceName,maplibreMap.getSource(DEMsourceName));	// Параметром должен быть не layer.id, как можно было бы подумать, а идентификатор источника, которых у layer может быть много.
+	const url = maplibreMap.getSource(DEMsourceName).tiles[0];
 	const maxzoom = style.sources[layer.source].maxzoom || 17;
-	//console.log('url=',url,'maxzoom=',maxzoom);
+	//console.log('[realContourLines] url=',url,'maxzoom=',maxzoom);
 	let DEMencoding;
 	DEMencoding = mapParm.clientData.DEMencoding;
 	if(DEMencoding != 'mapbox') DEMencoding = 'terrarium';

@@ -116,9 +116,9 @@ global $trackDir, $currTrackFirst;	// params.php
 if(!$trackNames) $trackNames = glob($trackDir.'/*gpx');
 if(!$trackNames) return '';
 if($currTrackFirst) $outpuFileName = $trackNames[0]; 	// params.php
-else $outpuFileName = $trackNames[count($trackNames)-1];
+else $outpuFileName = end($trackNames);
 $outpuFileName = explode('/',$outpuFileName); 	// выделим имя файла, которое, в принципе, может быть кириллицей
-$outpuFileName = $outpuFileName[count($outpuFileName)-1];
+$outpuFileName = end($outpuFileName);
 
 return $outpuFileName;
 }; // end function getLastTrackName
