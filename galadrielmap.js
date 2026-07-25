@@ -3268,7 +3268,7 @@ else {
 //console.log('Sending to server mobMarkerJSON',JSON.stringify(mobMarkerJSON));
 upData.MOB = GeoJSONtoMOB(mobMarkerJSON,status);	// приведение к формату gpsdPROXY
 //console.log('[sendMOBtoServer] Sending to server upData.MOB:',upData.MOB);
-//console.log('[sendMOBtoServer] upData=',JSON.stringify(upData.MOB));
+//console.log('[sendMOBtoServer] upData=','?UPDATE={"updates":['+JSON.stringify(upData.MOB)+']};');
 //console.log('[sendMOBtoServer] spatialWebSocket.readyState:',spatialWebSocket.readyState);
 
 // отдадим данные MOB для передачи на сервер через глобальный сокет для передачи координат.

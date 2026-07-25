@@ -197,4 +197,7 @@ $relBearingTXT = "'прямо по курсу',
 'слева впереди'";
 
 $DEMcontourStepTXT = "Горизонтали проведены через";
+
+$shallowDepthTXT = "Мель";
+$dangerDepthTXT = "Опасная глубина";
 ?>

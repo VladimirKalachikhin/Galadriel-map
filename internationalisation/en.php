@@ -197,4 +197,7 @@ $relBearingTXT = "'straight ahead',
 'left ahead'";
 
 $DEMcontourStepTXT = "Contour lines step is";
+
+$shallowDepthTXT = "Shallow";
+$dangerDepthTXT = "Danger depth";
 ?>

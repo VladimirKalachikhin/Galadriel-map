@@ -2,8 +2,9 @@
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 //ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 
-$versionTXT = '3.4.4';
-/* 
+$versionTXT = '3.5.0';
+/*
+3.5.0	depth alarm support 
 3.4.0	user defined waypoint icons
 3.3.0	panorama control
 3.2.0	map descriptions support
@@ -123,7 +124,14 @@ if($netAISconfig) {	// а это params.php от netAIS, который подк
 }
 if(!$boatInfo['shipname']) $boatInfo['shipname'] = (string)uniqid();
 if(!$boatInfo['mmsi']) $boatInfo['mmsi'] = str_pad(substr(crc32($boatInfo['shipname']),0,9),9,'0'); 	// левый mmsi, похожий на настоящий -- для тупых, кому не всё равно (SignalK, к примеру)
+if(!@$boatInfo['collisionDistance']) $boatInfo['collisionDistance'] = ($collisionDistance)? $collisionDistance : 10;	// gpsdPROXY's params.php
+if(!@$boatInfo['dangerDepth']) $boatInfo['dangerDepth'] = $dangerDepth;	// gpsdPROXY's params.php
+if(!@$boatInfo['shallowDepth']) $boatInfo['shallowDepth'] = $shallowDepth;	// gpsdPROXY's params.php
 //echo "boatInfo:"; print_r($boatInfo); echo "\n";
+$velocityVectorLengthInMn = $boatInfo['collisionDistance'];
+// если параметры опасной глубины имеются и демон запускается
+//if(isset($depthControlDaemonStart) and isset($boatInfo['dangerDepth']) and isset($boatInfo['shallowDepth'])){	// gpsdPROXY's params.php
+//};
 
 // Умолчальные значки маршрутных точек
 if(!$pointsButtonsConfig) $pointsButtonsConfig = array(
@@ -386,8 +394,11 @@ foreach($mapsInfo as $mapName => $humanName) {
 					</div>
 				</div>
 			</div>
-			<div style="text-align:center; position: absolute; bottom: 0;margin:0 0.5rem;">
-				<?=$dashboardSpeedZoomTXT?> <span id='velocityVectorLengthInMnDisplay'></span> <?=$dashboardSpeedZoomMesTXT?>.
+			<div style="position: absolute; bottom: 0;margin:0 0.5rem;">
+				<?=$dashboardSpeedZoomTXT?> <span id='velocityVectorLengthInMnDisplay'></span> <?=$dashboardSpeedZoomMesTXT?>.<br>
+<?php if(isset($depthControlDaemonStart) and isset($boatInfo['dangerDepth']) and isset($boatInfo['shallowDepth'])){	// gpsdPROXY's params.php ?>
+				<?=$shallowDepthTXT?> - <?=$boatInfo['shallowDepth']?> <?=$dashboardMeterMesTXT?><br><?=$dangerDepthTXT?> - <?=$boatInfo['dangerDepth']?> <?=$dashboardMeterMesTXT?>
+<?php }; ?>
 			</div>
 		</div>
 <?php }; ?>
@@ -790,10 +801,6 @@ foreach($routeInfo as $routeName) { 	// event -- предопределённы�
 <div id="hideControl"></div>
 <div id="mapInfo" style="display:none;"></div>
 <div id="mapid" ></div>
-<?php
-if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = $collisionDistance;	// gpsdPROXY's params.php
-if(!$velocityVectorLengthInMn) $velocityVectorLengthInMn = 10;
-?>
 <script> "use strict";
 // Глобальные переменные
 var selfServerPath = '<?=__DIR__?>';
@@ -1533,6 +1540,9 @@ var toMOBline = L.polyline([], {
 	opacity:0.3,
 });
 
+// depth Alarm marker
+var deptAlarmMarker = L.featureGroup();
+
 // восстановим маркеры
 // mobMarker - это мультислой, содержащий сколько-то L.Marker и одну L.Polyline,
 // являющийся выражением состояния MOB
@@ -1683,6 +1693,10 @@ spatialWebSocket.onmessage = function(event) {
 				realtimeCollisionsUpdate(data.alarms.collisions);
 				//realtimeCollisionsUpdate(data.alarms.collisions,data.alarms.collisionSegments);	///////// for collision test purpose /////////
 				break;
+			case 'depth':
+				//console.log('recieved ALARM depth data',data.alarms.depth);
+				realtimeDepthALARMupdate(data.alarms.depth);
+				break;
 			};
 		};
 		break;
@@ -1795,6 +1809,8 @@ if(gpsdData.error || (gpsdData.lon == null)||(gpsdData.lat == null)) { 	// == nu
 		collisionDirectionsCursor.remove();
 		toWPTline.remove;
 		toWPTline.setLatLngs([]);
+		deptAlarmMarker.remove();
+		deptAlarmMarker.clearLayers();
 	}
 	else cursor.setIcon(NoGpsCursor)	// заменим курсор (значёк) на серый
 	//velocityDial.innerHTML = '&nbsp;'; 	// обнулим панель приборов
@@ -1842,7 +1858,7 @@ else {
 	var velocityCursorLength = gpsdData.speed*60*velocityVectorLengthInMn; 	// метров  за  минуты
 	velocityCursorLength = Math.round(velocityCursorLength/metresPerPixel);
 	//console.log('map.getZoom='+map.getZoom()+'\nmetresPerPixel='+metresPerPixel+'\ngpsdData.speed='+gpsdData.speed+'\nvelocityCursorLength='+velocityCursorLength);
-	velocityCursor.options.iconSize=[5,velocityCursorLength];
+	velocityCursor.options.iconSize=[6,velocityCursorLength];
 	velocityCursor.options.iconAnchor=[3,velocityCursorLength];
 	velocityVector.setIcon(velocityCursor); 	// изменить иконку у маркера
 }
@@ -2222,6 +2238,27 @@ if(indata.action){	// может быть и список и много кома
 	};
 };
 }; // end function realtimePANOupdate
+
+
+function realtimeDepthALARMupdate(depth){
+deptAlarmMarker.remove();
+deptAlarmMarker.clearLayers();
+let alarmStatus = false;
+for(const alarm of depth.data){
+	//console.log('[realtimeDepthALARMupdate] alarm:',alarm);
+	const segment = L.polyline([alarm.start, alarm.end], 
+		{ 
+			"color": alarm.type == 'shallowDepth'? "red" : "yellow", 
+			"weight": 2,
+			"opacity": 0.7,
+			"lineCap": "butt"
+		});
+	deptAlarmMarker.addLayer(segment);
+	alarmStatus = true;
+};
+//console.log('[realtimeDepthALARMupdate] deptAlarmMarker:',deptAlarmMarker);
+if(alarmStatus) deptAlarmMarker.addTo(map);
+}; // end function realtimeDepthALARMupdate
 
 
 // 	Запуск всяких периодических функций	 realtime -- в galadrielmap.js, функция, асинхронно обращающаяся к uri
