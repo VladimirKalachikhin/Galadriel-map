@@ -2,7 +2,7 @@
 ini_set('error_reporting', E_ALL & ~E_NOTICE & ~E_STRICT & ~E_DEPRECATED);
 //ini_set('error_reporting', E_ALL & ~E_STRICT & ~E_DEPRECATED);
 
-$versionTXT = '3.5.0';
+$versionTXT = '3.5.1';
 /*
 3.5.0	depth alarm support 
 3.4.0	user defined waypoint icons
@@ -2244,11 +2244,14 @@ function realtimeDepthALARMupdate(depth){
 deptAlarmMarker.remove();
 deptAlarmMarker.clearLayers();
 let alarmStatus = false;
+if(typeof depth.data == "undefined") return;
 for(const alarm of depth.data){
 	//console.log('[realtimeDepthALARMupdate] alarm:',alarm);
 	const segment = L.polyline([alarm.start, alarm.end], 
 		{ 
-			"color": alarm.type == 'shallowDepth'? "red" : "yellow", 
+			//"color": alarm.type == 'shallowDepth'? "#FF5400" : "#E9FF00", 
+			"color": alarm.type == 'shallowDepth'? "#FF5400" : "#FFE000", 
+			//"color": alarm.type == 'shallowDepth'? "#FF5400" : "yellow", 
 			"weight": 2,
 			"opacity": 0.7,
 			"lineCap": "butt"
