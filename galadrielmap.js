@@ -1528,7 +1528,7 @@ xhr.onreadystatechange = function() { //
 
 		let liS = '';
 		for(let jobName in jobsInfo){
-			liS += `<li  ><span>${jobName} &nbsp; </span><span style='font-size:115%;'>${jobsInfo[jobName]}%</span></li>`;
+			liS += `<li  ><span>${jobName} </span><span style='font-size:75%;'>${jobsInfo[jobName]}%</span></li>`;
 		}
 		dwnldJobList.innerHTML += liS;
 	}
