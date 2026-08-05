@@ -148,9 +148,12 @@ if($tileCacheControlURI){	// мы знаем про GaladrielCache
 			$str .= substr($_SERVER['REQUEST_URI'],0,strrpos($_SERVER['REQUEST_URI'],'/')+1);
 		};
 		file_get_contents("http://localhost$tileCacheControlURI?collectMBTiles",false);	// создать отсутствующие описания для новых файлов mbtiles
-		$mapList = json_decode(@file_get_contents("http://localhost$tileCacheControlURI?getMapList",false),true);
+		$mapList = file_get_contents("http://localhost$tileCacheControlURI?getMapList",false);
+		//echo "mapList:"; echo "<pre>"; print_r($mapList); echo "</pre>";
+		//echo "http_get_last_response_headers:"; echo "<pre>"; print_r($http_response_header); echo "</pre>";
+		$mapList = json_decode($mapList,true);
 		$tileCacheControlURI = $str . $tileCacheControlURI;
-		//echo("str=$str; tileCacheControlURI=$tileCacheControlURI;");
+		//echo("str=$str; tileCacheControlURI=$tileCacheControlURI;<br>\n");
 	}
 	else{
 		file_get_contents("$tileCacheControlURI?collectMBTiles",false);
@@ -171,7 +174,7 @@ if($tileCacheControlURI){	// мы знаем про GaladrielCache
 		};
 	};
 	asort($mapsInfo,SORT_LOCALE_STRING);
-}
+};
 //echo "mapsInfo:<pre>"; print_r($mapsInfo); echo "</pre>";
 
 // Получаем список имён треков
